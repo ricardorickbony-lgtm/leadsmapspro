@@ -364,12 +364,7 @@ function Faq() {
     ["Posso cancelar?", "Sim. O plano mensal pode ser cancelado a qualquer momento."],
   ];
   return (
-    <section id="faq" className="mx-auto grid max-w-7xl gap-10 px-5 py-24 lg:grid-cols-2">
-      <div className="panel h-fit p-8">
-        <ShieldCheck className="h-12 w-12 text-primary" />
-        <h2 className="mt-6 text-3xl font-extrabold">Garantia Blindada de 7 Dias</h2>
-        <p className="mt-4 text-muted-foreground">Use a ferramenta por 7 dias. Se não fizer sentido para você, devolvemos 100% do valor. Sem perguntas, sem burocracia.</p>
-      </div>
+    <section id="faq" className="mx-auto max-w-3xl px-5 py-24">
       <div>
         <p className="font-mono text-xs uppercase tracking-widest text-primary">FAQ</p>
         <h2 className="mt-3 mb-6 text-3xl font-extrabold">Perguntas frequentes</h2>
