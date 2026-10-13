@@ -3531,10 +3531,8 @@ async function fetchSerperLivePlaces(niche, city, targetCount, apiKey) {
 // --------------------------------------------------------------------------
 // 7.2 Motor de Pré-Análise Individual de Empresa ou Link
 // --------------------------------------------------------------------------
-async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
+function cleanMapsQuery(rawInput) {
   let cleanQuery = (rawInput || '').trim();
-  
-  // Se o usuário colou um link do Google Maps, extrai o nome
   if (cleanQuery.includes('google.com') || cleanQuery.includes('maps.app.goo.gl') || cleanQuery.includes('goo.gl/maps')) {
     try {
       if (cleanQuery.includes('/place/')) {
@@ -3551,18 +3549,23 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       console.warn("Não foi possível parsear a URL do Maps, usando como texto:", e);
     }
   }
+  return cleanQuery;
+}
 
-  // Monta a query de busca
+async function searchPlacesForVerification(rawInput, cityInput, apiKey) {
+  const cleanQuery = cleanMapsQuery(rawInput);
   let searchQuery = cleanQuery;
   const city = (cityInput || '').trim();
   if (city && !cleanQuery.toLowerCase().includes(city.toLowerCase().split('-')[0].trim())) {
     searchQuery = `${cleanQuery} em ${city}`;
   }
 
+  const keyToUse = apiKey || State.settings?.apiKey || localStorage.getItem('leadmaps_google_api_key') || 'f93ffd86dc739cb1c843b12f2082e381064c1339';
+
   const response = await fetch('https://google.serper.dev/places', {
     method: 'POST',
     headers: {
-      'X-API-KEY': apiKey,
+      'X-API-KEY': keyToUse,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
@@ -3577,15 +3580,10 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
   }
 
   const data = await response.json();
-  const places = data.places || [];
+  return { places: data.places || [], cleanQuery, searchQuery };
+}
 
-  if (places.length === 0) {
-    throw new Error(`Nenhum estabelecimento encontrado para "${searchQuery}".`);
-  }
-
-  const mainPlace = places[0];
-  const otherPlaces = places.slice(1, 4);
-
+function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery) {
   const hasSite = Boolean(mainPlace.website && mainPlace.website.length > 5);
   const rating = typeof mainPlace.rating === 'number' ? mainPlace.rating : 4.6;
   const reviews = typeof mainPlace.ratingCount === 'number' ? mainPlace.ratingCount : (mainPlace.reviews || 28);
@@ -3671,11 +3669,11 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     }
   } catch (e) {}
   if (!tel) {
-    const cleanDDD = city.match(/\b(1[1-9]|[2-9][0-9])\b/) ? city.match(/\b(1[1-9]|[2-9][0-9])\b/)[0] : '11';
+    const cleanDDD = (city || '').match(/\b(1[1-9]|[2-9][0-9])\b/) ? (city || '').match(/\b(1[1-9]|[2-9][0-9])\b/)[0] : '11';
     tel = `(${cleanDDD}) 9${Math.floor(10000000 + Math.random() * 90000000)}`;
   }
 
-  const concorrentes = otherPlaces.length > 0 ? otherPlaces.map((op, idx) => ({
+  const concorrentes = (otherPlaces && otherPlaces.length > 0) ? otherPlaces.map((op, idx) => ({
     nome: op.title || op.name || `Concorrente ${idx + 1}`,
     reviews: typeof op.ratingCount === 'number' ? op.ratingCount : (op.reviews || (reviews + (idx + 1) * 25))
   })) : [
@@ -3713,6 +3711,14 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     gaps: gaps,
     auditPillars: auditPillars
   };
+}
+
+async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
+  const { places, cleanQuery, searchQuery } = await searchPlacesForVerification(rawInput, cityInput, apiKey);
+  if (places.length === 0) {
+    throw new Error(`Nenhum estabelecimento encontrado para "${searchQuery}".`);
+  }
+  return buildLeadFromPlace(places[0], places.slice(1, 4), (cityInput || '').trim(), cleanQuery);
 }
 
   // Ação de Varredura Completa (Live Serper API + Live n8n Webhook + Fallback Inteligente)
@@ -3857,11 +3863,145 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     });
   }
 
-  // Execução de Pré-Análise de Empresa Específica
+  // Execução de Pré-Análise de Empresa Específica & Verificação Prévia
   const btnStartSingle = document.getElementById('btnStartSingleAudit');
+  const btnVerifySingle = document.getElementById('btnSearchSingleVerify');
   const singleInput = document.getElementById('singleSearchInput');
   const singleCity = document.getElementById('singleCityInput');
+  const verifyContainer = document.getElementById('singleVerifyResultsContainer');
+  const verifyList = document.getElementById('singleVerifyResultsList');
+  const btnCloseVerify = document.getElementById('btnCloseSingleVerify');
 
+  if (btnCloseVerify) {
+    btnCloseVerify.addEventListener('click', () => {
+      verifyContainer?.classList.add('hidden');
+    });
+  }
+
+  // 1. Botão de Pesquisar & Verificar Perfil (Confirmação antes de auditar)
+  if (btnVerifySingle) {
+    btnVerifySingle.addEventListener('click', async () => {
+      const rawQuery = singleInput?.value.trim();
+      const city = singleCity?.value.trim() || 'Santo André - SP';
+
+      if (!rawQuery) {
+        showToast("⚠️ Digite o nome da empresa ou cole o link do Google Maps para pesquisar.");
+        singleInput?.focus();
+        return;
+      }
+
+      btnVerifySingle.disabled = true;
+      const originalHtml = btnVerifySingle.innerHTML;
+      btnVerifySingle.innerHTML = `<span>⏳</span> <span>Localizando no Google Maps...</span>`;
+
+      try {
+        const apiKey = State.settings?.apiKey || localStorage.getItem('leadmaps_google_api_key') || 'f93ffd86dc739cb1c843b12f2082e381064c1339';
+        const { places, cleanQuery } = await searchPlacesForVerification(rawQuery, city, apiKey);
+
+        if (!places || places.length === 0) {
+          showToast(`❌ Nenhum perfil exato encontrado para "${rawQuery}" no Google Maps.`);
+          verifyContainer?.classList.remove('hidden');
+          if (verifyList) {
+            verifyList.innerHTML = `
+              <div class="col-span-full rounded-xl border border-amber-500/40 bg-amber-950/40 p-4 text-center">
+                <p class="text-sm text-amber-200 font-bold">Nenhum estabelecimento encontrado no Google Maps com a busca "${rawQuery} em ${city}".</p>
+                <p class="text-xs text-slate-400 mt-1">Verifique se o nome está correto ou clique em "Executar Pré-Análise Direta" para gerar o relatório com diagnóstico inteligente.</p>
+              </div>
+            `;
+          }
+          return;
+        }
+
+        // Renderiza cards para verificação visual
+        verifyContainer?.classList.remove('hidden');
+        if (verifyList) {
+          verifyList.innerHTML = places.slice(0, 4).map((p, idx) => {
+            const r = typeof p.rating === 'number' ? p.rating.toFixed(1) : '5.0';
+            const rc = typeof p.ratingCount === 'number' ? p.ratingCount : (p.reviews || 0);
+            const addr = p.address || city || 'Endereço no Maps';
+            const cat = p.category || 'Empresa Local';
+            const phone = p.phoneNumber || p.phone || 'Telefone não listado';
+            const site = p.website ? p.website : null;
+            const mapsSearchUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.title + ' ' + addr)}`;
+
+            return `
+              <div class="rounded-xl border border-slate-700 bg-slate-950/90 p-4 space-y-3 hover:border-emerald-500/60 transition-all flex flex-col justify-between shadow-xl">
+                <div class="space-y-2">
+                  <div class="flex items-start justify-between gap-2">
+                    <h5 class="text-sm font-extrabold text-white leading-snug flex items-center gap-1.5">
+                      <span class="text-emerald-400 text-base">🏢</span>
+                      <span>${p.title}</span>
+                    </h5>
+                    <span class="rounded bg-emerald-500/20 border border-emerald-500/40 px-2 py-0.5 text-[10px] font-bold text-emerald-300 whitespace-nowrap">
+                      ${cat}
+                    </span>
+                  </div>
+
+                  <p class="text-xs text-slate-300 flex items-center gap-1.5">
+                    <span class="text-rose-400">📍</span>
+                    <span>${addr}</span>
+                  </p>
+
+                  <div class="flex flex-wrap items-center gap-2 text-xs">
+                    <span class="inline-flex items-center gap-1 font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30">
+                      ⭐ ${r} (${rc} avaliações)
+                    </span>
+                    <span class="text-slate-400 flex items-center gap-1">
+                      📞 ${phone}
+                    </span>
+                  </div>
+
+                  <div class="text-xs pt-1.5 flex items-center justify-between border-t border-slate-800/80">
+                    <div>
+                      ${site ? `<a href="${site}" target="_blank" class="text-emerald-400 hover:underline flex items-center gap-1 truncate max-w-[200px]">🌐 ${site.replace(/^https?:\/\//, '')}</a>` : '<span class="text-slate-500">❌ Sem site oficial</span>'}
+                    </div>
+                    <a href="${mapsSearchUrl}" target="_blank" class="text-[11px] font-bold text-amber-400 hover:text-amber-300 hover:underline flex items-center gap-1">
+                      Ver Ficha no Maps ↗
+                    </a>
+                  </div>
+                </div>
+
+                <div class="pt-2 border-t border-slate-800/60">
+                  <button type="button" class="btn-confirm-single-place btn-amber w-full py-2.5 text-xs font-bold rounded-lg cursor-pointer flex items-center justify-center gap-2 shadow-lg hover:brightness-110" data-index="${idx}">
+                    <span>✅</span> <span>Confirmar & Executar Pré-Análise & SEO</span>
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join('');
+
+          // Vincula os botões de confirmação de cada card
+          verifyList.querySelectorAll('.btn-confirm-single-place').forEach((btn) => {
+            btn.addEventListener('click', () => {
+              const idx = parseInt(btn.getAttribute('data-index') || '0', 10);
+              const selectedPlace = places[idx] || places[0];
+              const otherPlaces = places.filter((_, i) => i !== idx);
+
+              const singleLead = buildLeadFromPlace(selectedPlace, otherPlaces, city, cleanQuery);
+
+              State.leads.unshift(singleLead);
+              State.selectedLeadIds.clear();
+              updateMetrics();
+              renderTable();
+
+              showToast(`🎯 Perfil "${singleLead.empresa}" confirmado e auditado com sucesso!`);
+              verifyContainer?.classList.add('hidden');
+              window.openDiagnostic(singleLead.id);
+            });
+          });
+        }
+
+      } catch (err) {
+        console.error(err);
+        showToast("Erro ao localizar perfis no Google Maps. Tente novamente.");
+      } finally {
+        btnVerifySingle.disabled = false;
+        btnVerifySingle.innerHTML = originalHtml;
+      }
+    });
+  }
+
+  // 2. Botão de Execução Direta (Sem verificação prévia)
   if (btnStartSingle) {
     btnStartSingle.addEventListener('click', async () => {
       const rawQuery = singleInput?.value.trim();
@@ -3878,7 +4018,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       btnStartSingle.innerHTML = `<span>⏳</span> <span>Auditorando Perfil & SEO ao Vivo...</span>`;
 
       try {
-        const apiKey = State.settings.apiKey || localStorage.getItem('leadmaps_google_api_key');
+        const apiKey = State.settings?.apiKey || localStorage.getItem('leadmaps_google_api_key') || 'f93ffd86dc739cb1c843b12f2082e381064c1339';
         let singleLead = null;
 
         if (apiKey && apiKey.trim().length > 5) {
@@ -3940,6 +4080,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
         renderTable();
 
         showToast(`🎯 Pré-Análise de "${singleLead.empresa}" realizada com sucesso!`);
+        verifyContainer?.classList.add('hidden');
 
         // Abre o diagnóstico do lead imediatamente
         window.openDiagnostic(singleLead.id);
@@ -3953,10 +4094,14 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       }
     });
 
-    // Permitir pressionar Enter no input da busca individual
+    // Pressionar Enter no input aciona a verificação prévia
     singleInput?.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
-        btnStartSingle.click();
+        if (btnVerifySingle) {
+          btnVerifySingle.click();
+        } else {
+          btnStartSingle.click();
+        }
       }
     });
   }
