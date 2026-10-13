@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   MapPin, ScanSearch, FileText, MessageCircle, LogIn, Tags, BookOpen, ArrowRight,
-  Check, X, Zap, CreditCard, Search, Send, Handshake, Crosshair, Download,
+  Check, X, Zap, CreditCard, Search, Send, Handshake, Crosshair, Download, Sparkles,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -50,7 +50,7 @@ const btnGhost = "inline-flex items-center justify-center gap-2 rounded-lg borde
 
 function Header() {
   const on = useOnline();
-  const links = [["Hub", "hub"], ["Os 3 Pilares", "pilares"], ["Como Funciona", "fluxo"], ["Calculadora ROI", "roi"], ["Planos", "planos"], ["FAQ", "faq"]];
+  const links = [["Hub", "hub"], ["Os 3 Pilares", "pilares"], ["Pré-Análises", "pre-analises"], ["Como Funciona", "fluxo"], ["Calculadora ROI", "roi"], ["Planos", "planos"], ["FAQ", "faq"]];
   return (
     <header className="glass fixed inset-x-0 top-0 z-50 border-b border-border">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-5">
@@ -169,14 +169,14 @@ function Hero() {
         <div>
           <span className="inline-block rounded-full border border-primary/30 bg-primary/10 px-3 py-1 font-mono text-[11px] text-primary">🚀 INTELIGÊNCIA COMERCIAL B2B • VERSÃO 2.6 ENTERPRISE</span>
           <h1 className="mt-6 text-4xl font-extrabold leading-tight tracking-tight md:text-6xl">Transforme o Google Maps em <span className="text-emerald-grad">contratos de consultoria recorrentes.</span></h1>
-          <p className="mt-6 max-w-xl text-lg text-muted-foreground">Extraia empresas qualificadas, audite 22 pontos de SEO Local e mostre ao cliente exatamente onde ele está perdendo vendas — com relatórios white-label prontos para fechar <span className="font-mono text-foreground">R$ 1.500 a R$ 5.000/mês</span>.</p>
+          <p className="mt-6 max-w-xl text-lg text-muted-foreground">Extraia empresas qualificadas, gere a <span className="font-semibold text-foreground">pré-análise individual</span> de cada uma e mostre ao cliente exatamente onde ele está perdendo vendas — com relatórios white-label prontos para fechar <span className="font-mono text-foreground">R$ 1.500 a R$ 5.000/mês</span>.</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <a href="#hub" className={btnPrimary}>Abrir a Ferramenta Agora <ArrowRight className="h-4 w-4" /></a>
             <a href="#planos" className={btnGhost}>Ver Planos & Preços</a>
             <a href={wa("Olá Ricardo, quero suporte VIP do LeadMaps Pro.")} target="_blank" rel="noreferrer" className={btnGhost}><MessageCircle className="h-4 w-4 text-primary" />Suporte VIP WhatsApp</a>
           </div>
           <div className="mt-8 flex flex-wrap gap-2">
-            {["22 Itens Auditados", "GeoGrid GPS 1km a 20km", "PDF White-Label", "WhatsApp Validado"].map((p) => (
+            {["Pré-Análise Individual", "22 Itens Auditados", "GeoGrid GPS 1km a 20km", "PDF White-Label", "WhatsApp Validado"].map((p) => (
               <span key={p} className="rounded-md border border-border bg-card px-2.5 py-1 font-mono text-[11px] text-muted-foreground">{p}</span>
             ))}
           </div>
@@ -201,6 +201,7 @@ function Hub() {
   const on = useOnline();
   const cards = [
     { i: Crosshair, t: "Ferramenta Web Principal", d: "Painel completo: extração, auditoria e GeoGrid.", cta: "Abrir painel", href: "#top", big: true },
+    { i: FileText, t: "Pré-Análise Individual", d: "Diagnóstico de uma empresa específica, com o nome dela, pronto para enviar.", cta: "Gerar agora", href: "#pre-analises" },
     { i: LogIn, t: "Login & Ativação de Chave", d: "Acesso exclusivo de assinantes.", cta: "Entrar", href: wa("Olá, preciso ativar minha chave LeadMaps Pro.") },
     { i: Tags, t: "Planos & Preços", d: "Compare Mensal e Anual.", cta: "Comparar", href: "#planos" },
     { i: MessageCircle, t: "Suporte VIP no WhatsApp", d: "Atendimento direto com Ricardo • 11 97055-8412", cta: "Chamar", href: wa("Olá Ricardo, preciso de suporte."), status: true },
