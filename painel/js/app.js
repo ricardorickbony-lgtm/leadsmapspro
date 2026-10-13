@@ -5889,17 +5889,6 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     attemptLogin(em, ky);
   });
 
-  document.getElementById('btnQuickOwnerLogin')?.addEventListener('click', () => {
-    attemptLogin('ricardo@admin.com', 'LMPRO-MASTER');
-  });
-
-  document.getElementById('btnQuickClientTestLogin')?.addEventListener('click', () => {
-    const activeClient = State.subscribers.find(s => s.status === 'ativo' && s.expiraEm > Date.now()) || State.subscribers[0];
-    if (activeClient) {
-      attemptLogin(activeClient.email, activeClient.chave);
-    }
-  });
-
   document.getElementById('btnLogoutSession')?.addEventListener('click', () => {
     loginAlertBox?.classList.add('hidden');
     authOverlay?.classList.remove('hidden');
