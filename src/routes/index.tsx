@@ -110,10 +110,10 @@ function Console() {
             <div className="space-y-3">
               <p className="font-mono text-xs text-muted-foreground">CLÍNICA ODONTO SORRISO • raio 5km</p>
               <div className="flex items-baseline gap-3">
-                <span className="font-display text-5xl font-extrabold">#{pins[sel].r}</span>
-                <span className="font-mono text-sm text-muted-foreground">{pins[sel].km.toFixed(1)} km do centro</span>
+                <span className="font-display text-5xl font-extrabold">#{pins[sel]!.r}</span>
+                <span className="font-mono text-sm text-muted-foreground">{pins[sel]!.km.toFixed(1)} km do centro</span>
               </div>
-              <p className="text-sm text-muted-foreground">{diag(pins[sel].r)}</p>
+              <p className="text-sm text-muted-foreground">{diag(pins[sel]!.r)}</p>
               <p className="font-mono text-[11px] text-muted-foreground">lat -23.5{50 + sel} • lng -46.63{sel}</p>
             </div>
           </div>
@@ -303,11 +303,11 @@ function Roi() {
         <div className="panel space-y-10 p-8">
           <div>
             <div className="mb-4 flex justify-between text-sm"><span>Ticket médio mensal</span><span className="font-mono text-primary">{brl(ticket)}</span></div>
-            <Slider min={1000} max={6000} step={100} value={[ticket]} onValueChange={(v) => setTicket(v[0])} />
+            <Slider min={1000} max={6000} step={100} value={[ticket]} onValueChange={(v) => setTicket(v[0] ?? 2000)} />
           </div>
           <div>
             <div className="mb-4 flex justify-between text-sm"><span>Clientes fechados no mês</span><span className="font-mono text-primary">{clients}</span></div>
-            <Slider min={1} max={10} step={1} value={[clients]} onValueChange={(v) => setClients(v[0])} />
+            <Slider min={1} max={10} step={1} value={[clients]} onValueChange={(v) => setClients(v[0] ?? 2)} />
           </div>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
