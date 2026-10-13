@@ -271,6 +271,99 @@ function Pillars() {
   );
 }
 
+const preAnalises = [
+  { nome: "Clínica Odonto Sorriso", nicho: "Dentista", regiao: "Tatuapé • São Paulo", score: 48, pos: 12, km: 5.1, perda: 6200, falhas: ["Sem Tour 360°", "Sem botão de agendamento", "88% das avaliações sem resposta"] },
+  { nome: "Pet Vida Banho & Tosa", nicho: "Pet shop", regiao: "Moema • São Paulo", score: 61, pos: 4, km: 2.8, perda: 3400, falhas: ["Horário desatualizado", "Sem categoria secundária", "Fotos de 2 anos atrás"] },
+  { nome: "Studio Fit", nicho: "Academia", regiao: "Pinheiros • São Paulo", score: 32, pos: 12, km: 6.4, perda: 7800, falhas: ["Perfil sem descrição", "Sem link de WhatsApp", "Concorrente a 900m no Top 3"] },
+  { nome: "Bella Estética", nicho: "Estética", regiao: "Santo Amaro • São Paulo", score: 74, pos: 4, km: 3.3, perda: 2600, falhas: ["Sem posts semanais", "Respostas abaixo de 50%", "Serviços não cadastrados"] },
+];
+
+const scoreTone = (s: number) => (s < 50 ? "border-danger text-danger" : s < 75 ? "border-warn text-warn" : "border-primary text-primary");
+
+function PreAnalysis() {
+  const [idx, setIdx] = useState(0);
+  const [phase, setPhase] = useState<"idle" | "run" | "done">("done");
+
+  useEffect(() => {
+    if (phase !== "run") return;
+    const t = setTimeout(() => setPhase("done"), 900);
+    return () => clearTimeout(t);
+  }, [phase]);
+
+  const a = preAnalises[idx]!;
+  const msg = `Olá, ${a.nome}! Fiz uma pré-análise gratuita do perfil de vocês no Google Maps (${a.regiao}). Hoje vocês aparecem na posição #${a.pos} do mapa e ${a.falhas[0]!.toLowerCase()}. Isso custa cerca de ${brl(a.perda)} por mês em clientes que caem no concorrente mais próximo. Posso te mostrar o diagnóstico completo em 10 minutos?`;
+
+  return (
+    <section id="pre-analises" className="border-y border-border bg-background-2 py-24">
+      <div className="mx-auto max-w-7xl px-5">
+        <SectionTitle k="Pré-análises individuais" t="Uma empresa, um diagnóstico, um contrato." s="O LeadMaps Pro também faz a pré-análise individual: você escolhe uma empresa da lista e ele gera o diagnóstico dela — nome, posição no mapa, o que está quebrado e quanto isso está custando. Você chega antes do concorrente, com a resposta na mão." />
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,330px)_1fr]">
+          <div className="panel p-5">
+            <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">Sua lista de extração</p>
+            <div className="mt-4 space-y-2">
+              {preAnalises.map((x, i) => (
+                <button key={x.nome} onClick={() => { setIdx(i); setPhase("run"); }} className={`w-full rounded-lg border p-3 text-left transition ${idx === i ? "border-primary/60 bg-primary/10" : "border-border hover:border-primary/40"}`}>
+                  <span className="block text-sm font-semibold">{x.nome}</span>
+                  <span className="mt-0.5 block font-mono text-[11px] text-muted-foreground">{x.nicho} • {x.regiao}</span>
+                </button>
+              ))}
+            </div>
+            <button onClick={() => setPhase("run")} className={`${btnPrimary} mt-5 w-full`}><Sparkles className="h-4 w-4" />Gerar Pré-Análise</button>
+            <p className="mt-3 text-center font-mono text-[11px] text-muted-foreground">1 empresa por vez • dados reais do perfil</p>
+          </div>
+          <div className="panel overflow-hidden">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-background px-5 py-3">
+              <span className="font-mono text-[11px] uppercase tracking-widest text-primary">Pré-análise individual • Nº {String(idx + 1).padStart(3, "0")}</span>
+              <span className="font-mono text-[11px] text-muted-foreground">white-label • {a.regiao}</span>
+            </div>
+            {phase === "run" ? (
+              <div className="grid min-h-[420px] place-items-center p-8 text-center">
+                <div>
+                  <Sparkles className="mx-auto h-8 w-8 animate-pulse text-primary" />
+                  <p className="mt-4 font-mono text-sm text-muted-foreground">Lendo o perfil de {a.nome} e cruzando com o GeoGrid…</p>
+                </div>
+              </div>
+            ) : (
+              <div className="p-6">
+                <div className="flex flex-wrap items-center gap-6">
+                  <div className={`grid h-24 w-24 shrink-0 place-items-center rounded-full border-4 ${scoreTone(a.score)}`}>
+                    <span className="font-mono text-2xl font-bold">{a.score}<span className="text-sm text-muted-foreground">/100</span></span>
+                  </div>
+                  <div>
+                    <h3 className="font-display text-xl font-extrabold">{a.nome}</h3>
+                    <p className="mt-1 font-mono text-xs text-muted-foreground">{a.nicho} • raio 5km</p>
+                    <p className="mt-2 text-sm">Posição no mapa: <span className="font-mono font-bold">#{a.pos}</span> • {a.km.toFixed(1)} km do centro</p>
+                  </div>
+                </div>
+                <ul className="mt-6 grid gap-2 sm:grid-cols-3">
+                  {a.falhas.map((f) => (
+                    <li key={f} className="flex items-start gap-2 rounded-lg border border-border bg-background p-3 text-sm"><X className="mt-0.5 h-4 w-4 shrink-0 text-danger" />{f}</li>
+                  ))}
+                </ul>
+                <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-lg border border-gold/40 p-5">
+                  <div>
+                    <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">Perda mensal estimada</p>
+                    <p className="mt-1 font-mono text-3xl font-bold text-gold">{brl(a.perda)}</p>
+                  </div>
+                  <p className="max-w-sm text-sm text-muted-foreground">O cliente não vê a sua promessa: ele vê o número dele. É esse número que abre a conversa.</p>
+                </div>
+                <div className="mt-6 rounded-lg border border-border bg-foreground p-5 text-background">
+                  <p className="font-mono text-[10px] uppercase tracking-widest opacity-70">Mensagem pronta para o WhatsApp</p>
+                  <p className="mt-3 text-sm leading-relaxed">{msg}</p>
+                </div>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <a href={wa(msg)} target="_blank" rel="noreferrer" className={btnPrimary}><MessageCircle className="h-4 w-4" />Enviar Pré-Análise</a>
+                  <a href="#planos" className={btnGhost}>Quero gerar as minhas</a>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function Flow() {
   const s = [[Search, "Busque o Nicho"], [ScanSearch, "Gere a Pré-Análise Individual"], [Send, "Envie no WhatsApp"], [Handshake, "Feche a Recorrência"]] as const;
   return (
