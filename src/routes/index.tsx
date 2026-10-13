@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   MapPin, ScanSearch, FileText, MessageCircle, LogIn, Tags, BookOpen, ArrowRight,
-  Check, X, Zap, CreditCard, Search, Send, Handshake, Crosshair, Download,
+  Check, X, Zap, CreditCard, Search, Send, Handshake, Crosshair, Download, Sparkles,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -50,7 +50,7 @@ const btnGhost = "inline-flex items-center justify-center gap-2 rounded-lg borde
 
 function Header() {
   const on = useOnline();
-  const links = [["Hub", "hub"], ["Os 3 Pilares", "pilares"], ["Como Funciona", "fluxo"], ["Calculadora ROI", "roi"], ["Planos", "planos"], ["FAQ", "faq"]];
+  const links = [["Hub", "hub"], ["Os 3 Pilares", "pilares"], ["Pré-Análises", "pre-analises"], ["Como Funciona", "fluxo"], ["Calculadora ROI", "roi"], ["Planos", "planos"], ["FAQ", "faq"]];
   return (
     <header className="glass fixed inset-x-0 top-0 z-50 border-b border-border">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-5">
@@ -169,14 +169,14 @@ function Hero() {
         <div>
           <span className="inline-block rounded-full border border-primary/30 bg-primary/10 px-3 py-1 font-mono text-[11px] text-primary">🚀 INTELIGÊNCIA COMERCIAL B2B • VERSÃO 2.6 ENTERPRISE</span>
           <h1 className="mt-6 text-4xl font-extrabold leading-tight tracking-tight md:text-6xl">Transforme o Google Maps em <span className="text-emerald-grad">contratos de consultoria recorrentes.</span></h1>
-          <p className="mt-6 max-w-xl text-lg text-muted-foreground">Extraia empresas qualificadas, audite 22 pontos de SEO Local e mostre ao cliente exatamente onde ele está perdendo vendas — com relatórios white-label prontos para fechar <span className="font-mono text-foreground">R$ 1.500 a R$ 5.000/mês</span>.</p>
+          <p className="mt-6 max-w-xl text-lg text-muted-foreground">Extraia empresas qualificadas, gere a <span className="font-semibold text-foreground">pré-análise individual</span> de cada uma e mostre ao cliente exatamente onde ele está perdendo vendas — com relatórios white-label prontos para fechar <span className="font-mono text-foreground">R$ 1.500 a R$ 5.000/mês</span>.</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <a href="#hub" className={btnPrimary}>Abrir a Ferramenta Agora <ArrowRight className="h-4 w-4" /></a>
             <a href="#planos" className={btnGhost}>Ver Planos & Preços</a>
             <a href={wa("Olá Ricardo, quero suporte VIP do LeadMaps Pro.")} target="_blank" rel="noreferrer" className={btnGhost}><MessageCircle className="h-4 w-4 text-primary" />Suporte VIP WhatsApp</a>
           </div>
           <div className="mt-8 flex flex-wrap gap-2">
-            {["22 Itens Auditados", "GeoGrid GPS 1km a 20km", "PDF White-Label", "WhatsApp Validado"].map((p) => (
+            {["Pré-Análise Individual", "22 Itens Auditados", "GeoGrid GPS 1km a 20km", "PDF White-Label", "WhatsApp Validado"].map((p) => (
               <span key={p} className="rounded-md border border-border bg-card px-2.5 py-1 font-mono text-[11px] text-muted-foreground">{p}</span>
             ))}
           </div>
@@ -201,6 +201,7 @@ function Hub() {
   const on = useOnline();
   const cards = [
     { i: Crosshair, t: "Ferramenta Web Principal", d: "Painel completo: extração, auditoria e GeoGrid.", cta: "Abrir painel", href: "#top", big: true },
+    { i: FileText, t: "Pré-Análise Individual", d: "Diagnóstico de uma empresa específica, com o nome dela, pronto para enviar.", cta: "Gerar agora", href: "#pre-analises" },
     { i: LogIn, t: "Login & Ativação de Chave", d: "Acesso exclusivo de assinantes.", cta: "Entrar", href: wa("Olá, preciso ativar minha chave LeadMaps Pro.") },
     { i: Tags, t: "Planos & Preços", d: "Compare Mensal e Anual.", cta: "Comparar", href: "#planos" },
     { i: MessageCircle, t: "Suporte VIP no WhatsApp", d: "Atendimento direto com Ricardo • 11 97055-8412", cta: "Chamar", href: wa("Olá Ricardo, preciso de suporte."), status: true },
@@ -270,8 +271,101 @@ function Pillars() {
   );
 }
 
+const preAnalises = [
+  { nome: "Clínica Odonto Sorriso", nicho: "Dentista", regiao: "Tatuapé • São Paulo", score: 48, pos: 12, km: 5.1, perda: 6200, falhas: ["Sem Tour 360°", "Sem botão de agendamento", "88% das avaliações sem resposta"] },
+  { nome: "Pet Vida Banho & Tosa", nicho: "Pet shop", regiao: "Moema • São Paulo", score: 61, pos: 4, km: 2.8, perda: 3400, falhas: ["Horário desatualizado", "Sem categoria secundária", "Fotos de 2 anos atrás"] },
+  { nome: "Studio Fit", nicho: "Academia", regiao: "Pinheiros • São Paulo", score: 32, pos: 12, km: 6.4, perda: 7800, falhas: ["Perfil sem descrição", "Sem link de WhatsApp", "Concorrente a 900m no Top 3"] },
+  { nome: "Bella Estética", nicho: "Estética", regiao: "Santo Amaro • São Paulo", score: 74, pos: 4, km: 3.3, perda: 2600, falhas: ["Sem posts semanais", "Respostas abaixo de 50%", "Serviços não cadastrados"] },
+];
+
+const scoreTone = (s: number) => (s < 50 ? "border-danger text-danger" : s < 75 ? "border-warn text-warn" : "border-primary text-primary");
+
+function PreAnalysis() {
+  const [idx, setIdx] = useState(0);
+  const [phase, setPhase] = useState<"idle" | "run" | "done">("done");
+
+  useEffect(() => {
+    if (phase !== "run") return;
+    const t = setTimeout(() => setPhase("done"), 900);
+    return () => clearTimeout(t);
+  }, [phase]);
+
+  const a = preAnalises[idx]!;
+  const msg = `Olá, ${a.nome}! Fiz uma pré-análise gratuita do perfil de vocês no Google Maps (${a.regiao}). Hoje vocês aparecem na posição #${a.pos} do mapa e ${a.falhas[0]!.toLowerCase()}. Isso custa cerca de ${brl(a.perda)} por mês em clientes que caem no concorrente mais próximo. Posso te mostrar o diagnóstico completo em 10 minutos?`;
+
+  return (
+    <section id="pre-analises" className="border-y border-border bg-background-2 py-24">
+      <div className="mx-auto max-w-7xl px-5">
+        <SectionTitle k="Pré-análises individuais" t="Uma empresa, um diagnóstico, um contrato." s="O LeadMaps Pro também faz a pré-análise individual: você escolhe uma empresa da lista e ele gera o diagnóstico dela — nome, posição no mapa, o que está quebrado e quanto isso está custando. Você chega antes do concorrente, com a resposta na mão." />
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,330px)_1fr]">
+          <div className="panel p-5">
+            <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">Sua lista de extração</p>
+            <div className="mt-4 space-y-2">
+              {preAnalises.map((x, i) => (
+                <button key={x.nome} onClick={() => { setIdx(i); setPhase("run"); }} className={`w-full rounded-lg border p-3 text-left transition ${idx === i ? "border-primary/60 bg-primary/10" : "border-border hover:border-primary/40"}`}>
+                  <span className="block text-sm font-semibold">{x.nome}</span>
+                  <span className="mt-0.5 block font-mono text-[11px] text-muted-foreground">{x.nicho} • {x.regiao}</span>
+                </button>
+              ))}
+            </div>
+            <button onClick={() => setPhase("run")} className={`${btnPrimary} mt-5 w-full`}><Sparkles className="h-4 w-4" />Gerar Pré-Análise</button>
+            <p className="mt-3 text-center font-mono text-[11px] text-muted-foreground">1 empresa por vez • dados reais do perfil</p>
+          </div>
+          <div className="panel overflow-hidden">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-background px-5 py-3">
+              <span className="font-mono text-[11px] uppercase tracking-widest text-primary">Pré-análise individual • Nº {String(idx + 1).padStart(3, "0")}</span>
+              <span className="font-mono text-[11px] text-muted-foreground">white-label • {a.regiao}</span>
+            </div>
+            {phase === "run" ? (
+              <div className="grid min-h-[420px] place-items-center p-8 text-center">
+                <div>
+                  <Sparkles className="mx-auto h-8 w-8 animate-pulse text-primary" />
+                  <p className="mt-4 font-mono text-sm text-muted-foreground">Lendo o perfil de {a.nome} e cruzando com o GeoGrid…</p>
+                </div>
+              </div>
+            ) : (
+              <div className="p-6">
+                <div className="flex flex-wrap items-center gap-6">
+                  <div className={`grid h-24 w-24 shrink-0 place-items-center rounded-full border-4 ${scoreTone(a.score)}`}>
+                    <span className="font-mono text-2xl font-bold">{a.score}<span className="text-sm text-muted-foreground">/100</span></span>
+                  </div>
+                  <div>
+                    <h3 className="font-display text-xl font-extrabold">{a.nome}</h3>
+                    <p className="mt-1 font-mono text-xs text-muted-foreground">{a.nicho} • raio 5km</p>
+                    <p className="mt-2 text-sm">Posição no mapa: <span className="font-mono font-bold">#{a.pos}</span> • {a.km.toFixed(1)} km do centro</p>
+                  </div>
+                </div>
+                <ul className="mt-6 grid gap-2 sm:grid-cols-3">
+                  {a.falhas.map((f) => (
+                    <li key={f} className="flex items-start gap-2 rounded-lg border border-border bg-background p-3 text-sm"><X className="mt-0.5 h-4 w-4 shrink-0 text-danger" />{f}</li>
+                  ))}
+                </ul>
+                <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-lg border border-gold/40 p-5">
+                  <div>
+                    <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">Perda mensal estimada</p>
+                    <p className="mt-1 font-mono text-3xl font-bold text-gold">{brl(a.perda)}</p>
+                  </div>
+                  <p className="max-w-sm text-sm text-muted-foreground">O cliente não vê a sua promessa: ele vê o número dele. É esse número que abre a conversa.</p>
+                </div>
+                <div className="mt-6 rounded-lg border border-border bg-foreground p-5 text-background">
+                  <p className="font-mono text-[10px] uppercase tracking-widest opacity-70">Mensagem pronta para o WhatsApp</p>
+                  <p className="mt-3 text-sm leading-relaxed">{msg}</p>
+                </div>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <a href={wa(msg)} target="_blank" rel="noreferrer" className={btnPrimary}><MessageCircle className="h-4 w-4" />Enviar Pré-Análise</a>
+                  <a href="#planos" className={btnGhost}>Quero gerar as minhas</a>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function Flow() {
-  const s = [[Search, "Busque o Nicho"], [Zap, "Audite em 1 Clique"], [Send, "Envie o Relatório White-Label"], [Handshake, "Feche a Recorrência"]] as const;
+  const s = [[Search, "Busque o Nicho"], [ScanSearch, "Gere a Pré-Análise Individual"], [Send, "Envie no WhatsApp"], [Handshake, "Feche a Recorrência"]] as const;
   return (
     <section id="fluxo" className="border-y border-border bg-background-2 py-24">
       <div className="mx-auto max-w-7xl px-5">
@@ -343,7 +437,7 @@ function Plans() {
             <p className="mt-6 font-mono text-sm text-muted-foreground line-through">De R$ 1.164</p>
             <p className="font-mono text-4xl font-bold">R$ 497<span className="text-base text-muted-foreground">/ano</span></p>
             <p className="mt-1 font-mono text-sm text-primary">Apenas R$ 41,41/mês</p>
-            <ul className="my-6 space-y-2 text-sm">{["Extrator ilimitado", "Auditoria 22 itens", "GeoGrid 1–20km", "PDF white-label"].map((x) => <li key={x} className="flex gap-2"><Check className="h-4 w-4 text-primary" />{x}</li>)}</ul>
+            <ul className="my-6 space-y-2 text-sm">{["Pré-análises individuais", "Extrator ilimitado", "Auditoria 22 itens", "GeoGrid 1–20km", "PDF white-label"].map((x) => <li key={x} className="flex gap-2"><Check className="h-4 w-4 text-primary" />{x}</li>)}</ul>
             <a href={wa("Olá! Quero contratar o Plano Anual VIP (R$ 497/ano) do LeadMaps Pro.")} target="_blank" rel="noreferrer" className={`${btnPrimary} mt-auto`}>Quero o Anual VIP</a>
           </div>
         </div>
@@ -357,7 +451,9 @@ function Plans() {
 
 function Faq() {
   const q = [
-    ["Preciso saber programar?", "Não. Tudo funciona no navegador: você busca o nicho, clica em auditar e baixa o relatório."],
+    ["O que é a pré-análise individual?", "É o diagnóstico de uma única empresa, feito com o nome dela: posição no mapa, itens quebrados e a estimativa do que está perdendo por mês. Você envia antes da conversa e chega na reunião com a resposta na mão."],
+    ["A pré-análise é igual para todas as empresas?", "Não. Cada pré-análise é gerada a partir do perfil real daquela empresa no Google Maps, então os itens, a posição e o valor mudam de uma para outra."],
+    ["Preciso saber programar?", "Não. Tudo funciona no navegador: você busca o nicho, escolhe a empresa, gera a pré-análise e envia no WhatsApp."],
     ["O relatório sai com a minha marca?", "Sim. O PDF é 100% white-label, com logotipo e cores da sua agência."],
     ["O GeoGrid funciona em quais cidades?", "Em qualquer cidade do Brasil coberta pelo Google Maps, com raio configurável de 1km a 20km."],
     ["Como ativo minha chave?", "Após o pagamento você recebe a chave pelo WhatsApp e ativa em Login & Ativação. A liberação é imediata."],
@@ -383,11 +479,11 @@ function Index() {
     <div className="min-h-screen bg-background">
       <Header />
       <main>
-        <Hero /><Hub /><Pain /><Pillars /><Flow /><Roi /><Plans /><Faq />
+        <Hero /><Hub /><Pain /><Pillars /><PreAnalysis /><Flow /><Roi /><Plans /><Faq />
         <section className="mx-auto max-w-7xl px-5 pb-24">
           <div className="panel grid-bg border-primary/40 p-10 text-center shadow-glow md:p-16">
             <h2 className="text-3xl font-extrabold md:text-5xl">Seu próximo contrato está no mapa.</h2>
-            <p className="mx-auto mt-4 max-w-xl text-muted-foreground">Comece hoje e apresente seu primeiro diagnóstico ainda esta semana.</p>
+            <p className="mx-auto mt-4 max-w-xl text-muted-foreground">Comece hoje e envie sua primeira pré-análise individual ainda esta semana.</p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <a href="#planos" className={btnPrimary}>Começar Agora <ArrowRight className="h-4 w-4" /></a>
               <a href={wa("Olá Ricardo, tenho dúvidas sobre o LeadMaps Pro.")} target="_blank" rel="noreferrer" className={btnGhost}><Download className="h-4 w-4" />Falar com Ricardo</a>
