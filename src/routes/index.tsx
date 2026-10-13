@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
-  MapPin, ScanSearch, FileText, MessageCircle, LogIn, Chrome, Tags, BookOpen, ArrowRight,
-  Check, X, ShieldCheck, Zap, CreditCard, Search, Send, Handshake, Crosshair, Download, Crown,
+  MapPin, ScanSearch, FileText, MessageCircle, LogIn, Tags, BookOpen, ArrowRight,
+  Check, X, Zap, CreditCard, Search, Send, Handshake, Crosshair, Download,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -202,8 +202,7 @@ function Hub() {
   const cards = [
     { i: Crosshair, t: "Ferramenta Web Principal", d: "Painel completo: extração, auditoria e GeoGrid.", cta: "Abrir painel", href: "#top", big: true },
     { i: LogIn, t: "Login & Ativação de Chave", d: "Acesso exclusivo de assinantes.", cta: "Entrar", href: wa("Olá, preciso ativar minha chave LeadMaps Pro.") },
-    { i: Chrome, t: "Extensão do Google Chrome", d: "Download e guia de instalação.", cta: "Baixar", href: wa("Olá, quero o link da extensão Chrome do LeadMaps Pro.") },
-    { i: Tags, t: "Planos & Preços", d: "Compare Mensal, Anual e Vitalício.", cta: "Comparar", href: "#planos" },
+    { i: Tags, t: "Planos & Preços", d: "Compare Mensal e Anual.", cta: "Comparar", href: "#planos" },
     { i: MessageCircle, t: "Suporte VIP no WhatsApp", d: "Atendimento direto com Ricardo • 11 97055-8412", cta: "Chamar", href: wa("Olá Ricardo, preciso de suporte."), status: true },
     { i: BookOpen, t: "Metodologia de Fechamento", d: "Passo a passo comercial para fechar recorrência.", cta: "Ver passos", href: "#fluxo" },
   ];
@@ -325,7 +324,7 @@ function Roi() {
 }
 
 function Plans() {
-  const trust = [[CreditCard, "Pagamento Seguro • PIX e Cartão até 12x"], [Zap, "Liberação Imediata"], [ShieldCheck, "Garantia de 7 Dias"]] as const;
+  const trust = [[CreditCard, "Pagamento Seguro • PIX e Cartão até 12x"], [Zap, "Liberação Imediata"]] as const;
   return (
     <section id="planos" className="border-y border-border bg-background-2 py-24">
       <div className="mx-auto max-w-7xl px-5">
@@ -346,14 +345,6 @@ function Plans() {
             <p className="mt-1 font-mono text-sm text-primary">Apenas R$ 41,41/mês</p>
             <ul className="my-6 space-y-2 text-sm">{["Extrator ilimitado", "Auditoria 22 itens", "GeoGrid 1–20km", "PDF white-label"].map((x) => <li key={x} className="flex gap-2"><Check className="h-4 w-4 text-primary" />{x}</li>)}</ul>
             <a href={wa("Olá! Quero contratar o Plano Anual VIP (R$ 497/ano) do LeadMaps Pro.")} target="_blank" rel="noreferrer" className={`${btnPrimary} mt-auto`}>Quero o Anual VIP</a>
-          </div>
-          <div className="panel relative flex flex-col border-gold/60 p-8 shadow-gold">
-            <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gold px-3 py-1 font-mono text-[10px] font-bold text-gold-foreground">ATIVO DEFINITIVO</span>
-            <h3 className="flex items-center gap-2 text-lg font-bold"><Crown className="h-5 w-5 text-gold" />Vitalício Master</h3>
-            <p className="mt-1 text-sm text-muted-foreground">Acesso permanente, sem mensalidades.</p>
-            <p className="mt-6 font-mono text-4xl font-bold text-gold">R$ 997</p>
-            <p className="text-sm text-muted-foreground">taxa única</p>
-            <a href={wa("Olá! Quero contratar o Plano Vitalício Master (R$ 997) do LeadMaps Pro.")} target="_blank" rel="noreferrer" className="mt-auto inline-flex items-center justify-center rounded-lg border border-gold px-5 py-3 text-sm font-semibold text-gold transition hover:bg-gold hover:text-gold-foreground">Garantir Vitalício</a>
           </div>
         </div>
         <div className="mt-12 flex flex-wrap justify-center gap-6">
