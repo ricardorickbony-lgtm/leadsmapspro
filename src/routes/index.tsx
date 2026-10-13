@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
-  MapPin, ScanSearch, FileText, MessageCircle, LogIn, Chrome, Tags, BookOpen, ArrowRight,
-  Check, X, ShieldCheck, Zap, CreditCard, Search, Send, Handshake, Crosshair, Download, Crown,
+  MapPin, ScanSearch, FileText, MessageCircle, LogIn, Tags, BookOpen, ArrowRight,
+  Check, X, Zap, CreditCard, Search, Send, Handshake, Crosshair, Download,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -202,8 +202,7 @@ function Hub() {
   const cards = [
     { i: Crosshair, t: "Ferramenta Web Principal", d: "Painel completo: extração, auditoria e GeoGrid.", cta: "Abrir painel", href: "#top", big: true },
     { i: LogIn, t: "Login & Ativação de Chave", d: "Acesso exclusivo de assinantes.", cta: "Entrar", href: wa("Olá, preciso ativar minha chave LeadMaps Pro.") },
-    { i: Chrome, t: "Extensão do Google Chrome", d: "Download e guia de instalação.", cta: "Baixar", href: wa("Olá, quero o link da extensão Chrome do LeadMaps Pro.") },
-    { i: Tags, t: "Planos & Preços", d: "Compare Mensal, Anual e Vitalício.", cta: "Comparar", href: "#planos" },
+    { i: Tags, t: "Planos & Preços", d: "Compare Mensal e Anual.", cta: "Comparar", href: "#planos" },
     { i: MessageCircle, t: "Suporte VIP no WhatsApp", d: "Atendimento direto com Ricardo • 11 97055-8412", cta: "Chamar", href: wa("Olá Ricardo, preciso de suporte."), status: true },
     { i: BookOpen, t: "Metodologia de Fechamento", d: "Passo a passo comercial para fechar recorrência.", cta: "Ver passos", href: "#fluxo" },
   ];
@@ -325,12 +324,12 @@ function Roi() {
 }
 
 function Plans() {
-  const trust = [[CreditCard, "Pagamento Seguro • PIX e Cartão até 12x"], [Zap, "Liberação Imediata"], [ShieldCheck, "Garantia de 7 Dias"]] as const;
+  const trust = [[CreditCard, "Pagamento Seguro • PIX e Cartão até 12x"], [Zap, "Liberação Imediata"]] as const;
   return (
     <section id="planos" className="border-y border-border bg-background-2 py-24">
       <div className="mx-auto max-w-7xl px-5">
         <SectionTitle k="Planos" t="Escolha como começar." />
-        <div className="grid items-stretch gap-4 lg:grid-cols-3">
+        <div className="grid items-stretch gap-4 lg:grid-cols-2 lg:max-w-3xl mx-auto">
           <div className="panel flex flex-col p-8">
             <h3 className="text-lg font-bold">Mensal Pro</h3>
             <p className="mt-1 text-sm text-muted-foreground">Para começar rápido.</p>
@@ -347,14 +346,6 @@ function Plans() {
             <ul className="my-6 space-y-2 text-sm">{["Extrator ilimitado", "Auditoria 22 itens", "GeoGrid 1–20km", "PDF white-label"].map((x) => <li key={x} className="flex gap-2"><Check className="h-4 w-4 text-primary" />{x}</li>)}</ul>
             <a href={wa("Olá! Quero contratar o Plano Anual VIP (R$ 497/ano) do LeadMaps Pro.")} target="_blank" rel="noreferrer" className={`${btnPrimary} mt-auto`}>Quero o Anual VIP</a>
           </div>
-          <div className="panel relative flex flex-col border-gold/60 p-8 shadow-gold">
-            <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gold px-3 py-1 font-mono text-[10px] font-bold text-gold-foreground">ATIVO DEFINITIVO</span>
-            <h3 className="flex items-center gap-2 text-lg font-bold"><Crown className="h-5 w-5 text-gold" />Vitalício Master</h3>
-            <p className="mt-1 text-sm text-muted-foreground">Acesso permanente, sem mensalidades.</p>
-            <p className="mt-6 font-mono text-4xl font-bold text-gold">R$ 997</p>
-            <p className="text-sm text-muted-foreground">taxa única</p>
-            <a href={wa("Olá! Quero contratar o Plano Vitalício Master (R$ 997) do LeadMaps Pro.")} target="_blank" rel="noreferrer" className="mt-auto inline-flex items-center justify-center rounded-lg border border-gold px-5 py-3 text-sm font-semibold text-gold transition hover:bg-gold hover:text-gold-foreground">Garantir Vitalício</a>
-          </div>
         </div>
         <div className="mt-12 flex flex-wrap justify-center gap-6">
           {trust.map(([I, t]) => <span key={t} className="flex items-center gap-2 text-sm text-muted-foreground"><I className="h-4 w-4 text-primary" />{t}</span>)}
@@ -370,15 +361,10 @@ function Faq() {
     ["O relatório sai com a minha marca?", "Sim. O PDF é 100% white-label, com logotipo e cores da sua agência."],
     ["O GeoGrid funciona em quais cidades?", "Em qualquer cidade do Brasil coberta pelo Google Maps, com raio configurável de 1km a 20km."],
     ["Como ativo minha chave?", "Após o pagamento você recebe a chave pelo WhatsApp e ativa em Login & Ativação. A liberação é imediata."],
-    ["Posso cancelar?", "Sim. Você tem 7 dias de garantia incondicional e o plano mensal pode ser cancelado a qualquer momento."],
+    ["Posso cancelar?", "Sim. O plano mensal pode ser cancelado a qualquer momento."],
   ];
   return (
-    <section id="faq" className="mx-auto grid max-w-7xl gap-10 px-5 py-24 lg:grid-cols-2">
-      <div className="panel h-fit p-8">
-        <ShieldCheck className="h-12 w-12 text-primary" />
-        <h2 className="mt-6 text-3xl font-extrabold">Garantia Blindada de 7 Dias</h2>
-        <p className="mt-4 text-muted-foreground">Use a ferramenta por 7 dias. Se não fizer sentido para você, devolvemos 100% do valor. Sem perguntas, sem burocracia.</p>
-      </div>
+    <section id="faq" className="mx-auto max-w-3xl px-5 py-24">
       <div>
         <p className="font-mono text-xs uppercase tracking-widest text-primary">FAQ</p>
         <h2 className="mt-3 mb-6 text-3xl font-extrabold">Perguntas frequentes</h2>
