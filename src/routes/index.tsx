@@ -168,7 +168,7 @@ function Hero() {
       <div className="mx-auto grid max-w-7xl items-center gap-12 px-5 lg:grid-cols-2">
         <div>
           <span className="inline-block rounded-full border border-primary/30 bg-primary/10 px-3 py-1 font-mono text-[11px] text-primary">🚀 INTELIGÊNCIA COMERCIAL B2B • VERSÃO 2.6 ENTERPRISE</span>
-          <h1 className="mt-6 text-4xl font-extrabold leading-tight tracking-tight md:text-6xl">Transforme o Google Maps em <span className="text-emerald-grad">contratos de consultoria recorrentes.</span></h1>
+          <h1 className="mt-6 text-4xl font-extrabold leading-tight tracking-tight md:text-6xl">Transforme o Google Maps em <span className="text-gold-grad">contratos de consultoria recorrentes.</span></h1>
           <p className="mt-6 max-w-xl text-lg text-muted-foreground">Extraia empresas qualificadas, gere a <span className="font-semibold text-foreground">pré-análise individual</span> de cada uma e mostre ao cliente exatamente onde ele está perdendo vendas — com relatórios white-label prontos para fechar <span className="font-mono text-foreground">R$ 1.500 a R$ 5.000/mês</span>.</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <a href="#hub" className={btnPrimary}>Abrir a Ferramenta Agora <ArrowRight className="h-4 w-4" /></a>
@@ -352,7 +352,7 @@ function PreAnalysis() {
                   <p className="mt-3 text-sm leading-relaxed">{msg}</p>
                 </div>
                 <div className="mt-6 flex flex-wrap gap-3">
-                  <a href={wa(msg)} target="_blank" rel="noreferrer" className={btnPrimary}><MessageCircle className="h-4 w-4" />Enviar Pré-Análise</a>
+                  <a href={wa(msg)} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-lg bg-whats px-5 py-3 text-sm font-semibold text-whats-foreground transition hover:brightness-110"><MessageCircle className="h-4 w-4" />Enviar Pré-Análise</a>
                   <a href="#planos" className={btnGhost}>Quero gerar as minhas</a>
                 </div>
               </div>
