@@ -272,7 +272,7 @@ function Pillars() {
 }
 
 function Flow() {
-  const s = [[Search, "Busque o Nicho"], [Zap, "Audite em 1 Clique"], [Send, "Envie o Relatório White-Label"], [Handshake, "Feche a Recorrência"]] as const;
+  const s = [[Search, "Busque o Nicho"], [ScanSearch, "Gere a Pré-Análise Individual"], [Send, "Envie no WhatsApp"], [Handshake, "Feche a Recorrência"]] as const;
   return (
     <section id="fluxo" className="border-y border-border bg-background-2 py-24">
       <div className="mx-auto max-w-7xl px-5">
@@ -344,7 +344,7 @@ function Plans() {
             <p className="mt-6 font-mono text-sm text-muted-foreground line-through">De R$ 1.164</p>
             <p className="font-mono text-4xl font-bold">R$ 497<span className="text-base text-muted-foreground">/ano</span></p>
             <p className="mt-1 font-mono text-sm text-primary">Apenas R$ 41,41/mês</p>
-            <ul className="my-6 space-y-2 text-sm">{["Extrator ilimitado", "Auditoria 22 itens", "GeoGrid 1–20km", "PDF white-label"].map((x) => <li key={x} className="flex gap-2"><Check className="h-4 w-4 text-primary" />{x}</li>)}</ul>
+            <ul className="my-6 space-y-2 text-sm">{["Pré-análises individuais", "Extrator ilimitado", "Auditoria 22 itens", "GeoGrid 1–20km", "PDF white-label"].map((x) => <li key={x} className="flex gap-2"><Check className="h-4 w-4 text-primary" />{x}</li>)}</ul>
             <a href={wa("Olá! Quero contratar o Plano Anual VIP (R$ 497/ano) do LeadMaps Pro.")} target="_blank" rel="noreferrer" className={`${btnPrimary} mt-auto`}>Quero o Anual VIP</a>
           </div>
         </div>
@@ -358,7 +358,9 @@ function Plans() {
 
 function Faq() {
   const q = [
-    ["Preciso saber programar?", "Não. Tudo funciona no navegador: você busca o nicho, clica em auditar e baixa o relatório."],
+    ["O que é a pré-análise individual?", "É o diagnóstico de uma única empresa, feito com o nome dela: posição no mapa, itens quebrados e a estimativa do que está perdendo por mês. Você envia antes da conversa e chega na reunião com a resposta na mão."],
+    ["A pré-análise é igual para todas as empresas?", "Não. Cada pré-análise é gerada a partir do perfil real daquela empresa no Google Maps, então os itens, a posição e o valor mudam de uma para outra."],
+    ["Preciso saber programar?", "Não. Tudo funciona no navegador: você busca o nicho, escolhe a empresa, gera a pré-análise e envia no WhatsApp."],
     ["O relatório sai com a minha marca?", "Sim. O PDF é 100% white-label, com logotipo e cores da sua agência."],
     ["O GeoGrid funciona em quais cidades?", "Em qualquer cidade do Brasil coberta pelo Google Maps, com raio configurável de 1km a 20km."],
     ["Como ativo minha chave?", "Após o pagamento você recebe a chave pelo WhatsApp e ativa em Login & Ativação. A liberação é imediata."],
@@ -384,11 +386,11 @@ function Index() {
     <div className="min-h-screen bg-background">
       <Header />
       <main>
-        <Hero /><Hub /><Pain /><Pillars /><Flow /><Roi /><Plans /><Faq />
+        <Hero /><Hub /><Pain /><Pillars /><PreAnalysis /><Flow /><Roi /><Plans /><Faq />
         <section className="mx-auto max-w-7xl px-5 pb-24">
           <div className="panel grid-bg border-primary/40 p-10 text-center shadow-glow md:p-16">
             <h2 className="text-3xl font-extrabold md:text-5xl">Seu próximo contrato está no mapa.</h2>
-            <p className="mx-auto mt-4 max-w-xl text-muted-foreground">Comece hoje e apresente seu primeiro diagnóstico ainda esta semana.</p>
+            <p className="mx-auto mt-4 max-w-xl text-muted-foreground">Comece hoje e envie sua primeira pré-análise individual ainda esta semana.</p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <a href="#planos" className={btnPrimary}>Começar Agora <ArrowRight className="h-4 w-4" /></a>
               <a href={wa("Olá Ricardo, tenho dúvidas sobre o LeadMaps Pro.")} target="_blank" rel="noreferrer" className={btnGhost}><Download className="h-4 w-4" />Falar com Ricardo</a>
