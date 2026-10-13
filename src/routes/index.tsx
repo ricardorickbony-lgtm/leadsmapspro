@@ -329,7 +329,7 @@ function Plans() {
     <section id="planos" className="border-y border-border bg-background-2 py-24">
       <div className="mx-auto max-w-7xl px-5">
         <SectionTitle k="Planos" t="Escolha como começar." />
-        <div className="grid items-stretch gap-4 lg:grid-cols-3">
+        <div className="grid items-stretch gap-4 lg:grid-cols-2 lg:max-w-3xl mx-auto">
           <div className="panel flex flex-col p-8">
             <h3 className="text-lg font-bold">Mensal Pro</h3>
             <p className="mt-1 text-sm text-muted-foreground">Para começar rápido.</p>
@@ -361,7 +361,7 @@ function Faq() {
     ["O relatório sai com a minha marca?", "Sim. O PDF é 100% white-label, com logotipo e cores da sua agência."],
     ["O GeoGrid funciona em quais cidades?", "Em qualquer cidade do Brasil coberta pelo Google Maps, com raio configurável de 1km a 20km."],
     ["Como ativo minha chave?", "Após o pagamento você recebe a chave pelo WhatsApp e ativa em Login & Ativação. A liberação é imediata."],
-    ["Posso cancelar?", "Sim. Você tem 7 dias de garantia incondicional e o plano mensal pode ser cancelado a qualquer momento."],
+    ["Posso cancelar?", "Sim. O plano mensal pode ser cancelado a qualquer momento."],
   ];
   return (
     <section id="faq" className="mx-auto grid max-w-7xl gap-10 px-5 py-24 lg:grid-cols-2">
