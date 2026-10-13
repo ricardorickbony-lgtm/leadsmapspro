@@ -1,0 +1,1949 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LeadMaps Pro — Varredura & Diagnóstico de Leads Locais</title>
+  <meta name="description" content="Encontre negócios locais sem site, sem tour 360° e sem CRM. Diagnóstico completo, raio-x de concorrentes e pitch de WhatsApp gerado por IA.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="min-h-screen bg-[var(--background)] text-[var(--foreground)] selection:bg-[var(--primary)] selection:text-[var(--primary-foreground)]">
+
+  <!-- Header Sticky -->
+  <header class="sticky top-0 z-40 border-b border-[var(--border)] bg-[color-mix(in_oklab,var(--background)_85%,transparent)] backdrop-blur-xl">
+    <div class="mx-auto flex max-w-[1400px] flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
+      
+      <!-- Logo & Branding -->
+      <div class="flex items-center gap-3">
+        <div class="relative flex h-10 w-10 items-center justify-center rounded-xl bg-[color-mix(in_oklab,var(--primary)_18%,transparent)]">
+          <span class="text-xl">🎯</span>
+          <span class="animate-pulse-ring absolute inset-0 rounded-xl border border-[var(--primary)]"></span>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-extrabold tracking-tight">
+              LeadMaps <span class="text-[var(--amber-glow)]">PRO</span>
+            </h1>
+            <span class="badge-pill badge-amber">v2.6 Enterprise</span>
+          </div>
+          <p class="text-[11px] text-[var(--muted-foreground)]">Prospecção local inteligente</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs: Extrator Maps vs Análise de Ranking vs Google Business CRM vs Master Admin -->
+      <div class="flex flex-wrap items-center gap-1 rounded-xl bg-slate-900/90 p-1 border border-slate-800">
+        <button id="tabNavExtrator" class="tab-nav-btn active flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-950 bg-[var(--primary)] cursor-pointer">
+          🔍 Extrator Google Maps
+        </button>
+        <button id="tabNavRanking" class="tab-nav-btn flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-emerald-300 hover:text-white cursor-pointer">
+          🎯 Análise de Ranking <span class="rounded-full bg-emerald-500/20 px-1.5 py-0.2 font-mono text-[10px] text-emerald-400">GeoGrid</span>
+        </button>
+        <button id="tabNavCrm" class="tab-nav-btn flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-300 hover:text-white cursor-pointer">
+          📊 Google Business CRM <span id="crmTotalBadge" class="rounded-full bg-amber-500/20 px-1.5 py-0.2 font-mono text-[10px] text-amber-400">0</span>
+        </button>
+        <button id="tabNavAdmin" class="tab-nav-btn flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-amber-300 hover:text-white cursor-pointer">
+          👑 Admin Assinantes <span id="adminActiveSubBadge" class="rounded-full bg-emerald-500/20 px-1.5 py-0.2 font-mono text-[10px] text-emerald-400">4</span>
+        </button>
+      </div>
+
+      <!-- Actions & Credits -->
+      <div class="ml-auto flex flex-wrap items-center gap-2">
+        <div class="glass-card flex items-center gap-2 px-3 py-1.5">
+          <span class="h-2 w-2 rounded-full bg-[var(--emerald-signal)]"></span>
+          <span id="headerSessionUserBadge" class="text-xs font-semibold">👑 Ricardo (Master)</span>
+          <span class="font-mono text-xs text-[var(--amber-glow)]">5.000 créditos</span>
+        </div>
+        <button id="btnExportCSV" class="btn-ghost-dark px-3 py-2 text-xs font-semibold cursor-pointer">⬇ Exportar CSV/Excel</button>
+        <button id="btnWhiteLabelReport" class="btn-amber px-3.5 py-2 text-xs font-extrabold cursor-pointer flex items-center gap-1.5 shadow-md hover:scale-105 transition-all"><span>📄</span> <span>Gerar Relatórios em PDF</span></button>
+        <button id="btnOpenWhatsAppAutomation" class="btn-ghost-dark px-3 py-2 text-xs font-bold text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/10 cursor-pointer" title="Configurar mensagens de abordagem e gerenciar fila de disparos">💬 Automação WhatsApp</button>
+        <button id="btnOpenSettings" class="btn-ghost-dark px-3 py-2 text-xs font-semibold cursor-pointer" aria-label="Configurações">⚙️ Configurações</button>
+        <button id="btnLogoutSession" class="btn-ghost-dark px-3 py-2 text-xs font-bold text-rose-400 border border-rose-500/30 hover:bg-rose-500/10 cursor-pointer" title="Ver Tela de Login / Trocar de Conta">🔐 Tela Login</button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="mx-auto max-w-[1400px] space-y-6 px-4 py-6 sm:px-6">
+
+    <!-- VIEW 1: Extrator Google Maps -->
+    <div id="viewExtrator" class="space-y-6">
+
+    <!-- Section: Search & Filters -->
+    <section class="glass-card p-5">
+
+      <!-- Alternador de Modos de Busca: Varredura em Massa vs Pré-Análise Avulsa -->
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-1.5 p-1 rounded-xl bg-slate-900/90 border border-slate-800">
+          <button id="btnSearchModeBatch" type="button" class="search-mode-btn active px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-[var(--primary)] text-slate-950">
+            🎯 Varredura por Nicho & Região
+          </button>
+          <button id="btnSearchModeSingle" type="button" class="search-mode-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-300 hover:text-white">
+            🔍 Pré-Análise de Empresa Específica (Busca Avulsa / Link)
+          </button>
+        </div>
+        <span class="text-[11px] font-mono text-[var(--muted-foreground)]">
+          ⚡ Motor Google Maps Serper API Conectado
+        </span>
+      </div>
+
+      <!-- Container Modo 1: Varredura por Nicho & Cidade -->
+      <div id="containerModeBatch">
+        <div class="flex flex-wrap items-end gap-3">
+          <div class="min-w-[220px] flex-1">
+            <label class="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Nicho / Categoria</label>
+            <input id="nicheInput" list="nichos" placeholder="Ex: Clínica de Fisioterapia, Dentistas..." style="background-color: #131c2e !important; color: #ffffff !important;" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2.5 text-sm outline-none transition-colors focus:border-amber-400 text-white" value="Clínica de Fisioterapia">
+            <datalist id="nichos">
+              <option value="Clínica de Fisioterapia"></option>
+              <option value="Clínicas Odontológicas"></option>
+              <option value="Restaurantes"></option>
+              <option value="Academias"></option>
+              <option value="Clínicas de Estética"></option>
+              <option value="Pet Shops"></option>
+              <option value="Imobiliárias"></option>
+              <option value="Pizzarias"></option>
+              <option value="Oficinas Mecânicas"></option>
+              <option value="Barbearias & Salões"></option>
+              <option value="Escritórios de Advocacia"></option>
+            </datalist>
+          </div>
+
+          <div class="min-w-[200px] flex-1">
+            <label class="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Cidade / Região</label>
+            <input id="cityInput" list="cidades" placeholder="Ex: Santo André - SP, Campinas - SP" style="background-color: #131c2e !important; color: #ffffff !important;" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2.5 text-sm outline-none transition-colors focus:border-amber-400 text-white" value="Santo André - SP">
+            <datalist id="cidades">
+              <option value="Santo André - SP"></option>
+              <option value="São Bernardo do Campo - SP"></option>
+              <option value="São Caetano do Sul - SP"></option>
+              <option value="Campinas - SP"></option>
+              <option value="São Paulo - SP"></option>
+              <option value="Ribeirão Preto - SP"></option>
+              <option value="Sorocaba - SP"></option>
+              <option value="Santos - SP"></option>
+              <option value="Curitiba - PR"></option>
+              <option value="Belo Horizonte - MG"></option>
+            </datalist>
+          </div>
+
+          <div class="w-36">
+            <label class="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Qtd. Leads</label>
+            <select id="leadCountSelect" style="background-color: #131c2e !important; color: #ffffff !important;" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-2.5 text-sm outline-none focus:border-amber-400 text-white font-semibold cursor-pointer">
+              <option value="15">15 leads</option>
+              <option value="20">20 leads</option>
+              <option value="35" selected>35 leads (Padrão)</option>
+              <option value="50">50 leads (Expansivo)</option>
+              <option value="100">100 leads (Turbo)</option>
+            </select>
+          </div>
+
+          <button id="btnStartScraping" class="btn-amber flex items-center gap-2 px-5 py-2.5 text-sm whitespace-nowrap cursor-pointer">
+            <span id="btnIcon">📡</span> <span id="btnLabel">Iniciar Varredura & Diagnóstico</span>
+          </button>
+        </div>
+
+        <!-- Atalhos Rápidos de Nichos e Cidades -->
+        <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Sugestões Rápidas:</span>
+          <button type="button" class="quick-preset-niche rounded-md border border-[var(--border)] bg-[var(--secondary)]/40 px-2.5 py-1 text-[11px] text-slate-300 transition-colors hover:border-[var(--primary)] hover:text-white cursor-pointer" data-value="Clínica de Fisioterapia">🩺 Fisioterapia</button>
+          <button type="button" class="quick-preset-niche rounded-md border border-[var(--border)] bg-[var(--secondary)]/40 px-2.5 py-1 text-[11px] text-slate-300 transition-colors hover:border-[var(--primary)] hover:text-white cursor-pointer" data-value="Clínicas Odontológicas">🦷 Odontologia</button>
+          <button type="button" class="quick-preset-niche rounded-md border border-[var(--border)] bg-[var(--secondary)]/40 px-2.5 py-1 text-[11px] text-slate-300 transition-colors hover:border-[var(--primary)] hover:text-white cursor-pointer" data-value="Pizzarias">🍕 Pizzarias</button>
+          <button type="button" class="quick-preset-niche rounded-md border border-[var(--border)] bg-[var(--secondary)]/40 px-2.5 py-1 text-[11px] text-slate-300 transition-colors hover:border-[var(--primary)] hover:text-white cursor-pointer" data-value="Academias">🏋️ Academias</button>
+          <span class="text-slate-600">|</span>
+          <button type="button" class="quick-preset-city rounded-md border border-[var(--border)] bg-[var(--secondary)]/40 px-2.5 py-1 text-[11px] text-slate-300 transition-colors hover:border-[var(--primary)] hover:text-white cursor-pointer" data-value="Santo André - SP">📍 Santo André</button>
+          <button type="button" class="quick-preset-city rounded-md border border-[var(--border)] bg-[var(--secondary)]/40 px-2.5 py-1 text-[11px] text-slate-300 transition-colors hover:border-[var(--primary)] hover:text-white cursor-pointer" data-value="São Paulo - SP">📍 São Paulo</button>
+          <button type="button" class="quick-preset-city rounded-md border border-[var(--border)] bg-[var(--secondary)]/40 px-2.5 py-1 text-[11px] text-slate-300 transition-colors hover:border-[var(--primary)] hover:text-white cursor-pointer" data-value="Campinas - SP">📍 Campinas</button>
+        </div>
+      </div>
+
+      <!-- Container Modo 2: Pré-Análise Avulsa de Empresa Específica -->
+      <div id="containerModeSingle" class="hidden space-y-3">
+        <div class="flex flex-wrap items-end gap-3">
+          <div class="flex-1 min-w-[280px]">
+            <label class="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-amber-400">
+              🏢 Nome da Empresa ou Link do Google Maps
+            </label>
+            <input id="singleSearchInput" placeholder="Ex: Gil Car Multimarcas, Auto Shopping Global, ou cole o link do Google Maps..." style="background-color: #131c2e !important; color: #ffffff !important;" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-amber-400 text-white">
+          </div>
+          <div class="w-full sm:w-64">
+            <label class="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">
+              📍 Cidade / Região (Opcional)
+            </label>
+            <input id="singleCityInput" placeholder="Ex: Santo André - SP" value="Santo André - SP" style="background-color: #131c2e !important; color: #ffffff !important;" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2.5 text-sm outline-none transition-colors focus:border-amber-400 text-white">
+          </div>
+          <button id="btnStartSingleAudit" type="button" class="btn-amber flex items-center gap-2 px-5 py-2.5 text-sm whitespace-nowrap cursor-pointer">
+            <span>⚡</span> <span>Executar Pré-Análise & SEO</span>
+          </button>
+        </div>
+        <div class="flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
+          <span>💡 <strong>Dica de Prospecção:</strong> Audite qualquer empresa antes de entrar em contato. Descubra falhas de SEO, notas sem resposta e gere o relatório oficial instantaneamente!</span>
+        </div>
+      </div>
+
+      <!-- Barra de Progresso durante Varredura -->
+      <div id="progressContainer" class="mt-4 hidden">
+        <div class="h-1.5 overflow-hidden rounded-full bg-[var(--secondary)]">
+          <div id="progressBar" class="h-full rounded-full bg-gradient-to-r from-[var(--primary)] to-[var(--amber-glow)] transition-all duration-150" style="width: 0%"></div>
+        </div>
+        <p id="progressText" class="mt-2 font-mono text-[11px] text-[var(--muted-foreground)]">
+          Varrendo Google Maps → detectando sites, pixels, tours 360° e CRMs...
+        </p>
+      </div>
+
+      <!-- Filtros em Pílulas -->
+      <div class="mt-4 flex flex-wrap gap-2">
+        <button data-filter="todos" class="filter-btn rounded-full border px-3 py-1.5 text-xs font-semibold transition-all border-[var(--primary)] bg-[color-mix(in_oklab,var(--primary)_18%,transparent)] text-[var(--amber-glow)]">
+          Todos <span id="countTodos" class="ml-1.5 font-mono">12</span>
+        </button>
+        <button data-filter="semSite" class="filter-btn rounded-full border px-3 py-1.5 text-xs font-semibold transition-all border-[var(--border)] bg-[var(--secondary)]/50 text-[var(--muted-foreground)] hover:border-[var(--primary)]/50 hover:text-white">
+          🚨 Sem Site <span id="countSemSite" class="ml-1.5 font-mono">6</span>
+        </button>
+        <button data-filter="sem360" class="filter-btn rounded-full border px-3 py-1.5 text-xs font-semibold transition-all border-[var(--border)] bg-[var(--secondary)]/50 text-[var(--muted-foreground)] hover:border-[var(--primary)]/50 hover:text-white">
+          📷 Sem Tour 360° <span id="countSem360" class="ml-1.5 font-mono">9</span>
+        </button>
+        <button data-filter="semCRM" class="filter-btn rounded-full border px-3 py-1.5 text-xs font-semibold transition-all border-[var(--border)] bg-[var(--secondary)]/50 text-[var(--muted-foreground)] hover:border-[var(--primary)]/50 hover:text-white">
+          ⚙️ Sem CRM (Manual) <span id="countSemCRM" class="ml-1.5 font-mono">5</span>
+        </button>
+        <button data-filter="trafego" class="filter-btn rounded-full border px-3 py-1.5 text-xs font-semibold transition-all border-[var(--border)] bg-[var(--secondary)]/50 text-[var(--muted-foreground)] hover:border-[var(--primary)]/50 hover:text-white">
+          🔥 Investe em Anúncios (Pixel Ativo) <span id="countTrafego" class="ml-1.5 font-mono">5</span>
+        </button>
+        <button data-filter="critico" class="filter-btn rounded-full border px-3 py-1.5 text-xs font-semibold transition-all border-[var(--border)] bg-[var(--secondary)]/50 text-[var(--muted-foreground)] hover:border-[var(--primary)]/50 hover:text-white">
+          ⚠️ Score Crítico (&lt;50) <span id="countCritico" class="ml-1.5 font-mono">7</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Section: 6 KPI Cards Grid -->
+    <section class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <div class="glass-card p-4 transition-transform hover:-translate-y-0.5">
+        <div class="flex items-center justify-between">
+          <span class="text-lg">🎯</span>
+          <span id="kpiTotal" class="font-mono text-2xl font-extrabold text-[var(--foreground)]">12</span>
+        </div>
+        <p class="mt-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Total Capturado</p>
+      </div>
+
+      <div class="glass-card p-4 transition-transform hover:-translate-y-0.5">
+        <div class="flex items-center justify-between">
+          <span class="text-lg">🚨</span>
+          <span id="kpiNoSite" class="font-mono text-2xl font-extrabold text-[var(--rose-signal)]">6</span>
+        </div>
+        <p class="mt-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Sem Site</p>
+      </div>
+
+      <div class="glass-card p-4 transition-transform hover:-translate-y-0.5">
+        <div class="flex items-center justify-between">
+          <span class="text-lg">📷</span>
+          <span id="kpiNo360" class="font-mono text-2xl font-extrabold text-[var(--amber-glow)]">9</span>
+        </div>
+        <p class="mt-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Sem Fotos 360°</p>
+      </div>
+
+      <div class="glass-card p-4 transition-transform hover:-translate-y-0.5">
+        <div class="flex items-center justify-between">
+          <span class="text-lg">⚙️</span>
+          <span id="kpiNoCRM" class="font-mono text-2xl font-extrabold text-[var(--rose-signal)]">5</span>
+        </div>
+        <p class="mt-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Sem CRM / Manual</p>
+      </div>
+
+      <div class="glass-card p-4 transition-transform hover:-translate-y-0.5">
+        <div class="flex items-center justify-between">
+          <span class="text-lg">🔥</span>
+          <span id="kpiHasPixel" class="font-mono text-2xl font-extrabold text-[var(--emerald-signal)]">5</span>
+        </div>
+        <p class="mt-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Fazem Tráfego Pago</p>
+      </div>
+
+      <div class="glass-card p-4 transition-transform hover:-translate-y-0.5">
+        <div class="flex items-center justify-between">
+          <span class="text-lg">📤</span>
+          <span id="kpiSent" class="font-mono text-2xl font-extrabold text-[var(--foreground)]">37</span>
+        </div>
+        <p class="mt-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Disparos Realizados</p>
+      </div>
+    </section>
+
+    <!-- Section: Leads Table -->
+    <section class="glass-card overflow-hidden">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] px-5 py-4">
+        <div>
+          <h2 class="text-sm font-extrabold uppercase tracking-wider">Leads & Oportunidades</h2>
+          <p id="tableSummaryText" class="text-xs text-[var(--muted-foreground)]">12 de 12 leads · Clínicas Odontológicas em Campinas - SP</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="btnAddSelectedToCRM" class="hidden btn-ghost-dark px-3 py-2 text-xs font-bold text-amber-400 border-amber-500/30 hover:bg-amber-500/10">
+            📌 + CRM (<span id="crmSelectedCount">0</span>)
+          </button>
+          <button id="btnAddAllToCRM" class="btn-ghost-dark px-3 py-2 text-xs font-bold text-amber-400 border-amber-500/30 hover:bg-amber-500/10 cursor-pointer">
+            ⚡ Adicionar Todos ao CRM
+          </button>
+          <button id="btnHeaderOpenPdfHub" type="button" class="btn-amber px-3.5 py-2 text-xs font-extrabold flex items-center gap-1.5 shadow-md hover:scale-105 transition-all cursor-pointer" title="Gerar e Baixar Relatório Oficial em PDF do primeiro lead ou do lead ativo">
+            <span>📄</span> <span>Gerar PDF do Lead</span>
+          </button>
+          <button id="btnBulkWhatsApp" class="hidden btn-amber px-4 py-2 text-xs">
+            📤 Disparar WhatsApp (<span id="selectedCount">0</span> selecionados)
+          </button>
+        </div>
+      </div>
+
+      <div class="scrollbar-dark overflow-x-auto">
+        <table class="w-full min-w-[1080px] text-left text-sm">
+          <thead>
+            <tr class="border-b border-[var(--border)] text-[11px] uppercase tracking-wider text-[var(--muted-foreground)]">
+              <th class="px-4 py-3"><input type="checkbox" id="selectAllCheckbox" class="h-4 w-4 accent-[var(--primary)]"></th>
+              <th class="px-4 py-3">Empresa & Telefone</th>
+              <th class="px-4 py-3">Presença Web</th>
+              <th class="px-4 py-3">Fotos 360°</th>
+              <th class="px-4 py-3">Tech Stack</th>
+              <th class="px-4 py-3">Score Local</th>
+              <th class="px-4 py-3">Motivo do Contato</th>
+              <th class="px-4 py-3 text-right">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="leadsTableBody">
+            <!-- Dynamic rows injected by js/app.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    </div> <!-- End VIEW 1: viewExtrator -->
+
+    <!-- VIEW 2: Google Business CRM -->
+    <div id="viewCRM" class="hidden space-y-6">
+      
+      <!-- CRM Header & Funnel KPIs -->
+      <section class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div class="glass-card p-4">
+          <div class="flex items-center justify-between">
+            <span class="text-xl">👥</span>
+            <span id="crmKpiTotal" class="font-mono text-2xl font-extrabold text-white">0</span>
+          </div>
+          <p class="mt-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Total no Funil</p>
+        </div>
+
+        <div class="glass-card p-4">
+          <div class="flex items-center justify-between">
+            <span class="text-xl">💼</span>
+            <span id="crmKpiPipelineValue" class="font-mono text-xl font-extrabold text-[var(--amber-glow)]">R$ 0</span>
+          </div>
+          <p class="mt-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Pipeline em Aberto</p>
+        </div>
+
+        <div class="glass-card p-4">
+          <div class="flex items-center justify-between">
+            <span class="text-xl">🚨</span>
+            <span id="crmKpiNoSite" class="font-mono text-2xl font-extrabold text-[var(--rose-signal)]">0</span>
+          </div>
+          <p class="mt-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Sem Site (Alta Chance)</p>
+        </div>
+
+        <div class="glass-card p-4">
+          <div class="flex items-center justify-between">
+            <span class="text-xl">🏆</span>
+            <span id="crmKpiWonValue" class="font-mono text-xl font-extrabold text-[var(--emerald-signal)]">R$ 0</span>
+          </div>
+          <p class="mt-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Contratos Fechados</p>
+        </div>
+      </section>
+
+      <!-- CRM Toolbar -->
+      <section class="glass-card p-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-2 flex-1 min-w-[280px]">
+          <div class="relative flex-1 min-w-[220px]">
+            <input id="crmSearchInput" placeholder="Buscar no CRM por empresa, telefone ou nota..." class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs outline-none focus:border-amber-400 text-white">
+          </div>
+          <select id="crmFilterService" class="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs outline-none text-white">
+            <option value="todos">Todos os Serviços</option>
+            <option value="Site de Alta Conversão">Criação de Site</option>
+            <option value="Tour Virtual 360°">Tour Virtual 360°</option>
+            <option value="Otimização Google Perfil">Otimização Perfil Google</option>
+            <option value="Pacote Completo Presença 360°">Pacote Completo Presença 360°</option>
+          </select>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <button id="btnCrmNewLead" class="btn-amber px-3.5 py-2 text-xs font-bold flex items-center gap-1.5">
+            + Novo Lead Manual
+          </button>
+          <button id="btnCrmImportCurrent" class="btn-ghost-dark px-3 py-2 text-xs font-semibold flex items-center gap-1.5 text-amber-400 border-amber-500/30">
+            📥 Importar da Varredura (<span id="crmImportCount">0</span>)
+          </button>
+          <button id="btnCrmExportCSV" class="btn-ghost-dark px-3 py-2 text-xs font-semibold flex items-center gap-1.5">
+            ⬇ Exportar CRM
+          </button>
+          <button id="btnCrmClear" class="btn-ghost-dark px-2.5 py-2 text-xs font-semibold text-rose-400 hover:border-rose-500/40" title="Limpar Funil CRM">
+            🗑️
+          </button>
+        </div>
+      </section>
+
+      <!-- Kanban Board (5 Colunas) -->
+      <section class="kanban-board">
+        <!-- Coluna 1: Novos Leads -->
+        <div class="kanban-column col-novo" data-stage="novo">
+          <div class="kanban-column-header">
+            <div class="flex items-center gap-2">
+              <span class="h-2.5 w-2.5 rounded-full bg-sky-400"></span>
+              <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-200">1. Novos Leads</h3>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="crm-col-count font-mono text-xs font-bold text-sky-400 bg-sky-500/10 border border-sky-500/20 px-2 py-0.5 rounded-full" id="countColNovo">0</span>
+            </div>
+          </div>
+          <div class="kanban-cards-container" id="kanbanCardsNovo">
+            <!-- Cards injetados via JS -->
+          </div>
+        </div>
+
+        <!-- Coluna 2: Contatados no WhatsApp -->
+        <div class="kanban-column col-contatado" data-stage="contatado">
+          <div class="kanban-column-header">
+            <div class="flex items-center gap-2">
+              <span class="h-2.5 w-2.5 rounded-full bg-purple-400"></span>
+              <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-200">2. Contatados</h3>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="crm-col-count font-mono text-xs font-bold text-purple-400 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-full" id="countColContatado">0</span>
+            </div>
+          </div>
+          <div class="kanban-cards-container" id="kanbanCardsContatado">
+            <!-- Cards injetados via JS -->
+          </div>
+        </div>
+
+        <!-- Coluna 3: Em Negociação -->
+        <div class="kanban-column col-negociacao" data-stage="negociacao">
+          <div class="kanban-column-header">
+            <div class="flex items-center gap-2">
+              <span class="h-2.5 w-2.5 rounded-full bg-amber-400"></span>
+              <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-200">3. Em Negociação</h3>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="crm-col-count font-mono text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full" id="countColNegociacao">0</span>
+            </div>
+          </div>
+          <div class="kanban-cards-container" id="kanbanCardsNegociacao">
+            <!-- Cards injetados via JS -->
+          </div>
+        </div>
+
+        <!-- Coluna 4: Proposta Enviada -->
+        <div class="kanban-column col-proposta" data-stage="proposta">
+          <div class="kanban-column-header">
+            <div class="flex items-center gap-2">
+              <span class="h-2.5 w-2.5 rounded-full bg-cyan-400"></span>
+              <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-200">4. Proposta Enviada</h3>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="crm-col-count font-mono text-xs font-bold text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded-full" id="countColProposta">0</span>
+            </div>
+          </div>
+          <div class="kanban-cards-container" id="kanbanCardsProposta">
+            <!-- Cards injetados via JS -->
+          </div>
+        </div>
+
+        <!-- Coluna 5: Contrato Fechado -->
+        <div class="kanban-column col-fechado" data-stage="fechado">
+          <div class="kanban-column-header">
+            <div class="flex items-center gap-2">
+              <span class="h-2.5 w-2.5 rounded-full bg-emerald-400"></span>
+              <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-200">5. Fechado / Ganho</h3>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="crm-col-count font-mono text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full" id="countColFechado">0</span>
+            </div>
+          </div>
+          <div class="kanban-cards-container" id="kanbanCardsFechado">
+            <!-- Cards injetados via JS -->
+          </div>
+        </div>
+      </section>
+
+    </div> <!-- End VIEW 2: viewCRM -->
+
+    <!-- VIEW 3: Painel Master Admin — Gestão de Assinantes & Pagamentos Automáticos -->
+    <div id="viewAdmin" class="hidden space-y-6">
+
+      <!-- Cabeçalho Master Admin -->
+      <section class="glass-card p-6 border border-amber-500/30">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/20 border border-amber-500/40 text-2xl">
+              👑
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-xl font-extrabold text-white">Painel Master Admin — Gestão de Assinantes & Licenças</h2>
+                <span class="badge-pill badge-amber">Acesso Exclusivo Dono</span>
+              </div>
+              <p class="text-xs text-[var(--muted-foreground)]">Gerencie gestores assinantes, libere ou bloqueie acessos em 1 clique e configure pagamentos automáticos via PIX / Checkout</p>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button id="btnSimulateAutoPayment" type="button" class="btn-ghost-dark px-3.5 py-2 text-xs font-bold text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/10 cursor-pointer" title="Simula um pagamento aprovado na Kiwify/Asaas/PIX criando e liberando o cliente sozinho">
+              ⚡ Simular Pagamento PIX Aprovado (Auto-Liberação)
+            </button>
+            <button id="btnOpenLoginPreview" type="button" class="btn-amber px-4 py-2 text-xs font-bold cursor-pointer">
+              🔐 Visualizar Tela de Login do Cliente
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 KPIs Financeiros e de Assinaturas -->
+        <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-4">
+            <div class="flex items-center justify-between text-xs text-emerald-300 font-bold">
+              <span>Assinantes Ativos</span>
+              <span>🟢</span>
+            </div>
+            <p id="adminKpiActiveCount" class="mt-2 text-3xl font-black text-white">4</p>
+            <p class="text-[11px] text-emerald-400/80 mt-0.5">Com acesso liberado à plataforma</p>
+          </div>
+
+          <div class="rounded-xl border border-amber-500/30 bg-amber-950/20 p-4">
+            <div class="flex items-center justify-between text-xs text-amber-300 font-bold">
+              <span>Receita Mensal (MRR)</span>
+              <span>💰</span>
+            </div>
+            <p id="adminKpiMrrValue" class="mt-2 text-3xl font-black text-amber-400">R$ 488,00</p>
+            <p class="text-[11px] text-amber-300/80 mt-0.5">Faturamento recorrente ativo</p>
+          </div>
+
+          <div class="rounded-xl border border-sky-500/30 bg-sky-950/20 p-4">
+            <div class="flex items-center justify-between text-xs text-sky-300 font-bold">
+              <span>Vencendo em 7 Dias</span>
+              <span>⏳</span>
+            </div>
+            <p id="adminKpiExpiringCount" class="mt-2 text-3xl font-black text-sky-400">1</p>
+            <p class="text-[11px] text-sky-300/80 mt-0.5">Prontos para disparo de renovação</p>
+          </div>
+
+          <div class="rounded-xl border border-rose-500/30 bg-rose-950/20 p-4">
+            <div class="flex items-center justify-between text-xs text-rose-300 font-bold">
+              <span>Bloqueados / Vencidos</span>
+              <span>🔒</span>
+            </div>
+            <p id="adminKpiBlockedCount" class="mt-2 text-3xl font-black text-rose-400">1</p>
+            <p class="text-[11px] text-rose-300/80 mt-0.5">Acesso travado automaticamente</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Grid: Gerador de Nova Licença + Automação de Pagamento PIX/Webhook -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Coluna Esquerda (7 cols): Cadastrar Novo Cliente / Liberar Licença -->
+        <section class="glass-card p-6 lg:col-span-7 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div>
+              <h3 class="text-sm font-extrabold uppercase tracking-wider text-amber-400">➕ Liberar Novo Acesso / Gerar Chave de Licença</h3>
+              <p class="text-xs text-slate-400">Cadastre um gestor manualmente ou gere uma chave de teste/assinatura instantânea</p>
+            </div>
+            <span class="badge-pill badge-emerald">Gerador Criptografado</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div>
+              <label class="mb-1 block font-bold text-slate-300">Nome do Gestor / Cliente</label>
+              <input id="adminNewClientName" placeholder="Ex: Carlos Silva — Gestor Google" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white">
+            </div>
+            <div>
+              <label class="mb-1 block font-bold text-slate-300">E-mail de Login</label>
+              <input id="adminNewClientEmail" type="email" placeholder="Ex: carlos@agencia.com" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white">
+            </div>
+            <div>
+              <label class="mb-1 block font-bold text-slate-300">WhatsApp do Cliente (Com DDD)</label>
+              <input id="adminNewClientPhone" placeholder="Ex: (11) 98888-7777" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white">
+            </div>
+            <div>
+              <label class="mb-1 block font-bold text-slate-300">Plano & Prazo de Validade</label>
+              <select id="adminNewClientPlan" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white cursor-pointer">
+                <option value="mensal" data-days="30" data-price="97" selected>🚀 Plano Mensal Pro (30 Dias) — R$ 97</option>
+                <option value="anual" data-days="365" data-price="497">👑 Plano Anual VIP (365 Dias) — R$ 497</option>
+              </select>
+            </div>
+            <div>
+              <label class="mb-1 block font-bold text-slate-300">Valor da Assinatura (R$)</label>
+              <input id="adminNewClientPrice" type="number" value="97" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 font-mono text-white">
+            </div>
+            <div>
+              <label class="mb-1 block font-bold text-slate-300">Chave de Licença / Senha (Auto ou Personalizada)</label>
+              <div class="flex gap-1.5">
+                <input id="adminNewClientKey" placeholder="Clique em Gerar ou digite..." class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 font-mono text-emerald-400 font-bold">
+                <button id="btnGenerateRandomKey" type="button" class="btn-ghost-dark px-2.5 py-2 text-xs font-bold cursor-pointer" title="Gerar nova chave aleatória">🔄</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800">
+            <span class="text-[11px] text-slate-400">💡 Ao criar, você pode enviar o Login + Chave em 1 clique direto no WhatsApp do cliente.</span>
+            <button id="btnCreateSubscriber" type="button" class="btn-amber px-5 py-2.5 text-xs font-extrabold cursor-pointer flex items-center gap-2">
+              <span>⚡</span> <span>Liberar Acesso & Gerar Licença</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Coluna Direita (5 cols): Central de Pagamento Automático Asaas (PIX Dinâmico + Cartão de Crédito Recorrente) -->
+        <section class="glass-card p-6 lg:col-span-5 space-y-3.5 border border-emerald-500/25">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div>
+              <h3 class="text-sm font-extrabold uppercase tracking-wider text-emerald-400">💳 Cobrança Recorrente Asaas (Cartão & PIX)</h3>
+              <p class="text-xs text-slate-400">Renovação automática mensal no cartão sem atrasos</p>
+            </div>
+            <span class="badge-pill badge-emerald">Asaas Oficial</span>
+          </div>
+
+          <div class="space-y-3 text-xs">
+            <div>
+              <label class="mb-1 block font-bold text-slate-300">Link Checkout Asaas — Mensal R$ 97 (Cartão Recorrente + PIX)</label>
+              <input id="adminCheckoutMonthlyInput" placeholder="https://www.asaas.com/c/xxxxxxxxxx ou Kiwify" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white font-mono text-xs">
+              <span class="text-[10px] text-slate-400 mt-0.5 block">💡 Crie no Asaas como "Assinatura Mensal" para cobrar todo mês no cartão do cliente automaticamente sem você precisar cobrar.</span>
+            </div>
+            <div>
+              <label class="mb-1 block font-bold text-slate-300">Link Checkout Asaas — Anual R$ 497 (À Vista ou Parcelado)</label>
+              <input id="adminCheckoutYearlyInput" placeholder="https://www.asaas.com/c/xxxxxxxxxx ou Kiwify" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white font-mono text-xs">
+            </div>
+            <div>
+              <label class="mb-1 block font-bold text-slate-300">Chave PIX Oficial (11970558412)</label>
+              <input id="adminPixKeyInput" value="11970558412" placeholder="CPF, CNPJ, E-mail ou Celular" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 font-mono text-emerald-300">
+            </div>
+            <div>
+              <label class="mb-1 block font-bold text-slate-300">URL Webhook Asaas / n8n (Liberação Automática Instantânea)</label>
+              <input id="adminPaymentWebhookInput" readonly value="https://api.leadmaps.pro/webhook/asaas-license-v3" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-1.5 font-mono text-[11px] text-amber-300">
+            </div>
+            <div class="pt-1 flex justify-end">
+              <button id="btnSavePaymentConfig" type="button" class="btn-ghost-dark px-4 py-2 text-xs font-bold text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/10 cursor-pointer">
+                💾 Salvar Configurações do Asaas
+              </button>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- Tabela Completa de Assinantes & Controle 1-Click -->
+      <section class="glass-card p-6 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 class="text-base font-extrabold text-white">📋 Lista de Assinantes & Controle de Acesso em Tempo Real</h3>
+            <p class="text-xs text-slate-400">Gerencie validades, envie a chave no WhatsApp ou bloqueie inadimplentes com 1 clique</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <input id="adminSearchSubInput" placeholder="🔍 Buscar cliente, e-mail ou chave..." class="rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-white w-60">
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="border-b border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400 bg-slate-900/60">
+              <tr>
+                <th class="px-4 py-3">Cliente / Gestor</th>
+                <th class="px-4 py-3">Chave de Licença</th>
+                <th class="px-4 py-3">Plano & Valor</th>
+                <th class="px-4 py-3">Validade</th>
+                <th class="px-4 py-3">Status</th>
+                <th class="px-4 py-3 text-right">Ações de Controle (1-Click)</th>
+              </tr>
+            </thead>
+            <tbody id="adminSubscribersTableBody" class="divide-y divide-slate-800/70">
+              <!-- Preenchido via JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </div> <!-- End VIEW 3: viewAdmin -->
+
+    <!-- VIEW 4: Análise de Ranking Local (GeoGrid de Alta Precisão) -->
+    <div id="viewRanking" class="hidden space-y-6">
+
+      <!-- Cabeçalho Executivo da Análise de Ranking -->
+      <section class="glass-card p-6 border border-emerald-500/30 bg-gradient-to-r from-slate-950 via-slate-900 to-emerald-950/20">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-3.5">
+            <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-2xl shadow-lg">
+              🎯
+            </div>
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <h2 class="text-xl font-extrabold text-white">Análise de Ranking Local — GeoGrid GPS de Alta Precisão</h2>
+                <span id="rankOpenStatusBadge" class="badge-pill badge-emerald">🟢 Aberto Agora no Google</span>
+                <span id="rankApiStatusBadge" class="badge-pill badge-emerald flex items-center gap-1 font-mono text-[10px]" title="Conectado à API oficial do Google Maps (Serper Places)"><span>📡</span> <span>Google Maps Live (Serper API)</span></span>
+              </div>
+              <p class="text-xs text-slate-300 mt-0.5">
+                Descubra a posição exata do Perfil da Empresa no Google Maps quarteirão por quarteirão, meça distâncias, compare concorrentes e baixe o relatório em PDF com sua marca.
+              </p>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <button id="btnResetNewRankAnalysis" type="button" class="btn-ghost-dark px-3.5 py-2 text-xs font-bold text-slate-200 hover:text-white cursor-pointer">
+              🔄 Nova Análise para o Local
+            </button>
+            <button id="btnFullscreenRankMap" type="button" class="btn-ghost-dark px-3.5 py-2 text-xs font-bold text-sky-400 border-sky-500/40 hover:bg-sky-500/10 cursor-pointer">
+              ⛶ Apresentar em Tela Cheia
+            </button>
+            <button id="btnDownloadRankingPdf" type="button" class="btn-amber px-4 py-2 text-xs font-extrabold cursor-pointer flex items-center gap-1.5 shadow-lg">
+              <span>📄</span> <span>Baixar Report de Ranking em PDF</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4 KPIs de Performance da Grade -->
+      <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="glass-card p-5 border-l-4 border-l-emerald-500">
+          <div class="flex items-center justify-between">
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Média Encontrada (ARP)</p>
+            <span class="text-lg">🏆</span>
+          </div>
+          <div class="mt-2 flex items-baseline gap-2">
+            <p id="rankKpiFoundAvg" class="font-mono text-3xl font-black text-emerald-400">2.84</p>
+            <span id="rankKpiFoundBadge" class="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[11px] font-bold text-emerald-300">Top 3 Dominante</span>
+          </div>
+          <p class="mt-1 text-[11px] text-slate-400">Posição média nos pontos ranqueados</p>
+        </div>
+
+        <div class="glass-card p-5 border-l-4 border-l-amber-500">
+          <div class="flex items-center justify-between">
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Média Total da Grade (ATRP)</p>
+            <span class="text-lg">📐</span>
+          </div>
+          <div class="mt-2 flex items-baseline gap-2">
+            <p id="rankKpiTotalAvg" class="font-mono text-3xl font-black text-amber-400">3.96</p>
+            <span id="rankKpiTotalPointsLabel" class="font-mono text-xs text-slate-400">25 pontos GPS</span>
+          </div>
+          <p class="mt-1 text-[11px] text-slate-400">Média ponderada em toda a área selecionada</p>
+        </div>
+
+        <div class="glass-card p-5 border-l-4 border-l-sky-500">
+          <div class="flex items-center justify-between">
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Dominância Top 3 (Visibilidade)</p>
+            <span class="text-lg">🔥</span>
+          </div>
+          <div class="mt-2 flex items-baseline gap-2">
+            <p id="rankKpiSovPct" class="font-mono text-3xl font-black text-sky-400">68.0%</p>
+            <span class="text-xs text-emerald-400 font-bold">Alta Conversão</span>
+          </div>
+          <p class="mt-1 text-[11px] text-slate-400">% da região onde o cliente aparece em 1º, 2º ou 3º</p>
+        </div>
+
+        <div class="glass-card p-5 border-l-4 border-l-purple-500">
+          <div class="flex items-center justify-between">
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Distribuição da Grade Visual</p>
+            <span class="text-lg">📊</span>
+          </div>
+          <div id="rankKpiDistribution" class="mt-2.5 flex items-center justify-between gap-1 text-xs font-mono font-bold">
+            <span class="rounded-lg bg-emerald-500/20 border border-emerald-500/40 px-2.5 py-1 text-emerald-300">🟢 1-3: 17</span>
+            <span class="rounded-lg bg-amber-500/20 border border-amber-500/40 px-2.5 py-1 text-amber-300">🟡 4-10: 5</span>
+            <span class="rounded-lg bg-rose-500/20 border border-rose-500/40 px-2.5 py-1 text-rose-300">🔴 11+: 3</span>
+          </div>
+          <p class="mt-1.5 text-[11px] text-slate-400">Clique em qualquer pino do mapa para inspecionar</p>
+        </div>
+      </section>
+
+      <!-- Painel Principal: Controles da Grade (4 cols) + Mapa Interativo GeoGrid (8 cols) -->
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
+
+        <!-- Coluna Esquerda (4 cols): Configuração da Empresa, Palavra-Chave IA e Grade -->
+        <section class="glass-card p-5 lg:col-span-4 space-y-4 border border-slate-800">
+          <div class="border-b border-slate-800 pb-3 flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-extrabold uppercase tracking-wider text-amber-400">⚙️ Configurar GeoGrade</h3>
+              <p class="text-[11px] text-slate-400">2 cliques para escanear qualquer região</p>
+            </div>
+            <span class="badge-pill badge-amber text-[10px]">Alta Precisão</span>
+          </div>
+
+          <div class="space-y-3.5 text-xs">
+            <!-- 1. Escolher Empresa já extraída ou Autocompletar -->
+            <div>
+              <label class="mb-1 block font-bold text-slate-300">1. Selecionar Cliente / Empresa da Lista</label>
+              <select id="rankSelectExtractedLead" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white cursor-pointer">
+                <!-- Preenchido via JS com os leads atuais -->
+              </select>
+            </div>
+
+            <div class="relative">
+              <label class="mb-1 flex items-center justify-between font-bold text-slate-300">
+                <span>🏢 Ou Buscar Qualquer Local (Auto-Completar)</span>
+                <span class="text-[10px] text-emerald-400 font-mono">GPS Real</span>
+              </label>
+              <div class="flex gap-1.5">
+                <input id="rankBusinessSearchInput" type="text" placeholder="Digite nome da empresa, rua ou bairro..." class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white outline-none focus:border-amber-400">
+                <button id="btnRankGeocodeSearch" type="button" class="btn-ghost-dark px-3 py-2 font-bold text-amber-300 border-amber-500/40 hover:bg-amber-500/10 cursor-pointer" title="Localizar endereço e coordenadas no mapa">🔍</button>
+              </div>
+              <!-- Dropdown de Auto-Completar -->
+              <div id="rankAutocompleteDropdown" class="hidden absolute left-0 right-0 top-full mt-1 z-50 max-h-52 overflow-y-auto rounded-xl border border-slate-700 bg-slate-950 shadow-2xl divide-y divide-slate-800">
+              </div>
+              <p id="rankCoordsDisplay" class="mt-1 font-mono text-[10px] text-slate-400">
+                📍 Centro GPS: -23.6639, -46.5310 (Arraste o pino central para outra região)
+              </p>
+            </div>
+
+            <!-- 2. Palavra-Chave + Gerador IA + Manter Palavra -->
+            <div class="border-t border-slate-800/80 pt-3">
+              <div class="flex items-center justify-between mb-1">
+                <label class="font-bold text-slate-300">2. Palavra-Chave da Pesquisa</label>
+                <button id="btnGenerateAiKeywords" type="button" class="text-[11px] font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 cursor-pointer">
+                  <span>🤖</span> <span>Gerar com IA</span>
+                </button>
+              </div>
+              <input id="rankKeywordInput" type="text" value="loja de carros" placeholder="Ex: loja de carros, dentista, pizzaria..." class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white font-semibold outline-none focus:border-emerald-400">
+              
+              <!-- Sugestões de Palavras-Chave IA -->
+              <div id="rankAiKeywordsContainer" class="mt-2 flex flex-wrap gap-1.5">
+                <!-- Pílulas geradas via JS -->
+              </div>
+
+              <label class="mt-2 flex items-center gap-2 text-[11px] text-slate-300 cursor-pointer select-none">
+                <input id="rankKeepKeywordCheckbox" type="checkbox" class="rounded border-slate-700 bg-slate-900 text-amber-400">
+                <span>🔒 Manter palavra-chave fixa ao trocar de empresa (Opcional)</span>
+              </label>
+            </div>
+
+            <!-- 3. Três Formas de Seleção de Área + Tamanho da Grade -->
+            <div class="border-t border-slate-800/80 pt-3 grid grid-cols-2 gap-2.5">
+              <div>
+                <label class="mb-1 block font-bold text-slate-300">Formato da Área (3 Modos)</label>
+                <select id="rankAreaShapeSelect" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-2 text-white cursor-pointer">
+                  <option value="square" selected>🔲 Grade Quadrada</option>
+                  <option value="circle">⭕ Raio Circular</option>
+                  <option value="manual">📍 Pinos Customizados</option>
+                </select>
+              </div>
+              <div>
+                <label class="mb-1 block font-bold text-slate-300">Tamanho da Grade</label>
+                <select id="rankGridSizeSelect" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-2 text-white font-mono cursor-pointer">
+                  <option value="3">3x3 (9 Pontos)</option>
+                  <option value="5" selected>5x5 (25 Pontos)</option>
+                  <option value="7">7x7 (49 Pontos)</option>
+                  <option value="9">9x9 (81 Pontos)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- 4. Slider de Raio / Distância -->
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="font-bold text-slate-300">Raio da Análise (Slider de Área)</label>
+                <span id="rankRadiusValueLabel" class="font-mono text-xs font-extrabold text-amber-400">3.00 km</span>
+              </div>
+              <input id="rankRadiusSlider" type="range" min="0.5" max="12.0" step="0.2" value="3.0" class="w-full accent-amber-400 cursor-pointer">
+              <div class="flex justify-between text-[10px] font-mono text-slate-500 mt-0.5">
+                <span>0.5 km (Bairro)</span>
+                <span id="rankStepDistLabel">Espaçamento: 750m</span>
+                <span>12.0 km (Cidade)</span>
+              </div>
+            </div>
+
+            <!-- 5. Controle de Pontos Manual e em Lote -->
+            <div class="border-t border-slate-800/80 pt-3 space-y-2">
+              <p class="font-bold text-slate-300">Controle de Pinos da Grade:</p>
+              <div class="grid grid-cols-2 gap-1.5">
+                <button id="btnAddManualRankPoint" type="button" class="rounded-lg border border-slate-700 bg-slate-900/90 px-2.5 py-1.5 text-[11px] font-semibold text-slate-200 hover:border-amber-400 hover:text-white cursor-pointer">
+                  ➕ Adicionar Ponto Manual
+                </button>
+                <button id="btnDisableOuterPointsBatch" type="button" class="rounded-lg border border-slate-700 bg-slate-900/90 px-2.5 py-1.5 text-[11px] font-semibold text-slate-200 hover:border-amber-400 hover:text-white cursor-pointer">
+                  ✂️ Desativar Bordas (Lote)
+                </button>
+              </div>
+              <p class="text-[10px] text-slate-400">
+                💡 Dica: Clique com o botão direito em qualquer pino no mapa para desativar/ativar, ou arraste a estrela central para analisar outra região.
+              </p>
+            </div>
+
+            <!-- 6. Botão Executar + Timer com Previsão de Término -->
+            <div class="pt-2">
+              <button id="btnRunGeoGridAnalysis" type="button" class="btn-amber w-full py-3 text-xs font-black uppercase tracking-wider cursor-pointer shadow-xl flex items-center justify-center gap-2">
+                <span>🚀</span> <span>Executar Análise de Ranking Local</span>
+              </button>
+
+              <!-- Timer com previsão de término -->
+              <div id="rankTimerProgressBox" class="mt-3 hidden rounded-xl border border-amber-500/40 bg-slate-950 p-3 space-y-2">
+                <div class="flex items-center justify-between text-[11px] font-mono">
+                  <span id="rankTimerStatusText" class="text-amber-300 font-bold">⏳ Escaneando ponto 12/25...</span>
+                  <span id="rankTimerEtaText" class="text-emerald-400">Término em 00:04s</span>
+                </div>
+                <div class="h-2 w-full overflow-hidden rounded-full bg-slate-800">
+                  <div id="rankTimerProgressBar" class="h-full bg-gradient-to-r from-amber-400 to-emerald-400 transition-all duration-150" style="width: 45%"></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- Coluna Direita (8 cols): Mapa Interativo GeoGrid + Toolbar Visual + Inspeção de Ponto -->
+        <section id="rankMapCardContainer" class="glass-card p-5 lg:col-span-8 flex flex-col justify-between space-y-4 border border-slate-800">
+          
+          <!-- Toolbar Superior do Mapa: Heatmap, Medir Distância, Mover Região, Estilo Google Maps, Opacidade -->
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3 text-xs">
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="flex items-center gap-1.5">
+                <label for="rankMapTileStyleSelect" class="text-[11px] text-slate-300 font-bold">🗺️ Mapa:</label>
+                <select id="rankMapTileStyleSelect" class="rounded-lg border border-emerald-500/40 bg-slate-900 px-2.5 py-1.5 text-xs text-emerald-300 font-extrabold outline-none cursor-pointer" title="Escolha o estilo de mapa de fundo">
+                  <option value="googleRoads" selected>🗺️ Google Maps (Ruas Oficial)</option>
+                  <option value="googleSat">🛰️ Google Maps (Satélite Híbrido)</option>
+                  <option value="googleTerrain">⛰️ Google Maps (Relevo / Terreno)</option>
+                  <option value="osm">🗺️ OpenStreetMap Standard</option>
+                </select>
+              </div>
+              <button id="btnToggleRankHeatmap" type="button" class="rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-3 py-1.5 font-bold text-emerald-300 hover:bg-emerald-500/25 cursor-pointer flex items-center gap-1.5">
+                <span>🔥</span> <span id="labelToggleRankHeatmap">Mapa de Calor: ON</span>
+              </button>
+              <button id="btnToggleRankRuler" type="button" class="rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 font-bold text-slate-300 hover:border-amber-400 hover:text-white cursor-pointer flex items-center gap-1.5">
+                <span>📏</span> <span id="labelToggleRankRuler">Medir Distância</span>
+              </button>
+              <button id="btnCenterOtherRegion" type="button" class="rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 font-bold text-slate-300 hover:border-sky-400 hover:text-white cursor-pointer flex items-center gap-1.5" title="Clique aqui e depois clique em qualquer bairro do mapa para testar o ranking lá">
+                <span>📍</span> <span>Analisar Outra Região</span>
+              </button>
+              <span id="rankRulerDistanceBadge" class="hidden rounded-full bg-amber-500/20 border border-amber-500/50 px-2.5 py-1 font-mono text-[11px] font-bold text-amber-300">
+                📏 Distância: 0.00 km
+              </span>
+            </div>
+
+            <!-- Controle de Opacidade do Mapa -->
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] text-slate-400">Opacidade Mapa:</span>
+              <input id="rankMapOpacitySlider" type="range" min="25" max="100" value="95" class="w-24 accent-emerald-400 cursor-pointer">
+              <span id="rankMapOpacityLabel" class="font-mono text-[11px] text-slate-300">95%</span>
+            </div>
+          </div>
+
+          <!-- Container do Mapa Interativo Real (Leaflet) -->
+          <div class="relative w-full overflow-hidden rounded-2xl border border-slate-700 shadow-2xl" style="height: 500px; background: #0b1322;">
+            <div id="geoGridLeafletMap" class="h-full w-full z-10"></div>
+
+            <!-- Legenda Flutuante no Canto do Mapa -->
+            <div class="absolute bottom-3 left-3 z-20 rounded-xl border border-slate-700/90 bg-slate-950/90 px-3.5 py-2.5 text-[11px] backdrop-blur-md shadow-xl space-y-1">
+              <p class="font-extrabold uppercase tracking-wider text-white">Legenda de Posição no Google:</p>
+              <div class="flex flex-wrap items-center gap-3 font-bold">
+                <span class="flex items-center gap-1 text-emerald-400"><span class="h-3 w-3 rounded-full bg-emerald-500 inline-block"></span> 1º ao 3º (Top 3)</span>
+                <span class="flex items-center gap-1 text-amber-400"><span class="h-3 w-3 rounded-full bg-amber-500 inline-block"></span> 4º ao 10º (1ª Pág)</span>
+                <span class="flex items-center gap-1 text-rose-400"><span class="h-3 w-3 rounded-full bg-rose-600 inline-block"></span> 11º ao 20º+ (Invisível)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gaveta / Card de Inspeção do Pino Clicado (Mostra quem está ganhando naquela esquina!) -->
+          <div id="rankPointInspectionCard" class="rounded-xl border border-slate-800 bg-slate-950/90 p-4 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h4 id="rankInspectPointTitle" class="text-xs font-extrabold uppercase tracking-wider text-amber-400">
+                  📍 Raio-X do Ponto Selecionado: Centro da Grade (Posição #1)
+                </h4>
+                <p id="rankInspectPointSub" class="text-[11px] text-slate-400">
+                  Veja quais concorrentes aparecem no Top 5 do Google Maps para um cliente buscando exatamente nesta coordenada GPS:
+                </p>
+              </div>
+              <span id="rankInspectPointCoords" class="font-mono text-[11px] text-slate-400">-23.6639, -46.5310</span>
+            </div>
+
+            <div id="rankInspectCompetitorsGrid" class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 text-xs">
+              <!-- Preenchido dinamicamente ao clicar em qualquer pino da grade -->
+            </div>
+
+            <!-- Botão de Ação Direta para Gerar PDF Deste Ranking -->
+            <div class="mt-3 pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3">
+              <p class="text-[11px] text-slate-300 flex items-center gap-1.5">
+                <span>💡</span> <span><strong>Enviar para o Cliente:</strong> Baixe o relatório completo de posicionamento em PDF com a grade do Google Maps e top concorrentes.</span>
+              </p>
+              <button id="btnInspectDownloadPdf" type="button" class="btn-amber px-4 py-2 text-xs font-extrabold flex items-center gap-1.5 shadow-lg hover:scale-105 transition-all cursor-pointer">
+                <span>📄</span> <span>Gerar PDF Deste Ranking para o Cliente</span>
+              </button>
+            </div>
+          </div>
+
+        </section>
+
+      </div>
+
+      <!-- Histórico com Grade Visual Integrada (Idêntico ao Padrão Internacional) -->
+      <section class="glass-card p-6 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 class="text-base font-extrabold text-white">🗂️ Histórico com Grade Visual Integrada</h3>
+            <p class="text-xs text-slate-400">
+              Compare a evolução das análises realizadas com miniatura proporcional da grade e código de cores por ponto.
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <input id="rankHistoryFilterInput" type="text" placeholder="🔍 Filtrar empresa ou palavra-chave..." class="rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-white w-64">
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="border-b border-slate-800 bg-slate-900/70 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              <tr>
+                <th class="px-4 py-3">Empresa & Endereço</th>
+                <th class="px-4 py-3">Palavra-Chave</th>
+                <th class="px-3 py-3 text-center">Raio</th>
+                <th class="px-3 py-3 text-center">Grade</th>
+                <th class="px-3 py-3 text-center">Pontos</th>
+                <th class="px-3 py-3">Data / Hora</th>
+                <th class="px-3 py-3 text-center">Média Enc.</th>
+                <th class="px-3 py-3 text-center">Média Total</th>
+                <th class="px-3 py-3 text-center">Top 3 (%)</th>
+                <th class="px-4 py-3 text-center">Grade Visual</th>
+                <th class="px-3 py-3 text-center">Status</th>
+                <th class="px-4 py-3 text-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="rankHistoryTableBody" class="divide-y divide-slate-800/70">
+              <!-- Preenchido via JS com a Mini-Grade Visual Colorida -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </div> <!-- End VIEW 4: viewRanking -->
+
+    <!-- Footer -->
+    <footer id="footerText" class="pb-4 text-center text-[11px] text-[var(--muted-foreground)]">
+      LeadMaps Pro v2.6 Enterprise · Dados de demonstração · Agência Impulso Digital
+    </footer>
+
+  </main>
+
+  <!-- Modal: Raio-X & Diagnóstico Completo -->
+  <div id="diagnosticModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+    <div class="glass-card max-h-[90vh] w-full max-w-2xl overflow-y-auto scrollbar-dark">
+      <div class="border-b border-[var(--border)] p-6">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <h3 id="modalEmpresa" class="text-xl font-extrabold text-white">Nome da Empresa</h3>
+              <span id="modalCategoriaBadge" class="badge-pill badge-amber">Categoria</span>
+              <a id="modalMapsLink" href="#" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-bold text-sky-400 bg-sky-500/10 border border-sky-500/30 hover:bg-sky-500/25 transition-colors" title="Abrir perfil oficial no Google Maps para ver fotos e Street View">
+                📍 Abrir no Google Maps ↗
+              </a>
+            </div>
+            <p id="modalInfoSub" class="mt-1 text-sm text-[var(--muted-foreground)]">⭐ 4.6 · 14 avaliações · Campinas - SP</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="text-center">
+              <div id="modalScoreCircleContainer" class="relative inline-flex items-center justify-center">
+                <!-- SVG gauge ring 64px rendered here -->
+              </div>
+              <p id="modalHealthStatus" class="mt-1 text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">
+                Digital Health<br>Atenção
+              </p>
+            </div>
+            <button id="btnCloseDiagnostic" class="btn-ghost-dark self-start px-2.5 py-1 text-sm">✕</button>
+          </div>
+        </div>
+        <p class="mt-3 text-xs font-semibold uppercase tracking-wider text-[var(--amber-glow)]">🔍 Raio-X & Diagnóstico Completo</p>
+      </div>
+
+      <div class="space-y-6 p-6">
+        <!-- Radar de Concorrentes -->
+        <div>
+          <h4 class="mb-3 text-xs font-extrabold uppercase tracking-wider text-[var(--muted-foreground)]">📡 Radar de Concorrentes</h4>
+          <div id="competitorsContainer" class="space-y-2.5">
+            <!-- Competitors progress bars injected dynamically -->
+          </div>
+          <p id="competitorInsightBox" class="mt-3 rounded-lg border border-[var(--border)] bg-[var(--secondary)]/40 p-3 text-xs text-[var(--muted-foreground)]">
+            <!-- Dynamic insight text -->
+          </p>
+        </div>
+
+        <!-- Auditoria dos 7 Pilares de Presença Digital no Google Maps -->
+        <div>
+          <div class="mb-3 flex items-center justify-between">
+            <h4 class="text-xs font-extrabold uppercase tracking-wider text-[var(--muted-foreground)]">📊 Auditoria dos 7 Pilares do Perfil da Empresa (Google Maps 360°)</h4>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] text-slate-400 italic hidden sm:inline">💡 Clique nos itens para alternar</span>
+              <span id="modalProfileScoreBadge" class="badge-pill badge-amber text-[10px]">Índice de Saúde: 58/100</span>
+            </div>
+          </div>
+          <div id="modalProfilePillarsGrid" class="grid gap-2 sm:grid-cols-2">
+            <!-- Pilares injetados dinamicamente com suporte a alternância interativa -->
+          </div>
+        </div>
+
+        <!-- Gaps Identificados -->
+        <div>
+          <h4 class="mb-3 text-xs font-extrabold uppercase tracking-wider text-[var(--muted-foreground)]">⚠️ Oportunidades & Gargalos Críticos</h4>
+          <div id="modalGapsGrid" class="grid gap-2 sm:grid-cols-2">
+            <!-- Gaps list -->
+          </div>
+        </div>
+
+        <!-- Plano de Ação para o TOP 3 do Google Maps (SEO Local 360°) -->
+        <div>
+          <div class="mb-3 flex items-center justify-between">
+            <h4 class="text-xs font-extrabold uppercase tracking-wider text-amber-400">🚀 Plano de Ação para o TOP 3 do Google Maps (SEO Local)</h4>
+            <span class="badge-pill badge-amber text-[10px]">Oportunidade Comercial</span>
+          </div>
+          <div id="modalSeoActionPlanGrid" class="space-y-2">
+            <!-- Ações dinâmicas de SEO Local injetadas via JS -->
+          </div>
+        </div>
+
+        <!-- Pitch de WhatsApp com IA -->
+        <div>
+          <h4 class="mb-3 flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-[var(--muted-foreground)]">
+            🤖 Pitch de WhatsApp gerado por IA <span class="badge-pill badge-emerald">Google Gemini</span>
+          </h4>
+          <div class="rounded-xl border border-[color-mix(in_oklab,var(--emerald-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--emerald-signal)_6%,transparent)] p-4">
+            <p id="modalAiPitchText" class="whitespace-pre-line text-sm leading-relaxed text-slate-100">
+              Pitch de abordagem...
+            </p>
+          </div>
+        </div>
+
+        <!-- Modal Footer Actions -->
+        <div class="flex flex-wrap gap-2 border-t border-[var(--border)] pt-5">
+          <button id="btnModalAddToCrm" class="btn-amber px-4 py-2.5 text-xs font-bold flex items-center gap-1.5 cursor-pointer">
+            📊 + Adicionar ao CRM
+          </button>
+          <button id="btnModalOpenGeoGrid" type="button" class="btn-ghost-dark px-4 py-2.5 text-xs font-bold text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/10 cursor-pointer flex items-center gap-1.5">
+            🎯 Analisar Ranking GeoGrid
+          </button>
+          <button id="btnCopyModalPitch" class="btn-ghost-dark px-4 py-2.5 text-xs font-bold cursor-pointer">📋 Copiar Copy</button>
+          <a id="btnModalWhatsApp" href="#" target="_blank" rel="noreferrer" class="inline-flex items-center gap-1 rounded-lg bg-[color-mix(in_oklab,var(--emerald-signal)_18%,transparent)] px-4 py-2.5 text-xs font-bold text-[var(--emerald-signal)] transition-all hover:brightness-125">
+            💬 Abrir WhatsApp Web
+          </a>
+          <button id="btnDownloadWhiteLabel" type="button" class="btn-amber px-5 py-2.5 text-xs font-extrabold flex items-center gap-2 cursor-pointer shadow-lg hover:scale-105 transition-all" title="Gerar Dossiê Oficial Completo de Auditoria em PDF">
+            <span>📄</span> <span>Gerar Dossiê em PDF</span>
+          </button>
+          <button id="btnModalDownloadRankingPdf" type="button" class="btn-ghost-dark px-4 py-2.5 text-xs font-bold text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/10 cursor-pointer flex items-center gap-1.5" title="Baixar relatório de posicionamento geodésico do cliente">
+            <span>🗺️</span> <span>PDF de Ranking GeoGrid</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Relatório Completo de Auditoria & Saúde do Negócio (White-Label) -->
+  <div id="whiteLabelModal" class="fixed inset-0 z-50 hidden flex items-start justify-center bg-black/85 p-3 sm:p-6 backdrop-blur-md overflow-y-auto">
+    <div class="relative w-full max-w-5xl my-4">
+      <!-- Toolbar Superior (Oculta na impressão/PDF) -->
+      <div class="no-print sticky top-2 z-30 mb-4 rounded-xl border border-[var(--border)] bg-slate-950/95 p-4 shadow-2xl backdrop-blur-xl space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">📊</span>
+            <div>
+              <h4 class="text-sm font-extrabold text-white">Relatório Completo de Saúde, Métricas & Reputação no Google</h4>
+              <p class="text-xs text-[var(--muted-foreground)]">Dossiê executivo completo de 5 seções (22 itens de saúde, ISR, métricas, mídias e análise de sentimento)</p>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button id="btnToggleProspectMode" class="btn-ghost-dark px-3 py-2 text-xs font-bold flex items-center gap-1.5 border border-amber-500/40 text-amber-300 hover:bg-amber-500/10 cursor-pointer" title="Alternar entre modo consultor e modo prospecção (com bloqueio das ações para fechar contrato)">
+              🔒 <span id="labelProspectMode">Modo Prospecção: Ativado</span>
+            </button>
+            <button id="btnPrintWhiteLabel" class="btn-amber px-4 py-2 text-xs font-bold flex items-center gap-1.5 shadow-lg cursor-pointer">
+              🖨️ Imprimir / Salvar PDF Completo
+            </button>
+            <button id="btnCopyWhiteLabelSummary" class="btn-ghost-dark px-3 py-2 text-xs font-bold flex items-center gap-1.5 cursor-pointer">
+              📋 Copiar Resumo WhatsApp
+            </button>
+            <button id="btnCloseWhiteLabelModal" class="btn-ghost-dark px-3 py-2 text-xs font-bold cursor-pointer">
+              ✕ Fechar
+            </button>
+          </div>
+        </div>
+
+        <!-- Abas de Navegação Rápida das Seções do Relatório -->
+        <div id="whiteLabelSectionTabs" class="flex flex-wrap items-center gap-1.5 border-t border-slate-800 pt-2.5 text-xs">
+          <button type="button" data-report-tab="all" class="wl-tab-btn rounded-lg bg-emerald-500 px-3 py-1.5 font-extrabold text-slate-950 cursor-pointer transition-all">
+            📑 Relatório Completo (Todas as Seções)
+          </button>
+          <button type="button" data-report-tab="saude" class="wl-tab-btn rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 font-bold text-slate-300 hover:text-white cursor-pointer transition-all">
+            ❤️ 1. Análise de Saúde (22 Itens)
+          </button>
+          <button type="button" data-report-tab="avaliacoes" class="wl-tab-btn rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 font-bold text-slate-300 hover:text-white cursor-pointer transition-all">
+            ⭐ 2. Avaliações & ISR
+          </button>
+          <button type="button" data-report-tab="metricas" class="wl-tab-btn rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 font-bold text-slate-300 hover:text-white cursor-pointer transition-all">
+            📈 3. Métricas & Engajamento
+          </button>
+          <button type="button" data-report-tab="midia" class="wl-tab-btn rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 font-bold text-slate-300 hover:text-white cursor-pointer transition-all">
+            📸 4. Postagens & Mídia (360°)
+          </button>
+          <button type="button" data-report-tab="reputacao" class="wl-tab-btn rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 font-bold text-slate-300 hover:text-white cursor-pointer transition-all">
+            🧠 5. Reputação & Sentimento
+          </button>
+        </div>
+      </div>
+
+      <!-- Documento do Relatório White-Label (Design Corporativo Fiel & Completo) -->
+      <div id="whiteLabelPaper" class="report-paper p-6 sm:p-10 text-slate-900 bg-white rounded-2xl shadow-2xl space-y-10">
+        <!-- Preenchido dinamicamente via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Central de Geração de Relatórios Oficiais em PDF para Clientes -->
+  <div id="pdfReportHubModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/85 p-3 sm:p-5 backdrop-blur-md overflow-y-auto">
+    <div class="glass-card max-h-[92vh] w-full max-w-4xl overflow-y-auto border border-amber-500/40 bg-slate-950 p-6 sm:p-8 shadow-2xl scrollbar-dark space-y-6">
+      
+      <!-- Cabeçalho -->
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
+        <div class="flex items-center gap-3">
+          <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/20 text-2xl border border-amber-500/40 shadow-inner">
+            📄
+          </div>
+          <div>
+            <h3 class="text-lg font-black text-white flex items-center gap-2">
+              Central de Relatórios Oficiais em PDF
+              <span class="badge-pill badge-amber">White-Label</span>
+            </h3>
+            <p class="text-xs text-slate-300 mt-0.5">
+              Gere documentos profissionais prontos para impressão ou envio direto via WhatsApp para fechamento de contrato.
+            </p>
+          </div>
+        </div>
+        <button id="btnClosePdfHubModal" type="button" class="btn-ghost-dark px-3 py-1.5 text-sm font-bold text-slate-400 hover:text-white cursor-pointer">
+          ✕ Fechar
+        </button>
+      </div>
+
+      <!-- Card do Cliente Selecionado -->
+      <div class="rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <span class="text-[10px] uppercase font-bold text-emerald-400 tracking-wider">Cliente Selecionado para o Relatório:</span>
+          <h4 id="pdfHubTargetName" class="text-base font-extrabold text-white">Carregando empresa...</h4>
+          <p id="pdfHubTargetSub" class="text-xs text-slate-300">📍 Endereço da empresa · Categoria</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span id="pdfHubTargetScore" class="rounded-xl border border-emerald-500/40 bg-emerald-500/20 px-3 py-1 font-mono text-xs font-black text-emerald-300">
+            Score: 85/100
+          </span>
+        </div>
+      </div>
+
+      <!-- 3 Opções de Relatórios Disponíveis -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        
+        <!-- Opção 1: Dossiê Completo de Auditoria (22 Itens) -->
+        <div class="rounded-2xl border border-slate-800 bg-slate-900/90 p-5 flex flex-col justify-between space-y-4 hover:border-amber-500/50 transition-all shadow-lg">
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-2xl">📑</span>
+              <span class="badge-pill badge-amber text-[10px]">Auditoria 360°</span>
+            </div>
+            <h4 class="text-sm font-extrabold text-white">Dossiê de Saúde & Reputação (22 Itens)</h4>
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              O relatório mais completo do mercado: 5 seções executivas (Checklist de 22 itens, ISR de avaliações, métricas de tráfego, fotos 360° e análise de sentimento).
+            </p>
+          </div>
+          <div class="space-y-2 pt-2 border-t border-slate-800">
+            <button id="btnPdfHubDownloadAudit" type="button" class="btn-amber w-full py-2.5 text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-md hover:scale-102 transition-all cursor-pointer">
+              🖨️ Baixar Dossiê em PDF
+            </button>
+            <button id="btnPdfHubViewAudit" type="button" class="btn-ghost-dark w-full py-2 text-xs font-bold text-slate-300 hover:text-white cursor-pointer">
+              👁️ Visualizar na Tela
+            </button>
+          </div>
+        </div>
+
+        <!-- Opção 2: Relatório de Ranking Local GeoGrid -->
+        <div class="rounded-2xl border border-emerald-500/40 bg-emerald-950/20 p-5 flex flex-col justify-between space-y-4 hover:border-emerald-400 transition-all shadow-lg relative">
+          <span class="absolute -top-2.5 right-4 rounded-full bg-emerald-500 px-2.5 py-0.5 text-[9px] font-black text-slate-950 uppercase tracking-wider">Alta Conversão</span>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-2xl">🎯</span>
+              <span class="badge-pill badge-emerald text-[10px]">GeoGrid GPS</span>
+            </div>
+            <h4 class="text-sm font-extrabold text-white">Relatório de Ranking Local</h4>
+            <p class="text-[11px] text-slate-300 leading-relaxed">
+              Grade visual colorida do Google Maps quarteirão por quarteirão, médias ARP/ATRP e comparativo direto com os Top Concorrentes que estão roubando clientes.
+            </p>
+          </div>
+          <div class="space-y-2 pt-2 border-t border-emerald-900/50">
+            <button id="btnPdfHubDownloadRanking" type="button" class="btn-amber w-full py-2.5 text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-md hover:scale-102 transition-all cursor-pointer">
+              🖨️ Baixar Ranking em PDF
+            </button>
+            <button id="btnPdfHubOpenGeoGrid" type="button" class="btn-ghost-dark w-full py-2 text-xs font-bold text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/10 cursor-pointer">
+              🗺️ Ver no Mapa GeoGrid
+            </button>
+          </div>
+        </div>
+
+        <!-- Opção 3: Pré-Análise Executiva Rápida (1 Pág) -->
+        <div class="rounded-2xl border border-slate-800 bg-slate-900/90 p-5 flex flex-col justify-between space-y-4 hover:border-sky-500/50 transition-all shadow-lg">
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-2xl">⚡</span>
+              <span class="badge-pill badge-sky text-[10px]">WhatsApp Rápido</span>
+            </div>
+            <h4 class="text-sm font-extrabold text-white">Pré-Análise Executiva (1 Página)</h4>
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              Resumo direto ao ponto contendo os 7 pilares fundamentais, gargalos urgentes e nota geral. Perfeito para primeiro contato no WhatsApp.
+            </p>
+          </div>
+          <div class="space-y-2 pt-2 border-t border-slate-800">
+            <button id="btnPdfHubDownloadPreAnalysis" type="button" class="btn-amber w-full py-2.5 text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-md hover:scale-102 transition-all cursor-pointer">
+              🖨️ Baixar Pré-Análise em PDF
+            </button>
+            <button id="btnPdfHubCopyWhatsAppSummary" type="button" class="btn-ghost-dark w-full py-2 text-xs font-bold text-sky-300 border-sky-500/30 hover:bg-sky-500/10 cursor-pointer">
+              📋 Copiar Resumo WhatsApp
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Rodapé com Dica Comercial -->
+      <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-4 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="text-slate-300 flex items-center gap-2">
+          <span class="text-base">💡</span>
+          <span>Todos os PDFs saem timbrados com o nome e WhatsApp da sua agência configurados em Configurações.</span>
+        </div>
+        <button id="btnPdfHubConfigAgency" type="button" class="text-amber-400 hover:underline font-bold cursor-pointer">
+          ⚙️ Personalizar Marca da Agência
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Modal: Configurações Comerciais & White-Label -->
+  <div id="settingsModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+    <div class="glass-card max-h-[90vh] w-full max-w-lg overflow-y-auto p-6 scrollbar-dark">
+      <div class="mb-5 flex items-center justify-between">
+        <div>
+          <h3 class="text-lg font-extrabold text-white">⚙️ Configurações da Plataforma</h3>
+          <p class="text-xs text-[var(--muted-foreground)]">Gerencie sua agência white-label e parâmetros de prospecção</p>
+        </div>
+        <button id="btnCloseSettings" class="btn-ghost-dark px-2.5 py-1 text-sm">✕</button>
+      </div>
+
+      <div class="space-y-5">
+        <!-- Status do Plano Comercial & Créditos -->
+        <div class="rounded-xl border border-[var(--primary)]/40 bg-[color-mix(in_oklab,var(--primary)_8%,transparent)] p-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="badge-pill badge-emerald text-[11px] font-bold">● Assinatura Ativa: Agência Pro</span>
+            <span class="text-xs font-mono font-bold text-[var(--amber-glow)]" id="modalCreditBalanceDisplay">450 Créditos</span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            🚀 <strong>Motor Google Maps Engine v2.4:</strong> Totalmente integrado e operacional. Todas as buscas ao vivo utilizam a cota comercial do seu plano, sem necessidade de configuração técnica.
+          </p>
+        </div>
+
+        <!-- Identidade White-Label da Agência -->
+        <div class="rounded-xl border border-[var(--border)] bg-[var(--secondary)]/40 p-4 space-y-3">
+          <p class="text-xs font-bold uppercase tracking-wider text-[var(--amber-glow)]">🏢 Identidade White-Label da sua Agência</p>
+          <div>
+            <label class="mb-1 block text-xs font-semibold text-[var(--muted-foreground)]">Nome Comercial da Agência (Aparece no Relatório)</label>
+            <input id="settingAgencyName" value="Agência Impulso Digital" class="w-full rounded-lg border border-[var(--input)] bg-[var(--secondary)]/60 px-3 py-2 text-sm outline-none focus:border-[var(--primary)] text-white">
+          </div>
+          <div>
+            <label class="mb-1 block text-xs font-semibold text-[var(--muted-foreground)]">Nome do Consultor / Remetente</label>
+            <input id="settingSenderName" value="Ricardo — Agência Impulso" class="w-full rounded-lg border border-[var(--input)] bg-[var(--secondary)]/60 px-3 py-2 text-sm outline-none focus:border-[var(--primary)] text-white">
+          </div>
+          <div>
+            <label class="mb-1 block text-xs font-semibold text-[var(--muted-foreground)]">WhatsApp / Telefone da Agência (Para Propostas)</label>
+            <input id="settingAgencyPhone" value="(11) 97055-8412" class="w-full rounded-lg border border-[var(--input)] bg-[var(--secondary)]/60 px-3 py-2 text-sm outline-none focus:border-[var(--primary)] text-white">
+          </div>
+        </div>
+
+        <!-- Parâmetros de Automação & Anti-Ban -->
+        <div>
+          <div class="mb-1.5 flex items-center justify-between">
+            <label class="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Delay de Segurança Anti-Ban (WhatsApp)</label>
+            <span id="delayDisplay" class="font-mono text-sm font-bold text-[var(--amber-glow)]">60s</span>
+          </div>
+          <input id="settingDelayInput" type="range" min="45" max="120" step="5" value="60" class="w-full accent-[var(--primary)]">
+          <div class="flex justify-between text-[10px] text-[var(--muted-foreground)]">
+            <span>45s (Recomendado)</span>
+            <span>120s (Máxima Segurança)</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Limite diário de disparos recomendados</label>
+          <input id="settingDailyLimit" type="number" min="1" max="500" value="120" class="w-full rounded-lg border border-[var(--input)] bg-[var(--secondary)]/60 px-3 py-2 font-mono text-sm outline-none focus:border-[var(--primary)] text-white">
+        </div>
+
+        <!-- Configurações Técnicas Opcionais (Acordeão) -->
+        <details class="rounded-xl border border-[var(--border)] bg-[var(--secondary)]/20 p-3 text-xs text-[var(--muted-foreground)]">
+          <summary class="cursor-pointer font-bold text-slate-300 hover:text-white">🛠️ Opções Avançadas de Desenvolvedor (Opcional)</summary>
+          <div class="mt-3 space-y-3 pt-2 border-t border-[var(--border)]">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-400">Webhook Externo (n8n / Evolution API / CRM)</label>
+              <input id="settingWebhook" value="" placeholder="https://seu-n8n.com/webhook/leadmaps" class="mt-1 w-full rounded-lg border border-[var(--input)] bg-[var(--secondary)]/60 px-3 py-1.5 font-mono text-xs outline-none focus:border-[var(--primary)] text-white">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-400">Chave Própria Serper.dev (Se desejar cota dedicada)</label>
+              <input id="settingApiKey" placeholder="Deixe em branco para usar a cota inclusa do plano..." class="mt-1 w-full rounded-lg border border-[var(--input)] bg-[var(--secondary)]/60 px-3 py-1.5 font-mono text-xs outline-none focus:border-[var(--primary)] text-white">
+            </div>
+          </div>
+        </details>
+
+        <button id="btnSaveSettings" class="btn-amber w-full py-2.5 text-sm font-bold">Salvar Configurações</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Central de Automação & Disparos do WhatsApp -->
+  <div id="whatsAppModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/80 p-3 sm:p-5 backdrop-blur-md overflow-y-auto">
+    <div class="glass-card max-h-[92vh] w-full max-w-3xl overflow-y-auto border border-emerald-500/30 bg-slate-950 p-5 sm:p-7 shadow-2xl scrollbar-dark">
+      
+      <!-- Cabeçalho do Modal WhatsApp -->
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
+        <div class="flex items-center gap-3">
+          <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/20 text-2xl border border-emerald-500/30">
+            💬
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-base sm:text-lg font-extrabold text-white">Central de Automação & Disparos WhatsApp</h3>
+              <span class="badge-pill badge-emerald text-[10px]">Anti-Ban Ativo</span>
+            </div>
+            <p class="text-xs text-[var(--muted-foreground)]">Personalize mensagens, insira tags dinâmicas e execute a fila de prospecção</p>
+          </div>
+        </div>
+        <button id="btnCloseWhatsAppModal" class="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer" aria-label="Fechar">✕</button>
+      </div>
+
+      <!-- Abas da Central do WhatsApp -->
+      <div class="mt-4 flex items-center gap-2 border-b border-slate-800 pb-3">
+        <button id="tabWaConfig" class="wa-tab-btn active px-4 py-2 rounded-lg text-xs font-bold transition-all bg-emerald-500 text-slate-950 cursor-pointer">
+          ⚙️ 1. Configurar Mensagem & Templates
+        </button>
+        <button id="tabWaQueue" class="wa-tab-btn px-4 py-2 rounded-lg text-xs font-bold transition-all text-slate-300 hover:text-white cursor-pointer flex items-center gap-1.5">
+          🚀 2. Fila de Disparo Ativa <span id="waQueueBadge" class="rounded-full bg-emerald-500/20 px-2 py-0.5 font-mono text-[10px] text-emerald-400">0</span>
+        </button>
+      </div>
+
+      <!-- PAINEL 1: Configuração de Mensagem e Templates -->
+      <div id="waPanelConfig" class="mt-4 space-y-4">
+        
+        <!-- Seleção de Modelos Rápidos -->
+        <div>
+          <label class="mb-2 block text-xs font-bold uppercase tracking-wider text-amber-400">
+            🎯 Modelos Rápidos de Abordagem (Clique para carregar):
+          </label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <button type="button" class="btn-wa-preset rounded-lg border border-slate-700 bg-slate-900/80 p-2.5 text-left text-xs transition-all hover:border-emerald-500 hover:bg-slate-900 cursor-pointer" data-template="site">
+              <div class="font-bold text-emerald-400">🌐 1. Venda de Site de Alta Conversão</div>
+              <div class="text-[11px] text-slate-400 mt-0.5">Para empresas que só estão no Maps sem site</div>
+            </button>
+            <button type="button" class="btn-wa-preset rounded-lg border border-slate-700 bg-slate-900/80 p-2.5 text-left text-xs transition-all hover:border-emerald-500 hover:bg-slate-900 cursor-pointer" data-template="tour360">
+              <div class="font-bold text-amber-400">📷 2. Tour Virtual 360° Interno da Loja</div>
+              <div class="text-[11px] text-slate-400 mt-0.5">Destaca que só tem foto externa do carro do Google</div>
+            </button>
+            <button type="button" class="btn-wa-preset rounded-lg border border-slate-700 bg-slate-900/80 p-2.5 text-left text-xs transition-all hover:border-emerald-500 hover:bg-slate-900 cursor-pointer" data-template="seo">
+              <div class="font-bold text-cyan-400">🚀 3. TOP 3 Google Maps (SEO Local)</div>
+              <div class="text-[11px] text-slate-400 mt-0.5">Abordagem de raio-x e otimização do perfil</div>
+            </button>
+            <button type="button" class="btn-wa-preset rounded-lg border border-slate-700 bg-slate-900/80 p-2.5 text-left text-xs transition-all hover:border-emerald-500 hover:bg-slate-900 cursor-pointer" data-template="reuniao">
+              <div class="font-bold text-purple-400">🤝 4. Pitch Direto (Reunião 10 min)</div>
+              <div class="text-[11px] text-slate-400 mt-0.5">Proposta direta para proprietário ou gerente</div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tags Dinâmicas para Inserção -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">
+              🏷️ Tags Dinâmicas (Clique para inserir no texto):
+            </label>
+            <span class="text-[10px] text-slate-400 font-mono">Preenchimento automático por lead</span>
+          </div>
+          <div class="flex flex-wrap gap-1.5">
+            <button type="button" class="wa-tag-pill rounded border border-slate-700 bg-slate-800 px-2 py-1 font-mono text-[11px] text-emerald-300 hover:bg-slate-700 hover:text-white cursor-pointer" data-tag="{empresa}">{empresa}</button>
+            <button type="button" class="wa-tag-pill rounded border border-slate-700 bg-slate-800 px-2 py-1 font-mono text-[11px] text-emerald-300 hover:bg-slate-700 hover:text-white cursor-pointer" data-tag="{cidade}">{cidade}</button>
+            <button type="button" class="wa-tag-pill rounded border border-slate-700 bg-slate-800 px-2 py-1 font-mono text-[11px] text-emerald-300 hover:bg-slate-700 hover:text-white cursor-pointer" data-tag="{nicho}">{nicho}</button>
+            <button type="button" class="wa-tag-pill rounded border border-slate-700 bg-slate-800 px-2 py-1 font-mono text-[11px] text-emerald-300 hover:bg-slate-700 hover:text-white cursor-pointer" data-tag="{reviews}">{reviews}</button>
+            <button type="button" class="wa-tag-pill rounded border border-slate-700 bg-slate-800 px-2 py-1 font-mono text-[11px] text-emerald-300 hover:bg-slate-700 hover:text-white cursor-pointer" data-tag="{nota}">{nota}</button>
+            <button type="button" class="wa-tag-pill rounded border border-slate-700 bg-slate-800 px-2 py-1 font-mono text-[11px] text-emerald-300 hover:bg-slate-700 hover:text-white cursor-pointer" data-tag="{consultor}">{consultor}</button>
+            <button type="button" class="wa-tag-pill rounded border border-slate-700 bg-slate-800 px-2 py-1 font-mono text-[11px] text-emerald-300 hover:bg-slate-700 hover:text-white cursor-pointer" data-tag="{servico}">{servico}</button>
+          </div>
+        </div>
+
+        <!-- Editor de Texto -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">
+              ✍️ Mensagem de Abordagem Personalizada
+            </label>
+            <span id="waCharCount" class="text-[10px] font-mono text-slate-400">0 caracteres</span>
+          </div>
+          <textarea id="waMessageInput" rows="6" class="w-full rounded-xl border border-slate-700 bg-slate-900 p-3.5 text-xs text-white leading-relaxed outline-none focus:border-emerald-400" placeholder="Digite sua mensagem usando as tags dinâmicas..."></textarea>
+        </div>
+
+        <!-- Card de Prévia em Tempo Real -->
+        <div>
+          <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-400">
+            👁️ Prévia em Tempo Real (Como o cliente recebe no WhatsApp):
+          </label>
+          <div class="rounded-xl border border-emerald-900/60 bg-emerald-950/20 p-4">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="h-2.5 w-2.5 rounded-full bg-emerald-400"></span>
+              <span class="text-xs font-bold text-emerald-300" id="waPreviewTargetEmpresa">Exemplo: Lead Selecionado</span>
+            </div>
+            <div id="waMessagePreviewText" class="whitespace-pre-line text-xs leading-relaxed text-slate-100 font-sans">
+              <!-- Prévia renderizada via JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Configurações de Anti-Ban, Consultor e Destino -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 rounded-xl border border-slate-800 bg-slate-900/40 p-3.5">
+          <div>
+            <label class="mb-1 block text-xs font-bold text-slate-300">Nome do Consultor</label>
+            <input id="waSenderNameInput" value="Ricardo — LeadMaps Pro" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400">
+          </div>
+          <div>
+            <label class="mb-1 block text-xs font-bold text-slate-300">Destino de Disparo</label>
+            <select id="waPlatformSelect" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-2 text-xs text-white outline-none focus:border-emerald-400 cursor-pointer">
+              <option value="web" selected>🌐 WhatsApp Web Direto (PC)</option>
+              <option value="wame">📱 WhatsApp App / Celular (wa.me)</option>
+              <option value="webhook">⚡ Webhook API (n8n / Z-API / Evolution)</option>
+            </select>
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-xs font-bold text-slate-300">Delay Anti-Ban</label>
+              <span id="waDelayDisplay" class="font-mono text-xs font-bold text-emerald-400">25s</span>
+            </div>
+            <input id="waDelayInput" type="range" min="15" max="90" step="5" value="25" class="w-full accent-emerald-500 cursor-pointer">
+            <div class="flex justify-between text-[10px] text-slate-400">
+              <span>15s</span>
+              <span>25s (Ideal)</span>
+              <span>90s</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botões do Painel 1 -->
+        <div class="flex flex-wrap items-center justify-between gap-2.5 border-t border-slate-800 pt-4">
+          <div class="flex flex-wrap items-center gap-2">
+            <button id="btnSaveWaConfig" type="button" class="btn-amber px-4 py-2.5 text-xs font-bold cursor-pointer">
+              💾 Salvar Modelo de Mensagem
+            </button>
+            <button id="btnTestWaDispatch" type="button" class="btn-ghost-dark px-3.5 py-2.5 text-xs font-bold text-sky-400 border-sky-500/40 hover:bg-sky-500/10 cursor-pointer" title="Enviar uma mensagem de teste agora para validar seu WhatsApp">
+              📲 Testar Disparo Agora
+            </button>
+          </div>
+          <button id="btnSwitchToQueue" type="button" class="btn-ghost-dark px-4 py-2.5 text-xs font-bold text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/10 cursor-pointer flex items-center gap-1.5">
+            🚀 Ir para a Fila de Disparos (<span id="waBtnQueueCount">0</span> leads) →
+          </button>
+        </div>
+
+      </div>
+
+      <!-- PAINEL 2: Fila de Disparo Ativa (Interactive Queue Runner) -->
+      <div id="waPanelQueue" class="mt-4 hidden space-y-4">
+        
+        <!-- Barra de Progresso e Métricas da Fila -->
+        <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+            <div>
+              <span class="text-xs font-extrabold text-white">Progresso da Fila:</span>
+              <span id="waQueueProgressText" class="font-mono text-xs text-emerald-400 font-bold ml-1">0 de 0 disparados</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="btnEnqueueCurrentSearch" type="button" class="btn-ghost-dark px-2.5 py-1 text-[11px] font-semibold text-slate-300 hover:text-white cursor-pointer">
+                📥 Carregar Todos os Leads da Busca
+              </button>
+              <button id="btnClearQueue" type="button" class="text-[11px] font-semibold text-rose-400 hover:text-rose-300 cursor-pointer">
+                🗑️ Limpar Fila
+              </button>
+            </div>
+          </div>
+          <div class="h-2 w-full overflow-hidden rounded-full bg-slate-800">
+            <div id="waQueueProgressBar" class="h-full bg-emerald-500 transition-all duration-300" style="width: 0%;"></div>
+          </div>
+        </div>
+
+        <!-- Card de Foco: Lead Atual da Vez -->
+        <div id="waCurrentLeadBox" class="rounded-xl border border-emerald-500/40 bg-slate-900 p-5 space-y-3.5 shadow-xl">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-bold text-amber-400" id="waCurrentLeadIndexLabel">Lead #1 de 10</span>
+                <h4 class="text-base font-extrabold text-white" id="waCurrentLeadName">Nome da Empresa</h4>
+              </div>
+              <p class="text-xs text-slate-400 mt-0.5" id="waCurrentLeadInfo">Santo André - SP · Clínica de Fisioterapia</p>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <input id="waCurrentLeadPhone" type="text" value="(11) 99999-9999" title="Você pode editar o número de WhatsApp diretamente aqui antes de disparar" class="w-36 font-mono text-xs font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-700/80 px-2.5 py-1 rounded-lg outline-none focus:border-emerald-400 text-center">
+            </div>
+          </div>
+
+          <!-- Mensagem Personalizada do Lead Atual -->
+          <div>
+            <label class="mb-1 block text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              💬 Mensagem Pronta para Envio:
+            </label>
+            <div id="waCurrentLeadMessage" class="rounded-xl border border-slate-800 bg-slate-950 p-3.5 text-xs text-slate-200 leading-relaxed font-sans whitespace-pre-line max-h-48 overflow-y-auto">
+              <!-- Mensagem formatada do lead atual -->
+            </div>
+          </div>
+
+          <!-- Contador Anti-Ban Regressivo (Aparece após o envio) -->
+          <div id="waCountdownBox" class="hidden rounded-xl border border-amber-500/30 bg-amber-950/20 p-3 text-center">
+            <div class="text-xs font-bold text-amber-300">
+              ⏳ Aguardando intervalo de segurança anti-ban...
+            </div>
+            <div class="font-mono text-lg font-extrabold text-amber-400 my-1" id="waCountdownSeconds">
+              25s
+            </div>
+            <p class="text-[10px] text-slate-400">Protege seu número contra bloqueios automáticos do WhatsApp</p>
+          </div>
+
+          <!-- Status do Motor de Auto-Click ("Enviar" automático dentro do WhatsApp Web) -->
+          <div id="waAutoClickStatusBox" class="rounded-xl border border-emerald-500/30 bg-slate-950/90 p-3 space-y-2">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <span id="waAutoClickStatusBadge" class="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-extrabold text-emerald-300 border border-emerald-500/40">
+                  🤖 Motor Auto-Click WhatsApp Web
+                </span>
+                <span id="waAutoClickStatusText" class="text-[11px] font-semibold text-slate-300">
+                  Para o WhatsApp Web apertar "Enviar" (➤) sozinho sem intervenção:
+                </span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button id="btnCopyWaConsoleBot" type="button" class="rounded-lg border border-amber-500/40 bg-amber-500/15 px-2.5 py-1 text-[10px] font-bold text-amber-300 hover:bg-amber-500/25 cursor-pointer transition-colors" title="Copia o robô para colar no Console (F12) do WhatsApp Web caso não tenha ativado a extensão">
+                  📋 Copiar Robô Auto-Click (F12)
+                </button>
+                <button id="btnShowExtensionGuide" type="button" class="rounded-lg border border-sky-500/40 bg-sky-500/15 px-2.5 py-1 text-[10px] font-bold text-sky-300 hover:bg-sky-500/25 cursor-pointer transition-colors">
+                  🔌 Ativar Extensão Oficial
+                </button>
+              </div>
+            </div>
+            <div id="waExtensionGuideDetails" class="hidden rounded-lg border border-slate-800 bg-slate-900 p-2.5 text-[11px] text-slate-300 space-y-1.5">
+              <p class="font-bold text-emerald-400">⚡ Como fazer o WhatsApp Web clicar em "Enviar" 100% sozinho:</p>
+              <p>Por segurança do navegador, qualquer site precisa da nossa <strong>Extensão Oficial</strong> ativa no Chrome para apertar o botão <strong>Enviar (➤)</strong> dentro da aba do WhatsApp Web:</p>
+              <ol class="list-decimal list-inside space-y-1 text-slate-300">
+                <li>Abra uma aba no Chrome e digite <code class="bg-slate-950 px-1.5 py-0.5 rounded text-amber-300 font-mono">chrome://extensions</code></li>
+                <li>Ative a chave <strong>"Modo do desenvolvedor"</strong> (canto superior direito).</li>
+                <li>Clique em <strong>"Carregar sem compactação"</strong> (ou no ícone 🔄 <strong>Atualizar</strong> se já instalou) e selecione a pasta <code class="bg-slate-950 px-1.5 py-0.5 rounded text-emerald-300 font-mono">extensao-chrome</code> do projeto. (Se abrir o sistema por arquivo local, ative também <em>"Permitir acesso a URLs de arquivo"</em>).</li>
+              </ol>
+              <div class="pt-1 flex items-center gap-2">
+                <button id="btnCopyExtensionPath" type="button" class="rounded bg-emerald-500 px-2.5 py-1 text-[10px] font-black text-slate-950 hover:bg-emerald-400 cursor-pointer">
+                  📁 Copiar Caminho da Pasta extensao-chrome
+                </button>
+                <span class="text-[10px] text-slate-400">Depois disso, dê F5 no WhatsApp Web e no LeadMaps Pro!</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botão Principal: Disparo Automático Sequencial Anti-Ban -->
+          <div class="pt-1">
+            <button id="btnWaAutoRunner" type="button" class="w-full py-3.5 text-xs font-black flex items-center justify-center gap-2 cursor-pointer shadow-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 rounded-xl transition-all">
+              <span id="waAutoRunnerIcon">⚡</span> <span id="waAutoRunnerLabel">Iniciar Disparo Automático Sequencial (Anti-Ban)</span>
+            </button>
+            <p class="text-[10px] text-center text-slate-400 mt-1.5">
+              Reutiliza a mesma aba do WhatsApp Web sem bloqueio de pop-up e avança sozinho após o delay anti-ban.
+            </p>
+          </div>
+
+          <!-- Botões de Ação Manual do Lead Atual -->
+          <div class="flex flex-wrap items-center gap-2.5 pt-1">
+            <button id="btnWaOpenCurrent" type="button" class="btn-ghost-dark flex-1 min-w-[200px] py-2.5 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10">
+              <span>💬</span> <span>Abrir Este Lead Avulso no WhatsApp</span>
+            </button>
+            <button id="btnWaNextLead" type="button" class="btn-ghost-dark px-3.5 py-2.5 text-xs font-bold text-amber-400 border border-amber-500/30 hover:bg-amber-500/10 cursor-pointer">
+              ▶️ Próximo Lead
+            </button>
+            <button id="btnWaSkipCurrent" type="button" class="btn-ghost-dark px-3 py-2.5 text-xs font-semibold text-slate-400 hover:text-white cursor-pointer">
+              ⏭️ Pular
+            </button>
+          </div>
+        </div>
+
+        <!-- Se a Fila estiver Vazia -->
+        <div id="waEmptyQueueNotice" class="hidden rounded-xl border border-dashed border-slate-800 p-8 text-center">
+          <div class="text-3xl mb-2">📬</div>
+          <h4 class="text-sm font-bold text-white">Nenhum lead na fila no momento</h4>
+          <p class="text-xs text-slate-400 max-w-md mx-auto mt-1 mb-4">
+            Selecione leads na tabela através dos checkboxes ou clique no botão abaixo para carregar todos os leads da pesquisa atual.
+          </p>
+          <button id="btnEnqueueAllFromNotice" type="button" class="btn-amber px-4 py-2 text-xs font-bold cursor-pointer">
+            📥 Carregar Todos os Leads da Busca Atual
+          </button>
+        </div>
+
+        <!-- Tabela / Lista Completa dos Leads na Fila -->
+        <div class="rounded-xl border border-slate-800 bg-slate-900/40 p-3">
+          <div class="flex items-center justify-between mb-2 px-1">
+            <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400">Itens na Fila de Disparo</h5>
+            <span class="text-[11px] font-mono text-slate-400" id="waQueueListSummary">0 leads listados</span>
+          </div>
+          <div class="max-h-60 overflow-y-auto scrollbar-dark space-y-1.5" id="waQueueItemsList">
+            <!-- Injetado dinamicamente via JS -->
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Modal: Editar / Criar Lead do Google Business CRM -->
+  <div id="crmLeadModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
+    <div class="glass-card max-h-[90vh] w-full max-w-lg overflow-y-auto border border-slate-700 bg-slate-950 p-6 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 id="crmModalTitle" class="text-base font-extrabold text-white">Editar Negócio no Google Business CRM</h3>
+        <button id="btnCloseCrmModal" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white">✕</button>
+      </div>
+
+      <div class="mt-4 space-y-3.5 text-xs">
+        <input type="hidden" id="crmEditLeadId">
+
+        <div>
+          <label class="mb-1 block font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Nome da Empresa</label>
+          <input id="crmEditEmpresa" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="mb-1 block font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Telefone / WhatsApp</label>
+            <input id="crmEditTelefone" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400">
+          </div>
+          <div>
+            <label class="mb-1 block font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Nicho / Categoria</label>
+            <input id="crmEditCategoria" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="mb-1 block font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Estágio do Funil</label>
+            <select id="crmEditStage" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400">
+              <option value="novo">1. Novo Lead</option>
+              <option value="contatado">2. Contatado no WhatsApp</option>
+              <option value="negociacao">3. Em Negociação</option>
+              <option value="proposta">4. Proposta Enviada</option>
+              <option value="fechado">5. Fechado / Ganho</option>
+            </select>
+          </div>
+          <div>
+            <label class="mb-1 block font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Valor da Proposta (R$)</label>
+            <input id="crmEditValue" type="number" min="0" step="50" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 font-mono text-sm text-white outline-none focus:border-amber-400" placeholder="1500">
+          </div>
+        </div>
+
+        <div>
+          <label class="mb-1 block font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Serviço Oferecido</label>
+          <select id="crmEditService" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400">
+            <option value="Site de Alta Conversão">Criação de Site de Alta Conversão (R$ 1.500 - R$ 3.000)</option>
+            <option value="Tour Virtual 360°">Tour Virtual Google Street View 360° (R$ 800 - R$ 1.500)</option>
+            <option value="Otimização Google Perfil">Otimização de Ficha Google Meu Negócio (R$ 600 - R$ 1.200)</option>
+            <option value="Pacote Completo Presença 360°">Pacote Completo Presença 360° (R$ 2.500 - R$ 4.500)</option>
+            <option value="Consultoria Mensal">Consultoria & Tráfego Mensal (R$ 1.200/mês)</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="mb-1 block font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Status do Site</label>
+            <select id="crmEditHasSite" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400">
+              <option value="false">🚨 Sem Site (Oportunidade Alta)</option>
+              <option value="true">🌐 Com Site Ativo</option>
+            </select>
+          </div>
+          <div>
+            <label class="mb-1 block font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Tour 360° Street View</label>
+            <select id="crmEditHas360" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400">
+              <option value="false">Sem Tour 360°</option>
+              <option value="true">📷 Tour 360° Detectado</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="mb-1 block font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Anotações do Ricardo / Histórico de Conversa</label>
+          <textarea id="crmEditNotes" rows="3" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400" placeholder="Ex: Falei com o proprietário Carlos. Ele quer um site novo e fotos da loja. Agendado retorno na quinta-feira..."></textarea>
+        </div>
+
+        <div class="flex items-center justify-between border-t border-slate-800 pt-3">
+          <button id="btnDeleteCrmLead" type="button" class="text-xs font-bold text-rose-400 hover:text-rose-300">
+            🗑️ Excluir do CRM
+          </button>
+          <div class="flex items-center gap-2">
+            <button id="btnCancelCrmModal" type="button" class="btn-ghost-dark px-3.5 py-2 text-xs font-semibold">Cancelar</button>
+            <button id="btnSaveCrmLead" type="button" class="btn-amber px-4 py-2 text-xs font-bold">Salvar Negócio</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Tela Exclusiva de Login, Ativação de Licença & Checkout Automático 24h -->
+  <div id="authGateOverlay" class="fixed inset-0 z-[80] hidden flex items-center justify-center bg-[#070b14]/95 p-4 backdrop-blur-xl overflow-y-auto">
+    <div class="w-full max-w-5xl my-auto grid grid-cols-1 lg:grid-cols-12 rounded-2xl border border-slate-800 bg-slate-950 shadow-2xl overflow-hidden">
+
+      <!-- Coluna Esquerda (6 cols): Login & Chave de Licença -->
+      <div class="lg:col-span-6 p-6 sm:p-10 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900/90 to-amber-950/15">
+        <div>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-500/20 border border-amber-500/40 text-2xl">
+                🎯
+              </div>
+              <div>
+                <h2 class="text-xl font-extrabold text-white tracking-tight">LeadMaps <span class="text-amber-400">PRO</span></h2>
+                <p class="text-[11px] text-slate-400">Plataforma Oficial para Gestores Google</p>
+              </div>
+            </div>
+            <span class="badge-pill badge-amber">Acesso Licenciado</span>
+          </div>
+
+          <h1 class="mt-6 text-2xl font-black text-white leading-tight">
+            Acesso Exclusivo de Assinantes
+          </h1>
+          <p class="mt-1.5 text-xs text-slate-400 leading-relaxed">
+            Insira seu e-mail cadastrado e sua Chave de Licença ativa para acessar o extrator, relatórios de 22 itens e disparador WhatsApp.
+          </p>
+
+          <!-- Alerta de Status de Login / Vencimento -->
+          <div id="authLoginAlertBox" class="mt-4 hidden rounded-xl border border-rose-500/40 bg-rose-950/40 p-3.5 text-xs text-rose-200 space-y-1">
+            <p id="authLoginAlertTitle" class="font-extrabold text-rose-400">⚠️ Licença Expirada ou Inválida</p>
+            <p id="authLoginAlertText">Sua chave de acesso venceu ou foi suspensa. Realize a renovação ao lado via PIX ou Cartão para liberação imediata.</p>
+          </div>
+
+          <!-- Campos de Login -->
+          <div class="mt-5 space-y-4 text-xs">
+            <div>
+              <label class="mb-1.5 block font-bold uppercase tracking-wider text-slate-300">👤 E-mail ou Usuário</label>
+              <input id="loginEmailInput" type="text" placeholder="seu@email.com" class="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-none focus:border-amber-400">
+            </div>
+
+            <div>
+              <label class="mb-1.5 block font-bold uppercase tracking-wider text-slate-300">🔑 Chave de Licença / Senha</label>
+              <input id="loginLicenseInput" type="text" placeholder="LMPRO-XXXX-XXXX ou senha master" class="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 font-mono text-sm text-emerald-400 font-bold outline-none focus:border-amber-400">
+            </div>
+
+            <button id="btnSubmitLogin" type="button" class="btn-amber w-full py-3.5 text-sm font-extrabold cursor-pointer shadow-xl flex items-center justify-center gap-2">
+              <span>🔐</span> <span>Entrar na Plataforma</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Atalho de Dono (Ricardo) e Testes Rápidos Protegidos em Gaveta Oculta -->
+        <details class="mt-6 pt-3 border-t border-slate-800/80 text-[11px] text-slate-500">
+          <summary class="cursor-pointer hover:text-slate-300 font-semibold select-none flex items-center justify-between">
+            <span>🛠️ Acesso Rápido de Testes (Modo Desenvolvedor / Dono)</span>
+            <span class="text-[9px]">▼</span>
+          </summary>
+          <div class="mt-2.5 flex flex-wrap gap-2">
+            <button id="btnQuickOwnerLogin" type="button" class="flex-1 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs font-bold text-amber-300 hover:bg-amber-500/20 cursor-pointer">
+              👑 Entrar como Dono (Ricardo)
+            </button>
+            <button id="btnQuickClientTestLogin" type="button" class="flex-1 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs font-bold text-emerald-300 hover:bg-emerald-500/20 cursor-pointer">
+              👤 Testar Visão de Cliente Ativo
+            </button>
+          </div>
+        </details>
+      </div>
+
+      <!-- Coluna Direita (6 cols): Checkout Automático 24h & Renovação via PIX/Cartão -->
+      <div class="lg:col-span-6 p-6 sm:p-10 bg-slate-900/60 flex flex-col justify-between space-y-5">
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="badge-pill badge-emerald">🛡️ Liberação Segura Anti-Fraude</span>
+            <span class="text-xs font-mono text-slate-400">PIX ou Cartão</span>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-extrabold text-white">Ainda não tem Licença ou Precisa Renovar?</h3>
+            <p class="text-xs text-slate-400 mt-1">
+              Escolha seu plano abaixo. Após a confirmação do pagamento, sua Chave de Licença é liberada automaticamente no seu WhatsApp e E-mail!
+            </p>
+          </div>
+
+          <!-- Cards de Planos -->
+          <div class="space-y-2.5 text-xs">
+            <div class="rounded-xl border border-emerald-500/40 bg-emerald-950/20 p-4 flex items-center justify-between">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-extrabold text-white text-sm">🚀 Plano Mensal Pro</span>
+                  <span class="rounded bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300">Mais Vendido</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-0.5">Extrator ilimitado + Relatórios 5 Seções + Disparador WhatsApp</p>
+                <div class="flex items-center gap-2 mt-1 text-[10px] text-emerald-400 font-mono">
+                  <span>💳 Cartão Recorrente (Sem Atrasos)</span>
+                  <span>·</span>
+                  <span>⚡ PIX Automático</span>
+                </div>
+              </div>
+              <div class="text-right">
+                <p class="text-lg font-black text-emerald-400">R$ 97<span class="text-[10px] text-slate-400 font-normal">/mês</span></p>
+                <button type="button" onclick="window.openCheckoutPlan('mensal')" class="mt-1 rounded-lg bg-emerald-500 px-3 py-1.5 text-[11px] font-black text-slate-950 hover:bg-emerald-400 cursor-pointer flex items-center gap-1 shadow-md">
+                  <span>💳</span> <span>Assinar no Cartão / PIX</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="rounded-xl border border-amber-500/40 bg-amber-950/20 p-4 flex items-center justify-between">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-extrabold text-white text-sm">👑 Plano Anual VIP (Mais Escolhido)</span>
+                  <span class="rounded bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-300">Economize 57%</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-0.5">12 meses de acesso completo + Relatório White-Label + Extensão Chrome</p>
+                <div class="flex items-center gap-2 mt-1 text-[10px] text-amber-400 font-mono">
+                  <span>Apenas R$ 41,41/mês</span>
+                  <span>·</span>
+                  <span>⚡ Ativação Imediata via PIX</span>
+                </div>
+              </div>
+              <div class="text-right">
+                <p class="text-lg font-black text-amber-400">R$ 497<span class="text-[10px] text-slate-400 font-normal">/ano</span></p>
+                <button type="button" onclick="window.openCheckoutPlan('anual')" class="mt-1 rounded-lg bg-amber-500 px-3 py-1.5 text-[11px] font-black text-slate-950 hover:bg-amber-400 cursor-pointer flex items-center gap-1 shadow-md">
+                  <span>👑</span> <span>Assinar Anual (VIP)</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Box PIX Instantâneo Copia e Cola -->
+          <div class="rounded-xl border border-slate-800 bg-slate-950 p-4 space-y-2.5 text-xs">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-emerald-400">💠 Chave PIX Oficial (Celular):</span>
+              <button id="btnCopyPixKeyModal" type="button" class="rounded bg-emerald-500/20 border border-emerald-500/40 px-2.5 py-1 text-[11px] font-bold text-emerald-300 hover:bg-emerald-500/30 cursor-pointer">
+                📋 Copiar Chave PIX
+              </button>
+            </div>
+            <p class="font-mono text-xs text-emerald-400 font-bold bg-slate-900 px-3 py-2 rounded border border-slate-800 select-all" id="authPixKeyDisplay">
+              11970558412
+            </p>
+            <div class="flex flex-wrap gap-2 pt-1">
+              <button id="btnConfirmPixAutoRelease" type="button" class="flex-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3 py-2.5 text-xs font-extrabold text-white cursor-pointer flex items-center justify-center gap-1.5 shadow-lg">
+                <span>📲</span> <span>Enviar Comprovante no WhatsApp (Validação & Liberação)</span>
+              </button>
+              <a id="btnBuyLicenseWhatsApp" href="https://wa.me/5511970558412?text=Ol%C3%A1%20Ricardo!%20Quero%20adquirir%20minha%20licen%C3%A7a%20do%20LeadMaps%20Pro!" target="_blank" rel="noopener noreferrer" class="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-bold text-slate-300 hover:text-white flex items-center gap-1">
+                <span>💬</span> <span>Falar com Suporte</span>
+              </a>
+            </div>
+            <p class="text-[10px] text-slate-400 text-center pt-1 font-sans">
+              🛡️ <strong>Segurança Anti-Fraude:</strong> Para sua proteção e a nossa, a ativação via PIX manual requer envio do comprovante para conferência bancária. Não há liberação automática sem validação financeira.
+            </p>
+          </div>
+        </div>
+
+        <p class="text-[11px] text-center text-slate-500">
+          🔒 Ambiente Criptografado · Proteção Anti-Clonagem Ativa · LeadMaps Pro Enterprise
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast Flutuante -->
+  <div id="toastNotification" class="fixed bottom-5 left-1/2 z-[90] -translate-x-1/2 hidden rounded-xl border border-[color-mix(in_oklab,var(--emerald-signal)_40%,transparent)] bg-[color-mix(in_oklab,var(--surface-1)_95%,transparent)] px-4 py-2.5 text-sm font-semibold shadow-2xl backdrop-blur-xl text-white">
+    <!-- Message injected here -->
+  </div>
+
+  <script src="js/app.js"></script>
+  <script src="js/security-shield.js"></script>
+</body>
+</html>
