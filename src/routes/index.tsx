@@ -173,7 +173,7 @@ function Hero() {
           <div className="mt-8 flex flex-wrap gap-3">
             <a href="#hub" className={btnPrimary}>Abrir a Ferramenta Agora <ArrowRight className="h-4 w-4" /></a>
             <a href="#planos" className={btnGhost}>Ver Planos & Preços</a>
-            <a href={wa("Olá Ricardo, quero suporte VIP do LeadMaps Pro.")} target="_blank" rel="noreferrer" className={btnGhost}><MessageCircle className="h-4 w-4 text-primary" />Suporte VIP WhatsApp</a>
+            <a href={wa("Olá Ricardo, quero suporte VIP do LeadMaps Pro.")} target="_blank" rel="noreferrer" className={btnGhost}><MessageCircle className="h-4 w-4 text-whats" />Suporte VIP WhatsApp</a>
           </div>
           <div className="mt-8 flex flex-wrap gap-2">
             {["Pré-Análise Individual", "22 Itens Auditados", "GeoGrid GPS 1km a 20km", "PDF White-Label", "WhatsApp Validado"].map((p) => (
