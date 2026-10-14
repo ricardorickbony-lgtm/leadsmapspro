@@ -3722,6 +3722,10 @@ async function fetchSerperLivePlaces(niche, city, targetCount, apiKey) {
           break; // Acabaram os resultados para esta query, passa para a próxima variação
         }
 
+        if (typeof debitActiveUserCredits === 'function') {
+          debitActiveUserCredits(1);
+        }
+
         for (const p of places) {
           const key = (p.cid || `${p.title || p.name}-${p.address || ''}`).toLowerCase();
           if (!seenPlaceKeys.has(key)) {
@@ -4191,20 +4195,29 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       let leadsObtidos = null;
       let motorUtilizado = "local";
 
-      // 1. TENTA PRIMEIRO A API AO VIVO DO GOOGLE MAPS (Serper.dev)
-      const apiKey = State.settings.apiKey || localStorage.getItem('leadmaps_google_api_key');
+      // 1. TENTA PRIMEIRO A API AO VIVO DO GOOGLE MAPS (Motor Oficial com Pool Central de Créditos)
+      const apiKey = State.settings.apiKey || localStorage.getItem('leadmaps_google_api_key') || 'f93ffd86dc739cb1c843b12f2082e381064c1339';
       if (apiKey && apiKey.trim().length > 5) {
+        if (typeof getActiveUserCredits === 'function' && getActiveUserCredits() <= 0) {
+          showToast("⚠️ Seus créditos do mês acabaram (0 créditos). Adquira uma recarga avulsa ou renove seu plano!");
+          btn.disabled = false;
+          btn.innerHTML = originalBtnHtml;
+          return;
+        }
+
         try {
           if (progBar) progBar.style.width = '55%';
           if (btnLabel) btnLabel.textContent = 'Buscando dados ao vivo no Google Maps...';
           const liveResults = await fetchSerperLivePlaces(niche, city, targetCount, apiKey.trim());
           if (liveResults && liveResults.length > 0) {
             leadsObtidos = liveResults;
-            motorUtilizado = "Google Maps Oficial (Serper API)";
+            motorUtilizado = "Google Maps Oficial (Motor LeadMaps)";
+            const creditsLeft = typeof getActiveUserCredits === 'function' ? getActiveUserCredits() : 500;
+            showToast(`✅ Busca ao vivo concluída! ${liveResults.length} leads extraídos. (${creditsLeft} créditos restantes).`);
           }
         } catch (apiErr) {
           console.warn("Erro ao buscar via Serper API:", apiErr);
-          showToast("Aviso: Falha na API Serper. Verifique sua chave nas configurações.");
+          showToast("Aviso: Falha na API. Verifique sua conexão ou tente novamente.");
         }
       }
 
@@ -6074,7 +6087,13 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       const raw = localStorage.getItem(SUB_STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map(s => ({
+            ...s,
+            creditosDisponiveis: typeof s.creditosDisponiveis === 'number' ? s.creditosDisponiveis : 500,
+            creditosTotal: typeof s.creditosTotal === 'number' ? s.creditosTotal : 500
+          }));
+        }
       }
     } catch (e) {}
 
@@ -6089,6 +6108,8 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
         chave: 'LMPRO-MEN-8K4P-92XA',
         plano: 'Mensal Pro',
         valorMensal: 97,
+        creditosDisponiveis: 500,
+        creditosTotal: 500,
         expiraEm: now + (26 * dayMs),
         status: 'ativo'
       },
@@ -6100,6 +6121,8 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
         chave: 'LMPRO-ANU-7W2M-45TR',
         plano: 'Anual VIP',
         valorMensal: 97,
+        creditosDisponiveis: 500,
+        creditosTotal: 500,
         expiraEm: now + (310 * dayMs),
         status: 'ativo'
       },
@@ -6111,7 +6134,9 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
         chave: 'LMPRO-MEN-3J9L-11QZ',
         plano: 'Mensal Pro',
         valorMensal: 97,
-        expiraEm: now + (4 * dayMs), // Vencendo em 4 dias
+        creditosDisponiveis: 465,
+        creditosTotal: 500,
+        expiraEm: now + (4 * dayMs),
         status: 'ativo'
       },
       {
@@ -6122,7 +6147,9 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
         chave: 'LMPRO-MEN-5N8B-00XX',
         plano: 'Mensal Pro',
         valorMensal: 97,
-        expiraEm: now - (3 * dayMs), // Vencido / Bloqueado
+        creditosDisponiveis: 0,
+        creditosTotal: 500,
+        expiraEm: now - (3 * dayMs),
         status: 'bloqueado'
       }
     ];
@@ -6139,6 +6166,48 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
   }
 
   State.subscribers = loadSubscribers();
+
+  // Sistema de Gestão e Débito de Créditos do Usuário Ativo
+  function getActiveUserCredits() {
+    if (!State.activeSession) return 500;
+    if (State.activeSession.role === 'master') return 999999;
+    const sub = (State.subscribers || []).find(s => s.email && State.activeSession.email && s.email.toLowerCase() === State.activeSession.email.toLowerCase());
+    return sub && typeof sub.creditosDisponiveis === 'number' ? sub.creditosDisponiveis : 500;
+  }
+
+  function debitActiveUserCredits(amount = 1) {
+    if (!State.activeSession || State.activeSession.role === 'master') {
+      updateHeaderCreditsDisplay();
+      return true;
+    }
+    const sub = (State.subscribers || []).find(s => s.email && State.activeSession.email && s.email.toLowerCase() === State.activeSession.email.toLowerCase());
+    if (!sub) return true;
+    const current = typeof sub.creditosDisponiveis === 'number' ? sub.creditosDisponiveis : 500;
+    if (current < amount) return false;
+    sub.creditosDisponiveis = Math.max(0, current - amount);
+    saveSubscribers(State.subscribers);
+    updateHeaderCreditsDisplay();
+    return true;
+  }
+
+  function updateHeaderCreditsDisplay() {
+    const el = document.getElementById('headerCreditsDisplay');
+    if (!el) return;
+    if (!State.activeSession || State.activeSession.role === 'master') {
+      el.textContent = '∞ Créditos (Master)';
+      el.className = 'font-mono text-xs font-bold text-amber-400';
+    } else {
+      const credits = getActiveUserCredits();
+      const sub = (State.subscribers || []).find(s => s.email && State.activeSession?.email && s.email.toLowerCase() === State.activeSession.email.toLowerCase());
+      const total = (sub && sub.creditosTotal) ? sub.creditosTotal : 500;
+      el.textContent = `${credits} / ${total} créditos`;
+      el.className = credits > 100 
+        ? 'font-mono text-xs font-bold text-emerald-400' 
+        : credits > 30 
+          ? 'font-mono text-xs font-bold text-amber-400' 
+          : 'font-mono text-xs font-bold text-rose-400 animate-pulse';
+    }
+  }
 
   function loadPaymentConfig() {
     try {
@@ -6236,6 +6305,11 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
           <td class="px-4 py-3">
             <div class="font-semibold text-slate-200">${s.plano}</div>
             <div class="text-[11px] font-mono text-amber-400">R$ ${Number(s.valorMensal || 97).toLocaleString('pt-BR')}/mês</div>
+            <div class="mt-1 font-mono text-[10px]">
+              <span class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 ${(s.creditosDisponiveis !== undefined ? s.creditosDisponiveis : 500) > 80 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30'}">
+                ⚡ ${s.creditosDisponiveis !== undefined ? s.creditosDisponiveis : 500} / ${s.creditosTotal || 500} cr
+              </span>
+            </div>
           </td>
           <td class="px-4 py-3 font-mono text-xs text-slate-300">
             ${expDateStr}
@@ -6248,8 +6322,11 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
               <button type="button" onclick="window.sendAccessWhatsApp(${s.id})" class="rounded-lg bg-emerald-500/20 border border-emerald-500/40 hover:bg-emerald-500/30 px-2.5 py-1 text-[11px] font-bold text-emerald-300 cursor-pointer" title="Enviar Login e Chave de Acesso no WhatsApp do Cliente">
                 📲 Enviar Acesso WA
               </button>
-              <button type="button" onclick="window.renewSubscriberDays(${s.id}, 30)" class="rounded-lg bg-sky-500/20 border border-sky-500/40 hover:bg-sky-500/30 px-2.5 py-1 text-[11px] font-bold text-sky-300 cursor-pointer" title="Adicionar +30 dias de validade e ativar">
-                🔄 +30d
+              <button type="button" onclick="window.renewSubscriberDays(${s.id}, 30)" class="rounded-lg bg-sky-500/20 border border-sky-500/40 hover:bg-sky-500/30 px-2 py-1 text-[11px] font-bold text-sky-300 cursor-pointer" title="Renovar +30 dias de validade e recarregar cota para 500 créditos">
+                🔄 +30d (500cr)
+              </button>
+              <button type="button" onclick="window.addSubscriberCreditsPrompt(${s.id})" class="rounded-lg bg-amber-500/20 border border-amber-500/40 hover:bg-amber-500/30 px-2 py-1 text-[11px] font-bold text-amber-300 cursor-pointer" title="Adicionar recarga avulsa de créditos (+100, +500, etc)">
+                ➕ Recarga
               </button>
               <button type="button" onclick="window.toggleBlockSubscriber(${s.id})" class="rounded-lg ${isBlocked ? 'bg-amber-500/20 border-amber-500/40 text-amber-300' : 'bg-rose-500/20 border-rose-500/40 text-rose-300'} border px-2.5 py-1 text-[11px] font-bold cursor-pointer" title="Bloquear ou Desbloquear acesso deste cliente imediatamente">
                 ${isBlocked ? '🔓 Desbloquear' : '🔒 Bloquear'}
@@ -6299,8 +6376,39 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     const baseTime = Math.max(Date.now(), sub.expiraEm || Date.now());
     sub.expiraEm = baseTime + (days * 86400000);
     sub.status = 'ativo';
+    sub.creditosDisponiveis = 500;
+    sub.creditosTotal = Math.max(sub.creditosTotal || 500, 500);
     saveSubscribers(State.subscribers);
-    showToast(`🔄 Licença de "${sub.nome}" renovada por +${days} dias!`);
+    updateHeaderCreditsDisplay();
+    showToast(`🔄 Licença de "${sub.nome}" renovada por +${days} dias e recarregada com 500 créditos!`);
+  };
+
+  window.resetSubscriberCredits = function(subId, amount = 500) {
+    const sub = State.subscribers.find(s => s.id === subId);
+    if (!sub) return;
+    sub.creditosDisponiveis = amount;
+    sub.creditosTotal = Math.max(sub.creditosTotal || 500, amount);
+    saveSubscribers(State.subscribers);
+    updateHeaderCreditsDisplay();
+    showToast(`🎯 Saldo de "${sub.nome}" restaurado para ${amount} créditos!`);
+  };
+
+  window.addSubscriberCreditsPrompt = function(subId) {
+    const sub = State.subscribers.find(s => s.id === subId);
+    if (!sub) return;
+    const current = sub.creditosDisponiveis !== undefined ? sub.creditosDisponiveis : 500;
+    const input = prompt(`Adicionar recarga avulsa de créditos para "${sub.nome}" (Saldo atual: ${current}):\nDigite a quantidade a acrescentar (ex: 500, 1000):`, "500");
+    if (!input) return;
+    const qty = parseInt(input.trim(), 10);
+    if (!isNaN(qty) && qty > 0) {
+      sub.creditosDisponiveis = current + qty;
+      sub.creditosTotal = (sub.creditosTotal || 500) + qty;
+      saveSubscribers(State.subscribers);
+      updateHeaderCreditsDisplay();
+      showToast(`➕ Adicionados +${qty} créditos para "${sub.nome}" (Novo Saldo: ${sub.creditosDisponiveis})!`);
+    } else {
+      alert("Quantidade inválida.");
+    }
   };
 
   window.deleteSubscriber = function(subId) {
@@ -6375,6 +6483,8 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       plano: planLabel,
       valorMensal: valor,
       expiraEm: Date.now() + (days * 86400000),
+      creditosDisponiveis: 500,
+      creditosTotal: 500,
       status: 'ativo'
     };
 
@@ -6423,6 +6533,8 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       plano: 'Plano Mensal Pro (PIX Auto)',
       valorMensal: 97,
       expiraEm: Date.now() + (30 * 86400000),
+      creditosDisponiveis: 500,
+      creditosTotal: 500,
       status: 'ativo'
     };
 
@@ -6452,6 +6564,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       if (State.crmActiveTab === 'admin') activateMainView('extrator');
       if (badge) badge.textContent = `👤 ${sessionObj.name} (${sessionObj.daysLeft}d)`;
     }
+    updateHeaderCreditsDisplay();
   }
 
   function attemptLogin(emailRaw, keyRaw) {
