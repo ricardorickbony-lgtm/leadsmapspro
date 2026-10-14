@@ -6799,6 +6799,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
 
   // Dicionário Geodésico Real de Cidades e Bairros para Precisão Instantânea
   const CITY_COORDS_DB = [
+    { match: /(?:hebron|vila pires|dom pedro)/i, lat: -23.677748, lng: -46.510365, label: 'Vila Pires, Santo André - SP' },
     { match: /bairro jardim.*santo andr/i, lat: -23.6639, lng: -46.5348, label: 'Bairro Jardim, Santo André - SP' },
     { match: /campestre.*santo andr/i, lat: -23.6435, lng: -46.5412, label: 'Bairro Campestre, Santo André - SP' },
     { match: /vila assun.*santo andr/i, lat: -23.6698, lng: -46.5215, label: 'Vila Assunção, Santo André - SP' },
@@ -6879,9 +6880,10 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     addManualPointMode: false,
     centerLat: -23.677748,
     centerLng: -46.510365,
-    selectedLeadId: null,
-    selectedLeadName: 'Loja de Carros Hebron Motors',
+    selectedLeadId: 'hebron_verified',
+    selectedLeadName: 'Hebron Motors | Loja de Carros em Santo André',
     selectedLeadAddress: 'Av. Dom Pedro I, 1553 - Vila Pires, Santo André - SP',
+    selectedLeadCategory: 'Revendedora de carros usados',
     keyword: 'loja de carros',
     gridSize: 5,
     radiusKm: 3.0,
@@ -6891,7 +6893,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     liveCompetitors: [], // Concorrentes reais extraídos ao vivo via Google Places Serper API
     _cachedCompetitorsKey: '',
     duelMode: false,
-    duelCompetitorName: ''
+    duelCompetitorName: 'Santo André Automóveis | Loja de Carros em Santo André'
   };
 
   function loadGeoHistory() {
@@ -7300,13 +7302,14 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     let opts = '';
 
     // Se temos uma empresa pesquisada (ex: Hebron motors) que não está na lista extraída
-    if (GeoState.selectedLeadName && !leads.some(l => (l.empresa || '').toLowerCase().trim() === GeoState.selectedLeadName.toLowerCase().trim())) {
-      opts += `<option value="${GeoState.selectedLeadId || 'custom'}" selected>🏢 ${GeoState.selectedLeadName} (Empresa Analisada) · ${GeoState.selectedLeadAddress || 'Local'}</option>`;
+    const isTargetInLeads = leads.some(l => (l.empresa || '').toLowerCase().trim() === (GeoState.selectedLeadName || '').toLowerCase().trim());
+    if (GeoState.selectedLeadName && !isTargetInLeads) {
+      opts += `<option value="${GeoState.selectedLeadId || 'hebron_verified'}" selected>🏢 ${GeoState.selectedLeadName} (Empresa Analisada) · ${GeoState.selectedLeadAddress || 'Local'}</option>`;
     }
 
     if (leads.length > 0) {
       opts += leads.map((l, idx) => `
-        <option value="${l.id}" ${(l.id === GeoState.selectedLeadId || (l.empresa || '').toLowerCase().trim() === (GeoState.selectedLeadName || '').toLowerCase().trim()) ? 'selected' : ''}>
+        <option value="${l.id}" ${(isTargetInLeads && (l.id === GeoState.selectedLeadId || (l.empresa || '').toLowerCase().trim() === (GeoState.selectedLeadName || '').toLowerCase().trim())) ? 'selected' : ''}>
           🏢 ${l.empresa} — ⭐ ${Number(l.rating || 4.8).toFixed(1)} (${l.reviews || 0} aval.) · ${l.cidade || ''}
         </option>
       `).join('');
@@ -7505,7 +7508,10 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     const competitorRanks = {};
     pool.forEach((c, idx) => {
       if (c.empresa) {
-        competitorRanks[c.empresa.toLowerCase().trim()] = Math.min(20, idx + 1);
+        const fullKey = c.empresa.toLowerCase().trim();
+        competitorRanks[fullKey] = Math.min(20, idx + 1);
+        const shortKey = fullKey.split('|')[0].trim();
+        competitorRanks[shortKey] = Math.min(20, idx + 1);
       }
     });
 
@@ -7704,8 +7710,13 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
 
       if (GeoState.duelMode && GeoState.duelCompetitorName) {
         const rivalNorm = GeoState.duelCompetitorName.toLowerCase().trim();
+        const rivalClean = rivalNorm.split('|')[0].trim();
         const rivalRank = pt.competitorRanks?.[rivalNorm] ||
-          (pt.topCompetitors?.find(c => c.empresa.toLowerCase().includes(rivalNorm))?.pos) ||
+          pt.competitorRanks?.[rivalClean] ||
+          (pt.topCompetitors?.find(c => {
+            const cNorm = (c.empresa || '').toLowerCase();
+            return cNorm.includes(rivalClean) || rivalClean.includes(cNorm) || cNorm.includes(rivalNorm) || rivalNorm.includes(cNorm);
+          })?.pos) ||
           20;
 
         if (pt.rank < rivalRank) {
@@ -7816,6 +7827,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     if (rivalNameEl) rivalNameEl.textContent = rivalName;
 
     const rivalNorm = rivalName.toLowerCase().trim();
+    const rivalClean = rivalNorm.split('|')[0].trim();
     const activePts = GeoState.points.filter(p => p.active);
     const totalPts = activePts.length || 1;
 
@@ -7830,7 +7842,11 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     activePts.forEach(pt => {
       const ourRank = pt.rank;
       const rivalRank = pt.competitorRanks?.[rivalNorm] ||
-        (pt.topCompetitors?.find(c => c.empresa.toLowerCase().includes(rivalNorm))?.pos) ||
+        pt.competitorRanks?.[rivalClean] ||
+        (pt.topCompetitors?.find(c => {
+          const cNorm = (c.empresa || '').toLowerCase();
+          return cNorm.includes(rivalClean) || rivalClean.includes(cNorm) || cNorm.includes(rivalNorm) || rivalNorm.includes(cNorm);
+        })?.pos) ||
         20;
 
       sumLeadRank += ourRank;
@@ -7877,18 +7893,31 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     const seen = new Set();
     const myName = (GeoState.selectedLeadName || '').toLowerCase().trim();
 
+    // 1. Concorrentes ao vivo coletados
     (GeoState.liveCompetitors || []).forEach(c => {
       const n = (c.empresa || '').trim();
-      if (n && !seen.has(n.toLowerCase()) && n.toLowerCase() !== myName) {
+      if (n && !seen.has(n.toLowerCase()) && !n.toLowerCase().includes('hebron') && n.toLowerCase() !== myName) {
         seen.add(n.toLowerCase());
         candidates.push(n);
       }
     });
 
+    // 2. Presets de Concorrentes Reais do Nicho (Ex: Santo André Automóveis para carros)
+    const activeNiche = detectNicheCategory(GeoState.keyword, GeoState.selectedLeadName, GeoState.selectedLeadCategory || '');
+    const presetList = NICHE_COMPETITORS_PRESETS[activeNiche] || [];
+    presetList.forEach(c => {
+      const n = (c.empresa || '').trim();
+      if (n && !seen.has(n.toLowerCase()) && !n.toLowerCase().includes('hebron') && n.toLowerCase() !== myName) {
+        seen.add(n.toLowerCase());
+        candidates.push(n);
+      }
+    });
+
+    // 3. Fallback dos pontos calculados da grade
     if (candidates.length === 0) {
       (GeoState.points?.[0]?.topCompetitors || []).forEach(c => {
         const n = (c.empresa || '').trim();
-        if (n && !seen.has(n.toLowerCase()) && n.toLowerCase() !== myName) {
+        if (n && !seen.has(n.toLowerCase()) && !n.toLowerCase().includes('hebron') && n.toLowerCase() !== myName) {
           seen.add(n.toLowerCase());
           candidates.push(n);
         }
@@ -7896,16 +7925,20 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     }
 
     if (candidates.length === 0) {
-      candidates.push('Concorrente Principal');
+      candidates.push('Santo André Automóveis | Loja de Carros em Santo André');
     }
 
-    sel.innerHTML = candidates.map((name, i) => `
-      <option value="${name.replace(/"/g, '&quot;')}" ${i === 0 ? 'selected' : ''}>${name}</option>
+    // Se GeoState.duelCompetitorName já está definido mas não estava nos candidatos, insere no topo
+    if (GeoState.duelCompetitorName && !seen.has(GeoState.duelCompetitorName.toLowerCase().trim())) {
+      candidates.unshift(GeoState.duelCompetitorName);
+    }
+
+    const targetSelected = GeoState.duelCompetitorName || candidates[0] || '';
+    GeoState.duelCompetitorName = targetSelected;
+
+    sel.innerHTML = candidates.map((name) => `
+      <option value="${name.replace(/"/g, '&quot;')}" ${name === targetSelected ? 'selected' : ''}>${name}</option>
     `).join('');
-
-    if (!GeoState.duelCompetitorName || !candidates.includes(GeoState.duelCompetitorName)) {
-      GeoState.duelCompetitorName = candidates[0] || '';
-    }
   }
 
   // Auditoria de Visibilidade em Inteligência Artificial 2026 (ChatGPT, Google Gemini & AI Overviews)
@@ -8353,7 +8386,7 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
 
   window.initOrRefreshGeoGrid = function() {
     populateGeoLeadSelector();
-    if (!GeoState.selectedLeadId && State.leads && State.leads.length > 0) {
+    if (!GeoState.selectedLeadName && !GeoState.selectedLeadId && State.leads && State.leads.length > 0) {
       const first = State.leads[0];
       GeoState.selectedLeadId = first.id;
       GeoState.selectedLeadName = first.empresa;
@@ -8731,39 +8764,53 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
   // Listeners dos Controles da Aba de Ranking GeoGrid
   document.getElementById('rankSelectExtractedLead')?.addEventListener('change', (e) => {
     const val = e.target.value;
-    const id = Number(val);
-    const lead = (State.leads || []).find(l => l.id === id);
-    if (lead) {
-      GeoState.selectedLeadId = lead.id;
-      GeoState.selectedLeadName = lead.empresa;
-      GeoState.selectedLeadAddress = lead.endereco || lead.cidade || '';
-      GeoState.selectedLeadCategory = lead.categoria || '';
+    if (val === 'hebron_verified' || (typeof val === 'string' && val.toLowerCase().includes('hebron'))) {
+      GeoState.selectedLeadId = 'hebron_verified';
+      GeoState.selectedLeadName = 'Hebron Motors | Loja de Carros em Santo André';
+      GeoState.selectedLeadAddress = 'Av. Dom Pedro I, 1553 - Vila Pires, Santo André - SP';
+      GeoState.selectedLeadCategory = 'Revendedora de carros usados';
+      GeoState.keyword = 'loja de carros';
+      GeoState.centerLat = -23.677748;
+      GeoState.centerLng = -46.510365;
+      const kwInp = document.getElementById('rankKeywordInput');
+      if (kwInp) kwInp.value = GeoState.keyword;
+      const bInp = document.getElementById('rankBusinessSearchInput');
+      if (bInp) bInp.value = GeoState.selectedLeadName;
+    } else {
+      const id = Number(val);
+      const lead = (State.leads || []).find(l => l.id === id);
+      if (lead) {
+        GeoState.selectedLeadId = lead.id;
+        GeoState.selectedLeadName = lead.empresa;
+        GeoState.selectedLeadAddress = lead.endereco || lead.cidade || '';
+        GeoState.selectedLeadCategory = lead.categoria || '';
 
-      const keepKw = document.getElementById('rankKeepKeywordCheckbox')?.checked;
-      if (!keepKw) {
-        const leadNiche = detectNicheCategory(lead.categoria || '', lead.empresa || '');
-        const defaultKws = {
-          carros: 'loja de carros',
-          motos: 'loja de motos',
-          odontologia: 'dentista perto de mim',
-          estetica: 'clínica de estética',
-          alimentacao: 'restaurante perto de mim',
-          advocacia: 'escritório de advocacia',
-          imobiliaria: 'imobiliária perto de mim',
-          petshop: 'pet shop perto de mim',
-          academia: 'academia perto de mim',
-          oficina: 'oficina mecânica perto de mim',
-          fisioterapia: 'clínica de fisioterapia',
-          geral: 'loja de carros'
-        };
-        GeoState.keyword = defaultKws[leadNiche] || (lead.categoria || lead.empresa || 'loja de carros').toLowerCase();
-        const kwInp = document.getElementById('rankKeywordInput');
-        if (kwInp) kwInp.value = GeoState.keyword;
+        const keepKw = document.getElementById('rankKeepKeywordCheckbox')?.checked;
+        if (!keepKw) {
+          const leadNiche = detectNicheCategory(lead.categoria || '', lead.empresa || '');
+          const defaultKws = {
+            carros: 'loja de carros',
+            motos: 'loja de motos',
+            odontologia: 'dentista perto de mim',
+            estetica: 'clínica de estética',
+            alimentacao: 'restaurante perto de mim',
+            advocacia: 'escritório de advocacia',
+            imobiliaria: 'imobiliária perto de mim',
+            petshop: 'pet shop perto de mim',
+            academia: 'academia perto de mim',
+            oficina: 'oficina mecânica perto de mim',
+            fisioterapia: 'clínica de fisioterapia',
+            geral: 'loja de carros'
+          };
+          GeoState.keyword = defaultKws[leadNiche] || (lead.categoria || lead.empresa || 'loja de carros').toLowerCase();
+          const kwInp = document.getElementById('rankKeywordInput');
+          if (kwInp) kwInp.value = GeoState.keyword;
+        }
+
+        const coords = resolveLeadCoordinates(lead, 0);
+        GeoState.centerLat = coords.lat;
+        GeoState.centerLng = coords.lng;
       }
-
-      const coords = resolveLeadCoordinates(lead, 0);
-      GeoState.centerLat = coords.lat;
-      GeoState.centerLng = coords.lng;
     }
     updateCoordsDisplayText();
     renderAiKeywordSuggestions(GeoState.keyword || GeoState.selectedLeadName);
@@ -8961,7 +9008,7 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
     }
 
     GeoState.selectedLeadName = matchedPlace.name;
-    GeoState.selectedLeadId = 'custom_' + Date.now();
+    GeoState.selectedLeadId = matchedPlace.name.toLowerCase().includes('hebron') ? 'hebron_verified' : 'custom_' + Date.now();
     GeoState.selectedLeadAddress = matchedPlace.address;
     GeoState.centerLat = +matchedPlace.lat.toFixed(6);
     GeoState.centerLng = +matchedPlace.lng.toFixed(6);
