@@ -922,6 +922,15 @@
               <button id="btnToggleRankHeatmap" type="button" class="rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-3 py-1.5 font-bold text-emerald-300 hover:bg-emerald-500/25 cursor-pointer flex items-center gap-1.5">
                 <span>🔥</span> <span id="labelToggleRankHeatmap">Mapa de Calor: ON</span>
               </button>
+              <button id="btnToggleRankDuel" type="button" class="rounded-lg border border-purple-500/40 bg-purple-500/15 px-3 py-1.5 font-bold text-purple-300 hover:bg-purple-500/25 cursor-pointer flex items-center gap-1.5" title="Comparação direta frente a frente com o concorrente rival">
+                <span>⚔️</span> <span id="labelToggleRankDuel">Duelo Head-to-Head: OFF</span>
+              </button>
+              <div id="rankDuelSelectorContainer" class="hidden flex items-center gap-1.5 bg-slate-900 border border-purple-500/40 rounded-lg px-2.5 py-1">
+                <span class="text-[11px] text-purple-300 font-bold">vs:</span>
+                <select id="rankDuelCompetitorSelect" class="bg-transparent text-xs text-amber-300 font-extrabold outline-none cursor-pointer max-w-[160px] truncate">
+                  <!-- Concorrentes injetados via JS -->
+                </select>
+              </div>
               <button id="btnToggleRankRuler" type="button" class="rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 font-bold text-slate-300 hover:border-amber-400 hover:text-white cursor-pointer flex items-center gap-1.5">
                 <span>📏</span> <span id="labelToggleRankRuler">Medir Distância</span>
               </button>
@@ -952,6 +961,37 @@
                 <span class="flex items-center gap-1 text-emerald-400"><span class="h-3 w-3 rounded-full bg-emerald-500 inline-block"></span> 1º ao 3º (Top 3)</span>
                 <span class="flex items-center gap-1 text-amber-400"><span class="h-3 w-3 rounded-full bg-amber-500 inline-block"></span> 4º ao 10º (1ª Pág)</span>
                 <span class="flex items-center gap-1 text-rose-400"><span class="h-3 w-3 rounded-full bg-rose-600 inline-block"></span> 11º ao 20º+ (Invisível)</span>
+              </div>
+            </div>
+          <!-- Banner Placar do Duelo Head-to-Head (Visível quando o modo duelo está ativo) -->
+          <div id="rankDuelScorecardBox" class="hidden rounded-xl border border-purple-500/40 bg-purple-950/30 p-4 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-purple-500/30 pb-2.5">
+              <div class="flex items-center gap-2.5">
+                <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/20 text-base">⚔️</span>
+                <div>
+                  <h4 class="text-xs font-black uppercase tracking-wider text-purple-200">Placar do Duelo: <span id="duelLeadName" class="text-white">Sua Empresa</span> vs <span id="duelCompetitorName" class="text-amber-400">Rival</span></h4>
+                  <p class="text-[11px] text-purple-300/80">Comparação ponto a ponto nas esquinas e bairros da região mapeada</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span id="duelVictoryBadge" class="rounded-full bg-emerald-500/20 border border-emerald-500/40 px-3 py-1 text-xs font-mono font-bold text-emerald-300">🏆 Vitórias: 18 (72%)</span>
+                <span id="duelDefeatBadge" class="rounded-full bg-rose-500/20 border border-rose-500/40 px-3 py-1 text-xs font-mono font-bold text-rose-300">⚠️ Derrotas: 7 (28%)</span>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              <div class="rounded-lg bg-slate-900/80 p-2.5 border border-slate-800">
+                <span class="text-slate-400 block text-[10px] uppercase font-bold">Sua Empresa</span>
+                <span id="duelLeadAvgRank" class="text-base font-black text-emerald-400">Posição Média #2.1</span>
+                <span id="duelLeadSolv" class="block text-[11px] text-slate-300">Dominância Top 3: <strong>76%</strong></span>
+              </div>
+              <div class="rounded-lg bg-slate-900/80 p-2.5 border border-slate-800">
+                <span class="text-slate-400 block text-[10px] uppercase font-bold">Concorrente Rival</span>
+                <span id="duelRivalAvgRank" class="text-base font-black text-rose-400">Posição Média #4.8</span>
+                <span id="duelRivalSolv" class="block text-[11px] text-slate-300">Dominância Top 3: <strong>32%</strong></span>
+              </div>
+              <div class="rounded-lg bg-slate-900/80 p-2.5 border border-slate-800">
+                <span class="text-slate-400 block text-[10px] uppercase font-bold">Veredito Tático</span>
+                <p id="duelTacticalVerdict" class="text-[11px] text-purple-200 mt-0.5 leading-tight">Você vence amplamente no quadrante central, mas o rival tem vantagem nos bairros limítrofes.</p>
               </div>
             </div>
           </div>
@@ -988,6 +1028,81 @@
         </section>
 
       </div>
+
+      <!-- Card Oficial: Visibilidade em Busca por IA 2026 (ChatGPT, Google Gemini & AI Overviews) -->
+      <section id="rankAiVisibilityCard" class="rounded-2xl border border-sky-500/30 bg-gradient-to-br from-slate-950 via-slate-900 to-sky-950/25 p-5 space-y-4 shadow-xl">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+          <div class="flex items-center gap-3">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-500/20 border border-sky-500/40 text-xl shadow-md">
+              🤖
+            </div>
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <h3 class="text-sm font-extrabold uppercase tracking-wider text-white">Auditor de Visibilidade em Inteligência Artificial 2026</h3>
+                <span class="badge-pill badge-sky text-[10px] font-mono">SAIV & GEO Protocol</span>
+                <span class="badge-pill badge-emerald text-[10px]">ChatGPT & Google Gemini</span>
+              </div>
+              <p class="text-xs text-slate-300 mt-0.5">Descubra se a sua empresa é recomendada pelo ChatGPT e Google Gemini quando um morador local faz uma busca por voz ou texto.</p>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button id="btnRunAiVisibilityAudit" type="button" class="btn-amber px-4 py-2 text-xs font-extrabold flex items-center gap-1.5 cursor-pointer shadow-md hover:scale-105 transition-all">
+              <span>⚡</span> <span>Escanear Visibilidade em IA</span>
+            </button>
+            <button id="btnCopyAiValidationPrompt" type="button" class="btn-ghost-dark px-3 py-2 text-xs font-bold text-sky-300 border-sky-500/40 hover:bg-sky-500/10 cursor-pointer flex items-center gap-1" title="Copiar comando exato para colar e validar ao vivo no ChatGPT ou Gemini">
+              <span>📋</span> <span>Copiar Prompt Real</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Dashboard de Resultados da IA (Preenchido dinamicamente) -->
+        <div id="aiVisibilityResultsContainer" class="grid grid-cols-1 md:grid-cols-12 gap-4 text-xs">
+          <!-- Coluna 1: SAIV Score da IA (3 cols) -->
+          <div class="glass-card p-4 md:col-span-3 border border-sky-500/20 flex flex-col justify-between text-center">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Índice de Menção em IA (SAIV)</span>
+            <div class="my-3">
+              <span id="aiSaivScoreDisplay" class="font-mono text-4xl font-black text-sky-400">84%</span>
+              <span id="aiSaivScoreStatus" class="block text-xs font-bold text-emerald-400 mt-1">● Altamente Recomendado</span>
+            </div>
+            <p class="text-[10px] text-slate-400">Probabilidade de a IA citar a empresa no Top 3 de recomendações locais</p>
+          </div>
+
+          <!-- Coluna 2: Status por Plataforma (4 cols) -->
+          <div class="glass-card p-4 md:col-span-4 border border-slate-800 space-y-2.5">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">Presença nas Principais IAs:</span>
+            <div class="flex items-center justify-between rounded-lg bg-slate-900/80 p-2 border border-slate-800">
+              <div class="flex items-center gap-2">
+                <span class="text-sm">🟢</span>
+                <div>
+                  <span class="font-bold text-white block">ChatGPT (OpenAI Search)</span>
+                  <span id="aiChatGptStatus" class="text-[10px] text-emerald-400">Recomendação Direta no Nicho</span>
+                </div>
+              </div>
+              <span class="badge-pill badge-emerald text-[10px]">Top 1-2</span>
+            </div>
+            <div class="flex items-center justify-between rounded-lg bg-slate-900/80 p-2 border border-slate-800">
+              <div class="flex items-center gap-2">
+                <span class="text-sm">🔵</span>
+                <div>
+                  <span class="font-bold text-white block">Google Gemini & AI Overviews</span>
+                  <span id="aiGeminiStatus" class="text-[10px] text-emerald-400">Citado com Link e Horário Real</span>
+                </div>
+              </div>
+              <span class="badge-pill badge-sky text-[10px]">Destaque</span>
+            </div>
+          </div>
+
+          <!-- Coluna 3: Gatilhos Semânticos & Prescrição GEO (5 cols) -->
+          <div class="glass-card p-4 md:col-span-5 border border-slate-800 space-y-2">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-amber-400 block">💡 Prescrição GEO 2026 (Como Garantir o 1º Lugar na IA):</span>
+            <ul id="aiPrescriptionList" class="space-y-1.5 text-[11px] text-slate-300">
+              <li class="flex items-start gap-1.5"><span class="text-emerald-400">✔</span> <span>Adicione respostas a avaliações mencionando bairros vizinhos (ex: "atendemos todo o Bairro Jardim").</span></li>
+              <li class="flex items-start gap-1.5"><span class="text-emerald-400">✔</span> <span>Mantenha as fotos atualizadas; a IA do Google prioriza fichas com uploads no último mês.</span></li>
+              <li class="flex items-start gap-1.5"><span class="text-amber-400">⚠️</span> <span>Seu rival está sendo citado por ter a palavra-chave primária no início da categoria de serviços.</span></li>
+            </ul>
+          </div>
+        </div>
+      </section>
 
       <!-- Histórico com Grade Visual Integrada (Idêntico ao Padrão Internacional) -->
       <section class="glass-card p-6 space-y-4">
@@ -1131,6 +1246,9 @@
           </button>
           <button id="btnModalOpenGeoGrid" type="button" class="btn-ghost-dark px-4 py-2.5 text-xs font-bold text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/10 cursor-pointer flex items-center gap-1.5">
             🎯 Analisar Ranking GeoGrid
+          </button>
+          <button id="btnModalAiVisibility" type="button" class="btn-ghost-dark px-4 py-2.5 text-xs font-bold text-sky-400 border-sky-500/40 hover:bg-sky-500/10 cursor-pointer flex items-center gap-1.5" title="Verificar presença da empresa no ChatGPT e Gemini">
+            🤖 Visibilidade em IA
           </button>
           <button id="btnCopyModalPitch" class="btn-ghost-dark px-4 py-2.5 text-xs font-bold cursor-pointer">📋 Copiar Copy</button>
           <a id="btnModalWhatsApp" href="#" target="_blank" rel="noreferrer" class="inline-flex items-center gap-1 rounded-lg bg-[color-mix(in_oklab,var(--emerald-signal)_18%,transparent)] px-4 py-2.5 text-xs font-bold text-[var(--emerald-signal)] transition-all hover:brightness-125">

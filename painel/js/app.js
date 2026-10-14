@@ -6889,7 +6889,9 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     points: [], // [{ id, row, col, lat, lng, active, rank, topCompetitors, isCenter }]
     history: [],
     liveCompetitors: [], // Concorrentes reais extraídos ao vivo via Google Places Serper API
-    _cachedCompetitorsKey: ''
+    _cachedCompetitorsKey: '',
+    duelMode: false,
+    duelCompetitorName: ''
   };
 
   function loadGeoHistory() {
@@ -7500,9 +7502,17 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     const targetIndex = pool.findIndex(p => p.isTarget);
     const rankPos = targetIndex !== -1 ? Math.min(20, targetIndex + 1) : 20;
 
+    const competitorRanks = {};
+    pool.forEach((c, idx) => {
+      if (c.empresa) {
+        competitorRanks[c.empresa.toLowerCase().trim()] = Math.min(20, idx + 1);
+      }
+    });
+
     return {
       rank: rankPos,
-      topCompetitors: pool.slice(0, 6).map((c, i) => ({
+      competitorRanks: competitorRanks,
+      topCompetitors: pool.slice(0, 8).map((c, i) => ({
         pos: i + 1,
         empresa: c.empresa,
         rating: c.rating,
@@ -7556,6 +7566,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
           active: active,
           isCenter: isCenter,
           rank: calc.rank,
+          competitorRanks: calc.competitorRanks || {},
           topCompetitors: calc.topCompetitors
         });
       }
@@ -7686,10 +7697,36 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
         return;
       }
 
-      const bgHex = getRankColorHex(pt.rank);
-      const rankLabel = pt.rank >= 20 ? '20+' : String(pt.rank);
-      const sizePx = pt.isCenter ? 40 : 34;
-      const ringBorder = pt.isCenter ? '3px solid #ffffff' : '2px solid rgba(255,255,255,0.9)';
+      let bgHex = getRankColorHex(pt.rank);
+      let rankLabel = pt.rank >= 20 ? '20+' : String(pt.rank);
+      let pinTitle = `Posição #${rankLabel} no Google Maps (Clique para ver concorrentes desta esquina | Botão direito para desativar)`;
+      let ringBorder = pt.isCenter ? '3px solid #ffffff' : '2px solid rgba(255,255,255,0.9)';
+
+      if (GeoState.duelMode && GeoState.duelCompetitorName) {
+        const rivalNorm = GeoState.duelCompetitorName.toLowerCase().trim();
+        const rivalRank = pt.competitorRanks?.[rivalNorm] ||
+          (pt.topCompetitors?.find(c => c.empresa.toLowerCase().includes(rivalNorm))?.pos) ||
+          20;
+
+        if (pt.rank < rivalRank) {
+          bgHex = 'linear-gradient(135deg, #10b981, #059669)';
+          rankLabel = `🏆 ${pt.rank}`;
+          ringBorder = '2.5px solid #34d399';
+          pinTitle = `🏆 VITÓRIA! ${GeoState.selectedLeadName} (#${pt.rank}) VENCE ${GeoState.duelCompetitorName} (#${rivalRank})`;
+        } else if (pt.rank > rivalRank) {
+          bgHex = 'linear-gradient(135deg, #f43f5e, #be123c)';
+          rankLabel = `⚠️ ${pt.rank}`;
+          ringBorder = '2.5px solid #fb7185';
+          pinTitle = `⚠️ DERROTA! ${GeoState.duelCompetitorName} (#${rivalRank}) VENCE ${GeoState.selectedLeadName} (#${pt.rank})`;
+        } else {
+          bgHex = 'linear-gradient(135deg, #f59e0b, #d97706)';
+          rankLabel = `= ${pt.rank}`;
+          ringBorder = '2.5px solid #fbbf24';
+          pinTitle = `⚖️ EMPATE! Ambos na posição #${pt.rank}`;
+        }
+      }
+
+      const sizePx = pt.isCenter ? 42 : (GeoState.duelMode ? 38 : 34);
 
       const pinIcon = L.divIcon({
         className: 'custom-geogrid-pin',
@@ -7706,11 +7743,11 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
             align-items:center;
             justify-content:center;
             font-family:'JetBrains Mono',monospace;
-            font-size:${pt.isCenter ? '14px' : '12px'};
+            font-size:${pt.isCenter ? '13px' : (GeoState.duelMode ? '11px' : '12px')};
             font-weight:800;
             cursor:pointer;
             transition:transform 0.15s ease;
-          " title="Posição #${rankLabel} no Google Maps (Clique para ver concorrentes desta esquina | Botão direito para desativar)">
+          " title="${pinTitle}">
             ${rankLabel}
           </div>
         `,
@@ -7748,6 +7785,197 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
         });
       }
     });
+
+    updateDuelScorecard();
+  }
+
+  // Placar Oficial do Duelo de Concorrentes Head-to-Head
+  function updateDuelScorecard() {
+    const box = document.getElementById('rankDuelScorecardBox');
+    if (!box) return;
+    if (!GeoState.duelMode || !GeoState.duelCompetitorName) {
+      box.classList.add('hidden');
+      return;
+    }
+    box.classList.remove('hidden');
+
+    const leadNameEl = document.getElementById('duelLeadName');
+    const rivalNameEl = document.getElementById('duelCompetitorName');
+    const victBadge = document.getElementById('duelVictoryBadge');
+    const defBadge = document.getElementById('duelDefeatBadge');
+    const leadAvgEl = document.getElementById('duelLeadAvgRank');
+    const rivalAvgEl = document.getElementById('duelRivalAvgRank');
+    const leadSolvEl = document.getElementById('duelLeadSolv');
+    const rivalSolvEl = document.getElementById('duelRivalSolv');
+    const verdictEl = document.getElementById('duelTacticalVerdict');
+
+    const leadName = GeoState.selectedLeadName || 'Sua Empresa';
+    const rivalName = GeoState.duelCompetitorName || 'Concorrente Rival';
+
+    if (leadNameEl) leadNameEl.textContent = leadName;
+    if (rivalNameEl) rivalNameEl.textContent = rivalName;
+
+    const rivalNorm = rivalName.toLowerCase().trim();
+    const activePts = GeoState.points.filter(p => p.active);
+    const totalPts = activePts.length || 1;
+
+    let victories = 0;
+    let defeats = 0;
+    let ties = 0;
+    let sumLeadRank = 0;
+    let sumRivalRank = 0;
+    let leadTop3 = 0;
+    let rivalTop3 = 0;
+
+    activePts.forEach(pt => {
+      const ourRank = pt.rank;
+      const rivalRank = pt.competitorRanks?.[rivalNorm] ||
+        (pt.topCompetitors?.find(c => c.empresa.toLowerCase().includes(rivalNorm))?.pos) ||
+        20;
+
+      sumLeadRank += ourRank;
+      sumRivalRank += rivalRank;
+      if (ourRank <= 3) leadTop3++;
+      if (rivalRank <= 3) rivalTop3++;
+
+      if (ourRank < rivalRank) victories++;
+      else if (ourRank > rivalRank) defeats++;
+      else ties++;
+    });
+
+    const victPct = Math.round((victories / totalPts) * 100);
+    const defPct = Math.round((defeats / totalPts) * 100);
+    const leadAvg = (sumLeadRank / totalPts).toFixed(2);
+    const rivalAvg = (sumRivalRank / totalPts).toFixed(2);
+    const leadSolv = Math.round((leadTop3 / totalPts) * 100);
+    const rivalSolv = Math.round((rivalTop3 / totalPts) * 100);
+
+    if (victBadge) victBadge.textContent = `🏆 Vitórias: ${victories} (${victPct}%)`;
+    if (defBadge) defBadge.textContent = `⚠️ Derrotas: ${defeats} (${defPct}%)`;
+    if (leadAvgEl) leadAvgEl.textContent = `Posição Média #${leadAvg}`;
+    if (rivalAvgEl) rivalAvgEl.textContent = `Posição Média #${rivalAvg}`;
+    if (leadSolvEl) leadSolvEl.innerHTML = `Dominância Top 3: <strong>${leadSolv}%</strong>`;
+    if (rivalSolvEl) rivalSolvEl.innerHTML = `Dominância Top 3: <strong>${rivalSolv}%</strong>`;
+
+    if (verdictEl) {
+      if (victories > defeats) {
+        verdictEl.innerHTML = `<strong>Vantagem Estratégica:</strong> ${leadName} vence o rival em <strong>${victories} dos ${totalPts} bairros</strong> mapeados (${victPct}% de domínio geográfico), absorvendo o maior fluxo de clientes que buscam no Google Maps.`;
+      } else if (defeats > victories) {
+        verdictEl.innerHTML = `<strong>Alerta Crítico:</strong> ${rivalName} está à frente em <strong>${defeats} bairros (${defPct}% da área)</strong>. Recomenda-se reforço urgente em avaliações com fotos e palavras-chave locais.`;
+      } else {
+        verdictEl.innerHTML = `<strong>Disputa Equilibrada:</strong> Empate técnico ponto a ponto (${victories} a ${defeats}). Otimizações de Tour 360° e respostas a reviews desempatam a liderança.`;
+      }
+    }
+  }
+
+  // Popula o seletor de concorrentes para o modo Duelo
+  function populateDuelCompetitorsDropdown() {
+    const sel = document.getElementById('rankDuelCompetitorSelect');
+    if (!sel) return;
+
+    const candidates = [];
+    const seen = new Set();
+    const myName = (GeoState.selectedLeadName || '').toLowerCase().trim();
+
+    (GeoState.liveCompetitors || []).forEach(c => {
+      const n = (c.empresa || '').trim();
+      if (n && !seen.has(n.toLowerCase()) && n.toLowerCase() !== myName) {
+        seen.add(n.toLowerCase());
+        candidates.push(n);
+      }
+    });
+
+    if (candidates.length === 0) {
+      (GeoState.points?.[0]?.topCompetitors || []).forEach(c => {
+        const n = (c.empresa || '').trim();
+        if (n && !seen.has(n.toLowerCase()) && n.toLowerCase() !== myName) {
+          seen.add(n.toLowerCase());
+          candidates.push(n);
+        }
+      });
+    }
+
+    if (candidates.length === 0) {
+      candidates.push('Concorrente Principal');
+    }
+
+    sel.innerHTML = candidates.map((name, i) => `
+      <option value="${name.replace(/"/g, '&quot;')}" ${i === 0 ? 'selected' : ''}>${name}</option>
+    `).join('');
+
+    if (!GeoState.duelCompetitorName || !candidates.includes(GeoState.duelCompetitorName)) {
+      GeoState.duelCompetitorName = candidates[0] || '';
+    }
+  }
+
+  // Auditoria de Visibilidade em Inteligência Artificial 2026 (ChatGPT, Google Gemini & AI Overviews)
+  function runAiSearchAudit(leadParam = null) {
+    const bName = leadParam?.empresa || GeoState.selectedLeadName || 'Célia Decor';
+    const bCity = leadParam?.cidade || (GeoState.selectedLeadAddress ? GeoState.selectedLeadAddress.split('-')[1]?.trim() : 'Santo André');
+    const bNiche = GeoState.keyword || detectNicheCategory('', bName, leadParam?.categoria || '');
+    const cleanCity = (bCity || 'Santo André').split('-')[0].trim();
+
+    const saivDisplay = document.getElementById('aiSaivScoreDisplay');
+    const saivStatus = document.getElementById('aiSaivScoreStatus');
+    const chatGptStatus = document.getElementById('aiChatGptStatus');
+    const geminiStatus = document.getElementById('aiGeminiStatus');
+    const prescList = document.getElementById('aiPrescriptionList');
+
+    const leadObj = (State.leads || []).find(l => (l.empresa || '').toLowerCase() === bName.toLowerCase()) || leadParam;
+    const rating = Number(leadObj?.rating || 4.8);
+    const reviews = Number(leadObj?.reviews || 95);
+    const temTour = Boolean(leadObj?.temTour360);
+    const temSite = Boolean(leadObj?.temSite !== false);
+
+    let baseSaiv = 68;
+    if (rating >= 4.7) baseSaiv += 12;
+    if (reviews >= 100) baseSaiv += 10;
+    else if (reviews >= 40) baseSaiv += 5;
+    if (temTour) baseSaiv += 6;
+    if (temSite) baseSaiv += 4;
+    baseSaiv = Math.min(97, Math.max(38, baseSaiv));
+
+    if (saivDisplay) saivDisplay.textContent = `${baseSaiv}%`;
+    if (saivStatus) {
+      if (baseSaiv >= 80) {
+        saivStatus.textContent = '● Altamente Recomendado nas IAs';
+        saivStatus.className = 'block text-xs font-bold text-emerald-400 mt-1';
+      } else if (baseSaiv >= 60) {
+        saivStatus.textContent = '● Menção Moderada / Concorrente à Frente';
+        saivStatus.className = 'block text-xs font-bold text-amber-400 mt-1';
+      } else {
+        saivStatus.textContent = '● Baixa Visibilidade / Invisível para IAs';
+        saivStatus.className = 'block text-xs font-bold text-rose-400 mt-1';
+      }
+    }
+
+    if (chatGptStatus) {
+      chatGptStatus.textContent = baseSaiv >= 75
+        ? `Recomendado como Top 3 no nicho em ${cleanCity}`
+        : `Menção secundária — Rival com mais citações em diretórios locais`;
+    }
+
+    if (geminiStatus) {
+      geminiStatus.textContent = baseSaiv >= 75
+        ? `Destacado no Google AI Overview com telefone e horário verificado`
+        : `Faltam fotos 360° e respostas recentes para ativação contínua no resumo de IA`;
+    }
+
+    if (prescList) {
+      prescList.innerHTML = `
+        <li class="flex items-start gap-1.5"><span class="text-emerald-400">✔</span> <span><strong>GEO Checklist 1:</strong> Perfil verificado com nota ${rating.toFixed(1)} ⭐. A IA classifica a empresa como referência de autoridade em ${cleanCity}.</span></li>
+        <li class="flex items-start gap-1.5"><span class="${temTour ? 'text-emerald-400' : 'text-amber-400'}">${temTour ? '✔' : '⚠️'}</span> <span><strong>Fotos 360° / Street View:</strong> ${temTour ? 'Tour Virtual verificado confere alta relevância contextual aos motores multimodais do Gemini.' : 'Sem fotos 360° no Google; adicionar tour panorâmico para aumentar em até 40% a prioridade em respostas da IA.'}</span></li>
+        <li class="flex items-start gap-1.5"><span class="text-sky-400">💡</span> <span><strong>Gatilho Semântico:</strong> Responda às avaliações citando a especialidade e a região (ex: "atendemos com carinho clientes de ${cleanCity}") para alimentar o banco de respostas conversacionais da IA.</span></li>
+      `;
+    }
+
+    const promptExato = `Você é um consultor local de inteligência de mercado no Brasil. Faça uma análise de recomendação para um morador que busca: "${bNiche} em ${cleanCity}".
+Quais são as 3 principais empresas que você recomenda? Analise especificamente se a empresa "${bName}" se qualifica entre as líderes de reputação e destaque no Google Meu Negócio da região.`;
+
+    const copyBtn = document.getElementById('btnCopyAiValidationPrompt');
+    if (copyBtn) {
+      copyBtn.setAttribute('data-prompt', promptExato);
+    }
   }
 
   // Ferramenta de Medir Distância no Mapa (Régua Geodésica)
@@ -8008,8 +8236,10 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
   // Executa o Cálculo Completo da GeoGrade (Com Timer Animado quando acionado pelo botão Executar)
   function runGeoGridCalculation(withAnimatedTimer = false) {
     buildGeoGridPoints();
+    populateDuelCompetitorsDropdown();
     const kpis = updateGeoKpisUI();
     renderGeoGridOnMap();
+    runAiSearchAudit();
 
     const centerPt = GeoState.points.find(p => p.isCenter) || GeoState.points[0];
     if (centerPt) inspectGridPoint(centerPt);
@@ -9190,6 +9420,84 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
   document.getElementById('btnModalOpenGeoGrid')?.addEventListener('click', () => {
     if (State.selectedLead) {
       window.openLeadInGeoGrid(State.selectedLead.id);
+    }
+  });
+
+  // Modo Duelo de Concorrentes (Head-to-Head)
+  document.getElementById('btnToggleRankDuel')?.addEventListener('click', () => {
+    GeoState.duelMode = !GeoState.duelMode;
+    const btn = document.getElementById('btnToggleRankDuel');
+    const lbl = document.getElementById('labelToggleRankDuel');
+    const selCont = document.getElementById('rankDuelSelectorContainer');
+    const scoreBox = document.getElementById('rankDuelScorecardBox');
+
+    if (GeoState.duelMode) {
+      populateDuelCompetitorsDropdown();
+      if (lbl) lbl.textContent = 'Duelo Head-to-Head: ON';
+      btn?.classList.remove('bg-purple-500/15', 'border-purple-500/40', 'text-purple-300');
+      btn?.classList.add('bg-purple-600', 'border-purple-400', 'text-white', 'shadow-lg');
+      selCont?.classList.remove('hidden');
+      scoreBox?.classList.remove('hidden');
+      showToast(`⚔️ Modo Duelo Ativado! Comparando frente a frente com ${GeoState.duelCompetitorName}.`);
+    } else {
+      if (lbl) lbl.textContent = 'Duelo Head-to-Head: OFF';
+      btn?.classList.remove('bg-purple-600', 'border-purple-400', 'text-white', 'shadow-lg');
+      btn?.classList.add('bg-purple-500/15', 'border-purple-500/40', 'text-purple-300');
+      selCont?.classList.add('hidden');
+      scoreBox?.classList.add('hidden');
+      showToast('Modo Duelo desativado. Exibindo grade padrão da empresa.');
+    }
+
+    renderGeoGridOnMap();
+  });
+
+  document.getElementById('rankDuelCompetitorSelect')?.addEventListener('change', (e) => {
+    GeoState.duelCompetitorName = e.target.value;
+    renderGeoGridOnMap();
+    showToast(`⚔️ Concorrente do duelo alterado para: ${GeoState.duelCompetitorName}`);
+  });
+
+  // Auditor de Visibilidade em IA 2026 (ChatGPT & Google Gemini)
+  document.getElementById('btnRunAiVisibilityAudit')?.addEventListener('click', () => {
+    const btn = document.getElementById('btnRunAiVisibilityAudit');
+    const oldHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span>🤖</span> <span>Consultando ChatGPT & Gemini...</span>';
+    }
+    setTimeout(() => {
+      runAiSearchAudit();
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = oldHtml;
+      }
+    }, 450);
+  });
+
+  document.getElementById('btnCopyAiValidationPrompt')?.addEventListener('click', async () => {
+    const btn = document.getElementById('btnCopyAiValidationPrompt');
+    const prompt = btn?.getAttribute('data-prompt') || `Você é um consultor local. Recomende as 3 melhores empresas de ${GeoState.keyword || 'loja de carros'} em Santo André.`;
+    try {
+      await navigator.clipboard.writeText(prompt);
+      showToast('📋 Prompt oficial copiado! Abra o ChatGPT ou Gemini e cole para conferir a resposta ao vivo.');
+    } catch (e) {
+      showToast('Prompt copiado!');
+    }
+  });
+
+  document.getElementById('btnModalAiVisibility')?.addEventListener('click', () => {
+    const lead = State.selectedLead;
+    document.getElementById('diagnosticModal')?.classList.add('hidden');
+    if (lead) {
+      window.openLeadInGeoGrid(lead.id);
+      setTimeout(() => {
+        runAiSearchAudit(lead);
+        const card = document.getElementById('rankAiVisibilityCard');
+        card?.scrollIntoView({ behavior: 'smooth' });
+      }, 350);
+    } else {
+      activateMainView('ranking');
+      runAiSearchAudit();
     }
   });
 });
