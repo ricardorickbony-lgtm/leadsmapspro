@@ -321,7 +321,7 @@
               <th class="px-4 py-3"><input type="checkbox" id="selectAllCheckbox" class="h-4 w-4 accent-[var(--primary)]"></th>
               <th class="px-4 py-3">Empresa & Telefone</th>
               <th class="px-4 py-3">Presença Web</th>
-              <th class="px-4 py-3">Fotos 360°</th>
+              <th class="px-4 py-3">Fotos & Posts (GBP)</th>
               <th class="px-4 py-3">Tech Stack</th>
               <th class="px-4 py-3">Score Local</th>
               <th class="px-4 py-3">Motivo do Contato</th>
@@ -1916,6 +1916,117 @@
           </div>
         </div>
 
+  <!-- Modal de Auditoria de Postagens & Mídia (Padrão GBP Check) -->
+  <div id="postAuditModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+    <div class="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-950 p-6 shadow-2xl space-y-5">
+      <!-- Header -->
+      <div class="flex items-start justify-between border-b border-slate-800 pb-3">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/20 text-base">📰</span>
+            <div>
+              <h3 class="text-base font-extrabold text-white">Auditoria de Postagens & Mídia</h3>
+              <p class="text-[11px] text-amber-400 font-medium">Padrão de Aferição GBP Check (Dias sem Postar)</p>
+            </div>
+          </div>
+          <p class="mt-2 text-xs text-slate-300">
+            Empresa: <strong id="postAuditModalLeadName" class="text-white"></strong>
+          </p>
+        </div>
+        <button type="button" onclick="window.closePostAuditModal()" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer" aria-label="Fechar">✕</button>
+      </div>
+
+      <!-- Explicação Técnica Anti-Achismo -->
+      <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-3.5 text-xs text-slate-300 space-y-1.5 leading-relaxed">
+        <p class="font-bold text-amber-300 flex items-center gap-1.5">
+          <span>🔍</span> <span>Como funciona a aferição cirúrgica:</span>
+        </p>
+        <p class="text-[11px] text-slate-400">
+          Ferramentas como o <strong>GBP Check</strong> e <strong>GMB Everywhere</strong> capturam o tempo relativo desde a última publicação no Google Posts (ex: <em>"há 2 horas"</em>, <em>"há 3 dias"</em>, <em>"há 45 dias"</em>).
+        </p>
+        <p class="text-[11px] text-slate-400">
+          Um perfil pode ter nota 5.0 e centenas de avaliações, mas se estiver há <strong>mais de 30 dias sem postar</strong>, o Google rebaixa o ranqueamento local — tornando-se um <strong>gargalo de ouro para prospecção</strong>.
+        </p>
+      </div>
+
+      <!-- Presets Rápidos de 1 Clique -->
+      <div class="space-y-2">
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">
+          ⚡ Presets Rápidos de Recência (Selecione em 1 clique):
+        </label>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <!-- 0 dias (Hoje) -->
+          <button type="button" onclick="window.applyPostDaysPreset(0)" class="rounded-xl border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/25 p-2.5 text-center cursor-pointer transition-all hover:scale-[1.02]">
+            <p class="text-xs font-black text-emerald-400">🟢 Hoje (0d)</p>
+            <p class="text-[10px] text-emerald-300/80 font-medium">Há poucas horas</p>
+          </button>
+
+          <!-- 3 dias -->
+          <button type="button" onclick="window.applyPostDaysPreset(3)" class="rounded-xl border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/25 p-2.5 text-center cursor-pointer transition-all hover:scale-[1.02]">
+            <p class="text-xs font-black text-emerald-400">🟢 3 dias</p>
+            <p class="text-[10px] text-emerald-300/80 font-medium">Recente / Ativo</p>
+          </button>
+
+          <!-- 7 dias -->
+          <button type="button" onclick="window.applyPostDaysPreset(7)" class="rounded-xl border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/25 p-2.5 text-center cursor-pointer transition-all hover:scale-[1.02]">
+            <p class="text-xs font-black text-emerald-400">🟢 7 dias</p>
+            <p class="text-[10px] text-emerald-300/80 font-medium">Padrão Semanal</p>
+          </button>
+
+          <!-- 15 dias -->
+          <button type="button" onclick="window.applyPostDaysPreset(15)" class="rounded-xl border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/25 p-2.5 text-center cursor-pointer transition-all hover:scale-[1.02]">
+            <p class="text-xs font-black text-amber-400">🟡 15 dias</p>
+            <p class="text-[10px] text-amber-300/80 font-medium">Atenção (Alerta)</p>
+          </button>
+
+          <!-- 30 dias -->
+          <button type="button" onclick="window.applyPostDaysPreset(30)" class="rounded-xl border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/25 p-2.5 text-center cursor-pointer transition-all hover:scale-[1.02]">
+            <p class="text-xs font-black text-amber-400">🟡 30 dias</p>
+            <p class="text-[10px] text-amber-300/80 font-medium">Limite Google</p>
+          </button>
+
+          <!-- 42 dias -->
+          <button type="button" onclick="window.applyPostDaysPreset(42)" class="rounded-xl border border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/25 p-2.5 text-center cursor-pointer transition-all hover:scale-[1.02]">
+            <p class="text-xs font-black text-rose-400">🔴 42 dias</p>
+            <p class="text-[10px] text-rose-300/80 font-medium">Gargalo Médio</p>
+          </button>
+
+          <!-- 60 dias -->
+          <button type="button" onclick="window.applyPostDaysPreset(60)" class="rounded-xl border border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/25 p-2.5 text-center cursor-pointer transition-all hover:scale-[1.02]">
+            <p class="text-xs font-black text-rose-400">🚨 60 dias</p>
+            <p class="text-[10px] text-rose-300/80 font-medium">Perfil Inativo</p>
+          </button>
+
+          <!-- 90+ dias -->
+          <button type="button" onclick="window.applyPostDaysPreset(90)" class="rounded-xl border border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/25 p-2.5 text-center cursor-pointer transition-all hover:scale-[1.02]">
+            <p class="text-xs font-black text-rose-400">🚨 90+ dias</p>
+            <p class="text-[10px] text-rose-300/80 font-medium">Abandono Total</p>
+          </button>
+        </div>
+      </div>
+
+      <!-- Campo Customizado de Dias -->
+      <div class="space-y-1.5 pt-1">
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">
+          Ou informe o número exato de dias capturado no GBP Check:
+        </label>
+        <div class="flex items-center gap-2">
+          <div class="relative flex-1">
+            <input id="inputCustomPostDays" type="number" min="0" max="999" placeholder="Ex: 45" class="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm font-mono text-white outline-none focus:border-amber-400">
+            <span class="absolute right-3 top-2.5 text-xs text-slate-500 pointer-events-none">dias sem postar</span>
+          </div>
+          <button type="button" onclick="window.applyCustomPostDaysInput()" class="btn-amber px-4 py-2.5 text-xs font-bold whitespace-nowrap cursor-pointer">
+            Salvar Aferição
+          </button>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="flex items-center justify-between border-t border-slate-800 pt-3 text-[11px] text-slate-400">
+        <span>💡 Atualiza 7 Pilares, Raio-X 22 Itens e Copy WhatsApp</span>
+        <button type="button" onclick="window.closePostAuditModal()" class="btn-ghost-dark px-3 py-1.5 text-xs font-semibold cursor-pointer">
+          Fechar
+        </button>
       </div>
     </div>
   </div>
