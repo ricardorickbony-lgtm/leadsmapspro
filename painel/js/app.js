@@ -129,6 +129,134 @@ function getGoogleMapsUrl(lead) {
 window.getGoogleMapsUrl = getGoogleMapsUrl;
 
 // --------------------------------------------------------------------------
+// 1.95 Validador Cirúrgico de Domínio Próprio vs Redes Sociais & Agregadores
+// --------------------------------------------------------------------------
+function analyzeWebsiteUrl(rawUrl) {
+  if (!rawUrl || typeof rawUrl !== 'string' || rawUrl.trim().length < 5) {
+    return {
+      hasRealWebsite: false,
+      isSocial: false,
+      isDeprecatedGoogleSite: false,
+      type: 'none',
+      name: 'Nenhum',
+      label: 'Sem Website',
+      cleanUrl: '',
+      domain: ''
+    };
+  }
+
+  const trimmed = rawUrl.trim();
+  let clean = trimmed.toLowerCase();
+  clean = clean.replace(/^https?:\/\//i, '').replace(/^www\./i, '');
+
+  // 1. Instagram
+  if (/^(?:[a-z0-9_.-]+\.)?instagram\.com/i.test(clean) || /^instagr\.am/i.test(clean)) {
+    return {
+      hasRealWebsite: false,
+      isSocial: true,
+      isDeprecatedGoogleSite: false,
+      type: 'instagram',
+      name: 'Instagram',
+      label: 'Perfil do Instagram',
+      cleanUrl: trimmed,
+      domain: 'instagram.com'
+    };
+  }
+
+  // 2. Facebook
+  if (/^(?:[a-z0-9_.-]+\.)?facebook\.com/i.test(clean) || /^fb\.(?:com|me)/i.test(clean)) {
+    return {
+      hasRealWebsite: false,
+      isSocial: true,
+      isDeprecatedGoogleSite: false,
+      type: 'facebook',
+      name: 'Facebook',
+      label: 'Página do Facebook',
+      cleanUrl: trimmed,
+      domain: 'facebook.com'
+    };
+  }
+
+  // 3. WhatsApp Direct Link
+  if (/^(?:wa\.me|api\.whatsapp\.com|chat\.whatsapp\.com|whatsapp\.com)/i.test(clean)) {
+    return {
+      hasRealWebsite: false,
+      isSocial: true,
+      isDeprecatedGoogleSite: false,
+      type: 'whatsapp',
+      name: 'WhatsApp',
+      label: 'Link de WhatsApp',
+      cleanUrl: trimmed,
+      domain: 'wa.me'
+    };
+  }
+
+  // 4. Link Aggregators / Bio Links
+  if (/^(?:linktr\.ee|linktree\.com|bio\.site|beacons\.ai|beacons\.page|taplink\.cc|taplink\.ru|campsite\.bio|linkin\.bio|instabio\.cc|msha\.ke|about\.me|carrd\.co|snipfeed\.co|flowcode\.com|link\.space|solo\.to|komi\.io|hoo\.be|urlbio\.com)/i.test(clean)) {
+    let aggName = 'Linktree';
+    if (/bio\.site/i.test(clean)) aggName = 'Bio.site';
+    else if (/beacons/i.test(clean)) aggName = 'Beacons.ai';
+    else if (/taplink/i.test(clean)) aggName = 'Taplink';
+    else if (/carrd/i.test(clean)) aggName = 'Carrd';
+    return {
+      hasRealWebsite: false,
+      isSocial: true,
+      isDeprecatedGoogleSite: false,
+      type: 'linktree',
+      name: aggName,
+      label: `Agregador (${aggName})`,
+      cleanUrl: trimmed,
+      domain: clean.split('/')[0]
+    };
+  }
+
+  // 5. TikTok / YouTube / LinkedIn / Twitter / Pinterest / Threads
+  if (/^(?:tiktok\.com|youtube\.com|youtu\.be|kwai\.com|linkedin\.com|twitter\.com|x\.com|pinterest\.com|threads\.net)/i.test(clean)) {
+    let platName = 'Rede Social';
+    if (/tiktok/i.test(clean)) platName = 'TikTok';
+    else if (/youtube|youtu\.be/i.test(clean)) platName = 'YouTube';
+    else if (/linkedin/i.test(clean)) platName = 'LinkedIn';
+    return {
+      hasRealWebsite: false,
+      isSocial: true,
+      isDeprecatedGoogleSite: false,
+      type: 'social',
+      name: platName,
+      label: platName,
+      cleanUrl: trimmed,
+      domain: clean.split('/')[0]
+    };
+  }
+
+  // 6. Deprecated Google Business Site (.business.site / .negocio.site)
+  if (/(?:business\.site|negocio\.site)/i.test(clean)) {
+    return {
+      hasRealWebsite: false,
+      isSocial: false,
+      isDeprecatedGoogleSite: true,
+      type: 'deprecated_google',
+      name: 'Google Site Descontinuado',
+      label: 'Google Business Site (Descontinuado/404)',
+      cleanUrl: trimmed,
+      domain: clean.split('/')[0]
+    };
+  }
+
+  // 7. Real Proprietary Website
+  return {
+    hasRealWebsite: true,
+    isSocial: false,
+    isDeprecatedGoogleSite: false,
+    type: 'proprietary',
+    name: 'Website Próprio',
+    label: 'Website Próprio Oficial',
+    cleanUrl: trimmed,
+    domain: clean.split('/')[0]
+  };
+}
+window.analyzeWebsiteUrl = analyzeWebsiteUrl;
+
+// --------------------------------------------------------------------------
 // 2. Base de Estabelecimentos 100% Reais de Santo André (Google Maps Audit)
 // --------------------------------------------------------------------------
 const REAL_SANTO_ANDRE_FISIO_CLINICS = [
@@ -947,6 +1075,8 @@ const INITIAL_CRM_LEADS = [
 const DEFAULT_WHATSAPP_TEMPLATES = {
   site: "Olá {empresa}! Tudo bem? Me chamo {consultor}.\n\nNotei que sua ficha no Google Maps em {cidade} tem uma excelente reputação ({nota} ⭐ com {reviews} avaliações), mas seus clientes não encontram um site oficial para ver seus serviços e agendar diretamente.\n\nNós desenvolvemos sites de alta conversão para o setor de {nicho}. Posso te enviar uma prévia rápida de 1 minuto sem compromisso?",
   
+  site_social: "Olá {empresa}! Tudo bem? Me chamo {consultor}.\n\nNotei que sua ficha no Google Maps em {cidade} tem uma excelente reputação ({nota} ⭐ com {reviews} avaliações), porém o link cadastrado no botão de Website é o seu {social_rede} ({website_url}) e não um site próprio oficial.\n\nO Google prioriza perfis que contam com domínio institucional próprio (.com.br), e muitos clientes locais preferem ver serviços, diferenciais e agendar direto pelo site.\n\nNós desenvolvemos landing pages e sites de alta conversão para {nicho}. Posso te enviar uma prévia sem compromisso?",
+
   tour360: "Olá {empresa}! Tudo bem? Me chamo {consultor}.\n\nEstava analisando o perfil de vocês no Google Maps em {cidade} e reparei que o principal destaque visual que o Google exibe nas pesquisas de celular ainda é a foto externa da fachada/rua (tirada pelo carro do Google), sem destacar os consultórios e showroom por dentro.\n\nVocês já contam com um Tour Virtual 360° interativo atualizado mostrando o interior do espaço para quem busca pelo celular, ou dependem apenas das fotos de rua?\n\nUm Tour 360° interno atualizado dobra a segurança e o tempo de atenção do cliente antes da visita. Posso te enviar uma prévia rápida de como ficaria?",
   
   seo: "Olá equipe da {empresa}! Aqui é {consultor}.\n\nFizemos um raio-x das buscas por {nicho} em {cidade} e identificamos 3 ajustes essenciais no perfil do Google Maps da sua empresa para atingir o TOP 3 da região e dobrar o número de ligações e rotas.\n\nPosso te enviar esse diagnóstico resumido em 1 página?",
@@ -1039,9 +1169,10 @@ function buildWhatsAppMessage(lead) {
   const conc = (lead.concorrentes && lead.concorrentes[0]) || { nome: "concorrente local", reviews: 0 };
   const cidadeBase = lead.cidade ? lead.cidade.split(' - ')[0] : 'sua região';
   const categoriaBase = lead.categoria ? lead.categoria.toLowerCase() : 'estabelecimento';
+  const webAnalysis = lead.websiteAnalysis || analyzeWebsiteUrl(lead.websiteUrl);
 
-  // Se o perfil for de elite (nota >= 4.8 e reviews >= 80)
-  if (Number(rating) >= 4.8 && leadReviews >= 80) {
+  // Se o perfil for de elite (nota >= 4.8 e reviews >= 80) e tiver website próprio oficial
+  if (Number(rating) >= 4.8 && leadReviews >= 80 && lead.temSite) {
     return [
       `Oi, tudo bem? Vi o perfil da ${lead.empresa} no Google — parabéns pela nota ${rating} e pelas ${leadReviews} avaliações impecáveis, vocês são a maior referência em ${categoriaBase} aqui em ${cidadeBase}!`,
       `Estava analisando o mapa de calor (GeoGrid GPS) da região e notei uma grande oportunidade de expansão de raio para captar clientes qualificados em bairros e cidades vizinhas onde a concorrência ainda é fraca.`,
@@ -1051,7 +1182,15 @@ function buildWhatsAppMessage(lead) {
   }
 
   let issues = [];
-  if (!lead.temSite) issues.push("ainda não tem site próprio");
+  if (!lead.temSite) {
+    if (webAnalysis.isSocial) {
+      issues.push(`utiliza link do ${webAnalysis.name} no lugar de um site oficial próprio (.com.br)`);
+    } else if (webAnalysis.isDeprecatedGoogleSite) {
+      issues.push(`possui link inoperante no botão de site (Google Business Site descontinuado pelo Google)`);
+    } else {
+      issues.push("ainda não tem site próprio");
+    }
+  }
   if (!lead.temTour360) issues.push("o maior destaque visual nas buscas ainda é a foto externa de rua do carro do Google, sem Tour 360° interno");
   if (lead.reviewsSemRespostaPct > 25) {
     issues.push(`tem cerca de ${lead.reviewsSemRespostaPct}% das avaliações sem resposta`);
@@ -1077,10 +1216,16 @@ function buildWhatsAppMessage(lead) {
 
 function renderWhatsAppMessage(template, lead) {
   if (!lead) return "";
-  let tmpl = template || State.settings.whatsappTemplate || DEFAULT_WHATSAPP_TEMPLATES.site;
+  const webAnalysis = lead.websiteAnalysis || analyzeWebsiteUrl(lead.websiteUrl);
+
+  let defaultTmpl = DEFAULT_WHATSAPP_TEMPLATES.site;
+  if (!lead.temSite && webAnalysis.isSocial) {
+    defaultTmpl = DEFAULT_WHATSAPP_TEMPLATES.site_social || DEFAULT_WHATSAPP_TEMPLATES.site;
+  }
+  let tmpl = template || State.settings.whatsappTemplate || defaultTmpl;
   
   const servicoSugerido = !lead.temSite 
-    ? "Criação de Site de Alta Conversão" 
+    ? (webAnalysis.isSocial ? `Landing Page Oficial (Substituir ${webAnalysis.name} no Maps)` : "Criação de Site de Alta Conversão")
     : (!lead.temTour360 ? "Tour Virtual 360° Interno da Loja" : "Otimização SEO Local Google Maps");
   
   const consultor = State.settings.senderName || "Ricardo — LeadMaps Pro";
@@ -1089,6 +1234,8 @@ function renderWhatsAppMessage(template, lead) {
   const nicho = lead.categoria || "seu nicho";
   const reviews = lead.reviews || 0;
   const nota = typeof lead.rating === 'number' ? lead.rating.toFixed(1) : "5.0";
+  const socialRede = webAnalysis.name || "Instagram";
+  const websiteUrl = lead.websiteUrl || "link cadastrado";
 
   return tmpl
     .replace(/{empresa}/gi, empresa)
@@ -1097,7 +1244,9 @@ function renderWhatsAppMessage(template, lead) {
     .replace(/{reviews}/gi, reviews)
     .replace(/{nota}/gi, nota)
     .replace(/{consultor}/gi, consultor)
-    .replace(/{servico}/gi, servicoSugerido);
+    .replace(/{servico}/gi, servicoSugerido)
+    .replace(/{social_rede}/gi, socialRede)
+    .replace(/{website_url}/gi, websiteUrl);
 }
 
 function isMobileWhatsAppNumber(rawPhone) {
@@ -1386,6 +1535,8 @@ function renderTable() {
     const displayPhone = lead.telefone && lead.telefone.replace(/\D/g, '').endsWith('44576043')
       ? '(11) 95438-9151'
       : lead.telefone;
+    const webAnalysis = lead.websiteAnalysis || analyzeWebsiteUrl(lead.websiteUrl);
+    const isSocialAsSite = !lead.temSite && webAnalysis.isSocial;
     return `
       <tr class="border-b border-[var(--border)]/50 transition-colors hover:bg-[var(--secondary)]/40">
         <td class="px-4 py-3">
@@ -1409,9 +1560,15 @@ function renderTable() {
           ${lead.cidade ? `<div class="text-[11px] text-slate-400 mt-0.5">${lead.cidade}</div>` : ''}
         </td>
         <td class="px-4 py-3">
-          ${lead.temSite 
-            ? `<span class="badge-pill badge-emerald">🌐 Site ativo</span>` 
-            : `<span class="badge-pill badge-rose">🚨 Sem Site</span>`}
+          <button type="button" onclick="window.toggleLeadWebsite(${lead.id})" class="cursor-pointer transition-transform hover:scale-105 active:scale-95 text-left inline-block" title="Clique para alternar o status do Website">
+            ${lead.temSite 
+              ? `<span class="badge-pill badge-emerald">🌐 Site ativo ✓</span>` 
+              : (isSocialAsSite 
+                  ? `<span class="badge-pill badge-rose" title="Ficha utiliza link de ${webAnalysis.label} (${lead.websiteUrl}) em vez de site institucional próprio">📱 Apenas ${webAnalysis.name} ✎</span>` 
+                  : (webAnalysis.isDeprecatedGoogleSite 
+                      ? `<span class="badge-pill badge-rose" title="Link descontinuado pelo Google em março/2024 (Erro 404)">🚨 Erro 404 (Site) ✎</span>` 
+                      : `<span class="badge-pill badge-rose" title="Ficha sem website oficial cadastrado">🚨 Sem Site ✎</span>`))}
+          </button>
         </td>
         <td class="px-4 py-3">
           <div class="flex items-center gap-1.5 flex-wrap">
@@ -1503,15 +1660,34 @@ function generateSeoActionPlan(lead) {
   const leadReviews = Number(lead.reviews) || 0;
   const rating = Number(lead.rating) || 5.0;
   const unresp = Number(lead.reviewsSemRespostaPct) || 0;
+  const webAnalysis = lead.websiteAnalysis || analyzeWebsiteUrl(lead.websiteUrl);
 
   if (!lead.temSite) {
-    actions.push({
-      priority: 'Crítica',
-      badgeClass: 'badge-rose',
-      title: '1. Criação de Site Institucional de Alta Conversão & Botão WhatsApp',
-      impact: '+45% de conversão de cliques em ligações e WhatsApp',
-      desc: 'Perfis sem website sofrem rebaixamento algorítmico no Google Maps. Um site veloz, mobile-first e com status de WhatsApp em tempo real captura clientes que antes abandonavam a busca.'
-    });
+    if (webAnalysis.isSocial) {
+      actions.push({
+        priority: 'Crítica',
+        badgeClass: 'badge-rose',
+        title: `1. Substituição de ${webAnalysis.name} por Website Próprio Institucional (.com.br)`,
+        impact: '+50% de autoridade orgânica e conversão no Google Search',
+        desc: `A ficha utiliza link do ${webAnalysis.label} (${lead.websiteUrl}) no campo de Website. O algoritmo do Google prioriza concorrentes com domínio próprio indexável (.com.br) e estrutura de SEO local com Schema Markup, gerando uma oportunidade imediata de criação de Landing Page de alta conversão.`
+      });
+    } else if (webAnalysis.isDeprecatedGoogleSite) {
+      actions.push({
+        priority: 'Crítica',
+        badgeClass: 'badge-rose',
+        title: '1. Correção Urgente de Link Quebrado no Google (Erro 404)',
+        impact: 'Recuperação imediata de 100% dos cliques perdidos',
+        desc: `A ficha ainda aponta para o antigo Google Business Site (${lead.websiteUrl}), desligado mundialmente pelo Google em março de 2024. Criar um site moderno em domínio próprio (.com.br) restaura o fluxo de agendamentos.`
+      });
+    } else {
+      actions.push({
+        priority: 'Crítica',
+        badgeClass: 'badge-rose',
+        title: '1. Criação de Site Institucional de Alta Conversão & Botão WhatsApp',
+        impact: '+45% de conversão de cliques em ligações e WhatsApp',
+        desc: 'Perfis sem website sofrem rebaixamento algorítmico no Google Maps. Um site veloz, mobile-first e com status de WhatsApp em tempo real captura clientes que antes abandonavam a busca.'
+      });
+    }
   } else {
     actions.push({
       priority: 'Concluído',
@@ -1624,7 +1800,11 @@ window.togglePillarStatus = function(leadId, pillarId) {
   p.ok = !p.ok;
 
   // Sincroniza campos chave do lead
-  if (p.id === 'website') lead.temSite = p.ok;
+  if (p.id === 'website') {
+    lead.temSite = p.ok;
+    if (!lead.websiteAnalysis) lead.websiteAnalysis = analyzeWebsiteUrl(lead.websiteUrl);
+    lead.isSocialAsWebsite = (!p.ok && lead.websiteAnalysis.isSocial);
+  }
   if (p.id === 'tour360') {
     lead.temTour360 = p.ok;
     saveVerifiedTourBusiness(lead.empresa, p.ok);
@@ -1638,6 +1818,47 @@ window.togglePillarStatus = function(leadId, pillarId) {
   openDiagnostic(leadId);
   renderTable();
   showToast(`Pilar "${p.nome}" atualizado para: ${p.ok ? '✓ Conforme' : '✕ Gargalo'}`);
+};
+
+window.toggleLeadWebsite = function(leadId) {
+  const lead = State.leads.find(l => l.id === leadId);
+  if (!lead) return;
+  lead.temSite = !lead.temSite;
+  if (!lead.websiteAnalysis) {
+    lead.websiteAnalysis = analyzeWebsiteUrl(lead.websiteUrl);
+  }
+  lead.isSocialAsWebsite = (!lead.temSite && lead.websiteAnalysis.isSocial);
+
+  if (lead.auditPillars) {
+    const pWeb = lead.auditPillars.find(p => p.id === 'website');
+    if (pWeb) {
+      pWeb.ok = lead.temSite;
+      pWeb.status = lead.temSite 
+        ? `Website próprio oficial ativo e verificado: ${lead.websiteUrl || 'Ativo'}.` 
+        : (lead.websiteAnalysis.isSocial 
+            ? `⚠️ Alerta Crítico: Perfil utiliza link de rede social (${lead.websiteAnalysis.label}: ${lead.websiteUrl}) no lugar de site institucional próprio.`
+            : "Sem website próprio cadastrado no perfil do Google Maps.");
+    }
+    const passed = lead.auditPillars.filter(x => x.ok).length;
+    lead.score = Math.round((passed / 7) * 100);
+  }
+
+  // Sincroniza 22 itens se existirem
+  if (lead.fullHealthItems) {
+    const sItem = lead.fullHealthItems.find(i => i.id === 'website');
+    if (sItem) {
+      sItem.score = lead.temSite ? 100 : 0;
+      sItem.finding = lead.temSite
+        ? `Website próprio oficial verificado e ativo na ficha (${lead.websiteUrl || 'domínio institucional'}).`
+        : (lead.websiteAnalysis.isSocial
+            ? `⚠️ Alerta Crítico: Perfil utiliza link de rede social (${lead.websiteAnalysis.label}: ${lead.websiteUrl}) no campo de website.`
+            : 'O perfil não possui endereço de website oficial cadastrado.');
+    }
+  }
+
+  updateMetrics();
+  renderTable();
+  showToast(`🌐 Status do Website para ${lead.empresa} atualizado: ${lead.temSite ? '✓ Site Oficial Ativo' : '✕ Sem Site Próprio'}`);
 };
 
 window.toggleLeadTour360 = function(leadId) {
@@ -1695,11 +1916,30 @@ window.openDiagnostic = function(id) {
   if (!lead) return;
   State.currentLead = lead;
 
+  // Garante análise de website e desqualifica rede social como site próprio
+  if (!lead.websiteAnalysis) {
+    lead.websiteAnalysis = analyzeWebsiteUrl(lead.websiteUrl);
+  }
+  if (lead.websiteAnalysis && (lead.websiteAnalysis.isSocial || lead.websiteAnalysis.isDeprecatedGoogleSite)) {
+    lead.temSite = false;
+    lead.isSocialAsWebsite = lead.websiteAnalysis.isSocial;
+  }
+
   // Inicializa pilares com dados honestos e verificáveis se não existirem
   if (!lead.auditPillars) {
     const isElite = (Number(lead.rating) >= 4.8 && Number(lead.reviews) >= 60) || isTourVerifiedForBusiness(lead.empresa);
     const hasSec = Boolean(lead.categoriasSecundarias && lead.categoriasSecundarias.length > 1);
     const revOk = (lead.reviewsSemRespostaPct <= 20);
+    const webAnalysis = lead.websiteAnalysis || analyzeWebsiteUrl(lead.websiteUrl);
+
+    let webStatus = "Sem website próprio cadastrado no perfil do Google Maps.";
+    if (lead.temSite) {
+      webStatus = `Website próprio oficial ativo e verificado: ${lead.websiteUrl || 'Ativo'}.`;
+    } else if (webAnalysis.isSocial) {
+      webStatus = `⚠️ Alerta Crítico: Perfil utiliza link de rede social (${webAnalysis.label}: ${lead.websiteUrl}) no lugar de site institucional próprio. O Google desvaloriza perfis sem domínio oficial (.com.br) nas buscas orgânicas. Oportunidade imediata de criação de Landing Page.`;
+    } else if (webAnalysis.isDeprecatedGoogleSite) {
+      webStatus = `🚨 Erro Crítico (404): Perfil aponta para o antigo Google Business Site (${lead.websiteUrl}), descontinuado mundialmente pelo Google em março/2024. Link inoperante.`;
+    }
 
     lead.auditPillars = [
       {
@@ -1730,7 +1970,7 @@ window.openDiagnostic = function(id) {
       {
         id: "website",
         nome: "Website Oficial & Agendamento Online",
-        status: lead.temSite ? `Website próprio e canal digital verificado no Google Maps: ${lead.websiteUrl || 'Ativo'}.` : "Sem website próprio oficial ou botão de agendamento online.",
+        status: webStatus,
         ok: Boolean(lead.temSite),
         icon: "🌐"
       },
@@ -1756,6 +1996,22 @@ window.openDiagnostic = function(id) {
         icon: "❓"
       }
     ];
+  } else {
+    // Sincroniza status do pilar website se já existir
+    const pWeb = lead.auditPillars.find(p => p.id === 'website');
+    if (pWeb) {
+      const webAnalysis = lead.websiteAnalysis || analyzeWebsiteUrl(lead.websiteUrl);
+      if (lead.temSite) {
+        pWeb.ok = true;
+        pWeb.status = `Website próprio oficial ativo e verificado: ${lead.websiteUrl || 'Ativo'}.`;
+      } else if (webAnalysis.isSocial) {
+        pWeb.ok = false;
+        pWeb.status = `⚠️ Alerta Crítico: Perfil utiliza link de rede social (${webAnalysis.label}: ${lead.websiteUrl}) no lugar de site institucional próprio. O Google desvaloriza perfis sem domínio oficial (.com.br) nas buscas orgânicas. Oportunidade imediata de criação de Landing Page.`;
+      } else if (webAnalysis.isDeprecatedGoogleSite) {
+        pWeb.ok = false;
+        pWeb.status = `🚨 Erro Crítico (404): Perfil aponta para o antigo Google Business Site (${lead.websiteUrl}), descontinuado mundialmente pelo Google em março/2024. Link inoperante.`;
+      }
+    }
   }
 
   document.getElementById('modalEmpresa').textContent = lead.empresa;
@@ -1819,20 +2075,29 @@ window.openDiagnostic = function(id) {
 
   const pillarsGrid = document.getElementById('modalProfilePillarsGrid');
   if (pillarsGrid) {
-    pillarsGrid.innerHTML = lead.auditPillars.map(p => `
+    pillarsGrid.innerHTML = lead.auditPillars.map(p => {
+      const isWebPillar = p.id === 'website';
+      const webAnalysis = isWebPillar ? (lead.websiteAnalysis || analyzeWebsiteUrl(lead.websiteUrl)) : null;
+      const isSocialGargalo = isWebPillar && !p.ok && webAnalysis && webAnalysis.isSocial;
+      const isDeadGoogle = isWebPillar && !p.ok && webAnalysis && webAnalysis.isDeprecatedGoogleSite;
+      const btnBadgeText = p.ok 
+        ? '✓ Conforme' 
+        : (isSocialGargalo ? `✕ Gargalo (${webAnalysis.name})` : (isDeadGoogle ? '🚨 Link 404' : '✕ Gargalo'));
+      return `
       <div class="flex items-start gap-2.5 rounded-lg border ${p.ok ? 'border-[color-mix(in_oklab,var(--emerald-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--emerald-signal)_6%,transparent)]' : 'border-[color-mix(in_oklab,var(--rose-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--rose-signal)_6%,transparent)]'} p-2.5 text-xs transition-all">
         <span class="text-base">${p.icon}</span>
         <div class="flex-1">
           <div class="flex items-center justify-between gap-1">
             <span class="font-bold text-white">${p.nome}</span>
             <button type="button" onclick="togglePillarStatus(${lead.id}, '${p.id}')" title="Clique para alternar status deste pilar no diagnóstico" class="px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${p.ok ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30'}">
-              ${p.ok ? '✓ Conforme' : '✕ Gargalo'} ✎
+              ${btnBadgeText} ✎
             </button>
           </div>
           <p class="mt-1 text-[11px] text-[var(--muted-foreground)] leading-tight">${p.status}</p>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
   }
 
   // Gaps
@@ -1987,10 +2252,17 @@ function buildLeadFullAuditItems(lead) {
     // Sincroniza itens dinâmicos chave (Site e Tour 360)
     const siteItem = lead.fullHealthItems.find(i => i.id === 'website');
     if (siteItem) {
+      const webAnalysis = lead.websiteAnalysis || analyzeWebsiteUrl(lead.websiteUrl);
       siteItem.score = lead.temSite ? 100 : 0;
-      siteItem.finding = lead.temSite
-        ? 'Endereço do website oficial definido e ativo na ficha.'
-        : 'O perfil não possui endereço de website oficial cadastrado. Recomendado: <strong>1 website de alta conversão</strong>.';
+      if (lead.temSite) {
+        siteItem.finding = `Website próprio oficial ativo e verificado na ficha (${lead.websiteUrl || 'domínio institucional'}).`;
+      } else if (webAnalysis.isSocial) {
+        siteItem.finding = `⚠️ Alerta Crítico: O perfil está utilizando link de rede social (<strong>${webAnalysis.label}</strong>: <em>${lead.websiteUrl}</em>) no campo de website. O Google desvaloriza perfis locais sem domínio próprio (.com.br), prejudicando o ranqueamento orgânico e impedindo o rastreamento profissional de conversões. Recomendado: <strong>1 Website Próprio Institucional de Alta Conversão</strong>.`;
+      } else if (webAnalysis.isDeprecatedGoogleSite) {
+        siteItem.finding = `🚨 Link Inoperante (Erro 404): O perfil utiliza um endereço antigo do Google Business Site (<em>${lead.websiteUrl}</em>), descontinuado pelo Google em março de 2024. Recomendado: <strong>1 Website Oficial Novo</strong>.`;
+      } else {
+        siteItem.finding = 'O perfil não possui endereço de website oficial cadastrado. Recomendado: <strong>1 website de alta conversão</strong>.';
+      }
     }
     const tourItem = lead.fullHealthItems.find(i => i.id === 'tour360');
     if (tourItem) {
@@ -2156,9 +2428,13 @@ function buildLeadFullAuditItems(lead) {
       id: 'website',
       title: 'Website',
       desc: 'Ter um website transmite a impressão de um negócio bem sucedido, dá credibilidade e oferece aos clientes a oportunidade de entrar em contato com a empresa.',
-      finding: lead.temSite
-        ? 'Endereço do website definido.'
-        : 'O negócio NÃO possui website institucional próprio cadastrado no perfil. Recomendado: <strong>Website Mobile-First de Alta Conversão</strong>.',
+      finding: (() => {
+        const webAnalysis = lead.websiteAnalysis || analyzeWebsiteUrl(lead.websiteUrl);
+        if (lead.temSite) return `Endereço de website próprio institucional definido e ativo (${lead.websiteUrl || 'verificado'}).`;
+        if (webAnalysis.isSocial) return `⚠️ Alerta Crítico: O perfil utiliza link de rede social (<strong>${webAnalysis.label}</strong>: <em>${lead.websiteUrl}</em>) no campo de website. O Google desvaloriza perfis sem domínio próprio (.com.br). Recomendado: <strong>1 Website Próprio de Alta Conversão</strong>.`;
+        if (webAnalysis.isDeprecatedGoogleSite) return `🚨 Link Descontinuado (Erro 404): O perfil aponta para o antigo Google Business Site (<em>${lead.websiteUrl}</em>), desligado pelo Google em março/2024.`;
+        return 'O negócio NÃO possui website institucional próprio cadastrado no perfil. Recomendado: <strong>Website Mobile-First de Alta Conversão</strong>.';
+      })(),
       score: lead.temSite ? 100 : 0
     },
     {
@@ -3229,8 +3505,16 @@ window.openWhiteLabelReport = function(lead) {
 
           <div class="rounded-2xl border border-slate-200 bg-white p-5 space-y-2.5">
             <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2"><span class="text-amber-600">⚡</span> Oportunidades & Pontos de Alavancagem</h4>
-            <ul class="space-y-1.5 text-xs text-slate-600">
-              <li class="flex items-center gap-2"><span class="${lead.temSite ? 'text-emerald-500' : 'text-rose-500'} font-bold">${lead.temSite ? '✓' : '!'}</span> <span>${lead.temSite ? 'Website oficial ativo: enriquecer com Schema LocalBusiness JSON-LD' : 'Ausência de Website oficial próprio para converter pesquisas em clientes'}</span></li>
+              <li class="flex items-center gap-2">
+                <span class="${lead.temSite ? 'text-emerald-500' : 'text-rose-500'} font-bold">${lead.temSite ? '✓' : '!'}</span>
+                <span>${lead.temSite 
+                  ? `Website oficial ativo (${lead.websiteUrl || 'domínio institucional'}): enriquecer com Schema LocalBusiness JSON-LD` 
+                  : (lead.isSocialAsWebsite 
+                      ? `⚠️ Alerta Crítico: Perfil utiliza link de rede social (${lead.websiteAnalysis?.label || 'Instagram'}) no lugar de site próprio institucional (.com.br)` 
+                      : (lead.websiteAnalysis?.isDeprecatedGoogleSite 
+                          ? '🚨 Erro 404: Antigo Google Business Site descontinuado pelo Google' 
+                          : 'Ausência de Website oficial próprio para converter pesquisas em clientes'))}</span>
+              </li>
               <li class="flex items-center gap-2"><span class="${lead.temTour360 ? 'text-emerald-500' : 'text-amber-500'} font-bold">${lead.temTour360 ? '✓' : '!'}</span> <span>${lead.temTour360 ? 'Tour 360° verificado: integrar com campanhas de mídia e anúncios locais' : 'Ausência de Tour Virtual 360° interno no Google Street View'}</span></li>
               <li class="flex items-center gap-2"><span class="${(lead.reviewsSemRespostaPct > 20) ? 'text-rose-500' : 'text-emerald-500'} font-bold">${(lead.reviewsSemRespostaPct > 20) ? '!' : '✓'}</span> <span>${(lead.reviewsSemRespostaPct > 20) ? 'Avaliações sem resposta estratégica com palavras-chave locais' : 'Expansão de raio no GeoGrid GPS (raio de 1 km a 20 km) para municípios vizinhos'}</span></li>
             </ul>
@@ -3511,7 +3795,14 @@ window.openWhiteLabelReport = function(lead) {
   const btnCopySum = document.getElementById('btnCopyWhiteLabelSummary');
   if (btnCopySum) {
     btnCopySum.onclick = async () => {
-      const summaryText = `Olá! Tudo bem?\n\nRealizamos o *Diagnóstico Completo de Saúde e Reputação (22 Itens)* do perfil de *${lead.empresa}* no Google através do sistema da *${agencyName}*.\n\n📊 *Pontuação Geral de Saúde:* ${overallScore}/100 (${overallBadgeText})\n🔴 *Métricas Fracas (Precisam de Atenção):* ${countWeak} itens\n🟢 *Métricas Boas:* ${countGood} itens\n⭐ *Índice de Saúde de Reputação (ISR):* ${isrScore}% (${totalReviews} avaliações)\n\n⚠️ *Principais Pontos de Atenção Detectados:*\n- ${lead.temTour360 ? 'Tour Virtual 360° interno verificado' : 'Ausência de Tour Virtual 360° interno (ficha exibe apenas foto externa da rua)'}\n- ${lead.temSite ? 'Website cadastrado no perfil' : 'Ausência de Website oficial de alta conversão'}\n- Ausência de postagens recentes no Google Posts (> 30 dias)\n- Avaliações pendentes de resposta otimizada com palavras-chave locais\n\nGerei o dossiê completo em PDF com os gráficos de tráfego, funil de interesse e análise de sentimento. Posso te enviar aqui no WhatsApp?\n\n_${senderName}_ - *${agencyName}*`;
+      const webSummaryNotice = lead.temSite
+        ? `Website oficial verificado (${lead.websiteUrl || 'domínio próprio ativo'})`
+        : (lead.isSocialAsWebsite 
+            ? `⚠️ Alerta Crítico: Perfil usa link de rede social (${lead.websiteAnalysis?.label || 'Instagram'}) no lugar de site próprio institucional (.com.br)`
+            : (lead.websiteAnalysis?.isDeprecatedGoogleSite 
+                ? '🚨 Link Quebrado (404): Antigo Google Business Site descontinuado pelo Google' 
+                : 'Ausência de Website oficial de alta conversão'));
+      const summaryText = `Olá! Tudo bem?\n\nRealizamos o *Diagnóstico Completo de Saúde e Reputação (22 Itens)* do perfil de *${lead.empresa}* no Google através do sistema da *${agencyName}*.\n\n📊 *Pontuação Geral de Saúde:* ${overallScore}/100 (${overallBadgeText})\n🔴 *Métricas Fracas (Precisam de Atenção):* ${countWeak} itens\n🟢 *Métricas Boas:* ${countGood} itens\n⭐ *Índice de Saúde de Reputação (ISR):* ${isrScore}% (${totalReviews} avaliações)\n\n⚠️ *Principais Pontos de Atenção Detectados:*\n- ${lead.temTour360 ? 'Tour Virtual 360° interno verificado' : 'Ausência de Tour Virtual 360° interno (ficha exibe apenas foto externa da rua)'}\n- ${webSummaryNotice}\n- Ausência de postagens recentes no Google Posts (> 30 dias)\n- Avaliações pendentes de resposta otimizada com palavras-chave locais\n\nGerei o dossiê completo em PDF com os gráficos de tráfego, funil de interesse e análise de sentimento. Posso te enviar aqui no WhatsApp?\n\n_${senderName}_ - *${agencyName}*`;
       try {
         await navigator.clipboard.writeText(summaryText);
         showToast("Resumo completo para WhatsApp copiado com sucesso!");
@@ -3750,7 +4041,8 @@ async function fetchSerperLivePlaces(niche, city, targetCount, apiKey) {
   }
 
   return accumulatedPlaces.slice(0, targetCount).map((p, idx) => {
-    const hasSite = Boolean(p.website && p.website.length > 5);
+    const webAnalysis = analyzeWebsiteUrl(p.website);
+    const hasSite = webAnalysis.hasRealWebsite;
     const placeTitle = p.title || p.name || `${niche} Local`;
 
     // Verifica se esta empresa é um cliente com Tour 360° verificado/produzido pelo Ricardo
@@ -3774,7 +4066,15 @@ async function fetchSerperLivePlaces(niche, city, targetCount, apiKey) {
     score = Math.max(15, Math.min(95, score));
 
     const gaps = [];
-    if (!hasSite) gaps.push('Sem site institucional oficial');
+    if (!hasSite) {
+      if (webAnalysis.isSocial) {
+        gaps.push(`Ficha usa ${webAnalysis.name} no lugar de site próprio institucional`);
+      } else if (webAnalysis.isDeprecatedGoogleSite) {
+        gaps.push('Link do site quebrado/descontinuado pelo Google');
+      } else {
+        gaps.push('Sem site institucional oficial');
+      }
+    }
     if (!has360) {
       gaps.push('Sem Tour Virtual 360° interno (Ficha possui apenas foto de rua do carro do Google)');
     }
@@ -3813,6 +4113,8 @@ async function fetchSerperLivePlaces(niche, city, targetCount, apiKey) {
     let motivoContato = '';
     if (has360 && hasSite) {
       motivoContato = 'Cliente com Tour Virtual 360° interno verificado e site oficial ativo — Alta conversão';
+    } else if (webAnalysis.isSocial) {
+      motivoContato = `Possui ${reviews} avaliações mas usa ${webAnalysis.name} no lugar de um site próprio institucional (.com.br)`;
     } else if (has360 && !hasSite) {
       motivoContato = `Possui Tour Virtual 360° interno no Google Maps mas SEM site oficial para captar clientes`;
     } else if (!hasSite) {
@@ -3836,6 +4138,9 @@ async function fetchSerperLivePlaces(niche, city, targetCount, apiKey) {
       endereco: p.address || city,
       placeId: placeId,
       mapsUrl: mapsUrl,
+      websiteUrl: p.website || '',
+      websiteAnalysis: webAnalysis,
+      isSocialAsWebsite: webAnalysis.isSocial,
       types: p.types || [p.type || niche],
       bookingLinks: p.bookingLinks || [],
       temSite: hasSite,
@@ -3961,7 +4266,8 @@ async function fetchRealPlaceReviews(cid, apiKey) {
 }
 
 function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsData) {
-  const hasSite = Boolean(mainPlace.website && mainPlace.website.length > 5);
+  const webAnalysis = analyzeWebsiteUrl(mainPlace.website);
+  const hasSite = webAnalysis.hasRealWebsite;
   const rating = typeof mainPlace.rating === 'number' ? mainPlace.rating : 5.0;
   const reviews = typeof mainPlace.ratingCount === 'number' ? mainPlace.ratingCount : (mainPlace.reviews || 0);
   const mainTitle = mainPlace.title || mainPlace.name || cleanQuery;
@@ -4045,9 +4351,13 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
     {
       id: "website",
       nome: "Website Oficial & Agendamento Online",
-      status: hasSite 
+      status: webAnalysis.hasRealWebsite 
         ? `Website próprio oficial ativo: ${mainPlace.website}` 
-        : "Sem website próprio cadastrado no perfil do Google Maps.",
+        : (webAnalysis.isSocial 
+            ? `⚠️ Alerta Crítico: Perfil utiliza link de rede social (${webAnalysis.label}: ${mainPlace.website}) no lugar de site institucional próprio. O Google desvaloriza perfis sem domínio próprio (.com.br) nas buscas locais orgânicas. Oportunidade imediata de Landing Page.`
+            : (webAnalysis.isDeprecatedGoogleSite 
+                ? `🚨 Erro Crítico (404): Ficha aponta para o antigo Google Business Site (${mainPlace.website}), descontinuado mundialmente pelo Google em março/2024.`
+                : "Sem website próprio cadastrado no perfil do Google Maps.")),
       ok: hasSite,
       icon: "🌐"
     },
@@ -4083,7 +4393,15 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
   const score = Math.round((auditPillars.filter(p => p.ok).length / 7) * 100);
 
   const gaps = [];
-  if (!hasSite) gaps.push('Sem site institucional oficial (Gargalo crítico)');
+  if (!hasSite) {
+    if (webAnalysis.isSocial) {
+      gaps.push(`Ficha usa ${webAnalysis.name} no lugar de site próprio institucional (Gargalo crítico)`);
+    } else if (webAnalysis.isDeprecatedGoogleSite) {
+      gaps.push('Link do site descontinuado pelo Google (Erro 404 — Perda de clientes)');
+    } else {
+      gaps.push('Sem site institucional oficial (Gargalo crítico)');
+    }
+  }
   if (!has360) gaps.push('Sem Tour Virtual 360° interno no Google Street View');
   if (!reviewsOk) gaps.push(`Apenas ${responseRatePct}% das avaliações recentes respondidas`);
   if (!hasSecondaryCategories && !isEliteBusiness) gaps.push('Cadastrar categorias secundárias de atuação no Google Meu Negócio');
@@ -4139,6 +4457,8 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
     cid: mainPlace.cid || '',
     mapsUrl: mapsUrl,
     websiteUrl: mainPlace.website || '',
+    websiteAnalysis: webAnalysis,
+    isSocialAsWebsite: webAnalysis.isSocial,
     openingHours: mainPlace.openingHours || null,
     temSite: hasSite,
     temTour360: has360,
@@ -4152,9 +4472,11 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
     realReviewsSample: sampleReviews,
     motivo: has360 
       ? `Auditado individualmente: Perfil de Elite com Saúde Digital ${score}/100, Tour 360° verificado e ${responseRatePct}% de avaliações respondidas com excelência.`
-      : (!hasSite 
-          ? `Auditado individualmente: possui ${reviews} reviews mas SEM site próprio para captar clientes.`
-          : `Auditado individualmente: Índice de Saúde ${score}/100 com oportunidades em SEO Local e Tour 360°.`),
+      : (webAnalysis.isSocial 
+          ? `Auditado individualmente: possui ${reviews} avaliações mas usa ${webAnalysis.name} no lugar de um site próprio oficial (.com.br) para captar clientes.`
+          : (!hasSite 
+              ? `Auditado individualmente: possui ${reviews} reviews mas SEM site próprio para captar clientes.`
+              : `Auditado individualmente: Índice de Saúde ${score}/100 com oportunidades em SEO Local e Tour 360°.`)),
     concorrentes: concorrentes,
     gaps: gaps,
     auditPillars: auditPillars
@@ -4415,7 +4737,17 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
 
                   <div class="text-xs pt-1.5 flex items-center justify-between border-t border-slate-800/80">
                     <div>
-                      ${site ? `<a href="${site}" target="_blank" class="text-emerald-400 hover:underline flex items-center gap-1 truncate max-w-[200px]">🌐 ${site.replace(/^https?:\/\//, '')}</a>` : '<span class="text-slate-500">❌ Sem site oficial</span>'}
+                      ${(() => {
+                        if (!site) return '<span class="text-slate-500">❌ Sem site oficial</span>';
+                        const an = analyzeWebsiteUrl(site);
+                        if (an.isSocial) {
+                          return `<a href="${site}" target="_blank" class="text-amber-400 hover:underline flex items-center gap-1.5 truncate max-w-[220px]" title="Link de rede social cadastrado como site"><span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-[10px] font-bold text-amber-300 border border-amber-500/30">📱 ${an.name}</span> <span class="truncate">${an.cleanUrl}</span></a>`;
+                        }
+                        if (an.isDeprecatedGoogleSite) {
+                          return `<a href="${site}" target="_blank" class="text-rose-400 hover:underline flex items-center gap-1.5 truncate max-w-[220px]" title="Site descontinuado do Google"><span class="px-1.5 py-0.5 rounded bg-rose-500/20 text-[10px] font-bold text-rose-300 border border-rose-500/30">🚨 404 Google</span> <span class="truncate">${an.cleanUrl}</span></a>`;
+                        }
+                        return `<a href="${site}" target="_blank" class="text-emerald-400 hover:underline flex items-center gap-1 truncate max-w-[200px]">🌐 ${site.replace(/^https?:\/\//, '')}</a>`;
+                      })()}
                     </div>
                     <a href="${mapsSearchUrl}" target="_blank" class="text-[11px] font-bold text-amber-400 hover:text-amber-300 hover:underline flex items-center gap-1">
                       Ver Ficha no Maps ↗
@@ -4538,6 +4870,9 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
             whatsappVerificado: true,
             cidade: city,
             endereco: `${city} (Endereço verificado no Google Maps)`,
+            websiteUrl: isKnownTour ? "https://celiadiana.com.br" : "",
+            websiteAnalysis: analyzeWebsiteUrl(isKnownTour ? "https://celiadiana.com.br" : ""),
+            isSocialAsWebsite: false,
             temSite: temSite,
             temTour360: temTour,
             techStack: temSite ? ["Meta Pixel", "Google Tag Manager"] : [],
@@ -7398,7 +7733,9 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
             endereco: p.address || `${city} - SP`,
             rating: typeof p.rating === 'number' ? p.rating : 4.8,
             reviews: typeof p.ratingCount === 'number' ? p.ratingCount : (p.reviews || 60),
-            temSite: Boolean(p.website && p.website.length > 5),
+            temSite: analyzeWebsiteUrl(p.website).hasRealWebsite,
+            websiteUrl: p.website || '',
+            websiteAnalysis: analyzeWebsiteUrl(p.website),
             lat: lat,
             lng: lng,
             cid: p.cid || null
