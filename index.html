@@ -1,258 +1,1346 @@
-﻿<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;600&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" data-precedence="default"/><link rel="stylesheet" href="assets/styles-ChKwebH9.css" data-precedence="default"/><title>LeadMaps Pro Enterprise — Google Maps em contratos recorrentes</title><meta name="description" content="Extraia empresas do Google Maps, audite 22 pontos de SEO Local e feche consultorias de R$ 1.500 a R$ 5.000/mês com relatórios white-label."/><meta property="og:title" content="LeadMaps Pro Enterprise v2.6"/><meta property="og:description" content="Extrator em massa, auditoria de 22 itens e GeoGrid GPS para consultores B2B."/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><link rel="modulepreload" href="assets/index-ChqC3oIp.js"/><link rel="modulepreload" href="assets/routes-CNDtBP7s.js"/><link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/><link rel="icon" href="/favicon.ico" type="image/x-icon"/>
-<style>
-	#lovable-badge {
-		--badge-bg: #1b1b1b;
-		--badge-text: #c5c1b9;
-		--badge-text-hover: #dcdad5;
-		--badge-radius: 6px;
-		--badge-padding: 8px;
-		--badge-gap: 6px;
-		--badge-shadow: 
-			0 0 0 1px rgba(0, 0, 0, 0.88),
-			0 1px 0 0 rgba(0, 0, 0, 0.04),
-			0 2px 2px -1px rgba(0, 0, 0, 0.08),
-			0 4px 4px -2px rgba(0, 0, 0, 0.08),
-			0 8px 8px -4px rgba(0, 0, 0, 0.08),
-			0 16px 16px -8px rgba(0, 0, 0, 0.08);
-		--badge-transition-duration: 0.2s;
-		--badge-transition-easing: cubic-bezier(0.16, 1, 0.32, 1);
-		--focus-color: #575ECF;
-		--focus-offset: 2px;
-		--focus-width: 2px;
-		
-		position: fixed;
-		bottom: 12px;
-		right: 12px;
-		height: 24px;
-		display: flex;
-		align-items: center;
-		z-index: 1000000;
-		background-color: var(--badge-bg) !important;
-		color: var(--badge-text) !important;
-		border-radius: var(--badge-radius);
-		box-shadow: var(--badge-shadow) !important;
-		font-size: 12px;
-		font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-		font-weight: 400 !important;
-		text-transform: none !important;
-		font-feature-settings: normal !important;
-		transform: translateZ(0);
-		will-change: transform, opacity;
-		transition: opacity var(--badge-transition-duration) var(--badge-transition-easing);
-	}
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RadarMaps PRO — Inteligência Tática no Google Maps & Auditoria Local de Alto Padrão</title>
+  <meta name="description" content="Detecte falhas invisíveis no Google Maps, audite 22 pontos de SEO Local, afira postagens recentes (padrão GBP Check) e feche contratos recorrentes de R$ 1.500 a R$ 5.000/mês." />
+  <meta property="og:title" content="RadarMaps PRO — Inteligência Tática no Google Maps" />
+  <meta property="og:description" content="Extrator cirúrgico, auditoria de 22 itens, aferição de postagens GBP Check, detecção de Tour 360° e GeoGrid GPS para consultores e agências de elite." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
 
-	#lovable-badge.closing {
-		opacity: 0;
-		pointer-events: none;
-	}
+  <!-- Favicon SVG Inline -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23F59E0B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='m4.93 4.93 4.24 4.24'/%3E%3Cpath d='m14.83 9.17 4.24-4.24'/%3E%3Cpath d='m14.83 14.83 4.24 4.24'/%3E%3Cpath d='m9.17 14.83-4.24 4.24'/%3E%3Ccircle cx='12' cy='12' r='2' fill='%23F59E0B'/%3E%3C/svg%3E" />
 
-	#lovable-badge-cta {
-		display: flex;
-		align-items: baseline;
-		gap: var(--badge-gap);
-		box-sizing: border-box;
-		padding: 4px var(--badge-padding) 0;
-		height: 100%;
-		color: inherit;
-		text-decoration: none;
-		white-space: nowrap;
-		border-radius: var(--badge-radius) 0 0 var(--badge-radius);
-		transition: 
-			background-color var(--badge-transition-duration) ease,
-			color var(--badge-transition-duration) ease,
-			transform 0.1s ease;
-	}
+  <!-- Google Fonts: Plus Jakarta Sans, Inter, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@600;700;800;900&display=swap" rel="stylesheet" />
 
-	#lovable-badge-cta:hover {
-		background: rgba(255, 255, 255, 0.04);
-		color: var(--badge-text-hover);
-	}
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            obsidian: {
+              DEFAULT: '#07090E',
+              900: '#07090E',
+              800: '#0D111A',
+              700: '#131926',
+              600: '#1C2436',
+              500: '#2A354D',
+            },
+            solar: {
+              DEFAULT: '#F59E0B',
+              glow: '#FBBF24',
+              rich: '#D97706',
+              light: '#FEF3C7',
+              accent: '#FFE600'
+            },
+            signal: {
+              emerald: '#10B981',
+              emeraldDark: '#059669',
+              rose: '#F43F5E',
+              sky: '#0EA5E9'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
 
-	#lovable-badge-cta:active {
-		transform: scale(0.98);
-	}
+  <style>
+    /* Estilos de Alto Luxo Internacional 2026 */
+    :root {
+      --bg-base: #07090E;
+      --solar-gold: #F59E0B;
+      --solar-bright: #FBBF24;
+      --emerald-active: #10B981;
+    }
 
-	#lovable-badge-cta:focus {
-		outline: none;
-	}
+    body {
+      background-color: #07090E;
+      color: #F8FAFC;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(245, 158, 11, 0.08) 0%, transparent 60%),
+        radial-gradient(circle at 100% 50%, rgba(16, 185, 129, 0.04) 0%, transparent 50%),
+        radial-gradient(circle at 0% 80%, rgba(245, 158, 11, 0.05) 0%, transparent 50%);
+      background-attachment: fixed;
+    }
 
-	#lovable-badge-cta:focus-visible {
-		outline: var(--focus-width) solid var(--focus-color);
-		outline-offset: var(--focus-offset);
-		z-index: 1;
-	}
+    /* Radar Scanning Grid */
+    .radar-grid-bg {
+      background-size: 40px 40px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    }
 
-	#lovable-badge-text {
-		line-height: 1;
-	}
+    /* Radar Beam Sweep Animation */
+    @keyframes radarSweep {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .radar-sweep-line {
+      transform-origin: center center;
+      animation: radarSweep 6s linear infinite;
+    }
 
-	/* The wordmark baseline sits at y=12 of the 16px logo; an empty 12px box
-	   makes that the flex baseline so the text aligns to it on any system font. */
-	#lovable-badge-logo {
-		position: relative;
-		display: block;
-		width: 52px;
-		height: 12px;
-	}
+    /* Pulsing Signal */
+    @keyframes signalPulse {
+      0%, 100% { opacity: 0.3; transform: scale(0.96); }
+      50% { opacity: 0.8; transform: scale(1.04); }
+    }
+    .signal-pulse {
+      animation: signalPulse 3s ease-in-out infinite;
+    }
 
-	#lovable-badge-logo svg {
-		position: absolute;
-		top: 0;
-		left: 0;
-	}
+    /* Glass Cards */
+    .luxury-card {
+      background: linear-gradient(135deg, rgba(19, 25, 38, 0.75) 0%, rgba(13, 17, 26, 0.85) 100%);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .luxury-card:hover {
+      border-color: rgba(245, 158, 11, 0.35);
+      transform: translateY(-3px);
+      box-shadow: 0 20px 40px -15px rgba(245, 158, 11, 0.15);
+    }
 
-	#lovable-badge-divider {
-		width: 1px;
-		height: 24px;
-		background-color: rgba(255, 255, 255, 0.04);
-		flex-shrink: 0;
-	}
+    .luxury-card-gold {
+      background: linear-gradient(135deg, rgba(28, 36, 54, 0.85) 0%, rgba(19, 25, 38, 0.95) 100%);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(245, 158, 11, 0.45);
+      box-shadow: 0 15px 45px -10px rgba(245, 158, 11, 0.2);
+    }
 
-	#lovable-badge-close {
-		width: 24px;
-		height: 24px;
-		min-width: 24px;
-		min-height: 24px;
-		cursor: pointer;
-		background: none;
-		border: none;
-		padding: 0;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		border-radius: 0 var(--badge-radius) var(--badge-radius) 0;
-		flex-shrink: 0;
-		transition: 
-			background-color var(--badge-transition-duration) ease,
-			transform 0.1s ease;
-	}
+    /* Gold Gradient Text */
+    .text-gold-gradient {
+      background: linear-gradient(135deg, #FFF7ED 0%, #FDE68A 30%, #F59E0B 70%, #D97706 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
 
-	#lovable-badge-close:hover {
-		background: rgba(255, 255, 255, 0.04);
-	}
+    /* Custom Sliders */
+    input[type=range] {
+      -webkit-appearance: none;
+      appearance: none;
+      background: #1C2436;
+      height: 8px;
+      border-radius: 9999px;
+      outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #F59E0B;
+      cursor: pointer;
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.8);
+      border: 2px solid #FFF;
+      transition: transform 0.15s ease;
+    }
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
 
-	#lovable-badge-close:active {
-		transform: scale(0.92);
-	}
+    /* Glow utility */
+    .gold-glow {
+      box-shadow: 0 0 25px rgba(245, 158, 11, 0.3);
+    }
+    .gold-glow-lg {
+      box-shadow: 0 0 45px rgba(245, 158, 11, 0.4);
+    }
+  </style>
+</head>
+<body class="selection:bg-solar selection:text-slate-950 text-slate-100">
 
-	#lovable-badge-close:focus {
-		outline: none;
-	}
+  <!-- ========================================== -->
+  <!-- 1. TOP ACCENT BAR (QUIET LUXURY 2026)      -->
+  <!-- ========================================== -->
+  <div class="bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-slate-950 px-4 sm:px-8 py-2 text-xs font-bold tracking-wide flex flex-wrap items-center justify-between shadow-sm z-50 relative">
+    <div class="flex items-center gap-2">
+      <span class="inline-block w-2 h-2 rounded-full bg-slate-950 animate-ping"></span>
+      <span class="font-mono uppercase tracking-wider text-[11px] sm:text-xs">
+        Radar Tático Google Maps 2026 • Inteligência Comercial B2B • Padrão GBP Check & Tour 360°
+      </span>
+    </div>
+    <div class="flex items-center gap-6 mt-1 sm:mt-0">
+      <a href="https://wa.me/5511970558412?text=Ol%C3%A1%20Ricardo!%20Vim%20pelo%20RadarMaps%20PRO%20e%20gostaria%20de%20um%20atendimento%20VIP." target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 hover:opacity-80 transition font-mono">
+        <span class="text-sm">💬</span>
+        <span>Atendimento VIP: (11) 97055-8412</span>
+      </a>
+      <span class="hidden md:inline-block px-2 py-0.5 rounded bg-slate-950/15 text-[10px] uppercase font-mono tracking-widest font-black">
+        Enterprise Live
+      </span>
+    </div>
+  </div>
 
-	#lovable-badge-close:focus-visible {
-		outline: var(--focus-width) solid var(--focus-color);
-		outline-offset: calc(var(--focus-offset) * -1);
-		z-index: 1;
-	}
+  <!-- ========================================== -->
+  <!-- 2. DIGITAL LOBBY HEADER (STICKY LUXURY)    -->
+  <!-- ========================================== -->
+  <header class="sticky top-0 z-40 bg-obsidian-900/90 backdrop-blur-xl border-b border-white/10 transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8 h-20 flex items-center justify-between">
+      
+      <!-- Brand Logo com Ícone de Radar Dourado -->
+      <a href="#top" class="flex items-center gap-3 group">
+        <div class="relative w-11 h-11 rounded-xl bg-obsidian-700 border border-solar/40 flex items-center justify-center shadow-lg group-hover:border-solar transition-all">
+          <svg class="w-6 h-6 text-solar group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="m4.93 4.93 4.24 4.24"></path>
+            <path d="m14.83 9.17 4.24-4.24"></path>
+            <path d="m14.83 14.83 4.24 4.24"></path>
+            <path d="m9.17 14.83-4.24 4.24"></path>
+            <circle cx="12" cy="12" r="2" fill="currentColor"></circle>
+          </svg>
+          <span class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-signal-emerald ring-2 ring-obsidian-900"></span>
+        </div>
+        <div class="flex flex-col">
+          <div class="flex items-center gap-1.5">
+            <span class="font-display font-extrabold text-xl tracking-tight text-white">RadarMaps</span>
+            <span class="px-2 py-0.5 text-xs font-black rounded-md bg-gradient-to-r from-solar to-amber-400 text-slate-950 font-mono tracking-wider shadow-sm">PRO</span>
+          </div>
+          <span class="text-[11px] font-mono text-slate-400 tracking-wider">INTELIGÊNCIA TÁTICA 2026</span>
+        </div>
+      </a>
 
-	#lovable-badge-close svg path {
-		fill: var(--badge-text);
-		transition: fill var(--badge-transition-duration) ease;
-	}
+      <!-- Desktop Navigation Menu -->
+      <nav class="hidden lg:flex items-center gap-7 text-sm font-semibold text-slate-300">
+        <a href="#demo" class="hover:text-solar transition-colors">Simulador Radar</a>
+        <a href="#modulos" class="hover:text-solar transition-colors">Os 6 Módulos</a>
+        <a href="#gbp-check" class="hover:text-solar transition-colors">Padrão GBP Check</a>
+        <a href="#comparativo" class="hover:text-solar transition-colors">Método Tático</a>
+        <a href="#roi" class="hover:text-solar transition-colors">Calculadora ROI</a>
+        <a href="#planos" class="hover:text-solar transition-colors">Planos & Preços</a>
+        <a href="#faq" class="hover:text-solar transition-colors">FAQ</a>
+      </nav>
 
-	#lovable-badge-close:hover svg path {
-		fill: var(--badge-text-hover);
-	}
+      <!-- CTA Actions -->
+      <div class="flex items-center gap-3">
+        <a href="painel/index.html" class="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-slate-300 hover:text-white transition-colors border border-white/10 rounded-xl hover:bg-white/5">
+          <span>Área do Assinante</span>
+        </a>
+        <a href="painel/index.html" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-solar via-amber-400 to-yellow-400 text-slate-950 font-bold text-xs sm:text-sm tracking-wide shadow-lg hover:shadow-solar/30 hover:scale-[1.02] transition-all">
+          <span>Abrir Ferramenta</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+        </a>
+      </div>
 
-	@media (prefers-reduced-motion: reduce) {
-		#lovable-badge,
-		#lovable-badge-cta,
-		#lovable-badge-close,
-		#lovable-badge-close svg path {
-			transition: none;
-		}
-		
-		#lovable-badge-cta:active,
-		#lovable-badge-close:active {
-			transform: none;
-		}
-	}
+    </div>
+  </header>
 
-	@media (prefers-contrast: high) {
-		#lovable-badge {
-			--badge-bg: #000;
-			--badge-text: #fff;
-			--badge-text-hover: #fff;
-			border: 2px solid currentColor;
-		}
-		
-		#lovable-badge-cta:focus-visible,
-		#lovable-badge-close:focus-visible {
-			outline-width: 3px;
-		}
-	}
-</style>
-<meta name="twitter:title" content="LeadMaps Pro Enterprise v2.6"><meta name="twitter:description" content="Extrator em massa, auditoria de 22 itens e GeoGrid GPS para consultores B2B."><meta property="og:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/lovp_1hxyqrnfzt9z99at5xn7v80yaa/d947e8a9adeabc6770bef25c76af3cd0_1791924609292.png"><meta name="twitter:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/lovp_1hxyqrnfzt9z99at5xn7v80yaa/d947e8a9adeabc6770bef25c76af3cd0_1791924609292.png"></head><body><!--$--><div class="min-h-screen bg-background"><header class="glass fixed inset-x-0 top-0 z-50 border-b border-border"><div class="mx-auto flex h-16 max-w-7xl items-center gap-6 px-5"><a href="#top" class="flex items-center gap-2"><span class="grid h-8 w-8 place-items-center rounded-md bg-primary text-primary-foreground"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin h-4 w-4" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg></span><span class="font-display text-lg font-extrabold">LeadMaps <span class="text-primary">PRO</span></span><span class="hidden rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground sm:inline">v2.6 Enterprise</span></a><nav class="hidden flex-1 justify-center gap-5 lg:flex"><a href="#hub" class="text-sm text-muted-foreground transition hover:text-foreground">Hub</a><a href="#pilares" class="text-sm text-muted-foreground transition hover:text-foreground">Os 3 Pilares</a><a href="#pre-analises" class="text-sm text-muted-foreground transition hover:text-foreground">Pré-Análises</a><a href="#fluxo" class="text-sm text-muted-foreground transition hover:text-foreground">Como Funciona</a><a href="#roi" class="text-sm text-muted-foreground transition hover:text-foreground">Calculadora ROI</a><a href="#planos" class="text-sm text-muted-foreground transition hover:text-foreground">Planos</a><a href="#faq" class="text-sm text-muted-foreground transition hover:text-foreground">FAQ</a></nav><div class="ml-auto flex items-center gap-3"><a href="painel/index.html" class="hidden text-sm font-medium text-muted-foreground hover:text-foreground sm:inline">Login</a><a href="painel/index.html" class="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary-glow">Abrir Ferramenta</a></div></div></header><main><section id="top" class="grid-bg relative pt-28 pb-20"><div class="mx-auto grid max-w-7xl items-center gap-12 px-5 lg:grid-cols-2"><div><span class="inline-block rounded-full border border-primary/30 bg-primary/10 px-3 py-1 font-mono text-[11px] text-primary">🚀 INTELIGÊNCIA COMERCIAL B2B • VERSÃO 2.6 ENTERPRISE</span><h1 class="mt-6 text-4xl font-extrabold leading-tight tracking-tight md:text-6xl">Transforme o Google Maps em <span class="text-gold-grad">contratos de consultoria recorrentes.</span></h1><p class="mt-6 max-w-xl text-lg text-muted-foreground">Extraia empresas qualificadas, gere a <span class="font-semibold text-foreground">pré-análise individual</span> de cada uma e mostre ao cliente exatamente onde ele está perdendo vendas — com relatórios white-label prontos para fechar <span class="font-mono text-foreground">R$ 1.500 a R$ 5.000/mês</span>.</p><div class="mt-8 flex flex-wrap gap-3"><a href="painel/index.html" class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-glow transition hover:bg-primary-glow">Abrir a Ferramenta Agora <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right h-4 w-4" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></a><a href="#planos" class="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-secondary px-5 py-3 text-sm font-semibold text-foreground transition hover:bg-accent">Ver Planos &amp; Preços</a><a href="https://wa.me/5511970558412?text=Ol%C3%A1%20Ricardo%2C%20quero%20suporte%20VIP%20do%20LeadMaps%20Pro." target="_blank" rel="noreferrer" class="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-secondary px-5 py-3 text-sm font-semibold text-foreground transition hover:bg-accent"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-circle h-4 w-4 text-whats" aria-hidden="true"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"></path></svg>Suporte VIP WhatsApp</a></div><div class="mt-8 flex flex-wrap gap-2"><span class="rounded-md border border-border bg-card px-2.5 py-1 font-mono text-[11px] text-muted-foreground">Pré-Análise Individual</span><span class="rounded-md border border-border bg-card px-2.5 py-1 font-mono text-[11px] text-muted-foreground">22 Itens Auditados</span><span class="rounded-md border border-border bg-card px-2.5 py-1 font-mono text-[11px] text-muted-foreground">GeoGrid GPS 1km a 20km</span><span class="rounded-md border border-border bg-card px-2.5 py-1 font-mono text-[11px] text-muted-foreground">PDF White-Label</span><span class="rounded-md border border-border bg-card px-2.5 py-1 font-mono text-[11px] text-muted-foreground">WhatsApp Validado</span></div></div><div class="panel overflow-hidden shadow-glow"><div class="flex items-center gap-2 border-b border-border bg-background-2 px-4 py-3"><span class="h-2.5 w-2.5 rounded-full bg-danger"></span><span class="h-2.5 w-2.5 rounded-full bg-warn"></span><span class="h-2.5 w-2.5 rounded-full bg-primary"></span><span class="ml-3 font-mono text-xs text-muted-foreground">console.leadmaps.pro</span></div><div class="flex border-b border-border"><button class="flex-1 px-3 py-3 text-xs font-semibold transition sm:text-sm border-b-2 border-primary text-foreground">GeoGrid GPS</button><button class="flex-1 px-3 py-3 text-xs font-semibold transition sm:text-sm text-muted-foreground hover:text-foreground">Auditoria 22 Itens</button><button class="flex-1 px-3 py-3 text-xs font-semibold transition sm:text-sm text-muted-foreground hover:text-foreground">Extrator em Massa</button></div><div class="min-h-[340px] p-5"><div class="grid gap-5 sm:grid-cols-2"><div class="grid-bg grid grid-cols-3 gap-3 rounded-lg border border-border bg-background-2 p-4"><button class="grid aspect-square place-items-center rounded-full font-mono text-sm font-bold transition bg-primary text-primary-foreground opacity-80 hover:opacity-100">#<!-- -->1</button><button class="grid aspect-square place-items-center rounded-full font-mono text-sm font-bold transition bg-warn text-gold-foreground opacity-80 hover:opacity-100">#<!-- -->4</button><button class="grid aspect-square place-items-center rounded-full font-mono text-sm font-bold transition bg-danger text-destructive-foreground opacity-80 hover:opacity-100">#<!-- -->12</button><button class="grid aspect-square place-items-center rounded-full font-mono text-sm font-bold transition bg-warn text-gold-foreground opacity-80 hover:opacity-100">#<!-- -->4</button><button class="grid aspect-square place-items-center rounded-full font-mono text-sm font-bold transition bg-primary text-primary-foreground scale-110 ring-2 ring-foreground">#<!-- -->1</button><button class="grid aspect-square place-items-center rounded-full font-mono text-sm font-bold transition bg-danger text-destructive-foreground opacity-80 hover:opacity-100">#<!-- -->12</button><button class="grid aspect-square place-items-center rounded-full font-mono text-sm font-bold transition bg-danger text-destructive-foreground opacity-80 hover:opacity-100">#<!-- -->12</button><button class="grid aspect-square place-items-center rounded-full font-mono text-sm font-bold transition bg-warn text-gold-foreground opacity-80 hover:opacity-100">#<!-- -->4</button><button class="grid aspect-square place-items-center rounded-full font-mono text-sm font-bold transition bg-danger text-destructive-foreground opacity-80 hover:opacity-100">#<!-- -->12</button></div><div class="space-y-3"><p class="font-mono text-xs text-muted-foreground">CLÍNICA ODONTO SORRISO • raio 5km</p><div class="flex items-baseline gap-3"><span class="font-display text-5xl font-extrabold">#<!-- -->1</span><span class="font-mono text-sm text-muted-foreground">0.0<!-- --> km do centro</span></div><p class="text-sm text-muted-foreground">Domina o Top 3 nesta região. Mantenha avaliações e postagens.</p><p class="font-mono text-[11px] text-muted-foreground">lat -23.5<!-- -->54<!-- --> • lng -46.63<!-- -->4</p></div></div></div></div></div></section><section id="hub" class="mx-auto max-w-7xl px-5 py-24"><div class="mb-12 max-w-2xl"><p class="font-mono text-xs uppercase tracking-widest text-primary">Hub central</p><h2 class="mt-3 text-3xl font-extrabold tracking-tight md:text-4xl">Todos os acessos em um só lugar.</h2></div><div class="grid gap-4 md:grid-cols-3"><a href="painel/index.html" rel="noreferrer" class="panel group flex flex-col justify-between p-6 transition hover:border-primary/40 md:row-span-2 border-primary/40 bg-primary/5 shadow-glow"><div><div class="flex items-center justify-between"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-crosshair h-6 w-6 text-primary" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="22" x2="18" y1="12" y2="12"></line><line x1="6" x2="2" y1="12" y2="12"></line><line x1="12" x2="12" y1="6" y2="2"></line><line x1="12" x2="12" y1="22" y2="18"></line></svg></div><h3 class="mt-5 font-bold text-2xl">Ferramenta Web Principal</h3><p class="mt-2 text-sm text-muted-foreground">Painel completo: extração, auditoria e GeoGrid.</p></div><span class="mt-6 inline-flex items-center gap-1 text-sm font-semibold w-fit rounded-lg bg-primary px-4 py-2.5 text-primary-foreground">Abrir painel<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right h-4 w-4" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></span></a><a href="#pre-analises" rel="noreferrer" class="panel group flex flex-col justify-between p-6 transition hover:border-primary/40 "><div><div class="flex items-center justify-between"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-text h-6 w-6 text-muted-foreground group-hover:text-primary" aria-hidden="true"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"></path><path d="M14 2v5a1 1 0 0 0 1 1h5"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg></div><h3 class="mt-5 font-bold text-lg">Pré-Análise Individual</h3><p class="mt-2 text-sm text-muted-foreground">Diagnóstico de uma empresa específica, com o nome dela, pronto para enviar.</p></div><span class="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-primary">Gerar agora<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right h-4 w-4" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></span></a><a href="painel/index.html" class="panel group flex flex-col justify-between p-6 transition hover:border-primary/40 "><div><div class="flex items-center justify-between"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-in h-6 w-6 text-muted-foreground group-hover:text-primary" aria-hidden="true"><path d="m10 17 5-5-5-5"></path><path d="M15 12H3"></path><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path></svg></div><h3 class="mt-5 font-bold text-lg">Login &amp; Ativação de Chave</h3><p class="mt-2 text-sm text-muted-foreground">Acesso exclusivo de assinantes.</p></div><span class="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-primary">Entrar<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right h-4 w-4" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></span></a><a href="#planos" rel="noreferrer" class="panel group flex flex-col justify-between p-6 transition hover:border-primary/40 "><div><div class="flex items-center justify-between"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-tags h-6 w-6 text-muted-foreground group-hover:text-primary" aria-hidden="true"><path d="M13.172 2a2 2 0 0 1 1.414.586l6.71 6.71a2.4 2.4 0 0 1 0 3.408l-4.592 4.592a2.4 2.4 0 0 1-3.408 0l-6.71-6.71A2 2 0 0 1 6 9.172V3a1 1 0 0 1 1-1z"></path><path d="M2 7v6.172a2 2 0 0 0 .586 1.414l6.71 6.71a2.4 2.4 0 0 0 3.191.193"></path><circle cx="10.5" cy="6.5" r=".5" fill="currentColor"></circle></svg></div><h3 class="mt-5 font-bold text-lg">Planos &amp; Preços</h3><p class="mt-2 text-sm text-muted-foreground">Compare Mensal e Anual.</p></div><span class="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-primary">Comparar<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right h-4 w-4" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></span></a><a href="https://wa.me/5511970558412?text=Ol%C3%A1%20Ricardo%2C%20preciso%20de%20suporte." target="_blank" rel="noreferrer" class="panel group flex flex-col justify-between p-6 transition hover:border-primary/40 "><div><div class="flex items-center justify-between"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-circle h-6 w-6 text-muted-foreground group-hover:text-primary" aria-hidden="true"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"></path></svg></div><h3 class="mt-5 font-bold text-lg">Suporte VIP no WhatsApp</h3><p class="mt-2 text-sm text-muted-foreground">Atendimento direto com Ricardo • 11 97055-8412</p></div><span class="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-primary">Chamar<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right h-4 w-4" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></span></a><a href="#fluxo" rel="noreferrer" class="panel group flex flex-col justify-between p-6 transition hover:border-primary/40 "><div><div class="flex items-center justify-between"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-book-open h-6 w-6 text-muted-foreground group-hover:text-primary" aria-hidden="true"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg></div><h3 class="mt-5 font-bold text-lg">Metodologia de Fechamento</h3><p class="mt-2 text-sm text-muted-foreground">Passo a passo comercial para fechar recorrência.</p></div><span class="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-primary">Ver passos<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right h-4 w-4" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></span></a></div></section><section class="border-y border-border bg-background-2 py-24"><div class="mx-auto max-w-7xl px-5"><div class="mb-12 max-w-2xl"><p class="font-mono text-xs uppercase tracking-widest text-primary">A dor do consultor</p><h2 class="mt-3 text-3xl font-extrabold tracking-tight md:text-4xl">Pare de vender como amador.</h2></div><div class="grid gap-4 md:grid-cols-2"><div class="panel p-8"><h3 class="text-lg font-bold text-muted-foreground">Método Tradicional Amador</h3><ul class="mt-6 space-y-4"><li class="flex gap-3 text-muted-foreground"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x mt-0.5 h-5 w-5 shrink-0 text-danger" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>Listas frias compradas e desatualizadas</li><li class="flex gap-3 text-muted-foreground"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x mt-0.5 h-5 w-5 shrink-0 text-danger" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>2h auditando cada perfil na mão</li><li class="flex gap-3 text-muted-foreground"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x mt-0.5 h-5 w-5 shrink-0 text-danger" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>Cliente não entende o problema</li><li class="flex gap-3 text-muted-foreground"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x mt-0.5 h-5 w-5 shrink-0 text-danger" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>Proposta vira pedido de desconto</li></ul></div><div class="panel border-primary/40 p-8 shadow-glow"><h3 class="text-lg font-bold">Com LeadMaps Pro Enterprise</h3><ul class="mt-6 space-y-4"><li class="flex gap-3"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>Abordagem de consultor, com dados reais</li><li class="flex gap-3"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>Auditoria completa em 30 segundos</li><li class="flex gap-3"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>GeoGrid visual que o cliente entende na hora</li><li class="flex gap-3"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>Contrato recorrente fechado</li></ul></div></div></div></section><section id="pilares" class="mx-auto max-w-7xl px-5 py-24"><div class="mb-12 max-w-2xl"><p class="font-mono text-xs uppercase tracking-widest text-primary">Os 3 pilares</p><h2 class="mt-3 text-3xl font-extrabold tracking-tight md:text-4xl">Tecnologia que vira argumento de venda.</h2></div><div class="grid gap-4 md:grid-cols-3"><div class="panel p-7"><div class="flex items-center justify-between"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-scan-search h-7 w-7 text-primary" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path><circle cx="12" cy="12" r="3"></circle><path d="m16 16-1.9-1.9"></path></svg><span class="font-mono text-sm text-muted-foreground">01</span></div><h3 class="mt-6 text-xl font-bold">Extrator em Massa do Google Maps</h3><p class="mt-3 text-sm text-muted-foreground">Centenas de empresas por nicho e cidade, com telefone e WhatsApp validado.</p></div><div class="panel p-7"><div class="flex items-center justify-between"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-text h-7 w-7 text-primary" aria-hidden="true"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"></path><path d="M14 2v5a1 1 0 0 0 1 1h5"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg><span class="font-mono text-sm text-muted-foreground">02</span></div><h3 class="mt-6 text-xl font-bold">Auditoria Profunda de 22 Itens</h3><p class="mt-3 text-sm text-muted-foreground">Relatório PDF white-label com a marca da sua agência, pronto para enviar.</p></div><div class="panel p-7"><div class="flex items-center justify-between"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin h-7 w-7 text-primary" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg><span class="font-mono text-sm text-muted-foreground">03</span></div><h3 class="mt-6 text-xl font-bold">GeoGrid GPS de Ranking Local</h3><p class="mt-3 text-sm text-muted-foreground">Mapa de calor de posições no raio de 1km a 20km. Prova visual irrefutável.</p></div></div></section><section id="pre-analises" class="border-y border-border bg-background-2 py-24"><div class="mx-auto max-w-7xl px-5"><div class="mb-12 max-w-2xl"><p class="font-mono text-xs uppercase tracking-widest text-primary">Pré-análises individuais</p><h2 class="mt-3 text-3xl font-extrabold tracking-tight md:text-4xl">Uma empresa, um diagnóstico, um contrato.</h2><p class="mt-4 text-muted-foreground">O LeadMaps Pro também faz a pré-análise individual: você escolhe uma empresa da lista e ele gera o diagnóstico dela — nome, posição no mapa, o que está quebrado e quanto isso está custando. Você chega antes do concorrente, com a resposta na mão.</p></div><div class="grid gap-4 lg:grid-cols-[minmax(0,330px)_1fr]"><div class="panel p-5"><p class="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">Sua lista de extração</p><div class="mt-4 space-y-2"><button class="w-full rounded-lg border p-3 text-left transition border-primary/60 bg-primary/10"><span class="block text-sm font-semibold">Clínica Odonto Sorriso</span><span class="mt-0.5 block font-mono text-[11px] text-muted-foreground">Dentista<!-- --> • <!-- -->Tatuapé • São Paulo</span></button><button class="w-full rounded-lg border p-3 text-left transition border-border hover:border-primary/40"><span class="block text-sm font-semibold">Pet Vida Banho &amp; Tosa</span><span class="mt-0.5 block font-mono text-[11px] text-muted-foreground">Pet shop<!-- --> • <!-- -->Moema • São Paulo</span></button><button class="w-full rounded-lg border p-3 text-left transition border-border hover:border-primary/40"><span class="block text-sm font-semibold">Studio Fit</span><span class="mt-0.5 block font-mono text-[11px] text-muted-foreground">Academia<!-- --> • <!-- -->Pinheiros • São Paulo</span></button><button class="w-full rounded-lg border p-3 text-left transition border-border hover:border-primary/40"><span class="block text-sm font-semibold">Bella Estética</span><span class="mt-0.5 block font-mono text-[11px] text-muted-foreground">Estética<!-- --> • <!-- -->Santo Amaro • São Paulo</span></button></div><button class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-glow transition hover:bg-primary-glow mt-5 w-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles h-4 w-4" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"></path><path d="M20 2v4"></path><path d="M22 4h-4"></path><circle cx="4" cy="20" r="2"></circle></svg>Gerar Pré-Análise</button><p class="mt-3 text-center font-mono text-[11px] text-muted-foreground">1 empresa por vez • dados reais do perfil</p></div><div class="panel overflow-hidden"><div class="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-background px-5 py-3"><span class="font-mono text-[11px] uppercase tracking-widest text-primary">Pré-análise individual • Nº <!-- -->001</span><span class="font-mono text-[11px] text-muted-foreground">white-label • <!-- -->Tatuapé • São Paulo</span></div><div class="p-6"><div class="flex flex-wrap items-center gap-6"><div class="grid h-24 w-24 shrink-0 place-items-center rounded-full border-4 border-danger text-danger"><span class="font-mono text-2xl font-bold">48<span class="text-sm text-muted-foreground">/100</span></span></div><div><h3 class="font-display text-xl font-extrabold">Clínica Odonto Sorriso</h3><p class="mt-1 font-mono text-xs text-muted-foreground">Dentista<!-- --> • raio 5km</p><p class="mt-2 text-sm">Posição no mapa: <span class="font-mono font-bold">#<!-- -->12</span> • <!-- -->5.1<!-- --> km do centro</p></div></div><ul class="mt-6 grid gap-2 sm:grid-cols-3"><li class="flex items-start gap-2 rounded-lg border border-border bg-background p-3 text-sm"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x mt-0.5 h-4 w-4 shrink-0 text-danger" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>Sem Tour 360°</li><li class="flex items-start gap-2 rounded-lg border border-border bg-background p-3 text-sm"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x mt-0.5 h-4 w-4 shrink-0 text-danger" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>Sem botão de agendamento</li><li class="flex items-start gap-2 rounded-lg border border-border bg-background p-3 text-sm"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x mt-0.5 h-4 w-4 shrink-0 text-danger" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>88% das avaliações sem resposta</li></ul><div class="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-lg border border-gold/40 p-5"><div><p class="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">Perda mensal estimada</p><p class="mt-1 font-mono text-3xl font-bold text-gold">R$ 6.200</p></div><p class="max-w-sm text-sm text-muted-foreground">O cliente não vê a sua promessa: ele vê o número dele. É esse número que abre a conversa.</p></div><div class="mt-6 rounded-lg border border-border bg-foreground p-5 text-background"><p class="font-mono text-[10px] uppercase tracking-widest opacity-70">Mensagem pronta para o WhatsApp</p><p class="mt-3 text-sm leading-relaxed">Olá, Clínica Odonto Sorriso! Fiz uma pré-análise gratuita do perfil de vocês no Google Maps (Tatuapé • São Paulo). Hoje vocês aparecem na posição #12 do mapa e sem tour 360°. Isso custa cerca de R$ 6.200 por mês em clientes que caem no concorrente mais próximo. Posso te mostrar o diagnóstico completo em 10 minutos?</p></div><div class="mt-6 flex flex-wrap gap-3"><a href="https://wa.me/5511970558412?text=Ol%C3%A1%2C%20Cl%C3%ADnica%20Odonto%20Sorriso!%20Fiz%20uma%20pr%C3%A9-an%C3%A1lise%20gratuita%20do%20perfil%20de%20voc%C3%AAs%20no%20Google%20Maps%20(Tatuap%C3%A9%20%E2%80%A2%20S%C3%A3o%20Paulo).%20Hoje%20voc%C3%AAs%20aparecem%20na%20posi%C3%A7%C3%A3o%20%2312%20do%20mapa%20e%20sem%20tour%20360%C2%B0.%20Isso%20custa%20cerca%20de%20R%24%C2%A06.200%20por%20m%C3%AAs%20em%20clientes%20que%20caem%20no%20concorrente%20mais%20pr%C3%B3ximo.%20Posso%20te%20mostrar%20o%20diagn%C3%B3stico%20completo%20em%2010%20minutos%3F" target="_blank" rel="noreferrer" class="inline-flex items-center justify-center gap-2 rounded-lg bg-whats px-5 py-3 text-sm font-semibold text-whats-foreground transition hover:brightness-110"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-circle h-4 w-4" aria-hidden="true"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"></path></svg>Enviar Pré-Análise</a><a href="#planos" class="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-secondary px-5 py-3 text-sm font-semibold text-foreground transition hover:bg-accent">Quero gerar as minhas</a></div></div></div></div></div></section><section id="fluxo" class="border-y border-border bg-background-2 py-24"><div class="mx-auto max-w-7xl px-5"><div class="mb-12 max-w-2xl"><p class="font-mono text-xs uppercase tracking-widest text-primary">Como funciona</p><h2 class="mt-3 text-3xl font-extrabold tracking-tight md:text-4xl">Do mapa ao contrato em 4 passos.</h2></div><div class="grid gap-4 md:grid-cols-4"><div class="panel relative p-6"><span class="font-mono text-3xl font-bold text-primary">0<!-- -->1</span><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search mt-4 h-5 w-5 text-muted-foreground" aria-hidden="true"><path d="m21 21-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></svg><h3 class="mt-3 font-bold">Busque o Nicho</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right absolute top-1/2 -right-3 hidden h-5 w-5 text-primary md:block" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></div><div class="panel relative p-6"><span class="font-mono text-3xl font-bold text-primary">0<!-- -->2</span><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-scan-search mt-4 h-5 w-5 text-muted-foreground" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path><circle cx="12" cy="12" r="3"></circle><path d="m16 16-1.9-1.9"></path></svg><h3 class="mt-3 font-bold">Gere a Pré-Análise Individual</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right absolute top-1/2 -right-3 hidden h-5 w-5 text-primary md:block" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></div><div class="panel relative p-6"><span class="font-mono text-3xl font-bold text-primary">0<!-- -->3</span><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-send mt-4 h-5 w-5 text-muted-foreground" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"></path><path d="m21.854 2.147-10.94 10.939"></path></svg><h3 class="mt-3 font-bold">Envie no WhatsApp</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right absolute top-1/2 -right-3 hidden h-5 w-5 text-primary md:block" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></div><div class="panel relative p-6"><span class="font-mono text-3xl font-bold text-primary">0<!-- -->4</span><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-handshake mt-4 h-5 w-5 text-muted-foreground" aria-hidden="true"><path d="m11 17 2 2a1 1 0 1 0 3-3"></path><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"></path><path d="m21 3 1 11h-2"></path><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"></path><path d="M3 4h8"></path></svg><h3 class="mt-3 font-bold">Feche a Recorrência</h3></div></div></div></section><section id="roi" class="mx-auto max-w-7xl px-5 py-24"><div class="mb-12 max-w-2xl"><p class="font-mono text-xs uppercase tracking-widest text-primary">Calculadora de ROI</p><h2 class="mt-3 text-3xl font-extrabold tracking-tight md:text-4xl">Quanto a ferramenta pode render para você?</h2></div><div class="grid gap-6 lg:grid-cols-2"><div class="panel space-y-10 p-8"><div><div class="mb-4 flex justify-between text-sm"><span>Ticket médio mensal</span><span class="font-mono text-primary">R$ 2.000</span></div><span dir="ltr" data-orientation="horizontal" aria-disabled="false" class="relative flex w-full touch-none select-none items-center" style="--radix-slider-thumb-transform:translateX(-50%)"><span data-orientation="horizontal" class="relative h-1.5 w-full grow overflow-hidden rounded-full bg-primary/20"><span data-orientation="horizontal" class="absolute h-full bg-primary" style="left:0%;right:80%"></span></span><span style="transform:var(--radix-slider-thumb-transform);position:absolute;left:calc(0% + 0px)"><span role="slider" aria-valuemin="1000" aria-valuemax="6000" aria-orientation="horizontal" data-orientation="horizontal" tabindex="0" class="block h-4 w-4 rounded-full border border-primary/50 bg-background shadow transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" style="display:none" data-radix-collection-item=""></span></span><input style="display:none"/></span></div><div><div class="mb-4 flex justify-between text-sm"><span>Clientes fechados no mês</span><span class="font-mono text-primary">2</span></div><span dir="ltr" data-orientation="horizontal" aria-disabled="false" class="relative flex w-full touch-none select-none items-center" style="--radix-slider-thumb-transform:translateX(-50%)"><span data-orientation="horizontal" class="relative h-1.5 w-full grow overflow-hidden rounded-full bg-primary/20"><span data-orientation="horizontal" class="absolute h-full bg-primary" style="left:0%;right:88.88888888888889%"></span></span><span style="transform:var(--radix-slider-thumb-transform);position:absolute;left:calc(0% + 0px)"><span role="slider" aria-valuemin="1" aria-valuemax="10" aria-orientation="horizontal" data-orientation="horizontal" tabindex="0" class="block h-4 w-4 rounded-full border border-primary/50 bg-background shadow transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" style="display:none" data-radix-collection-item=""></span></span><input style="display:none"/></span></div></div><div class="grid gap-4 sm:grid-cols-2"><div class="panel p-6"><p class="text-sm text-muted-foreground">Faturamento mensal recorrente</p><p class="mt-2 font-mono text-3xl font-bold">R$ 4.000</p></div><div class="panel p-6"><p class="text-sm text-muted-foreground">Faturamento anual projetado</p><p class="mt-2 font-mono text-3xl font-bold">R$ 48.000</p></div><div class="panel border-gold/40 p-6 shadow-gold sm:col-span-2"><p class="text-sm text-muted-foreground">Retorno sobre o Plano Anual VIP</p><p class="mt-2 font-mono text-5xl font-bold text-gold">96<!-- -->x</p><p class="mt-3 text-sm text-muted-foreground">Um único cliente fechado paga a ferramenta <!-- -->4<!-- --> vezes no primeiro mês. O resto é lucro.</p></div></div></div></section><section id="planos" class="border-y border-border bg-background-2 py-24"><div class="mx-auto max-w-7xl px-5"><div class="mb-12 max-w-2xl"><p class="font-mono text-xs uppercase tracking-widest text-primary">Planos</p><h2 class="mt-3 text-3xl font-extrabold tracking-tight md:text-4xl">Escolha como começar.</h2></div><div class="grid items-stretch gap-4 lg:grid-cols-2 lg:max-w-3xl mx-auto"><div class="panel flex flex-col p-8"><h3 class="text-lg font-bold">Mensal Pro</h3><p class="mt-1 text-sm text-muted-foreground">Para começar rápido.</p><p class="mt-6 font-mono text-4xl font-bold">R$ 97<span class="text-base text-muted-foreground">/mês</span></p><a href="https://wa.me/5511970558412?text=Ol%C3%A1!%20Quero%20contratar%20o%20Plano%20Mensal%20Pro%20(R%24%2097%2Fm%C3%AAs)%20do%20LeadMaps%20Pro." target="_blank" rel="noreferrer" class="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-secondary px-5 py-3 text-sm font-semibold text-foreground transition hover:bg-accent mt-auto">Assinar Mensal</a></div><div class="panel relative flex flex-col border-primary p-8 shadow-glow lg:-my-4"><span class="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-3 py-1 font-mono text-[10px] font-bold text-primary-foreground">MAIS ESCOLHIDO • ECONOMIA DE 57%</span><h3 class="text-lg font-bold">Anual VIP</h3><p class="mt-1 text-sm text-muted-foreground">O melhor custo por resultado.</p><p class="mt-6 font-mono text-sm text-muted-foreground line-through">De R$ 1.164</p><p class="font-mono text-4xl font-bold">R$ 497<span class="text-base text-muted-foreground">/ano</span></p><p class="mt-1 font-mono text-sm text-primary">Apenas R$ 41,41/mês</p><ul class="my-6 space-y-2 text-sm"><li class="flex gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check h-4 w-4 text-primary" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>Pré-análises individuais</li><li class="flex gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check h-4 w-4 text-primary" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>Extrator ilimitado</li><li class="flex gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check h-4 w-4 text-primary" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>Auditoria 22 itens</li><li class="flex gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check h-4 w-4 text-primary" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>GeoGrid 1–20km</li><li class="flex gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check h-4 w-4 text-primary" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>PDF white-label</li></ul><a href="https://wa.me/5511970558412?text=Ol%C3%A1!%20Quero%20contratar%20o%20Plano%20Anual%20VIP%20(R%24%20497%2Fano)%20do%20LeadMaps%20Pro." target="_blank" rel="noreferrer" class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-glow transition hover:bg-primary-glow mt-auto">Quero o Anual VIP</a></div></div><div class="mt-12 flex flex-wrap justify-center gap-6"><span class="flex items-center gap-2 text-sm text-muted-foreground"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-credit-card h-4 w-4 text-primary" aria-hidden="true"><rect width="20" height="14" x="2" y="5" rx="2"></rect><line x1="2" x2="22" y1="10" y2="10"></line></svg>Pagamento Seguro • PIX e Cartão até 12x</span><span class="flex items-center gap-2 text-sm text-muted-foreground"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zap h-4 w-4 text-primary" aria-hidden="true"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"></path></svg>Liberação Imediata</span></div></div></section><section id="faq" class="mx-auto max-w-3xl px-5 py-24"><div><p class="font-mono text-xs uppercase tracking-widest text-primary">FAQ</p><h2 class="mt-3 mb-6 text-3xl font-extrabold">Perguntas frequentes</h2><div data-orientation="vertical"><div data-state="closed" data-orientation="vertical" class="border-b"><h3 data-orientation="vertical" data-state="closed" class="flex"><button type="button" aria-expanded="false" data-state="closed" data-orientation="vertical" id="radix-_R_f6aq_" class="flex flex-1 items-center justify-between py-4 text-sm font-medium cursor-pointer transition-all hover:underline [&amp;[data-state=open]&gt;svg]:rotate-180 text-left" data-radix-collection-item="">O que é a pré-análise individual?<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></button></h3><div data-state="closed" id="radix-_R_2f6aq_" hidden="" role="region" aria-labelledby="radix-_R_f6aq_" data-orientation="vertical" class="overflow-hidden text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down" style="--radix-accordion-content-height:var(--radix-collapsible-content-height);--radix-accordion-content-width:var(--radix-collapsible-content-width)"></div></div><div data-state="closed" data-orientation="vertical" class="border-b"><h3 data-orientation="vertical" data-state="closed" class="flex"><button type="button" aria-expanded="false" data-state="closed" data-orientation="vertical" id="radix-_R_n6aq_" class="flex flex-1 items-center justify-between py-4 text-sm font-medium cursor-pointer transition-all hover:underline [&amp;[data-state=open]&gt;svg]:rotate-180 text-left" data-radix-collection-item="">A pré-análise é igual para todas as empresas?<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></button></h3><div data-state="closed" id="radix-_R_2n6aq_" hidden="" role="region" aria-labelledby="radix-_R_n6aq_" data-orientation="vertical" class="overflow-hidden text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down" style="--radix-accordion-content-height:var(--radix-collapsible-content-height);--radix-accordion-content-width:var(--radix-collapsible-content-width)"></div></div><div data-state="closed" data-orientation="vertical" class="border-b"><h3 data-orientation="vertical" data-state="closed" class="flex"><button type="button" aria-expanded="false" data-state="closed" data-orientation="vertical" id="radix-_R_v6aq_" class="flex flex-1 items-center justify-between py-4 text-sm font-medium cursor-pointer transition-all hover:underline [&amp;[data-state=open]&gt;svg]:rotate-180 text-left" data-radix-collection-item="">Preciso saber programar?<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></button></h3><div data-state="closed" id="radix-_R_2v6aq_" hidden="" role="region" aria-labelledby="radix-_R_v6aq_" data-orientation="vertical" class="overflow-hidden text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down" style="--radix-accordion-content-height:var(--radix-collapsible-content-height);--radix-accordion-content-width:var(--radix-collapsible-content-width)"></div></div><div data-state="closed" data-orientation="vertical" class="border-b"><h3 data-orientation="vertical" data-state="closed" class="flex"><button type="button" aria-expanded="false" data-state="closed" data-orientation="vertical" id="radix-_R_176aq_" class="flex flex-1 items-center justify-between py-4 text-sm font-medium cursor-pointer transition-all hover:underline [&amp;[data-state=open]&gt;svg]:rotate-180 text-left" data-radix-collection-item="">O relatório sai com a minha marca?<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></button></h3><div data-state="closed" id="radix-_R_376aq_" hidden="" role="region" aria-labelledby="radix-_R_176aq_" data-orientation="vertical" class="overflow-hidden text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down" style="--radix-accordion-content-height:var(--radix-collapsible-content-height);--radix-accordion-content-width:var(--radix-collapsible-content-width)"></div></div><div data-state="closed" data-orientation="vertical" class="border-b"><h3 data-orientation="vertical" data-state="closed" class="flex"><button type="button" aria-expanded="false" data-state="closed" data-orientation="vertical" id="radix-_R_1f6aq_" class="flex flex-1 items-center justify-between py-4 text-sm font-medium cursor-pointer transition-all hover:underline [&amp;[data-state=open]&gt;svg]:rotate-180 text-left" data-radix-collection-item="">O GeoGrid funciona em quais cidades?<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></button></h3><div data-state="closed" id="radix-_R_3f6aq_" hidden="" role="region" aria-labelledby="radix-_R_1f6aq_" data-orientation="vertical" class="overflow-hidden text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down" style="--radix-accordion-content-height:var(--radix-collapsible-content-height);--radix-accordion-content-width:var(--radix-collapsible-content-width)"></div></div><div data-state="closed" data-orientation="vertical" class="border-b"><h3 data-orientation="vertical" data-state="closed" class="flex"><button type="button" aria-expanded="false" data-state="closed" data-orientation="vertical" id="radix-_R_1n6aq_" class="flex flex-1 items-center justify-between py-4 text-sm font-medium cursor-pointer transition-all hover:underline [&amp;[data-state=open]&gt;svg]:rotate-180 text-left" data-radix-collection-item="">Como ativo minha chave?<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></button></h3><div data-state="closed" id="radix-_R_3n6aq_" hidden="" role="region" aria-labelledby="radix-_R_1n6aq_" data-orientation="vertical" class="overflow-hidden text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down" style="--radix-accordion-content-height:var(--radix-collapsible-content-height);--radix-accordion-content-width:var(--radix-collapsible-content-width)"></div></div><div data-state="closed" data-orientation="vertical" class="border-b"><h3 data-orientation="vertical" data-state="closed" class="flex"><button type="button" aria-expanded="false" data-state="closed" data-orientation="vertical" id="radix-_R_1v6aq_" class="flex flex-1 items-center justify-between py-4 text-sm font-medium cursor-pointer transition-all hover:underline [&amp;[data-state=open]&gt;svg]:rotate-180 text-left" data-radix-collection-item="">Posso cancelar?<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></button></h3><div data-state="closed" id="radix-_R_3v6aq_" hidden="" role="region" aria-labelledby="radix-_R_1v6aq_" data-orientation="vertical" class="overflow-hidden text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down" style="--radix-accordion-content-height:var(--radix-collapsible-content-height);--radix-accordion-content-width:var(--radix-collapsible-content-width)"></div></div></div></div></section><section class="mx-auto max-w-7xl px-5 pb-24"><div class="panel grid-bg border-primary/40 p-10 text-center shadow-glow md:p-16"><h2 class="text-3xl font-extrabold md:text-5xl">Seu próximo contrato está no mapa.</h2><p class="mx-auto mt-4 max-w-xl text-muted-foreground">Comece hoje e envie sua primeira pré-análise individual ainda esta semana.</p><div class="mt-8 flex flex-wrap justify-center gap-3"><a href="#planos" class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-glow transition hover:bg-primary-glow">Começar Agora <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right h-4 w-4" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></a><a href="https://wa.me/5511970558412?text=Ol%C3%A1%20Ricardo%2C%20tenho%20d%C3%BAvidas%20sobre%20o%20LeadMaps%20Pro." target="_blank" rel="noreferrer" class="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-secondary px-5 py-3 text-sm font-semibold text-foreground transition hover:bg-accent"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download h-4 w-4" aria-hidden="true"><path d="M12 15V3"></path><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m7 10 5 5 5-5"></path></svg>Falar com Ricardo</a></div></div></section></main><footer class="border-t border-border py-10"><div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-5 text-sm text-muted-foreground md:flex-row"><span class="font-display font-extrabold text-foreground">LeadMaps <span class="text-primary">PRO</span></span><span>© <!-- -->2026<!-- --> LeadMaps Pro Enterprise. Todos os direitos reservados.</span><span>Desenvolvido com excelência por Severino &amp; Ricardo</span></div></footer></div><script>(function(a,f){let l;try{l=JSON.parse(sessionStorage.getItem(a)||"{}")}catch{return}const n=l?.[f||history.state?.__TSR_key];let c=!1;for(const t in n){const e=n[t],o=e?.scrollX,s=e?.scrollY;if(Number.isFinite(o)&&Number.isFinite(s)){if(t==="window")scrollTo(o,s),c=!0;else if(t)try{const r=document.querySelector(t);r&&(r.scrollLeft=o,r.scrollTop=s)}catch{}}}if(c)return;const i=location.hash.slice(1);if(i){const t=history.state?.__hashScrollIntoViewOptions??!0;if(t){const e=document.getElementById(i);e&&e.scrollIntoView(t)}return}scrollTo(0,0)})("tsr-scroll-restoration-v1_3");document.currentScript.remove()</script><!--/$--><script data-tsr-stream-part="">(self.$R=self.$R||{})["tsr"]=[];self.$_TSR={h(){this.hydrated=!0,this.c()},e(){this.streamEnded=!0,this.c()},c(){this.hydrated&&this.streamEnded&&(delete self.$_TSR,delete self.$R.tsr)},p(e){this.initialized?e():this.buffer.push(e)},buffer:[]};$_TSR.router=($R=>$R[0]={manifest:$R[1]={routes:$R[2]={__root__:$R[3]={preloads:$R[4]=["/assets/index-ChqC3oIp.js"],scripts:$R[5]=[$R[6]={attrs:$R[7]={type:"module",async:!0,src:"/assets/index-ChqC3oIp.js"}}]},"/":$R[8]={preloads:$R[9]=["/assets/routes-CNDtBP7s.js"]}}},matches:$R[10]=[$R[11]={i:"__root__ ",u:1791930729456,s:"success",ssr:!0},$R[12]={i:"  ",u:1791930729456,s:"success",ssr:!0}]})($R["tsr"]);$_TSR.e();{let s=document.currentScript,p;while((p=s.previousElementSibling)&&p.hasAttribute('data-tsr-stream-part'))p.remove();s.remove()}</script><script type="module" async="" src="assets/index-ChqC3oIp.js"></script><script>document.currentScript.remove();/*$tsr-stream-boundary*/</script>
-<aside
-	id="lovable-badge"
-	role="complementary"
-	dir="ltr"
-	lang="en"
-	aria-label="Edit with Lovable">
-	<a
-		id="lovable-badge-cta" 
-		target="_blank" 
-		href="https://lovable.dev/projects/lovp_1hxyqrnfzt9z99at5xn7v80yaa?utm_source=lovable-badge"
-		rel="noopener nofollow"
-		aria-label="Edit with Lovable">
-		<span id="lovable-badge-text">Edit with</span>
-		<span id="lovable-badge-logo"><svg xmlns="http://www.w3.org/2000/svg" width="52" height="16" fill="none" viewBox="0 0 52 16">
-  <path fill="#FCFBF8" fill-rule="evenodd" d="M20.318 5.25c.643 0 1.206.14 1.69.418a2.81 2.81 0 0 1 1.118 1.191c.266.513.4 1.115.4 1.807s-.134 1.296-.4 1.812a2.81 2.81 0 0 1-1.118 1.193c-.484.278-1.047.418-1.69.418s-1.208-.14-1.695-.418a2.85 2.85 0 0 1-1.125-1.193c-.262-.516-.393-1.12-.393-1.812s.131-1.294.393-1.807a2.848 2.848 0 0 1 1.125-1.191c.487-.279 1.052-.418 1.695-.418Zm0 1.425c-.27 0-.504.076-.7.228-.193.147-.34.37-.443.67-.102.295-.153.66-.153 1.093 0 .435.05.801.153 1.1.102.3.25.524.443.676.196.147.43.22.7.22.27 0 .502-.073.694-.22.193-.152.341-.375.443-.67.103-.299.153-.667.153-1.106 0-.65-.112-1.145-.337-1.481a1.08 1.08 0 0 0-.953-.51ZM32.7 5.25c.61 0 1.127.1 1.549.3.422.197.74.48.953.849.217.368.325.809.325 1.32v2.704c0 .29.02.562.062.812.044.245.108.4.19.466V12h-1.935a5.895 5.895 0 0 1-.105-.684 7.745 7.745 0 0 1-.02-.228 2.293 2.293 0 0 1-.151.203c-.205.242-.47.437-.793.584-.32.143-.685.215-1.094.215-.406 0-.77-.08-1.094-.24a1.845 1.845 0 0 1-.756-.682 1.984 1.984 0 0 1-.27-1.045c0-.606.178-1.069.535-1.388.356-.324.87-.534 1.542-.633l1.125-.16c.225-.032.403-.074.534-.123a.622.622 0 0 0 .288-.196.549.549 0 0 0 .093-.327.65.65 0 0 0-.11-.367.702.702 0 0 0-.32-.27c-.14-.07-.31-.105-.51-.105-.32 0-.576.083-.768.251-.193.164-.298.39-.314.676h-1.923c.016-.434.147-.82.393-1.155.25-.34.596-.604 1.039-.792.442-.189.954-.283 1.535-.283Zm.99 3.498a.98.98 0 0 1-.215.14 2.49 2.49 0 0 1-.584.178l-.473.092c-.315.061-.553.156-.713.283-.155.127-.233.305-.233.534 0 .23.084.412.252.547.168.135.383.203.645.203s.494-.058.694-.173c.201-.118.355-.282.461-.49.11-.21.166-.448.166-.714v-.6Zm4.526-2.375c.065-.125.138-.243.221-.349.197-.25.437-.44.719-.571.282-.135.6-.203.952-.203.528 0 .988.138 1.377.412.389.275.688.67.896 1.186.21.512.314 1.12.314 1.824 0 .7-.107 1.309-.32 1.825-.213.512-.518.906-.915 1.18-.393.275-.854.412-1.383.412-.352 0-.667-.062-.946-.184a1.832 1.832 0 0 1-.7-.554 2.2 2.2 0 0 1-.234-.383V12h-1.843V3h1.862v3.373Zm1.284.296c-.274 0-.51.085-.707.253-.192.163-.338.397-.436.7a3.376 3.376 0 0 0-.148 1.05c0 .406.05.759.148 1.058.098.299.243.53.436.694.197.164.433.246.707.246.279 0 .512-.082.7-.246.193-.164.336-.395.43-.694.099-.3.148-.652.148-1.058 0-.405-.05-.757-.147-1.056-.095-.299-.238-.53-.43-.694a1.015 1.015 0 0 0-.7-.253Zm9.416-1.419c.602 0 1.136.131 1.604.393.466.262.829.643 1.086 1.143.263.5.394 1.097.394 1.794 0 .25-.002.449-.006.596H47.51c.018.288.071.538.164.75a1.3 1.3 0 0 0 .491.596c.214.13.465.196.757.196.319 0 .583-.082.792-.246.209-.167.34-.403.393-.706h1.862a2.48 2.48 0 0 1-.485 1.235 2.54 2.54 0 0 1-1.051.805c-.439.188-.949.283-1.53.283-.655 0-1.225-.125-1.708-.375a2.672 2.672 0 0 1-1.13-1.143c-.267-.508-.4-1.137-.4-1.887 0-.712.14-1.327.418-1.843a2.86 2.86 0 0 1 1.155-1.186c.491-.27 1.051-.405 1.678-.405Zm-.044 1.345c-.274 0-.516.068-.725.203a1.29 1.29 0 0 0-.479.59 2.045 2.045 0 0 0-.132.498h2.562a1.873 1.873 0 0 0-.138-.602 1.061 1.061 0 0 0-.418-.516 1.243 1.243 0 0 0-.67-.173Z" clip-rule="evenodd"/>
-  <path fill="#FCFBF8" d="m26.605 9.995 1.342-4.566h1.924L27.628 12h-2.07l-2.33-6.57h1.98l1.397 4.565Zm-13.013.143h2.256c1.632 0 1.421 1.837 1.418 1.861h-5.603V3h1.93v7.138Zm31.516 1.861h-1.862V3h1.862v8.999Z"/>
-  <path fill="url(#a)" fill-rule="evenodd" d="M2.7 3c1.492 0 2.7 1.192 2.7 2.663v1.012h.9c1.49 0 2.7 1.192 2.7 2.662S7.791 12 6.3 12H0V5.663C0 4.193 1.209 3 2.7 3Z" clip-rule="evenodd"/>
-  <defs>
-    <radialGradient id="a" cx="0" cy="0" r="1" gradientTransform="matrix(-1.54236 7.07838 -10.231 -2.15602 4.627 5.022)" gradientUnits="userSpaceOnUse">
-      <stop offset=".106" stop-color="#FE7B02"/>
-      <stop offset=".394" stop-color="#FE3F21"/>
-      <stop offset=".608" stop-color="#F858BC"/>
-      <stop offset=".929" stop-color="#575ECF"/>
-    </radialGradient>
-  </defs>
-</svg>
+  <!-- ========================================== -->
+  <!-- 3. HERO SECTION COM RADAR TÁTICO & ALGORITMO -->
+  <!-- ========================================== -->
+  <section id="top" class="relative pt-12 pb-24 md:pt-20 md:pb-32 overflow-hidden">
+    
+    <!-- Radar Ambient Background -->
+    <div class="absolute inset-0 pointer-events-none radar-grid-bg opacity-30"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-solar/5 blur-[120px] pointer-events-none"></div>
 
-</span>
-	</a>
-	
-	<span id="lovable-badge-divider" aria-hidden="true"></span>
-	
-	<button 
-		id="lovable-badge-close"
-		aria-label="Dismiss"
-		title="Dismiss"
-		type="button">
-		<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 16 16" aria-hidden="true">
-			<path d="M10.646 4.646a.5.5 0 1 1 .707.708L8.707 8l2.646 2.646a.5.5 0 1 1-.707.707L8 8.707l-2.646 2.646a.5.5 0 1 1-.708-.707L7.293 8 4.646 5.354a.5.5 0 1 1 .708-.708L8 7.293l2.646-2.647Z"/>
-		</svg>
-	</button>
-</aside>
-<script>
-	(() => {
-		if (window.self !== window.top || navigator.userAgent.includes('puppeteer')) {
-			const badge = document.querySelector('#lovable-badge');
-			if (badge) {
-				badge.style.display = 'none';
-			}
-			return;
-		}
+    <div class="max-w-7xl mx-auto px-4 sm:px-8 relative z-10">
+      
+      <div class="text-center max-w-4xl mx-auto space-y-6">
+        
+        <!-- Live Status Pill -->
+        <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-solar/30 bg-solar/10 backdrop-blur-md shadow-sm">
+          <span class="w-2 h-2 rounded-full bg-signal-emerald animate-pulse"></span>
+          <span class="font-mono text-xs font-bold text-solar tracking-wider uppercase">
+            ⚡ Algoritmo Cirúrgico 2026 • Varredura de Alta Conversão B2B
+          </span>
+        </div>
 
-		const closeButton = document.querySelector('#lovable-badge-close');
-		if (closeButton) {
-			closeButton.addEventListener('click', function(event) {
-				event.preventDefault();
-				event.stopPropagation();
-				const badge = document.querySelector('#lovable-badge');
-				if (badge) {
-					badge.classList.add('closing');
-					setTimeout(function() {
-						if (badge) {
-							badge.style.display = 'none';
-						}
-					}, 240);
-				}
-			});
-		}
-	})();
-</script>
-</body></html>
+        <!-- Master Headline -->
+        <h1 class="text-4xl sm:text-6xl lg:text-7xl font-display font-extrabold tracking-tight leading-[1.08] text-white">
+          Detecte falhas invisíveis no Google Maps e feche contratos de <span class="text-gold-gradient">R$ 1.500 a R$ 5.000/mês.</span>
+        </h1>
 
+        <!-- Subheadline com Autoridade e Alma -->
+        <p class="text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed font-normal">
+          O primeiro radar inteligente que combina <strong class="text-white font-semibold">extração de leads com WhatsApp validado</strong>, 
+          auditoria cirúrgica de <strong class="text-white font-semibold">22 pontos</strong>, aferição de postagens recentes (<strong class="text-solar font-semibold">Padrão GBP Check</strong>), 
+          detecção de <strong class="text-white font-semibold">Tour Virtual 360°</strong> e <strong class="text-white font-semibold">GeoGrid GPS</strong> com relatórios executivos white-label prontos para envio.
+        </p>
 
+        <!-- CTA Buttons Row -->
+        <div class="pt-4 flex flex-wrap items-center justify-center gap-4">
+          <a href="painel/index.html" class="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-gradient-to-r from-solar via-amber-400 to-yellow-400 text-slate-950 font-extrabold text-base tracking-wide shadow-xl hover:shadow-solar/40 hover:scale-[1.03] transition-all">
+            <svg class="w-5 h-5 text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
+            <span>Iniciar Varredura no Painel</span>
+          </a>
+
+          <a href="#demo" class="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl border border-white/15 bg-obsidian-800/80 hover:bg-obsidian-700 text-white font-bold text-base hover:border-solar/40 transition-all backdrop-blur-md">
+            <span>Ver Demonstração Interativa</span>
+            <svg class="w-4 h-4 text-solar" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+          </a>
+
+          <a href="https://wa.me/5511970558412?text=Ol%C3%A1%20Ricardo!%20Gostaria%20de%20conhecer%20o%20RadarMaps%20PRO%20e%20tirar%20algumas%20d%C3%BAvidas." target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl border border-emerald-500/30 bg-emerald-950/20 hover:bg-emerald-950/40 text-emerald-300 font-bold text-base hover:border-emerald-400/60 transition-all">
+            <span class="text-lg">💬</span>
+            <span>WhatsApp VIP com Ricardo</span>
+          </a>
+        </div>
+
+        <!-- Trust Badges Bar (Sem micro-fontes) -->
+        <div class="pt-8 flex flex-wrap items-center justify-center gap-3 text-xs sm:text-sm font-mono text-slate-300">
+          <span class="px-3.5 py-1.5 rounded-lg bg-obsidian-800/90 border border-white/10 flex items-center gap-1.5">
+            <span class="text-solar">✓</span> Extração Ilimitada
+          </span>
+          <span class="px-3.5 py-1.5 rounded-lg bg-obsidian-800/90 border border-white/10 flex items-center gap-1.5">
+            <span class="text-solar">✓</span> Auditoria 22 Itens
+          </span>
+          <span class="px-3.5 py-1.5 rounded-lg bg-obsidian-800/90 border border-white/10 flex items-center gap-1.5">
+            <span class="text-solar">✓</span> Padrão GBP Check (Postagens)
+          </span>
+          <span class="px-3.5 py-1.5 rounded-lg bg-obsidian-800/90 border border-white/10 flex items-center gap-1.5">
+            <span class="text-solar">✓</span> Detecção Tour 360°
+          </span>
+          <span class="px-3.5 py-1.5 rounded-lg bg-obsidian-800/90 border border-white/10 flex items-center gap-1.5">
+            <span class="text-solar">✓</span> GeoGrid GPS 1-20km
+          </span>
+          <span class="px-3.5 py-1.5 rounded-lg bg-obsidian-800/90 border border-white/10 flex items-center gap-1.5">
+            <span class="text-solar">✓</span> Relatório White-Label
+          </span>
+        </div>
+
+      </div>
+
+      <!-- ========================================== -->
+      <!-- 4. HUD TÁTICO AO VIVO: CONSOLE RADAR MAPS  -->
+      <!-- ========================================== -->
+      <div id="demo" class="mt-16 sm:mt-24 max-w-5xl mx-auto">
+        <div class="luxury-card rounded-3xl p-2 sm:p-3 border border-solar/30 shadow-2xl relative">
+          
+          <!-- Top Window Controls -->
+          <div class="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-obsidian-900/80 rounded-t-2xl">
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-rose-500/80"></span>
+              <span class="w-3 h-3 rounded-full bg-amber-500/80"></span>
+              <span class="w-3 h-3 rounded-full bg-emerald-500/80"></span>
+              <span class="ml-3 font-mono text-xs text-slate-400">radar.radarmaps.pro/live-hud</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-signal-emerald animate-ping"></span>
+              <span class="font-mono text-xs text-emerald-400 font-bold uppercase tracking-wider">Telemetria em Tempo Real</span>
+            </div>
+          </div>
+
+          <!-- Live Interactive Tabs Selector -->
+          <div class="grid grid-cols-3 border-b border-white/10 bg-obsidian-800/50">
+            <button id="tabDemoGeoGrid" onclick="switchDemoTab('geogrid')" class="demo-tab-btn py-3.5 px-3 text-xs sm:text-sm font-bold border-b-2 border-solar text-solar flex items-center justify-center gap-2 transition-all">
+              <span>🎯</span>
+              <span>GeoGrid GPS de Ranking</span>
+            </button>
+            <button id="tabDemoAuditoria" onclick="switchDemoTab('auditoria')" class="demo-tab-btn py-3.5 px-3 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-white flex items-center justify-center gap-2 transition-all">
+              <span>📋</span>
+              <span>Auditoria 22 Itens & GBP Check</span>
+            </button>
+            <button id="tabDemoPitch" onclick="switchDemoTab('pitch')" class="demo-tab-btn py-3.5 px-3 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-white flex items-center justify-center gap-2 transition-all">
+              <span>💬</span>
+              <span>Pitch WhatsApp 1-Clique</span>
+            </button>
+          </div>
+
+          <!-- TAB 1: GEOGRID GPS INTERATIVO -->
+          <div id="contentDemoGeoGrid" class="p-6 sm:p-8">
+            <div class="grid lg:grid-cols-12 gap-8 items-center">
+              
+              <!-- 9-Point Interactive Grid -->
+              <div class="lg:col-span-6 bg-obsidian-900/90 rounded-2xl p-6 border border-white/10 relative overflow-hidden">
+                <div class="absolute inset-0 radar-grid-bg opacity-30 pointer-events-none"></div>
+                
+                <div class="flex items-center justify-between mb-4">
+                  <span class="font-mono text-xs text-slate-400 uppercase tracking-wider">Mapa de Calor (Raio 5.0 km)</span>
+                  <span class="text-xs font-mono text-solar bg-solar/10 px-2.5 py-1 rounded-md border border-solar/20">9 Pontos GPS</span>
+                </div>
+
+                <!-- Interactive 9-Pin Grid -->
+                <div class="grid grid-cols-3 gap-3.5 my-2">
+                  <button onclick="selectPin(0, '#1', '0.0 km (Centro)', 'Domina o Top 3 no raio imediato. Fortaleça postagens semanais.', 'bg-emerald-500 text-slate-950', 'Baixo (R$ 0/mês)')" class="pin-btn aspect-square rounded-2xl font-mono text-base font-black flex flex-col items-center justify-center transition-all bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20 hover:scale-105 ring-2 ring-white">
+                    <span>#1</span>
+                    <span class="text-[10px] font-sans font-semibold opacity-90">Centro</span>
+                  </button>
+                  <button onclick="selectPin(1, '#4', '1.8 km (Norte)', 'Caiu para a 4ª posição. O cliente já não aparece no Pack Principal de 3 vagas.', 'bg-amber-500 text-slate-950', 'Médio (R$ 2.400/mês)')" class="pin-btn aspect-square rounded-2xl font-mono text-base font-black flex flex-col items-center justify-center transition-all bg-amber-500 text-slate-950 shadow-lg hover:scale-105">
+                    <span>#4</span>
+                    <span class="text-[10px] font-sans font-semibold opacity-90">Norte</span>
+                  </button>
+                  <button onclick="selectPin(2, '#12', '3.5 km (Nordeste)', 'Invisível! Na posição #12 nenhum usuário rola a tela. Clientes migram para a concorrência.', 'bg-rose-500 text-white', 'Crítico (R$ 5.800/mês)')" class="pin-btn aspect-square rounded-2xl font-mono text-base font-black flex flex-col items-center justify-center transition-all bg-rose-500 text-white shadow-lg hover:scale-105">
+                    <span>#12</span>
+                    <span class="text-[10px] font-sans font-semibold opacity-90">Nordeste</span>
+                  </button>
+                  <button onclick="selectPin(3, '#3', '1.4 km (Oeste)', 'No limite do Top 3. Risco iminente de queda por falta de Tour Virtual 360° e postagens.', 'bg-amber-400 text-slate-950', 'Alerta (R$ 1.200/mês)')" class="pin-btn aspect-square rounded-2xl font-mono text-base font-black flex flex-col items-center justify-center transition-all bg-amber-400 text-slate-950 shadow-lg hover:scale-105">
+                    <span>#3</span>
+                    <span class="text-[10px] font-sans font-semibold opacity-90">Oeste</span>
+                  </button>
+                  <button onclick="selectPin(4, '#1', 'Sede da Empresa', 'Ponto de origem. Perfeito, mas perde relevância assim que o consumidor se afasta 800m.', 'bg-emerald-500 text-slate-950', 'Excelente')", class="pin-btn aspect-square rounded-2xl font-mono text-base font-black flex flex-col items-center justify-center transition-all bg-emerald-500 text-slate-950 shadow-lg ring-4 ring-solar hover:scale-105">
+                    <span>#1</span>
+                    <span class="text-[10px] font-sans font-semibold opacity-90">Sede</span>
+                  </button>
+                  <button onclick="selectPin(5, '#15', '4.2 km (Leste)', 'Desastre total. O concorrente local leva 100% das chamadas e orçamentos desta região.', 'bg-rose-600 text-white', 'Crítico (R$ 7.200/mês)')" class="pin-btn aspect-square rounded-2xl font-mono text-base font-black flex flex-col items-center justify-center transition-all bg-rose-600 text-white shadow-lg hover:scale-105">
+                    <span>#15</span>
+                    <span class="text-[10px] font-sans font-semibold opacity-90">Leste</span>
+                  </button>
+                  <button onclick="selectPin(6, '#9', '3.8 km (Sudoeste)', 'Posição intermediária fraca. Falta consistência de palavras-chave nas avaliações.', 'bg-rose-500 text-white', 'Alto (R$ 4.100/mês)')" class="pin-btn aspect-square rounded-2xl font-mono text-base font-black flex flex-col items-center justify-center transition-all bg-rose-500 text-white shadow-lg hover:scale-105">
+                    <span>#9</span>
+                    <span class="text-[10px] font-sans font-semibold opacity-90">Sudoeste</span>
+                  </button>
+                  <button onclick="selectPin(7, '#5', '2.6 km (Sul)', '5ª colocação. Mais de 60% dos cliques param nos 3 primeiros colocados do Google Maps.', 'bg-amber-500 text-slate-950', 'Médio (R$ 3.000/mês)')" class="pin-btn aspect-square rounded-2xl font-mono text-base font-black flex flex-col items-center justify-center transition-all bg-amber-500 text-slate-950 shadow-lg hover:scale-105">
+                    <span>#5</span>
+                    <span class="text-[10px] font-sans font-semibold opacity-90">Sul</span>
+                  </button>
+                  <button onclick="selectPin(8, '#14', '4.8 km (Sudeste)', 'Invisibilidade geográfica crítica. Nenhuma ligação gerada neste perímetro comercial.', 'bg-rose-600 text-white', 'Crítico (R$ 6.500/mês)')" class="pin-btn aspect-square rounded-2xl font-mono text-base font-black flex flex-col items-center justify-center transition-all bg-rose-600 text-white shadow-lg hover:scale-105">
+                    <span>#14</span>
+                    <span class="text-[10px] font-sans font-semibold opacity-90">Sudeste</span>
+                  </button>
+                </div>
+
+                <p class="text-center font-mono text-[11px] text-slate-400 mt-4">
+                  💡 Clique nos números para simular a auditoria geográfica em tempo real
+                </p>
+              </div>
+
+              <!-- Pin Telemetry Details Card -->
+              <div class="lg:col-span-6 space-y-4">
+                <div class="p-5 rounded-2xl bg-obsidian-800/80 border border-white/10 space-y-4">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <span class="font-mono text-xs text-solar uppercase font-bold tracking-wider">Telemetria de Posição</span>
+                      <h4 class="text-lg font-bold text-white mt-0.5">Clínica Odonto Sorriso Tatuapé</h4>
+                    </div>
+                    <span id="pinBadgePosition" class="font-mono text-2xl font-black px-3.5 py-1.5 rounded-xl bg-emerald-500 text-slate-950 shadow-md">#1</span>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-3 pt-2">
+                    <div class="p-3 rounded-xl bg-obsidian-900 border border-white/5">
+                      <span class="text-xs text-slate-400 block">Distância do Centro:</span>
+                      <span id="pinDistance" class="font-mono text-sm font-bold text-white">0.0 km (Centro)</span>
+                    </div>
+                    <div class="p-3 rounded-xl bg-obsidian-900 border border-white/5">
+                      <span class="text-xs text-slate-400 block">Impacto de Perda:</span>
+                      <span id="pinLeak" class="font-mono text-sm font-bold text-solar">Baixo (R$ 0/mês)</span>
+                    </div>
+                  </div>
+
+                  <div class="p-3.5 rounded-xl bg-obsidian-900/90 border border-white/10">
+                    <span class="text-xs font-bold text-slate-300 block mb-1">Diagnóstico do Consultor:</span>
+                    <p id="pinDiagnosis" class="text-sm text-slate-300 leading-relaxed">
+                      Domina o Top 3 no raio imediato. Fortaleça postagens semanais para não ser ultrapassado.
+                    </p>
+                  </div>
+
+                  <div class="flex items-center justify-between pt-2">
+                    <span class="font-mono text-xs text-slate-400">Lat: -23.5412 • Lng: -46.5742</span>
+                    <a href="painel/index.html" class="inline-flex items-center gap-1.5 text-xs font-bold text-solar hover:underline font-mono">
+                      <span>Auditar Meus Clientes</span>
+                      <span>→</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- TAB 2: AUDITORIA 22 ITENS & PADRÃO GBP CHECK -->
+          <div id="contentDemoAuditoria" class="p-6 sm:p-8 hidden">
+            <div class="grid lg:grid-cols-12 gap-8">
+              
+              <!-- Card 1: Score & Perdas -->
+              <div class="lg:col-span-5 bg-obsidian-900/90 rounded-2xl p-6 border border-white/10 space-y-5">
+                <div class="flex items-center gap-4">
+                  <div class="w-20 h-20 rounded-2xl bg-rose-500/10 border-2 border-rose-500 flex flex-col items-center justify-center font-mono">
+                    <span class="text-3xl font-black text-rose-500">48</span>
+                    <span class="text-[10px] text-slate-400 uppercase font-bold">de 100</span>
+                  </div>
+                  <div>
+                    <span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 text-xs font-bold font-mono">SAÚDE CRÍTICA</span>
+                    <h4 class="text-lg font-bold text-white mt-1">Clínica Odonto Sorriso</h4>
+                    <p class="text-xs text-slate-400 font-mono">Dentista • Tatuapé, São Paulo</p>
+                  </div>
+                </div>
+
+                <div class="p-4 rounded-xl bg-obsidian-800 border border-solar/30">
+                  <span class="text-xs text-slate-400 uppercase font-mono tracking-wider block">Faturamento Perdido Estimado</span>
+                  <div class="flex items-baseline gap-2 mt-1">
+                    <span class="text-3xl font-black font-mono text-solar">R$ 6.200</span>
+                    <span class="text-xs text-slate-400">/mês para a concorrência</span>
+                  </div>
+                  <p class="text-xs text-slate-300 mt-2 leading-relaxed">
+                    Com base no ticket médio odontológico e taxa de conversão perdida pela ausência de Tour 360°, agendamento e postagens.
+                  </p>
+                </div>
+
+                <div class="space-y-2 text-xs">
+                  <div class="flex justify-between text-slate-400">
+                    <span>Posição Média no GeoGrid:</span>
+                    <span class="font-mono font-bold text-white">#8.4 (Fora do Top 3)</span>
+                  </div>
+                  <div class="flex justify-between text-slate-400">
+                    <span>Avaliações sem Resposta:</span>
+                    <span class="font-mono font-bold text-rose-400">18 de 24 (75% abandonadas)</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card 2: Checklist dos 7 Pilares de Elite -->
+              <div class="lg:col-span-7 space-y-3">
+                <span class="font-mono text-xs text-solar font-bold uppercase tracking-wider block">
+                  Checklist Cirúrgico Auditado pelo RadarMaps PRO:
+                </span>
+
+                <div class="grid gap-2.5">
+                  <div class="p-3.5 rounded-xl bg-obsidian-800/80 border border-rose-500/30 flex items-start gap-3">
+                    <span class="text-rose-500 text-lg">✕</span>
+                    <div>
+                      <div class="flex items-center gap-2">
+                        <span class="text-sm font-bold text-white">Frequência de Postagens no Google (Padrão GBP Check)</span>
+                        <span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 text-[10px] font-mono font-bold">34 DIAS SEM POST</span>
+                      </div>
+                      <p class="text-xs text-slate-400 mt-0.5">O perfil está estagnado. O algoritmo do Google rebaixa fichas que passam mais de 7 dias sem postagens de produtos/ofertas.</p>
+                    </div>
+                  </div>
+
+                  <div class="p-3.5 rounded-xl bg-obsidian-800/80 border border-rose-500/30 flex items-start gap-3">
+                    <span class="text-rose-500 text-lg">✕</span>
+                    <div>
+                      <div class="flex items-center gap-2">
+                        <span class="text-sm font-bold text-white">Tour Virtual 360° no Google Street View</span>
+                        <span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 text-[10px] font-mono font-bold">AUSENTE</span>
+                      </div>
+                      <p class="text-xs text-slate-400 mt-0.5">Sem tour 360° mapeado. Negócios com fotos 360° geram 2x mais interesse de agendamento presencial.</p>
+                    </div>
+                  </div>
+
+                  <div class="p-3.5 rounded-xl bg-obsidian-800/80 border border-rose-500/30 flex items-start gap-3">
+                    <span class="text-rose-500 text-lg">✕</span>
+                    <div>
+                      <div class="flex items-center gap-2">
+                        <span class="text-sm font-bold text-white">Botão de Agendamento Direto no Maps</span>
+                        <span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 text-[10px] font-mono font-bold">FALTA LINK</span>
+                      </div>
+                      <p class="text-xs text-slate-400 mt-0.5">O lead não encontra botão de WhatsApp ou agendamento na primeira tela e vai para outro consultório.</p>
+                    </div>
+                  </div>
+
+                  <div class="p-3.5 rounded-xl bg-obsidian-800/80 border border-emerald-500/30 flex items-start gap-3">
+                    <span class="text-emerald-400 text-lg">✓</span>
+                    <div>
+                      <div class="flex items-center gap-2">
+                        <span class="text-sm font-bold text-white">Nome & Categoria Primária</span>
+                        <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-mono font-bold">CONFORME</span>
+                      </div>
+                      <p class="text-xs text-slate-400 mt-0.5">Categoria definida como "Clínica Odontológica", mas sem categorias secundárias cadastradas.</p>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+
+          <!-- TAB 3: PITCH DE ABORDAGEM WHATSAPP 1-CLIQUE -->
+          <div id="contentDemoPitch" class="p-6 sm:p-8 hidden">
+            <div class="max-w-3xl mx-auto space-y-5">
+              <div class="flex items-center justify-between">
+                <div>
+                  <span class="font-mono text-xs text-solar font-bold uppercase tracking-wider">Script de Abordagem Cirúrgico</span>
+                  <h4 class="text-lg font-bold text-white">Mensagem Personalizada Gerada Automaticamente</h4>
+                </div>
+                <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 font-mono text-xs font-bold flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                  WhatsApp Pronto
+                </span>
+              </div>
+
+              <!-- Message Bubble -->
+              <div class="p-5 sm:p-6 rounded-2xl bg-obsidian-900 border border-white/10 text-slate-200 font-mono text-xs sm:text-sm leading-relaxed space-y-3">
+                <p>Olá, Dr. Responsável da <strong>Clínica Odonto Sorriso</strong>! Tudo bem?</p>
+                <p>Aqui é o Ricardo, especialista em posicionamento no Google Maps na região do Tatuapé.</p>
+                <p>Fiz uma auditoria tática gratuita do perfil de vocês no Google Maps e identifiquei <strong>3 falhas críticas</strong> que estão custando cerca de <span class="text-solar font-bold">R$ 6.200/mês</span> em pacientes perdidos:</p>
+                <ul class="list-disc pl-5 space-y-1 text-slate-300">
+                  <li>O perfil está há <strong>34 dias sem novas postagens</strong> (o algoritmo rebaixa quem fica inativo);</li>
+                  <li>Vocês não possuem <strong>Tour Virtual 360°</strong> ativo no Street View;</li>
+                  <li>Na busca a 2km do consultório, vocês caem para a <strong>12ª posição</strong> do mapa.</li>
+                </ul>
+                <p>Preparei um relatório executivo de 22 páginas em PDF mostrando como recuperar o Top 3. Posso te enviar por aqui em 2 minutos?</p>
+              </div>
+
+              <!-- Action Row -->
+              <div class="flex flex-wrap items-center justify-between gap-4 pt-2">
+                <span class="text-xs text-slate-400 font-mono">
+                  💡 O RadarMaps PRO já puxa o WhatsApp validado da empresa direto do Google Maps.
+                </span>
+                <a href="https://wa.me/5511970558412?text=Ol%C3%A1%20Ricardo!%20Adorei%20o%20script%20de%20WhatsApp%20do%20RadarMaps%20PRO.%20Quero%20acesso%20ao%20sistema!" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-signal-emerald hover:bg-signal-emeraldDark text-white font-bold text-xs sm:text-sm shadow-lg transition-all">
+                  <span>💬 Enviar Teste no WhatsApp</span>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </a>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ========================================== -->
+  <!-- 5. OS 6 MÓDULOS TÁTICOS (BENTO GRID LUXURY)-->
+  <!-- ========================================== -->
+  <section id="modulos" class="py-24 sm:py-32 border-t border-white/10 bg-obsidian-900/50 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+      
+      <div class="max-w-2xl mb-16">
+        <span class="font-mono text-xs uppercase tracking-widest text-solar font-bold">Tecnologia Tática 2026</span>
+        <h2 class="mt-3 text-3xl sm:text-5xl font-display font-extrabold text-white tracking-tight">
+          A engenharia completa dos 6 módulos do RadarMaps PRO.
+        </h2>
+        <p class="mt-4 text-slate-300 text-base sm:text-lg">
+          Cada ferramenta foi desenhada para uma única missão: transformar pesquisas locais em contratos mensais recorrentes para sua agência ou consultoria.
+        </p>
+      </div>
+
+      <!-- Bento Grid Layout -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        
+        <!-- Módulo 1 (Destaque Grande) -->
+        <div class="luxury-card rounded-3xl p-8 lg:col-span-2 relative overflow-hidden group">
+          <div class="flex items-center justify-between mb-6">
+            <span class="w-12 h-12 rounded-2xl bg-solar/10 border border-solar/30 flex items-center justify-center text-solar text-xl font-bold">
+              01
+            </span>
+            <span class="px-3 py-1 rounded-full bg-solar/10 border border-solar/20 font-mono text-xs text-solar font-bold">
+              MOTOR SERPER OFICIAL
+            </span>
+          </div>
+          <h3 class="text-2xl font-display font-extrabold text-white">
+            Extrator Cirúrgico de Empresas com Validação de WhatsApp
+          </h3>
+          <p class="mt-3 text-slate-300 text-sm leading-relaxed max-w-xl">
+            Extraia centenas de empresas por nicho e cidade em segundos. O algoritmo do RadarMaps PRO separa automaticamente telefones fixos de números celulares/WhatsApp com DDI 55 limpo, eliminando listas frias e perda de tempo da sua equipe.
+          </p>
+          <div class="mt-6 flex flex-wrap gap-2 text-xs font-mono text-slate-400">
+            <span class="px-2.5 py-1 rounded-md bg-obsidian-900 border border-white/10">Validação Automática DDI 55</span>
+            <span class="px-2.5 py-1 rounded-md bg-obsidian-900 border border-white/10">Filtro de Sem Site / Sem Tour</span>
+            <span class="px-2.5 py-1 rounded-md bg-obsidian-900 border border-white/10">Exportação CSV / Excel</span>
+          </div>
+        </div>
+
+        <!-- Módulo 2: Padrão GBP Check -->
+        <div id="gbp-check" class="luxury-card rounded-3xl p-8 relative overflow-hidden group border-solar/30">
+          <div class="flex items-center justify-between mb-6">
+            <span class="w-12 h-12 rounded-2xl bg-solar/10 border border-solar/30 flex items-center justify-center text-solar text-xl font-bold">
+              02
+            </span>
+            <span class="px-3 py-1 rounded-full bg-signal-emerald/20 text-emerald-400 font-mono text-xs font-bold">
+              PADRÃO GBP CHECK
+            </span>
+          </div>
+          <h3 class="text-xl font-display font-extrabold text-white">
+            Aferição de Postagens Recentes no Google
+          </h3>
+          <p class="mt-3 text-slate-300 text-sm leading-relaxed">
+            Identifique com exatidão há quantos dias o cliente não posta nada no perfil do Google Maps. Mostre que o perfil dele está inativo e perdendo autoridade para concorrentes locais que postam semanalmente.
+          </p>
+          <div class="mt-5 p-3 rounded-xl bg-obsidian-900/80 border border-white/10 font-mono text-xs text-slate-300">
+            ⚠️ <em>"Seu perfil está há 38 dias sem postagens no Google. O algoritmo penaliza perfis parados."</em>
+          </div>
+        </div>
+
+        <!-- Módulo 3: Detecção de Tour Virtual 360° -->
+        <div class="luxury-card rounded-3xl p-8 relative overflow-hidden group">
+          <div class="flex items-center justify-between mb-6">
+            <span class="w-12 h-12 rounded-2xl bg-solar/10 border border-solar/30 flex items-center justify-center text-solar text-xl font-bold">
+              03
+            </span>
+            <span class="px-3 py-1 rounded-full bg-white/10 font-mono text-xs text-slate-300 font-bold">
+              EXCLUSIVO RICARDO
+            </span>
+          </div>
+          <h3 class="text-xl font-display font-extrabold text-white">
+            Detecção de Tour Virtual 360° Street View
+          </h3>
+          <p class="mt-3 text-slate-300 text-sm leading-relaxed">
+            O diferencial de maior valor percebido no mercado. Detecte se a empresa tem ou não o Tour 360° mapeado. Se não tiver, você tem a porta de entrada perfeita para vender tanto a otimização de SEO quanto a produção fotográfica em 360°.
+          </p>
+          <div class="mt-4 text-xs font-mono text-solar">
+            📸 Argumento de venda de R$ 1.200 a R$ 3.500 no setup
+          </div>
+        </div>
+
+        <!-- Módulo 4: GeoGrid GPS -->
+        <div class="luxury-card rounded-3xl p-8 relative overflow-hidden group">
+          <div class="flex items-center justify-between mb-6">
+            <span class="w-12 h-12 rounded-2xl bg-solar/10 border border-solar/30 flex items-center justify-center text-solar text-xl font-bold">
+              04
+            </span>
+            <span class="px-3 py-1 rounded-full bg-white/10 font-mono text-xs text-slate-300 font-bold">
+              GPS 1KM A 20KM
+            </span>
+          </div>
+          <h3 class="text-xl font-display font-extrabold text-white">
+            GeoGrade GPS de Ranking Local
+          </h3>
+          <p class="mt-3 text-slate-300 text-sm leading-relaxed">
+            O mapa de calor visual que destrói qualquer objeção. Mostre ao empresário que ele só é #1 na calçada dele; a 2km dali, ele desaparece para a 14ª posição e perde todas as vendas do bairro vizinho.
+          </p>
+          <div class="mt-4 text-xs font-mono text-slate-400">
+            📍 Simulação de raios de 1km, 3km, 5km, 10km e 20km
+          </div>
+        </div>
+
+        <!-- Módulo 5: Relatórios White-Label -->
+        <div class="luxury-card rounded-3xl p-8 relative overflow-hidden group">
+          <div class="flex items-center justify-between mb-6">
+            <span class="w-12 h-12 rounded-2xl bg-solar/10 border border-solar/30 flex items-center justify-center text-solar text-xl font-bold">
+              05
+            </span>
+            <span class="px-3 py-1 rounded-full bg-white/10 font-mono text-xs text-slate-300 font-bold">
+              PDF EXECUTIVO
+            </span>
+          </div>
+          <h3 class="text-xl font-display font-extrabold text-white">
+            Relatórios White-Label com Sua Marca
+          </h3>
+          <p class="mt-3 text-slate-300 text-sm leading-relaxed">
+            Gere dossiês de auditoria com a logo, cores e contatos da sua agência. Um documento profissional com 22 páginas de análise técnica que posiciona você como consultor estratégico, não como um vendedor comum.
+          </p>
+          <div class="mt-4 text-xs font-mono text-slate-400">
+            📄 Formato PDF de alta resolução com 1 clique
+          </div>
+        </div>
+
+        <!-- Módulo 6: CRM Google Business -->
+        <div class="luxury-card rounded-3xl p-8 relative overflow-hidden group">
+          <div class="flex items-center justify-between mb-6">
+            <span class="w-12 h-12 rounded-2xl bg-solar/10 border border-solar/30 flex items-center justify-center text-solar text-xl font-bold">
+              06
+            </span>
+            <span class="px-3 py-1 rounded-full bg-white/10 font-mono text-xs text-slate-300 font-bold">
+              PIPELINE KANBAN
+            </span>
+          </div>
+          <h3 class="text-xl font-display font-extrabold text-white">
+            CRM Integrado Google Business
+          </h3>
+          <p class="mt-3 text-slate-300 text-sm leading-relaxed">
+            Mova os leads extraídos diretamente para um pipeline de prospecção. Acompanhe quem foi contatado, quem pediu proposta, quem está em negociação e quem já virou cliente de contrato mensal recorrente.
+          </p>
+          <div class="mt-4 text-xs font-mono text-slate-400">
+            📊 Controle total de conversão e faturamento da sua carteira
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ========================================== -->
+  <!-- 6. O COMPARATIVO BRUTAL (AMADOR VS TÁTICO)  -->
+  <!-- ========================================== -->
+  <section id="comparativo" class="py-24 sm:py-32 border-t border-white/10 bg-obsidian-900">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+      
+      <div class="text-center max-w-3xl mx-auto mb-16">
+        <span class="font-mono text-xs uppercase tracking-widest text-solar font-bold">A Quebra de Paradigma</span>
+        <h2 class="mt-3 text-3xl sm:text-5xl font-display font-extrabold text-white tracking-tight">
+          Pare de prospectar como um amador.
+        </h2>
+        <p class="mt-4 text-slate-300 text-base sm:text-lg">
+          Veja a diferença brutal entre a abordagem cansativa de quem vive de pedir reuniões e a autoridade inquestionável de quem chega com o diagnóstico pronto.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-8 items-stretch max-w-5xl mx-auto">
+        
+        <!-- Lado 1: Método Amador -->
+        <div class="p-8 sm:p-10 rounded-3xl bg-obsidian-800/40 border border-rose-500/20 relative space-y-6">
+          <div class="flex items-center gap-3">
+            <span class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-500 font-bold text-lg">✕</span>
+            <h3 class="text-xl font-bold text-slate-300">Método Tradicional Amador</h3>
+          </div>
+
+          <ul class="space-y-4 text-sm text-slate-400">
+            <li class="flex items-start gap-3">
+              <span class="text-rose-500 font-bold text-base mt-0.5">✕</span>
+              <span>Comprar listas frias desatualizadas cheias de telefones fixos mudos.</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="text-rose-500 font-bold text-base mt-0.5">✕</span>
+              <span>Passar 2 a 3 horas auditando manualmente o perfil de cada empresa.</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="text-rose-500 font-bold text-base mt-0.5">✕</span>
+              <span>Mandar mensagens genéricas no WhatsApp pedindo <em>"15 minutos para falar de marketing"</em> (ignorado).</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="text-rose-500 font-bold text-base mt-0.5">✕</span>
+              <span>O cliente não enxerga valor e a negociação vira leilão de desconto.</span>
+            </li>
+          </ul>
+
+          <div class="pt-4 border-t border-white/5 font-mono text-xs text-rose-400">
+            Resultado: Dias perdidos, zero autoridade e fechamentos raros de R$ 300.
+          </div>
+        </div>
+
+        <!-- Lado 2: RadarMaps PRO -->
+        <div class="luxury-card-gold p-8 sm:p-10 rounded-3xl relative space-y-6">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span class="w-10 h-10 rounded-xl bg-solar/20 border border-solar flex items-center justify-center text-solar font-bold text-lg">✓</span>
+              <h3 class="text-xl font-bold text-white">Com RadarMaps PRO</h3>
+            </div>
+            <span class="px-3 py-1 rounded-full bg-solar text-slate-950 font-mono text-xs font-black">
+              CONSULTOR DE ELITE
+            </span>
+          </div>
+
+          <ul class="space-y-4 text-sm text-slate-200">
+            <li class="flex items-start gap-3">
+              <span class="text-solar font-bold text-base mt-0.5">✓</span>
+              <span>Extração instantânea com filtro exclusivo de WhatsApp válido e celular.</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="text-solar font-bold text-base mt-0.5">✓</span>
+              <span>Auditoria completa de 22 itens gerada em menos de 30 segundos.</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="text-solar font-bold text-base mt-0.5">✓</span>
+              <span>Abordagem cirúrgica: <em>"Seu perfil está há 34 dias sem postar e na posição #12 do bairro"</em>.</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="text-solar font-bold text-base mt-0.5">✓</span>
+              <span>O cliente vê a perda financeira em números e contrata sua consultoria recorrente.</span>
+            </li>
+          </ul>
+
+          <div class="pt-4 border-t border-solar/30 font-mono text-xs text-solar font-bold">
+            Resultado: Contratos recorrentes de R$ 1.500 a R$ 5.000/mês com autoridade executiva.
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ========================================== -->
+  <!-- 7. CALCULADORA DINÂMICA DE ROI INTERATIVA -->
+  <!-- ========================================== -->
+  <section id="roi" class="py-24 sm:py-32 border-t border-white/10 bg-obsidian-900/40 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+      
+      <div class="max-w-3xl mx-auto text-center mb-16">
+        <span class="font-mono text-xs uppercase tracking-widest text-solar font-bold">Simulador Financeiro</span>
+        <h2 class="mt-3 text-3xl sm:text-5xl font-display font-extrabold text-white tracking-tight">
+          Quanto o RadarMaps PRO pode render para você?
+        </h2>
+        <p class="mt-4 text-slate-300 text-base sm:text-lg">
+          Ajuste o valor da sua mensalidade de consultoria e a quantidade de clientes que você pretende fechar por mês com as auditorias táticas.
+        </p>
+      </div>
+
+      <div class="grid lg:grid-cols-12 gap-8 items-center max-w-5xl mx-auto">
+        
+        <!-- Sliders Controls -->
+        <div class="lg:col-span-6 luxury-card rounded-3xl p-8 space-y-8">
+          
+          <!-- Slider 1: Ticket Médio Mensal -->
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <label class="text-sm font-semibold text-slate-200">Ticket Médio Mensal por Cliente</label>
+              <span id="sliderTicketVal" class="font-mono text-lg font-black text-solar">R$ 2.000/mês</span>
+            </div>
+            <input id="sliderTicket" type="range" min="1000" max="5000" step="250" value="2000" class="w-full" oninput="updateRoiCalc()" />
+            <div class="flex justify-between text-[11px] font-mono text-slate-500">
+              <span>R$ 1.000</span>
+              <span>R$ 3.000</span>
+              <span>R$ 5.000</span>
+            </div>
+          </div>
+
+          <!-- Slider 2: Clientes Fechados no Mês -->
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <label class="text-sm font-semibold text-slate-200">Novos Contratos Fechados no Mês</label>
+              <span id="sliderClientsVal" class="font-mono text-lg font-black text-solar">2 clientes</span>
+            </div>
+            <input id="sliderClients" type="range" min="1" max="15" step="1" value="2" class="w-full" oninput="updateRoiCalc()" />
+            <div class="flex justify-between text-[11px] font-mono text-slate-500">
+              <span>1 cliente</span>
+              <span>5 clientes</span>
+              <span>15 clientes</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-obsidian-900 border border-white/5 text-xs text-slate-400 font-mono">
+            💡 <em>Com as 22 falhas apontadas no relatório, a taxa média de conversão é de 1 fechamento a cada 7 auditorias enviadas.</em>
+          </div>
+
+        </div>
+
+        <!-- Resultados do ROI -->
+        <div class="lg:col-span-6 grid gap-4">
+          
+          <div class="luxury-card rounded-2xl p-6">
+            <span class="text-xs uppercase font-mono tracking-wider text-slate-400 block">Faturamento Mensal Recorrente (MRR)</span>
+            <div id="resultMrr" class="text-4xl font-display font-black text-white mt-1">R$ 4.000,00</div>
+            <span class="text-xs text-slate-400 mt-1 block">Entrando todo mês na sua conta bancária</span>
+          </div>
+
+          <div class="luxury-card rounded-2xl p-6">
+            <span class="text-xs uppercase font-mono tracking-wider text-slate-400 block">Faturamento Anual Projetado (ARR)</span>
+            <div id="resultArr" class="text-4xl font-display font-black text-solar mt-1">R$ 48.000,00</div>
+            <span class="text-xs text-slate-400 mt-1 block">Em contratos recorrentes de 12 meses</span>
+          </div>
+
+          <div class="luxury-card-gold rounded-2xl p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-xs uppercase font-mono tracking-wider text-amber-200 font-bold block">Retorno sobre o Plano Anual VIP</span>
+                <div id="resultRoiX" class="text-4xl sm:text-5xl font-mono font-black text-white mt-1">96x</div>
+              </div>
+              <span class="text-4xl">🚀</span>
+            </div>
+            <p id="resultRoiDesc" class="text-xs text-slate-200 mt-2 leading-relaxed">
+              Um único cliente no primeiro mês já paga o acesso de 1 ano inteiro ao RadarMaps PRO. Todo o resto é margem de lucro líquido.
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ========================================== -->
+  <!-- 8. PLANOS & PREÇOS (TRANSPARÊNCIA EXECUTIVA)-->
+  <!-- ========================================== -->
+  <section id="planos" class="py-24 sm:py-32 border-t border-white/10 bg-obsidian-900 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+      
+      <div class="text-center max-w-3xl mx-auto mb-16">
+        <span class="font-mono text-xs uppercase tracking-widest text-solar font-bold">Investimento & Licenças</span>
+        <h2 class="mt-3 text-3xl sm:text-5xl font-display font-extrabold text-white tracking-tight">
+          Acesso liberado sem limites de extração.
+        </h2>
+        <p class="mt-4 text-slate-300 text-base sm:text-lg">
+          Escolha o plano ideal para a sua agência ou carreira como consultor independente de SEO Local.
+        </p>
+      </div>
+
+      <div class="grid lg:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
+        
+        <!-- PLANO 1: MENSAL PRO -->
+        <div class="luxury-card rounded-3xl p-8 sm:p-10 flex flex-col justify-between space-y-8">
+          <div>
+            <div class="flex items-center justify-between">
+              <h3 class="text-2xl font-display font-extrabold text-white">Mensal Pro</h3>
+              <span class="px-3 py-1 rounded-full bg-white/10 text-slate-300 font-mono text-xs font-bold">FLEXIBILIDADE</span>
+            </div>
+            <p class="mt-2 text-sm text-slate-400">Ideal para quem quer testar e fechar os primeiros contratos de consultoria local.</p>
+
+            <div class="mt-6 flex items-baseline gap-2">
+              <span class="text-5xl font-display font-black text-white">R$ 97</span>
+              <span class="text-slate-400 font-mono text-sm">/mês</span>
+            </div>
+
+            <ul class="mt-8 space-y-3.5 text-sm text-slate-300">
+              <li class="flex items-center gap-2.5">
+                <span class="text-solar font-bold">✓</span>
+                <span>Extração Ilimitada no Google Maps</span>
+              </li>
+              <li class="flex items-center gap-2.5">
+                <span class="text-solar font-bold">✓</span>
+                <span>Validação Automática de WhatsApp e Celular</span>
+              </li>
+              <li class="flex items-center gap-2.5">
+                <span class="text-solar font-bold">✓</span>
+                <span>Auditoria Cirúrgica de 22 Pontos</span>
+              </li>
+              <li class="flex items-center gap-2.5">
+                <span class="text-solar font-bold">✓</span>
+                <span>Padrão GBP Check (Postagens Recentes)</span>
+              </li>
+              <li class="flex items-center gap-2.5">
+                <span class="text-solar font-bold">✓</span>
+                <span>GeoGrid GPS de 1km a 20km</span>
+              </li>
+              <li class="flex items-center gap-2.5">
+                <span class="text-solar font-bold">✓</span>
+                <span>Relatórios White-Label em PDF</span>
+              </li>
+            </ul>
+          </div>
+
+          <a href="https://wa.me/5511970558412?text=Ol%C3%A1%20Ricardo!%20Quero%20assinar%20o%20Plano%20Mensal%20Pro%20(R%24%2097%2Fm%C3%AAs)%20do%20RadarMaps%20PRO." target="_blank" rel="noopener noreferrer" class="w-full py-4 rounded-xl border border-white/20 bg-obsidian-800 hover:bg-obsidian-700 text-white font-bold text-sm text-center tracking-wide transition-all">
+            Assinar Mensal Pro
+          </a>
+        </div>
+
+        <!-- PLANO 2: ANUAL VIP (DESTAQUE SOLAR) -->
+        <div class="luxury-card-gold rounded-3xl p-8 sm:p-10 flex flex-col justify-between space-y-8 relative overflow-hidden ring-2 ring-solar">
+          
+          <div class="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-gradient-to-r from-solar via-amber-400 to-yellow-400 px-4 py-1 font-mono text-[11px] font-black text-slate-950 shadow-md">
+            🔥 MAIS ESCOLHIDO • ECONOMIA DE 57%
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between pt-2">
+              <h3 class="text-2xl font-display font-extrabold text-white">Anual VIP</h3>
+              <span class="px-3 py-1 rounded-full bg-solar/20 text-solar font-mono text-xs font-bold">VIP COMPLETO</span>
+            </div>
+            <p class="mt-2 text-sm text-slate-300">O melhor custo-benefício. Garanta acesso anual sem mensalidades recorrentes.</p>
+
+            <div class="mt-4">
+              <span class="text-xs font-mono text-slate-400 line-through">De R$ 1.164/ano</span>
+              <div class="flex items-baseline gap-2 mt-0.5">
+                <span class="text-5xl font-display font-black text-white">R$ 497</span>
+                <span class="text-slate-300 font-mono text-sm">/ano</span>
+              </div>
+              <span class="font-mono text-xs font-bold text-solar block mt-1">Apenas R$ 41,41/mês</span>
+            </div>
+
+            <ul class="mt-8 space-y-3.5 text-sm text-slate-100 font-medium">
+              <li class="flex items-center gap-2.5">
+                <span class="text-solar font-bold">✓</span>
+                <span><strong>Tudo do Plano Mensal incluído</strong></span>
+              </li>
+              <li class="flex items-center gap-2.5">
+                <span class="text-solar font-bold">✓</span>
+                <span>Extrações e Consultas 100% Ilimitadas</span>
+              </li>
+              <li class="flex items-center gap-2.5">
+                <span class="text-solar font-bold">✓</span>
+                <span>Auditoria de 22 Itens + GBP Check sem travas</span>
+              </li>
+              <li class="flex items-center gap-2.5">
+                <span class="text-solar font-bold">✓</span>
+                <span>Detecção de Tour 360° em lote</span>
+              </li>
+              <li class="flex items-center gap-2.5">
+                <span class="text-solar font-bold">✓</span>
+                <span>Acesso Direto ao Suporte VIP no WhatsApp com Ricardo</span>
+              </li>
+              <li class="flex items-center gap-2.5">
+                <span class="text-solar font-bold">✓</span>
+                <span>Novas atualizações da Versão 2026 inclusas</span>
+              </li>
+            </ul>
+          </div>
+
+          <a href="https://wa.me/5511970558412?text=Ol%C3%A1%20Ricardo!%20Quero%20aproveitar%20a%20condi%C3%A7%C3%A3o%20especial%20do%20Plano%20Anual%20VIP%20(R%24%20497%2Fano)%20do%20RadarMaps%20PRO!" target="_blank" rel="noopener noreferrer" class="w-full py-4 rounded-xl bg-gradient-to-r from-solar via-amber-400 to-yellow-400 text-slate-950 font-black text-sm text-center tracking-wide shadow-xl hover:scale-[1.02] transition-all">
+            Quero o Plano Anual VIP (Acesso Imediato)
+          </a>
+        </div>
+
+      </div>
+
+      <!-- Trust Assurance -->
+      <div class="mt-12 flex flex-wrap justify-center gap-8 text-xs font-mono text-slate-400">
+        <span class="flex items-center gap-2">
+          <span class="text-solar">🛡️</span> Pagamento Seguro via PIX ou Cartão em até 12x
+        </span>
+        <span class="flex items-center gap-2">
+          <span class="text-solar">⚡</span> Liberação Imediata de Chave de Licença
+        </span>
+        <span class="flex items-center gap-2">
+          <span class="text-solar">💬</span> Atendimento Direto com Ricardo (11 97055-8412)
+        </span>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ========================================== -->
+  <!-- 9. FAQ EXECUTIVO (ACCORDION DE ALTO PADRÃO)-->
+  <!-- ========================================== -->
+  <section id="faq" class="py-24 sm:py-32 border-t border-white/10 bg-obsidian-900/60">
+    <div class="max-w-4xl mx-auto px-4 sm:px-8">
+      
+      <div class="text-center mb-16">
+        <span class="font-mono text-xs uppercase tracking-widest text-solar font-bold">Dúvidas Frequentes</span>
+        <h2 class="mt-3 text-3xl sm:text-4xl font-display font-extrabold text-white">
+          Perguntas Frequentes sobre o RadarMaps PRO
+        </h2>
+      </div>
+
+      <div class="space-y-4">
+        
+        <!-- FAQ 1 -->
+        <div class="luxury-card rounded-2xl p-6 cursor-pointer" onclick="toggleFaq(this)">
+          <div class="flex items-center justify-between">
+            <h4 class="text-base sm:text-lg font-bold text-white">Como funciona a aferição de postagens recentes (Padrão GBP Check)?</h4>
+            <span class="faq-icon text-solar font-bold text-xl transition-transform duration-200">+</span>
+          </div>
+          <div class="faq-content hidden mt-4 text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-3">
+            O algoritmo do RadarMaps PRO se conecta à ficha oficial da empresa no Google Maps e afere a data da última postagem de produto, oferta ou atualização. Se a empresa estiver há mais de 7, 15 ou 30 dias sem publicar nada, a plataforma alerta o consultor, que usa esse argumento de urgência para fechar contratos de gestão mensal de perfil.
+          </div>
+        </div>
+
+        <!-- FAQ 2 -->
+        <div class="luxury-card rounded-2xl p-6 cursor-pointer" onclick="toggleFaq(this)">
+          <div class="flex items-center justify-between">
+            <h4 class="text-base sm:text-lg font-bold text-white">Eu preciso comprar chaves de API caras para usar o sistema?</h4>
+            <span class="faq-icon text-solar font-bold text-xl transition-transform duration-200">+</span>
+          </div>
+          <div class="faq-content hidden mt-4 text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-3">
+            Não! O RadarMaps PRO já vem pronto para uso, configurado com inteligência de busca integrada. Você não precisa se preocupar com infraestrutura técnica, cobranças em dólar ou integrações complicadas.
+          </div>
+        </div>
+
+        <!-- FAQ 3 -->
+        <div class="luxury-card rounded-2xl p-6 cursor-pointer" onclick="toggleFaq(this)">
+          <div class="flex items-center justify-between">
+            <h4 class="text-base sm:text-lg font-bold text-white">O relatório PDF sai com o nome do RadarMaps ou com a marca da minha agência?</h4>
+            <span class="faq-icon text-solar font-bold text-xl transition-transform duration-200">+</span>
+          </div>
+          <div class="faq-content hidden mt-4 text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-3">
+            O relatório é <strong>100% White-Label</strong>! Você personaliza o nome da sua agência, seu logotipo, telefone de contato e termos de consultoria. O seu cliente recebe um dossiê corporativo assinado exclusivamente por você.
+          </div>
+        </div>
+
+        <!-- FAQ 4 -->
+        <div class="luxury-card rounded-2xl p-6 cursor-pointer" onclick="toggleFaq(this)">
+          <div class="flex items-center justify-between">
+            <h4 class="text-base sm:text-lg font-bold text-white">Como recebo meu acesso após o pagamento?</h4>
+            <span class="faq-icon text-solar font-bold text-xl transition-transform duration-200">+</span>
+          </div>
+          <div class="faq-content hidden mt-4 text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-3">
+            Assim que você confirmar o pagamento via PIX ou Cartão, sua Chave de Licença Exclusiva é ativada no sistema pelo Ricardo e enviada diretamente para o seu WhatsApp e E-mail, acompanhada de um passo a passo em vídeo.
+          </div>
+        </div>
+
+        <!-- FAQ 5 -->
+        <div class="luxury-card rounded-2xl p-6 cursor-pointer" onclick="toggleFaq(this)">
+          <div class="flex items-center justify-between">
+            <h4 class="text-base sm:text-lg font-bold text-white">Tenho suporte caso precise de ajuda com prospecções?</h4>
+            <span class="faq-icon text-solar font-bold text-xl transition-transform duration-200">+</span>
+          </div>
+          <div class="faq-content hidden mt-4 text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-3">
+            Sim! Você conta com canal direto de suporte VIP via WhatsApp com o próprio Ricardo ((11) 97055-8412), tirando dúvidas técnicas, estratégicas e de abordagem comercial.
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ========================================== -->
+  <!-- 10. RODAPÉ OBSIDIAN DE LUXO & STATUS REAL  -->
+  <!-- ========================================== -->
+  <footer class="bg-obsidian-900 border-t border-white/10 py-16 text-slate-400 text-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+      
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-10 pb-12 border-b border-white/10">
+        
+        <!-- Coluna 1: Marca & Descrição -->
+        <div class="space-y-4 md:col-span-2">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-solar/10 border border-solar/40 flex items-center justify-center text-solar">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
+            </div>
+            <span class="font-display font-extrabold text-lg text-white">RadarMaps</span>
+            <span class="px-1.5 py-0.5 text-[10px] font-black rounded bg-solar text-slate-950 font-mono">PRO</span>
+          </div>
+          <p class="text-xs text-slate-400 max-w-sm leading-relaxed">
+            Plataforma corporativa de inteligência tática no Google Maps, extração de leads qualificados, auditoria de 22 pontos e fechamento de contratos de SEO Local recorrentes.
+          </p>
+          <div class="flex items-center gap-2 font-mono text-xs text-slate-400">
+            <span class="w-2 h-2 rounded-full bg-signal-emerald"></span>
+            <span>Servidores Enterprise 2026 Operando com 99.9% Uptime</span>
+          </div>
+        </div>
+
+        <!-- Coluna 2: Navegação Rápida -->
+        <div class="space-y-3">
+          <span class="font-mono text-xs font-bold text-white uppercase tracking-wider block">Navegação</span>
+          <ul class="space-y-2 text-xs">
+            <li><a href="#demo" class="hover:text-solar transition-colors">Simulador Radar</a></li>
+            <li><a href="#modulos" class="hover:text-solar transition-colors">Os 6 Módulos Táticos</a></li>
+            <li><a href="#gbp-check" class="hover:text-solar transition-colors">Padrão GBP Check</a></li>
+            <li><a href="#roi" class="hover:text-solar transition-colors">Calculadora ROI</a></li>
+            <li><a href="#planos" class="hover:text-solar transition-colors">Planos & Preços</a></li>
+          </ul>
+        </div>
+
+        <!-- Coluna 3: Acesso & Contato Oficial -->
+        <div class="space-y-3">
+          <span class="font-mono text-xs font-bold text-white uppercase tracking-wider block">Atendimento Oficial</span>
+          <div class="space-y-2 text-xs">
+            <p class="font-semibold text-white">Ricardo Rick Bony</p>
+            <p class="font-mono">WhatsApp: (11) 97055-8412</p>
+            <p class="font-mono text-slate-500">São Paulo — SP • Brasil</p>
+            <div class="pt-2">
+              <a href="painel/index.html" class="inline-block px-3 py-1.5 rounded-lg bg-obsidian-800 border border-white/10 text-solar hover:text-white text-xs font-bold font-mono transition-colors">
+                🔐 Login do Assinante
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="pt-8 flex flex-wrap items-center justify-between gap-4 text-xs font-mono text-slate-500">
+        <p>© 2026 RadarMaps PRO • Todos os direitos reservados. Padrão Ricardo & Severino.</p>
+        <p>Google Maps™ é marca registrada da Google LLC. Plataforma independente de inteligência B2B.</p>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- ========================================== -->
+  <!-- 11. BOTÃO INTELIGENTE DE WHATSAPP (REALTIME)-->
+  <!-- ========================================== -->
+  <div id="smartWhatsAppContainer" class="fixed bottom-6 right-6 z-50">
+    <a id="smartWhatsAppBtn" href="https://wa.me/5511970558412?text=Ol%C3%A1%20Ricardo!%20Vim%20pelo%20RadarMaps%20PRO%20e%20gostaria%20de%20um%20atendimento%20VIP." target="_blank" rel="noopener noreferrer" class="group flex items-center gap-3 px-4 py-3 rounded-2xl bg-signal-emerald hover:bg-signal-emeraldDark text-white font-bold text-sm shadow-2xl hover:scale-105 transition-all ring-2 ring-emerald-400/40">
+      <div class="relative">
+        <span class="text-xl">💬</span>
+        <span id="waStatusDot" class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-white ring-2 ring-emerald-600 animate-pulse"></span>
+      </div>
+      <div class="flex flex-col text-left">
+        <span id="waStatusText" class="text-[10px] uppercase font-mono tracking-wider font-extrabold text-emerald-100">
+          Suporte VIP Online
+        </span>
+        <span class="text-xs font-extrabold text-white">
+          Falar com Ricardo
+        </span>
+      </div>
+    </a>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 12. JAVASCRIPT INTERATIVO (HUD + ROI + FAQ)-->
+  <!-- ========================================== -->
+  <script>
+    // Tab Switcher no Console Hero HUD
+    function switchDemoTab(tab) {
+      const tabs = ['geogrid', 'auditoria', 'pitch'];
+      tabs.forEach(t => {
+        const btn = document.getElementById('tabDemo' + t.charAt(0).toUpperCase() + t.slice(1));
+        const content = document.getElementById('contentDemo' + t.charAt(0).toUpperCase() + t.slice(1));
+        if (t === tab) {
+          btn.classList.add('border-solar', 'text-solar');
+          btn.classList.remove('border-transparent', 'text-slate-400');
+          content.classList.remove('hidden');
+        } else {
+          btn.classList.remove('border-solar', 'text-solar');
+          btn.classList.add('border-transparent', 'text-slate-400');
+          content.classList.add('hidden');
+        }
+      });
+    }
+
+    // Seleção Interativa de Pinos no GeoGrid
+    function selectPin(index, pos, dist, diag, colorClass, leak) {
+      document.getElementById('pinBadgePosition').textContent = pos;
+      document.getElementById('pinBadgePosition').className = 'font-mono text-2xl font-black px-3.5 py-1.5 rounded-xl shadow-md ' + colorClass;
+      document.getElementById('pinDistance').textContent = dist;
+      document.getElementById('pinDiagnosis').textContent = diag;
+      document.getElementById('pinLeak').textContent = leak;
+      
+      const allPins = document.querySelectorAll('.pin-btn');
+      allPins.forEach((btn, i) => {
+        if (i === index) {
+          btn.classList.add('ring-4', 'ring-solar');
+        } else {
+          btn.classList.remove('ring-4', 'ring-solar');
+        }
+      });
+    }
+
+    // Calculadora Dinâmica de ROI Reativa
+    function updateRoiCalc() {
+      const ticket = parseInt(document.getElementById('sliderTicket').value, 10);
+      const clients = parseInt(document.getElementById('sliderClients').value, 10);
+
+      document.getElementById('sliderTicketVal').textContent = 'R$ ' + ticket.toLocaleString('pt-BR') + '/mês';
+      document.getElementById('sliderClientsVal').textContent = clients + (clients === 1 ? ' cliente' : ' clientes');
+
+      const mrr = ticket * clients;
+      const arr = mrr * 12;
+      const vipCost = 497;
+      const roiMultiplier = Math.round(arr / vipCost);
+
+      document.getElementById('resultMrr').textContent = 'R$ ' + mrr.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+      document.getElementById('resultArr').textContent = 'R$ ' + arr.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+      document.getElementById('resultRoiX').textContent = roiMultiplier + 'x';
+      
+      document.getElementById('resultRoiDesc').textContent = 
+        'Com ' + clients + (clients === 1 ? ' cliente fechado' : ' clientes fechados') + ' a R$ ' + ticket.toLocaleString('pt-BR') + '/mês, você recupera ' + roiMultiplier + ' vezes o valor do Plano Anual VIP no primeiro ano!';
+    }
+
+    // Accordion do FAQ
+    function toggleFaq(card) {
+      const content = card.querySelector('.faq-content');
+      const icon = card.querySelector('.faq-icon');
+      const isHidden = content.classList.contains('hidden');
+
+      // Fecha todos os outros
+      document.querySelectorAll('.faq-content').forEach(c => c.classList.add('hidden'));
+      document.querySelectorAll('.faq-icon').forEach(i => { i.textContent = '+'; i.classList.remove('rotate-45'); });
+
+      if (isHidden) {
+        content.classList.remove('hidden');
+        icon.textContent = '✕';
+        icon.classList.add('rotate-45');
+      }
+    }
+
+    // Verificação de Horário em Tempo Real para o WhatsApp
+    function updateWhatsAppStatus() {
+      try {
+        const now = new Date();
+        // Converte para o horário de São Paulo (UTC-3)
+        const spTime = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+        const hours = spTime.getHours();
+        const day = spTime.getDay(); // 0: Domingo, 6: Sábado
+
+        const dot = document.getElementById('waStatusDot');
+        const text = document.getElementById('waStatusText');
+
+        // Horário de Atendimento VIP: Seg a Sex das 08h às 20h, Sábado das 09h às 15h
+        const isWeekday = day >= 1 && day <= 5 && hours >= 8 && hours < 20;
+        const isSaturday = day === 6 && hours >= 9 && hours < 15;
+
+        if (isWeekday || isSaturday) {
+          text.textContent = 'Atendimento VIP Online';
+          dot.className = 'absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-white ring-2 ring-emerald-600 animate-pulse';
+        } else {
+          text.textContent = 'Plantão WhatsApp';
+          dot.className = 'absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-300 ring-2 ring-emerald-600';
+        }
+      } catch (e) {
+        console.error('Erro ao verificar horário:', e);
+      }
+    }
+
+    // Inicialização ao carregar
+    document.addEventListener('DOMContentLoaded', () => {
+      updateRoiCalc();
+      updateWhatsAppStatus();
+      setInterval(updateWhatsAppStatus, 60000); // Checa a cada minuto
+    });
+  </script>
+
+</body>
+</html>

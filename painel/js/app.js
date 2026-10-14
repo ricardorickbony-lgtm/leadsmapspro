@@ -1482,7 +1482,7 @@ function renderWhatsAppMessage(template, lead) {
     ? (webAnalysis.isSocial ? `Landing Page Oficial (Substituir ${webAnalysis.name} no Maps)` : "Criação de Site de Alta Conversão")
     : (!lead.temTour360 ? "Tour Virtual 360° Interno da Loja" : "Otimização SEO Local Google Maps");
   
-  const consultor = State.settings.senderName || "Ricardo — LeadMaps Pro";
+  const consultor = State.settings.senderName || "Ricardo — RadarMaps PRO";
   const empresa = lead.empresa || "sua empresa";
   const cidade = (lead.cidade || "sua região").split(' - ')[0];
   const nicho = lead.categoria || "seu nicho";
@@ -4887,7 +4887,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
           const liveResults = await fetchSerperLivePlaces(niche, city, targetCount, apiKey.trim());
           if (liveResults && liveResults.length > 0) {
             leadsObtidos = liveResults;
-            motorUtilizado = "Google Maps Oficial (Motor LeadMaps)";
+            motorUtilizado = "Google Maps Oficial (Motor RadarMaps)";
             const creditsLeft = typeof getActiveUserCredits === 'function' ? getActiveUserCredits() : 500;
             showToast(`✅ Busca ao vivo concluída! ${liveResults.length} leads extraídos. (${creditsLeft} créditos restantes).`);
           }
@@ -6199,7 +6199,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
 
       const footer = document.getElementById('footerText');
       if (footer) {
-        footer.textContent = `LeadMaps Pro v2.6 Enterprise · Dados reais · ${State.settings.agencyName}`;
+        footer.textContent = `RadarMaps PRO v2.6 Enterprise · Dados reais · ${State.settings.agencyName}`;
       }
       settingsModal?.classList.add('hidden');
       showToast("Configurações salvas com sucesso!");
@@ -7120,7 +7120,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     const sub = State.subscribers.find(s => s.id === subId);
     if (!sub) return;
     const expStr = new Date(sub.expiraEm).toLocaleDateString('pt-BR');
-    const msg = `Olá, *${sub.nome.split('—')[0].trim()}*! Seja muito bem-vindo(a) ao *LeadMaps PRO Enterprise*! 🚀\n\nSeu acesso oficial já está *ATIVO e LIBERADO*.\n\n🔐 *SEUS DADOS DE ACESSO:*\n👤 *Login (E-mail):* ${sub.email}\n🔑 *Chave de Licença:* ${sub.chave}\n📅 *Plano:* ${sub.plano} (Válido até ${expStr})\n\nBasta inserir seu e-mail e sua chave na tela de entrada para começar a extrair empresas, gerar relatórios completos de 22 itens e disparar no WhatsApp!\n\nQualquer dúvida estou à disposição. Bons negócios!`;
+    const msg = `Olá, *${sub.nome.split('—')[0].trim()}*! Seja muito bem-vindo(a) ao *RadarMaps PRO Enterprise*! 🚀\n\nSeu acesso oficial já está *ATIVO e LIBERADO*.\n\n🔐 *SEUS DADOS DE ACESSO:*\n👤 *Login (E-mail):* ${sub.email}\n🔑 *Chave de Licença:* ${sub.chave}\n📅 *Plano:* ${sub.plano} (Válido até ${expStr})\n\nBasta inserir seu e-mail e sua chave na tela de entrada para começar a extrair empresas, gerar relatórios completos de 22 itens e disparar no WhatsApp!\n\nQualquer dúvida estou à disposição. Bons negócios!`;
     const phoneDigits = formatBrazilWhatsAppNumber(sub.telefone || '11970558412');
     window.open(`https://web.whatsapp.com/send?phone=${phoneDigits}&text=${encodeURIComponent(msg)}`, '_blank');
   };
@@ -7130,7 +7130,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     if (!sub) return;
     const pixKey = State.paymentConfig.pixKey || '11970558412';
     const checkoutUrl = State.paymentConfig.checkoutMonthly || '';
-    const msg = `Olá, *${sub.nome.split('—')[0].trim()}*! Tudo bem?\n\nPassando para avisar que a sua licença do *LeadMaps PRO* (${sub.chave}) está próxima do vencimento / renovação.\n\nPara manter seu acesso ativo sem interrupções:\n💠 *Chave PIX (R$ ${sub.valorMensal || 97},00):* ${pixKey}${checkoutUrl ? `\n💳 *Ou pelo Checkout Automático:* ${checkoutUrl}` : ''}\n\nAssim que confirmar, sua licença já renova por mais 30 dias automaticamente! 🚀`;
+    const msg = `Olá, *${sub.nome.split('—')[0].trim()}*! Tudo bem?\n\nPassando para avisar que a sua licença do *RadarMaps PRO* (${sub.chave}) está próxima do vencimento / renovação.\n\nPara manter seu acesso ativo sem interrupções:\n💠 *Chave PIX (R$ ${sub.valorMensal || 97},00):* ${pixKey}${checkoutUrl ? `\n💳 *Ou pelo Checkout Automático:* ${checkoutUrl}` : ''}\n\nAssim que confirmar, sua licença já renova por mais 30 dias automaticamente! 🚀`;
     const phoneDigits = formatBrazilWhatsAppNumber(sub.telefone || '11970558412');
     window.open(`https://web.whatsapp.com/send?phone=${phoneDigits}&text=${encodeURIComponent(msg)}`, '_blank');
   };
@@ -7403,7 +7403,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     const pixKey = State.paymentConfig.pixKey || '11970558412';
     const rawPhone = State.settings?.agencyPhone || State.settings?.whatsapp || '11970558412';
     const whatsappNum = formatBrazilWhatsAppNumber(rawPhone);
-    const msg = `Olá, Ricardo! 👋\n\nAcabei de realizar o pagamento de *R$ 97,00 via PIX* para assinar o *LeadMaps PRO*.\n\n📧 *Meu E-mail:* ${emailDigitado}\n🔑 *Chave PIX Utilizada:* ${pixKey}\n\nEstou enviando o comprovante em anexo para você conferir no extrato e ativar minha Chave de Licença! 🚀`;
+    const msg = `Olá, Ricardo! 👋\n\nAcabei de realizar o pagamento de *R$ 97,00 via PIX* para assinar o *RadarMaps PRO*.\n\n📧 *Meu E-mail:* ${emailDigitado}\n🔑 *Chave PIX Utilizada:* ${pixKey}\n\nEstou enviando o comprovante em anexo para você conferir no extrato e ativar minha Chave de Licença! 🚀`;
 
     // Abre o WhatsApp para envio seguro do comprovante
     window.open(`https://wa.me/${whatsappNum}?text=${encodeURIComponent(msg)}`, '_blank');
@@ -7411,7 +7411,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     // Exibe aviso oficial de segurança e antifraude na tela de login
     if (loginAlertBox && loginAlertTitle && loginAlertText) {
       loginAlertTitle.textContent = '⏳ Comprovante em Análise de Segurança';
-      loginAlertText.innerHTML = `Por segurança contra fraudes e estornos, <strong>o LeadMaps Pro não libera acessos sem conferência no extrato bancário</strong>.<br><br>Seu comprovante foi encaminhado ao administrador via WhatsApp. Assim que o pagamento for conferido na conta bancária, sua Chave de Licença será ativada e entregue para você!`;
+      loginAlertText.innerHTML = `Por segurança contra fraudes e estornos, <strong>o RadarMaps PRO não libera acessos sem conferência no extrato bancário</strong>.<br><br>Seu comprovante foi encaminhado ao administrador via WhatsApp. Assim que o pagamento for conferido na conta bancária, sua Chave de Licença será ativada e entregue para você!`;
       loginAlertBox.classList.remove('hidden', 'border-rose-500/40', 'bg-rose-950/40', 'text-rose-200');
       loginAlertBox.classList.add('border-amber-500/40', 'bg-amber-950/40', 'text-amber-200');
     }
@@ -7425,7 +7425,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     if (btnSupport) {
       const rawPhone = State.settings?.agencyPhone || State.settings?.whatsapp || '11970558412';
       const whatsappNum = formatBrazilWhatsAppNumber(rawPhone);
-      btnSupport.href = `https://wa.me/${whatsappNum}?text=${encodeURIComponent('Olá Ricardo! Quero adquirir minha licença do LeadMaps Pro!')}`;
+      btnSupport.href = `https://wa.me/${whatsappNum}?text=${encodeURIComponent('Olá Ricardo! Quero adquirir minha licença do RadarMaps PRO!')}`;
     }
   }
   updateSupportWhatsAppBtn();
