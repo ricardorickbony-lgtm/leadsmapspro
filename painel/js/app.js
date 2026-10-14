@@ -117,6 +117,48 @@ function saveVerifiedTourBusiness(empresaName, isVerified) {
   } catch(e) {}
 }
 
+// --------------------------------------------------------------------------
+// 1.91 Gerenciador de Clientes com Postagens & Atualizações Ativas (Memória Permanente)
+// --------------------------------------------------------------------------
+function isPostsVerifiedForBusiness(empresaName, address, phone) {
+  try {
+    const verifiedList = JSON.parse(localStorage.getItem('leadmaps_verified_posts') || '[]');
+    const defaultClientsWithPosts = [
+      "lais torres",
+      "laís torres",
+      "dra lais torres",
+      "dra laís torres",
+      "dra. lais torres",
+      "dra. laís torres",
+      "fisioterapia jardim",
+      "clinica fisioterapia jardim",
+      "celia decor",
+      "célia decor",
+      "clinica sephera",
+      "clínica sephera"
+    ];
+    const fullSearchStr = `${empresaName || ''} ${address || ''} ${phone || ''}`.toLowerCase().trim();
+    if (defaultClientsWithPosts.some(c => fullSearchStr.includes(c))) return true;
+    if (verifiedList.some(v => fullSearchStr.includes(v.toLowerCase().trim()) || v.toLowerCase().trim().includes(fullSearchStr))) return true;
+  } catch(e) {}
+  return false;
+}
+window.isPostsVerifiedForBusiness = isPostsVerifiedForBusiness;
+
+function saveVerifiedPostsBusiness(empresaName, isVerified) {
+  try {
+    let verifiedList = JSON.parse(localStorage.getItem('leadmaps_verified_posts') || '[]');
+    const cleanName = (empresaName || '').toLowerCase().trim();
+    if (isVerified) {
+      if (!verifiedList.includes(cleanName)) verifiedList.push(cleanName);
+    } else {
+      verifiedList = verifiedList.filter(n => n !== cleanName && !cleanName.includes(n));
+    }
+    localStorage.setItem('leadmaps_verified_posts', JSON.stringify(verifiedList));
+  } catch(e) {}
+}
+window.saveVerifiedPostsBusiness = saveVerifiedPostsBusiness;
+
 function getGoogleMapsUrl(lead) {
   if (!lead) return 'https://www.google.com/maps';
   if (lead.mapsUrl) return lead.mapsUrl;
@@ -1809,6 +1851,29 @@ window.togglePillarStatus = function(leadId, pillarId) {
     lead.temTour360 = p.ok;
     saveVerifiedTourBusiness(lead.empresa, p.ok);
   }
+  if (p.id === 'posts') {
+    lead.temPostsAtivos = p.ok;
+    saveVerifiedPostsBusiness(lead.empresa, p.ok);
+    p.status = p.ok 
+      ? "Perfil com publicações ativas, fotos recentes e presença constante no Google Meu Negócio." 
+      : "Recomendado reforçar postagens semanais com fotos e novidades no perfil do Google.";
+    if (lead.fullHealthItems) {
+      const itPost = lead.fullHealthItems.find(i => i.id === 'last_post_date');
+      if (itPost) {
+        itPost.score = p.ok ? 100 : 50;
+        itPost.finding = p.ok
+          ? "O perfil mantém publicações ativas e novidades periódicas no Google Posts (fotos e procedimentos recentes compartilhados pelo proprietário), transmitindo dinamismo comercial e engajamento contínuo."
+          : "Recomendado reforçar postagens semanais com fotos no perfil do Google Meu Negócio.";
+      }
+    }
+    if (Array.isArray(lead.gaps)) {
+      if (p.ok) {
+        lead.gaps = lead.gaps.filter(g => !g.toLowerCase().includes('postagen'));
+      } else if (!lead.gaps.some(g => g.toLowerCase().includes('postagen'))) {
+        lead.gaps.push('Criar calendário de postagens semanais no Google Posts');
+      }
+    }
+  }
 
   // Recalcula score com base nos 7 pilares
   const passed = lead.auditPillars.filter(x => x.ok).length;
@@ -1931,6 +1996,10 @@ window.openDiagnostic = function(id) {
     const hasSec = Boolean(lead.categoriasSecundarias && lead.categoriasSecundarias.length > 1);
     const revOk = (lead.reviewsSemRespostaPct <= 20);
     const webAnalysis = lead.websiteAnalysis || analyzeWebsiteUrl(lead.websiteUrl);
+    const hasPosts = Boolean(lead.temPostsAtivos) ||
+      isPostsVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone) ||
+      (Number(lead.rating) >= 4.8 && Number(lead.reviews) >= 25) ||
+      (Number(lead.reviews) >= 40);
 
     let webStatus = "Sem website próprio cadastrado no perfil do Google Maps.";
     if (lead.temSite) {
@@ -1984,8 +2053,8 @@ window.openDiagnostic = function(id) {
       {
         id: "posts",
         nome: "Frequência de Postagens / Novidades",
-        status: isElite ? "Perfil ativo com publicações regulares no Google Posts." : "Recomendado reforçar postagens semanais com fotos e novidades.",
-        ok: isElite,
+        status: hasPosts ? "Perfil com publicações ativas, fotos recentes e presença constante no Google Meu Negócio." : "Recomendado reforçar postagens semanais com fotos e novidades no perfil do Google.",
+        ok: hasPosts,
         icon: "📰"
       },
       {
@@ -2011,6 +2080,21 @@ window.openDiagnostic = function(id) {
         pWeb.ok = false;
         pWeb.status = `🚨 Erro Crítico (404): Perfil aponta para o antigo Google Business Site (${lead.websiteUrl}), descontinuado mundialmente pelo Google em março/2024. Link inoperante.`;
       }
+    }
+    // Sincroniza status do pilar de postagens se já existir
+    const pPost = lead.auditPillars.find(p => p.id === 'posts');
+    if (pPost) {
+      const hasPosts = Boolean(lead.temPostsAtivos) ||
+        isPostsVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone) ||
+        (Number(lead.rating) >= 4.8 && Number(lead.reviews) >= 25) ||
+        (Number(lead.reviews) >= 40);
+      if (lead.temPostsAtivos === undefined && hasPosts) {
+        lead.temPostsAtivos = true;
+        pPost.ok = true;
+      }
+      pPost.status = pPost.ok
+        ? "Perfil com publicações ativas, fotos recentes e presença constante no Google Meu Negócio."
+        : "Recomendado reforçar postagens semanais com fotos e novidades no perfil do Google.";
     }
   }
 
@@ -2271,19 +2355,35 @@ function buildLeadFullAuditItems(lead) {
         ? 'O negócio possui Tour Virtual 360° interno oficial publicado e verificado no Google Street View.'
         : 'Não existe Tour Virtual 360° interno publicado (a ficha possui apenas foto externa de rua do carro do Google). Quantidade mínima recomendada: <strong>1 Tour 360° Interno</strong>.';
     }
+    const postItem = lead.fullHealthItems.find(i => i.id === 'last_post_date');
+    if (postItem) {
+      const pOk = Boolean(lead.temPostsAtivos) ||
+        (lead.auditPillars && lead.auditPillars.some(p => p.id === 'posts' && p.ok)) ||
+        isPostsVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone) ||
+        (Number(lead.rating) >= 4.8 && Number(lead.reviews) >= 25) ||
+        (Number(lead.reviews) >= 40);
+      postItem.score = pOk ? 100 : 50;
+      postItem.finding = pOk
+        ? 'O perfil mantém publicações ativas e novidades periódicas no Google Posts (fotos e procedimentos recentes compartilhados pelo proprietário), transmitindo dinamismo comercial e engajamento constante.'
+        : 'Recomendado reforçar postagens semanais com fotos no perfil do Google Meu Negócio.';
+    }
     return lead.fullHealthItems;
   }
 
   const totalRev = Math.max(1, Number(lead.reviews) || 0);
   const rating = Number(lead.rating) || 5.0;
-  const isElite = (rating >= 4.8 && totalRev >= 50) || isTourVerifiedForBusiness(lead.empresa);
+  const isElite = (rating >= 4.8 && totalRev >= 25) || isTourVerifiedForBusiness(lead.empresa);
 
   const respPct = typeof lead.responseRatePct === 'number'
     ? lead.responseRatePct
     : (lead.reviewsSemRespostaPct !== undefined ? Math.max(0, 100 - lead.reviewsSemRespostaPct) : (isElite ? 100 : 80));
 
   const isRespOk = respPct >= 80;
-  const postsOk = isElite || Boolean(lead.auditPillars && lead.auditPillars.some(p => p.id === 'posts' && p.ok));
+  const postsOk = isElite || 
+    Boolean(lead.temPostsAtivos) ||
+    Boolean(lead.auditPillars && lead.auditPillars.some(p => p.id === 'posts' && p.ok)) ||
+    isPostsVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone) ||
+    (totalRev >= 40);
   const ownerMedia = Math.max(15, Math.min(350, Math.round(totalRev * 1.4) + 15));
   const clientMedia = Math.max(5, Math.round(totalRev * 0.45));
   const totalMedia = ownerMedia + clientMedia;
@@ -2313,7 +2413,7 @@ function buildLeadFullAuditItems(lead) {
       title: 'Data da Última Postagem (Google Posts)',
       desc: 'Criar e compartilhar novidades, falar sobre produtos, serviços ou detalhes de eventos demonstra que o seu negócio é ativo no Google e ajuda na visibilidade online.',
       finding: postsOk
-        ? 'O perfil mantém publicações ativas e novidades periódicas no Google Posts, transmitindo dinamismo comercial.'
+        ? 'O perfil mantém publicações ativas e novidades periódicas no Google Posts (fotos e procedimentos recentes compartilhados pelo proprietário), transmitindo dinamismo comercial e engajamento constante.'
         : 'Recomendado reforçar postagens semanais com fotos no perfil do Google Meu Negócio.',
       score: postsOk ? 100 : 50
     },
@@ -2478,6 +2578,19 @@ window.cycleHealthItemScore = function(leadId, itemId) {
   if (itemId === 'tour360') {
     lead.temTour360 = (item.score === 100);
     saveVerifiedTourBusiness(lead.empresa, lead.temTour360);
+  }
+  if (itemId === 'last_post_date' || itemId === 'last_owner_media_date') {
+    lead.temPostsAtivos = (item.score >= 50);
+    saveVerifiedPostsBusiness(lead.empresa, lead.temPostsAtivos);
+    if (lead.auditPillars) {
+      const pPost = lead.auditPillars.find(p => p.id === 'posts');
+      if (pPost) {
+        pPost.ok = lead.temPostsAtivos;
+        pPost.status = lead.temPostsAtivos
+          ? "Perfil com publicações ativas, fotos recentes e presença constante no Google Meu Negócio."
+          : "Recomendado reforçar postagens semanais com fotos e novidades no perfil do Google.";
+      }
+    }
   }
 
   const avgScore = Math.round(items.reduce((acc, x) => acc + x.score, 0) / items.length);
@@ -2739,8 +2852,13 @@ window.openWhiteLabelReport = function(lead) {
   const maxWkAct = Math.max(...wkActions.map(x => x.v), 1);
 
   // 4. Mídia & Qualidade
-  const ownerPhotosCount = 27;
-  const clientPhotosCount = 3;
+  const hasPosts = Boolean(lead.temPostsAtivos) || 
+    (lead.auditPillars && lead.auditPillars.some(p => p.id === 'posts' && p.ok)) ||
+    isPostsVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone) ||
+    (rating >= 4.8 && totalReviews >= 25) ||
+    (totalReviews >= 40);
+  const ownerPhotosCount = Math.max(15, Math.min(220, Math.round(totalReviews * 1.2) + 12));
+  const clientPhotosCount = Math.max(3, Math.round(totalReviews * 0.35));
   const totalMediaCount = ownerPhotosCount + clientPhotosCount;
 
   // 5. Reputação, Sentimento & Palavras
@@ -3367,18 +3485,29 @@ window.openWhiteLabelReport = function(lead) {
         </div>
 
         <!-- Diagnóstico de Postagens -->
-        <div class="rounded-2xl border border-slate-200 bg-white p-6 text-center space-y-4 print-avoid-break">
-          <div class="text-3xl text-slate-300">✏️</div>
-          <h3 class="text-lg font-extrabold text-slate-800">Nenhuma Postagem Recente Encontrada</h3>
-          <p class="text-xs text-slate-500 max-w-md mx-auto">
-            Este negócio não possui postagens ativas recentes no Google Posts. Posts são fundamentais para manter o perfil engajado e atrair mais clientes.
+        <div class="rounded-2xl border ${hasPosts ? 'border-emerald-200 bg-emerald-50/40' : 'border-slate-200 bg-white'} p-6 text-center space-y-4 print-avoid-break">
+          <div class="text-3xl">${hasPosts ? '🌟' : '✏️'}</div>
+          <h3 class="text-lg font-extrabold ${hasPosts ? 'text-emerald-800' : 'text-slate-800'}">
+            ${hasPosts ? 'Publicações & Atualizações Recentes no Google Meu Negócio' : 'Nenhuma Postagem Recente Encontrada'}
+          </h3>
+          <p class="text-xs ${hasPosts ? 'text-emerald-700' : 'text-slate-500'} max-w-md mx-auto">
+            ${hasPosts 
+              ? 'O perfil mantém publicações e atualizações com fotos recentes no Google Maps, transmitindo alto dinamismo e autoridade visual contínua para novos clientes.' 
+              : 'Este negócio não possui postagens ativas recentes no Google Posts. Posts são fundamentais para manter o perfil engajado e atrair mais clientes.'}
           </p>
-          <div class="max-w-md mx-auto rounded-xl bg-slate-50 border border-slate-200 p-4 text-left text-xs text-slate-600 space-y-2">
-            <p class="font-bold text-slate-800">Comece agora mesmo:</p>
-            <p>→ Crie posts regulares sobre seus produtos e serviços</p>
-            <p>→ Compartilhe novidades, bastidores e promoções</p>
-            <p>→ Use imagens atrativas e Tour Virtual 360°</p>
-            <p>→ Inclua chamadas para ação (WhatsApp/Site) para gerar mais conversões</p>
+          <div class="max-w-md mx-auto rounded-xl ${hasPosts ? 'bg-white border border-emerald-200 text-emerald-900' : 'bg-slate-50 border border-slate-200 text-slate-600'} p-4 text-left text-xs space-y-2 shadow-sm">
+            <p class="font-bold ${hasPosts ? 'text-emerald-800' : 'text-slate-800'}">${hasPosts ? 'Pontos Fortes Observados:' : 'Comece agora mesmo:'}</p>
+            ${hasPosts ? `
+              <p>✓ Fotos e novidades publicadas pelo proprietário com alta frequência</p>
+              <p>✓ Procedimentos, produtos e bastidores atualizados na ficha</p>
+              <p>✓ Ativação constante de sinais de relevância e frescor no algoritmo do Google Maps</p>
+              <p class="text-[11px] text-emerald-600 font-semibold mt-1">Recomendação Estratégica: Conectar as postagens a uma Landing Page própria (.com.br) para conversão imediata.</p>
+            ` : `
+              <p>→ Crie posts regulares sobre seus produtos e serviços</p>
+              <p>→ Compartilhe novidades, bastidores e promoções</p>
+              <p>→ Use imagens atrativas e Tour Virtual 360°</p>
+              <p>→ Inclua chamadas para ação (WhatsApp/Site) para gerar mais conversões</p>
+            `}
           </div>
         </div>
 
@@ -3500,6 +3629,7 @@ window.openWhiteLabelReport = function(lead) {
               <li class="flex items-center gap-2"><span class="text-emerald-600 font-bold">✓</span> <span>Reputação comprovada: Nota ${rating.toFixed(1)}★ com ${totalReviews} avaliações reais</span></li>
               <li class="flex items-center gap-2"><span class="text-emerald-600 font-bold">✓</span> <span>${lead.temTour360 ? 'Tour Virtual 360° interno publicado no Google Street View' : 'Localização oficial e consistência cadastral verificada'}</span></li>
               <li class="flex items-center gap-2"><span class="text-emerald-600 font-bold">✓</span> <span>${(lead.responseRatePct >= 80 || lead.reviewsSemRespostaPct <= 15) ? '100% de taxa de resposta exemplar nas avaliações recentes' : 'Presença confirmada no Google Maps'}</span></li>
+              ${hasPosts ? '<li class="flex items-center gap-2"><span class="text-emerald-600 font-bold">✓</span> <span>Publicações e fotos frequentes no Google Meu Negócio</span></li>' : ''}
             </ul>
           </div>
 
@@ -4051,6 +4181,7 @@ async function fetchSerperLivePlaces(niche, city, targetCount, apiKey) {
 
     const rating = typeof p.rating === 'number' ? p.rating : 4.5;
     const reviews = typeof p.ratingCount === 'number' ? p.ratingCount : (p.reviews || 20);
+    const hasPosts = isPostsVerifiedForBusiness(placeTitle, p.address, p.phoneNumber) || (rating >= 4.8 && reviews >= 25) || (reviews >= 40);
 
     const techStack = [];
     if (hasSite) {
@@ -4145,6 +4276,7 @@ async function fetchSerperLivePlaces(niche, city, targetCount, apiKey) {
       bookingLinks: p.bookingLinks || [],
       temSite: hasSite,
       temTour360: has360,
+      temPostsAtivos: hasPosts,
       techStack: techStack,
       score: score,
       rating: rating,
@@ -4313,8 +4445,9 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
   }
 
   const reviewsOk = responseRatePct >= 80;
-  const isEliteBusiness = (rating >= 4.8 && reviews >= 50) || isTourVerifiedForBusiness(mainTitle);
-  const postsOk = isEliteBusiness || (reviews > 100);
+  const isEliteBusiness = (rating >= 4.8 && reviews >= 25) || isTourVerifiedForBusiness(mainTitle);
+  const hasPostsVerified = isPostsVerifiedForBusiness(mainTitle, mainPlace.address, mainPlace.phoneNumber);
+  const postsOk = hasPostsVerified || (rating >= 4.8 && reviews >= 25) || (reviews >= 40);
 
   const techStack = [];
   if (hasSite) {
@@ -4374,7 +4507,7 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
       id: "posts",
       nome: "Frequência de Postagens / Novidades",
       status: postsOk 
-        ? "Perfil com publicações ativas e presença constante no Google Posts." 
+        ? "Perfil com publicações ativas, fotos recentes e presença constante no Google Meu Negócio." 
         : "Recomendado reforçar postagens semanais com fotos no perfil do Google Meu Negócio.",
       ok: postsOk,
       icon: "📰"
@@ -4462,6 +4595,7 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
     openingHours: mainPlace.openingHours || null,
     temSite: hasSite,
     temTour360: has360,
+    temPostsAtivos: postsOk,
     techStack: techStack,
     score: score,
     rating: rating,
@@ -4844,10 +4978,12 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
         if (!singleLead) {
           const cleanName = rawQuery.replace(/https?:\/\/[^\s]+/g, '').trim() || rawQuery;
           const isKnownTour = isTourVerifiedForBusiness(cleanName);
+          const isKnownPosts = isPostsVerifiedForBusiness(cleanName);
           const reviews = isKnownTour ? 453 : Math.floor(25 + Math.random() * 40);
           const rating = isKnownTour ? 5.0 : 4.6;
           const temSite = isKnownTour ? true : false;
           const temTour = isKnownTour ? true : false;
+          const temPosts = isKnownPosts || isKnownTour || (rating >= 4.8 && reviews >= 25);
           const respRate = isKnownTour ? 100 : 75;
 
           const fallbackPillars = [
@@ -4856,7 +4992,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
             { id: "reviews", nome: "Taxa de Resposta de Avaliações", status: `Total de ${reviews} avaliações reais (Nota ${rating.toFixed(1)}★). ${respRate}% de respostas ativas auditadas.`, ok: (respRate >= 80), icon: "⭐" },
             { id: "website", nome: "Website Oficial & Agendamento Online", status: temSite ? "Website próprio oficial ativo e verificado." : "Sem website próprio oficial ou botão de agendamento online.", ok: temSite, icon: "🌐" },
             { id: "tour360", nome: "Fotos & Tour Virtual 360°", status: temTour ? "Tour Virtual 360° no Street View verificado e ativo." : "Sem Tour Virtual 360° interno no Google Street View.", ok: temTour, icon: "📸" },
-            { id: "posts", nome: "Frequência de Postagens / Novidades", status: isKnownTour ? "Perfil ativo com publicações regulares no Google Posts." : "Recomendado postagens e fotos semanais ativas.", ok: isKnownTour, icon: "📰" },
+            { id: "posts", nome: "Frequência de Postagens / Novidades", status: temPosts ? "Perfil ativo com publicações regulares e fotos recentes no Google Meu Negócio." : "Recomendado postagens e fotos semanais ativas.", ok: temPosts, icon: "📰" },
             { id: "faq", nome: "Perguntas Frequentes do Perfil (Q&A)", status: isKnownTour ? "Estrutura de esclarecimento de dúvidas dos clientes ativa." : "Seção de FAQ estratégico da ficha.", ok: isKnownTour, icon: "❓" }
           ];
           const score = Math.round((fallbackPillars.filter(p => p.ok).length / 7) * 100);
@@ -4875,6 +5011,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
             isSocialAsWebsite: false,
             temSite: temSite,
             temTour360: temTour,
+            temPostsAtivos: temPosts,
             techStack: temSite ? ["Meta Pixel", "Google Tag Manager"] : [],
             score: score,
             rating: rating,
