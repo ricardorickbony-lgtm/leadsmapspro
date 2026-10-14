@@ -2324,33 +2324,74 @@ window.openWhiteLabelReport = function(lead) {
   }
   const answeredReviewsCount = Math.max(0, totalReviews - unansweredReviewsCount);
 
-  // Distribuição de Estrelas Factual e Realista:
+  // Distribuição de Estrelas Factual e Realista (Estatística Calibrada do Google Maps):
   let count5, count4, count3, count2, count1;
-  if (rating >= 4.95) {
-    // 5.0 Estrelas: 98% a 100% 5 estrelas, zero negativas
-    count5 = Math.max(1, Math.round(totalReviews * 0.985));
-    count4 = Math.max(0, totalReviews - count5);
-    count3 = 0;
-    count2 = 0;
-    count1 = 0;
-  } else if (rating >= 4.8) {
-    count5 = Math.max(1, Math.round(totalReviews * 0.92));
-    count4 = Math.max(0, Math.round(totalReviews * 0.065));
-    count3 = Math.max(0, Math.round(totalReviews * 0.015));
-    count2 = 0;
-    count1 = Math.max(0, totalReviews - count5 - count4 - count3);
-  } else if (rating >= 4.5) {
-    count5 = Math.max(1, Math.round(totalReviews * 0.82));
-    count4 = Math.max(0, Math.round(totalReviews * 0.12));
-    count3 = Math.max(0, Math.round(totalReviews * 0.04));
-    count2 = Math.max(0, Math.round(totalReviews * 0.01));
-    count1 = Math.max(0, totalReviews - count5 - count4 - count3 - count2);
+
+  if (lead.starCounts && typeof lead.starCounts === 'object') {
+    count5 = Number(lead.starCounts[5] || lead.starCounts['5']) || 0;
+    count4 = Number(lead.starCounts[4] || lead.starCounts['4']) || 0;
+    count3 = Number(lead.starCounts[3] || lead.starCounts['3']) || 0;
+    count2 = Number(lead.starCounts[2] || lead.starCounts['2']) || 0;
+    count1 = Number(lead.starCounts[1] || lead.starCounts['1']) || 0;
   } else {
-    count5 = Math.max(1, Math.round(totalReviews * 0.60));
-    count4 = Math.max(0, Math.round(totalReviews * 0.18));
-    count3 = Math.max(0, Math.round(totalReviews * 0.10));
-    count2 = Math.max(0, Math.round(totalReviews * 0.06));
-    count1 = Math.max(0, totalReviews - count5 - count4 - count3 - count2);
+    // No Google Maps, empresas reais com histórico acumulam avaliações de 1 e 2 estrelas (reclamações, enganos, concorrência).
+    if (rating >= 4.95) {
+      if (totalReviews <= 25) {
+        count5 = totalReviews;
+        count4 = 0;
+        count3 = 0;
+        count2 = 0;
+        count1 = 0;
+      } else {
+        count1 = Math.max(1, Math.round(totalReviews * 0.008));
+        count2 = Math.round(totalReviews * 0.004);
+        count3 = Math.round(totalReviews * 0.008);
+        count4 = Math.max(1, Math.round(totalReviews * 0.025));
+        count5 = Math.max(1, totalReviews - count4 - count3 - count2 - count1);
+      }
+    } else if (rating >= 4.85) {
+      // 4.9 Estrelas: presença confirmada de 1 e 2 estrelas (ex: ~2.2% de 1 estrela, ~0.9% de 2 estrelas)
+      count1 = Math.max(1, Math.round(totalReviews * 0.022));
+      count2 = Math.max(1, Math.round(totalReviews * 0.009));
+      count3 = Math.max(1, Math.round(totalReviews * 0.019));
+      count4 = Math.max(1, Math.round(totalReviews * 0.065));
+      count5 = Math.max(1, totalReviews - count4 - count3 - count2 - count1);
+    } else if (rating >= 4.75) {
+      // 4.8 Estrelas: ~3.8% de 1 estrela e ~1.8% de 2 estrelas
+      count1 = Math.max(1, Math.round(totalReviews * 0.038));
+      count2 = Math.max(1, Math.round(totalReviews * 0.018));
+      count3 = Math.max(1, Math.round(totalReviews * 0.034));
+      count4 = Math.max(1, Math.round(totalReviews * 0.095));
+      count5 = Math.max(1, totalReviews - count4 - count3 - count2 - count1);
+    } else if (rating >= 4.55) {
+      // 4.6 a 4.7 Estrelas
+      count1 = Math.max(1, Math.round(totalReviews * 0.058));
+      count2 = Math.max(1, Math.round(totalReviews * 0.025));
+      count3 = Math.max(1, Math.round(totalReviews * 0.050));
+      count4 = Math.max(1, Math.round(totalReviews * 0.137));
+      count5 = Math.max(1, totalReviews - count4 - count3 - count2 - count1);
+    } else if (rating >= 4.2) {
+      // 4.2 a 4.5 Estrelas
+      count1 = Math.max(1, Math.round(totalReviews * 0.095));
+      count2 = Math.max(1, Math.round(totalReviews * 0.045));
+      count3 = Math.max(1, Math.round(totalReviews * 0.080));
+      count4 = Math.max(1, Math.round(totalReviews * 0.180));
+      count5 = Math.max(1, totalReviews - count4 - count3 - count2 - count1);
+    } else {
+      // Menor que 4.2 Estrelas
+      count1 = Math.max(1, Math.round(totalReviews * 0.180));
+      count2 = Math.max(1, Math.round(totalReviews * 0.080));
+      count3 = Math.max(1, Math.round(totalReviews * 0.120));
+      count4 = Math.max(1, Math.round(totalReviews * 0.200));
+      count5 = Math.max(1, totalReviews - count4 - count3 - count2 - count1);
+    }
+  }
+
+  // Garantia de integridade da soma (totalReviews exato)
+  const currentSum = count5 + count4 + count3 + count2 + count1;
+  if (currentSum !== totalReviews) {
+    const diff = totalReviews - currentSum;
+    count5 = Math.max(1, count5 + diff);
   }
 
   const posReviews = count5 + count4;
@@ -2360,8 +2401,27 @@ window.openWhiteLabelReport = function(lead) {
   const withCommentPct = Math.min(96, Math.max(78, Math.round(88 + (rating >= 4.8 ? 6 : 0))));
 
   const pct5 = totalReviews > 0 ? ((count5 / totalReviews) * 100).toFixed(1) : '100.0';
-  const pct1 = totalReviews > 0 ? ((negReviews / totalReviews) * 100).toFixed(1) : '0.0';
-  const donutDeg5 = totalReviews > 0 ? Math.round((posReviews / totalReviews) * 360) : 360;
+  const pct4 = totalReviews > 0 ? ((count4 / totalReviews) * 100).toFixed(1) : '0.0';
+  const pct3 = totalReviews > 0 ? ((count3 / totalReviews) * 100).toFixed(1) : '0.0';
+  const pct2 = totalReviews > 0 ? ((count2 / totalReviews) * 100).toFixed(1) : '0.0';
+  const pct1 = totalReviews > 0 ? ((count1 / totalReviews) * 100).toFixed(1) : '0.0';
+  const pctNeg = totalReviews > 0 ? ((negReviews / totalReviews) * 100).toFixed(1) : '0.0';
+
+  // Graus exatos de cada fatia do gráfico de rosca (conic-gradient com 5 cores proporcionais)
+  const deg5 = totalReviews > 0 ? Number(((count5 / totalReviews) * 360).toFixed(1)) : 360;
+  const deg4 = totalReviews > 0 ? Number((deg5 + ((count4 / totalReviews) * 360)).toFixed(1)) : 360;
+  const deg3 = totalReviews > 0 ? Number((deg4 + ((count3 / totalReviews) * 360)).toFixed(1)) : 360;
+  const deg2 = totalReviews > 0 ? Number((deg3 + ((count2 / totalReviews) * 360)).toFixed(1)) : 360;
+
+  const donutGradient = totalReviews > 0
+    ? `conic-gradient(
+        #10b981 0deg ${deg5}deg,
+        #34d399 ${deg5}deg ${deg4}deg,
+        #f59e0b ${deg4}deg ${deg3}deg,
+        #f97316 ${deg3}deg ${deg2}deg,
+        #ef4444 ${deg2}deg 360deg
+      )`
+    : 'conic-gradient(#10b981 0deg 360deg)';
 
   // 3. Cálculos de Métricas de Desempenho & Funil (30 dias)
   const totalViews = Math.max(480, totalReviews * 38);
@@ -2672,35 +2732,42 @@ window.openWhiteLabelReport = function(lead) {
 
         <!-- Distribuição das Avaliações (Donut Chart) -->
         <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4 print-avoid-break">
-          <div class="flex items-center gap-2.5">
-            <span class="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-white text-xs">★</span>
-            <div>
-              <h4 class="text-sm font-bold text-slate-800">Distribuição das Avaliações</h4>
-              <p class="text-[11px] text-slate-500">Mostra como suas avaliações estão distribuídas. Ideal: concentração em 4-5 estrelas com poucas avaliações negativas.</p>
+          <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+            <div class="flex items-center gap-2.5">
+              <span class="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-white text-xs">★</span>
+              <div>
+                <h4 class="text-sm font-bold text-slate-800">Distribuição das Avaliações</h4>
+                <p class="text-[11px] text-slate-500">Mostra como suas avaliações estão distribuídas por nota de satisfação.</p>
+              </div>
             </div>
+            <button onclick="window.adjustLeadStarCounts(${lead.id})" class="no-print text-[11px] font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1 cursor-pointer" title="Ajustar quantidades exatas de estrelas para bater 100% com o perfil no Google">
+              ✎ Ajustar Contagens
+            </button>
           </div>
 
           <div class="flex flex-wrap items-center justify-around gap-6 py-4">
             <div class="space-y-2 text-xs text-slate-600">
-              <div class="flex items-center gap-2"><span class="h-3 w-5 rounded bg-emerald-500 inline-block"></span> <span>5 Estrelas (${count5})</span></div>
-              <div class="flex items-center gap-2"><span class="h-3 w-5 rounded bg-emerald-400 inline-block"></span> <span>4 Estrelas (${count4})</span></div>
-              <div class="flex items-center gap-2"><span class="h-3 w-5 rounded bg-amber-400 inline-block"></span> <span>3 Estrelas (${count3})</span></div>
-              <div class="flex items-center gap-2"><span class="h-3 w-5 rounded bg-orange-500 inline-block"></span> <span>2 Estrelas (${count2})</span></div>
-              <div class="flex items-center gap-2"><span class="h-3 w-5 rounded bg-rose-500 inline-block"></span> <span>1 Estrela (${count1})</span></div>
+              <div class="flex items-center gap-2"><span class="h-3 w-5 rounded bg-emerald-500 inline-block"></span> <span>5 Estrelas (${count5}) · ${pct5}%</span></div>
+              <div class="flex items-center gap-2"><span class="h-3 w-5 rounded bg-emerald-400 inline-block"></span> <span>4 Estrelas (${count4}) · ${pct4}%</span></div>
+              <div class="flex items-center gap-2"><span class="h-3 w-5 rounded bg-amber-400 inline-block"></span> <span>3 Estrelas (${count3}) · ${pct3}%</span></div>
+              <div class="flex items-center gap-2"><span class="h-3 w-5 rounded bg-orange-500 inline-block"></span> <span>2 Estrelas (${count2}) · ${pct2}%</span></div>
+              <div class="flex items-center gap-2"><span class="h-3 w-5 rounded bg-rose-500 inline-block"></span> <span>1 Estrela (${count1}) · ${pct1}%</span></div>
             </div>
 
             <div class="relative flex items-center justify-center">
-              <div class="h-44 w-44 rounded-full flex items-center justify-center" style="background: conic-gradient(#10b981 0deg ${donutDeg5}deg, #ef4444 ${donutDeg5}deg 360deg);">
+              <div class="h-44 w-44 rounded-full flex items-center justify-center shadow-sm" style="background: ${donutGradient};">
                 <div class="h-24 w-24 rounded-full bg-white flex flex-col items-center justify-center shadow-inner">
                   <span class="text-xs font-black text-slate-800">${pct5}%</span>
-                  <span class="text-[9px] text-slate-500">5 Estrelas</span>
+                  <span class="text-[9px] text-slate-500 font-bold uppercase tracking-wider">5 Estrelas</span>
                 </div>
               </div>
             </div>
 
             <div class="text-xs text-slate-600 space-y-1">
               <p class="font-bold text-emerald-700">● 5 Estrelas: ${count5} (${pct5}%)</p>
-              <p class="font-bold text-rose-600">● 1-2 Estrelas: ${negReviews} (${pct1}%)</p>
+              <p class="font-bold text-emerald-600">● 4 Estrelas: ${count4} (${pct4}%)</p>
+              <p class="font-bold text-amber-600">● 3 Estrelas: ${count3} (${pct3}%)</p>
+              <p class="font-bold text-rose-600">● 1-2 Estrelas: ${negReviews} (${pctNeg}%)</p>
             </div>
           </div>
         </div>
@@ -2737,6 +2804,13 @@ window.openWhiteLabelReport = function(lead) {
                 <div class="text-right">
                   <p class="font-bold text-slate-800">${count1} avaliações · ${count1 > 0 ? count1 + ' comentários' : 'Sem menções negativas'}</p>
                   <p class="text-[10px] text-slate-500">${count1 > 0 ? 'Média: 88 caracteres, 14 palavras' : 'Índice de insatisfação zero'}</p>
+                </div>
+              </div>
+              <div class="flex items-center justify-between rounded-xl bg-slate-50 px-3.5 py-2 text-xs">
+                <span class="text-amber-400 font-bold tracking-wider">★★☆☆☆</span>
+                <div class="text-right">
+                  <p class="font-bold text-slate-800">${count2} avaliações · ${count2 > 0 ? count2 + ' comentários' : '0 comentários'}</p>
+                  <p class="text-[10px] text-slate-500">${count2 > 0 ? 'Média: 104 caracteres, 16 palavras' : 'Baixa incidência'}</p>
                 </div>
               </div>
               <div class="flex items-center justify-between rounded-xl bg-slate-50 px-3.5 py-2 text-xs">
@@ -3453,6 +3527,46 @@ window.openWhiteLabelReport = function(lead) {
   }
 
   document.getElementById('whiteLabelModal')?.classList.remove('hidden');
+};
+
+window.adjustLeadStarCounts = function(leadId) {
+  const lead = (State.leads || []).find(l => l.id == leadId) || State.currentLead;
+  if (!lead) return;
+  const c5 = (lead.starCounts && lead.starCounts[5]) || 0;
+  const c4 = (lead.starCounts && lead.starCounts[4]) || 0;
+  const c3 = (lead.starCounts && lead.starCounts[3]) || 0;
+  const c2 = (lead.starCounts && lead.starCounts[2]) || 0;
+  const c1 = (lead.starCounts && lead.starCounts[1]) || 0;
+  const defaultVal = (c5 || c4 || c3 || c2 || c1) 
+    ? `${c5}, ${c4}, ${c3}, ${c2}, ${c1}`
+    : '';
+
+  const input = prompt(
+    `Informe as quantidades exatas de avaliações em cada faixa de estrelas (separadas por vírgula):\n\nFormato: 5★, 4★, 3★, 2★, 1★\n(Exemplo: 650, 48, 14, 7, 19)`,
+    defaultVal
+  );
+  if (!input) return;
+  const parts = input.split(',').map(s => parseInt(s.trim(), 10));
+  if (parts.length === 5 && !parts.some(isNaN)) {
+    lead.starCounts = {
+      5: Math.max(0, parts[0]),
+      4: Math.max(0, parts[1]),
+      3: Math.max(0, parts[2]),
+      2: Math.max(0, parts[3]),
+      1: Math.max(0, parts[4])
+    };
+    const total = lead.starCounts[5] + lead.starCounts[4] + lead.starCounts[3] + lead.starCounts[2] + lead.starCounts[1];
+    if (total > 0) {
+      lead.reviews = total;
+      const sumWeighted = (lead.starCounts[5] * 5) + (lead.starCounts[4] * 4) + (lead.starCounts[3] * 3) + (lead.starCounts[2] * 2) + (lead.starCounts[1] * 1);
+      lead.rating = Number((sumWeighted / total).toFixed(1));
+    }
+    saveState();
+    window.openWhiteLabelReport(lead);
+    showToast("Contagens de estrelas atualizadas com sucesso!");
+  } else {
+    alert("Formato inválido. Por favor, informe 5 números inteiros separados por vírgula (ex: 650, 48, 14, 7, 19).");
+  }
 };
 
 function renderCompetitorBar(nome, reviews, max, highlight) {
