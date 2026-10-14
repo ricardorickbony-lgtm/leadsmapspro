@@ -6509,6 +6509,43 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     showToast(`✅ Acesso liberado! Bem-vindo(a), ${sub.nome.split('—')[0].trim()} (${daysLeft} dias restantes).`);
   }
 
+  // Alternar visibilidade da senha no login (olhinho: pontinhos vs texto)
+  const btnToggleEye = document.getElementById('btnTogglePasswordVisibility');
+  const licenseInput = document.getElementById('loginLicenseInput');
+  const eyeOpen = document.getElementById('eyeIconOpen');
+  const eyeClosed = document.getElementById('eyeIconClosed');
+
+  if (btnToggleEye && licenseInput) {
+    btnToggleEye.addEventListener('click', () => {
+      const isPassword = licenseInput.type === 'password';
+      licenseInput.type = isPassword ? 'text' : 'password';
+      if (eyeOpen && eyeClosed) {
+        if (isPassword) {
+          eyeOpen.classList.remove('hidden');
+          eyeClosed.classList.add('hidden');
+          btnToggleEye.setAttribute('title', 'Ocultar senha (mostrar pontinhos)');
+        } else {
+          eyeOpen.classList.add('hidden');
+          eyeClosed.classList.remove('hidden');
+          btnToggleEye.setAttribute('title', 'Visualizar senha');
+        }
+      }
+      licenseInput.focus();
+    });
+  }
+
+  // Atalho Enter para login rápido
+  licenseInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      document.getElementById('btnSubmitLogin')?.click();
+    }
+  });
+  document.getElementById('loginEmailInput')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      document.getElementById('btnSubmitLogin')?.click();
+    }
+  });
+
   document.getElementById('btnSubmitLogin')?.addEventListener('click', () => {
     const em = document.getElementById('loginEmailInput')?.value || '';
     const ky = document.getElementById('loginLicenseInput')?.value || '';
