@@ -4,14 +4,14 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>RadarMaps PRO — Inteligência Tática no Google Maps & Auditoria Local de Alto Padrão</title>
-  <meta name="description" content="Detecte falhas invisíveis no Google Maps, audite 22 pontos de SEO Local, afira postagens recentes (padrão GBP Check) e feche contratos recorrentes de R$ 1.500 a R$ 5.000/mês." />
+  <meta name="description" content="Detecte falhas invisíveis no Google Maps, audite 22 pontos de SEO Local, afira postagens recentes e inatividade de perfil, e feche contratos recorrentes de R$ 1.500 a R$ 5.000/mês." />
   <meta property="og:title" content="RadarMaps PRO — Inteligência Tática no Google Maps" />
-  <meta property="og:description" content="Extrator cirúrgico, auditoria de 22 itens, aferição de postagens GBP Check, detecção de Tour 360° e GeoGrid GPS para consultores e agências de elite." />
+  <meta property="og:description" content="Extrator cirúrgico, auditoria de 22 itens, aferição de postagens recentes, detecção de Tour 360° e GeoGrid GPS para consultores e agências de elite." />
   <meta property="og:type" content="website" />
   <meta name="twitter:card" content="summary_large_image" />
 
   <!-- Favicon SVG Inline -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23F59E0B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='m4.93 4.93 4.24 4.24'/%3E%3Cpath d='m14.83 9.17 4.24-4.24'/%3E%3Cpath d='m14.83 14.83 4.24 4.24'/%3E%3Cpath d='m9.17 14.83-4.24 4.24'/%3E%3Ccircle cx='12' cy='12' r='2' fill='%23F59E0B'/%3E%3C/svg%3E" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2310B981' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='m4.93 4.93 4.24 4.24'/%3E%3Cpath d='m14.83 9.17 4.24-4.24'/%3E%3Cpath d='m14.83 14.83 4.24 4.24'/%3E%3Cpath d='m9.17 14.83-4.24 4.24'/%3E%3Ccircle cx='12' cy='12' r='2' fill='%2310B981'/%3E%3C/svg%3E" />
 
   <!-- Google Fonts: Plus Jakarta Sans, Inter, JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -28,10 +28,11 @@
             obsidian: {
               DEFAULT: '#07090E',
               900: '#07090E',
-              800: '#0D111A',
-              700: '#131926',
-              600: '#1C2436',
-              500: '#2A354D',
+              850: '#0A0D15',
+              800: '#0F1420',
+              700: '#151C2C',
+              600: '#1F293D',
+              500: '#2D3A54',
             },
             solar: {
               DEFAULT: '#F59E0B',
@@ -43,6 +44,7 @@
             signal: {
               emerald: '#10B981',
               emeraldDark: '#059669',
+              emeraldLight: '#34D399',
               rose: '#F43F5E',
               sky: '#0EA5E9'
             }
@@ -58,7 +60,7 @@
   </script>
 
   <style>
-    /* Estilos de Alto Luxo Internacional 2026 */
+    /* Estilos de Ultra Luxo Internacional 2026 */
     :root {
       --bg-base: #07090E;
       --solar-gold: #F59E0B;
@@ -72,18 +74,18 @@
       font-family: 'Inter', sans-serif;
       overflow-x: hidden;
       background-image: 
-        radial-gradient(circle at 50% 0%, rgba(245, 158, 11, 0.08) 0%, transparent 60%),
-        radial-gradient(circle at 100% 50%, rgba(16, 185, 129, 0.04) 0%, transparent 50%),
-        radial-gradient(circle at 0% 80%, rgba(245, 158, 11, 0.05) 0%, transparent 50%);
+        radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.08) 0%, transparent 60%),
+        radial-gradient(circle at 100% 50%, rgba(245, 158, 11, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 0% 80%, rgba(16, 185, 129, 0.04) 0%, transparent 50%);
       background-attachment: fixed;
     }
 
     /* Radar Scanning Grid */
     .radar-grid-bg {
-      background-size: 40px 40px;
+      background-size: 36px 36px;
       background-image: 
-        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
     }
 
     /* Radar Beam Sweep Animation */
@@ -93,21 +95,31 @@
     }
     .radar-sweep-line {
       transform-origin: center center;
-      animation: radarSweep 6s linear infinite;
+      animation: radarSweep 5s linear infinite;
     }
 
     /* Pulsing Signal */
     @keyframes signalPulse {
-      0%, 100% { opacity: 0.3; transform: scale(0.96); }
-      50% { opacity: 0.8; transform: scale(1.04); }
+      0%, 100% { opacity: 0.35; transform: scale(0.97); }
+      50% { opacity: 0.9; transform: scale(1.03); }
     }
     .signal-pulse {
-      animation: signalPulse 3s ease-in-out infinite;
+      animation: signalPulse 2.5s ease-in-out infinite;
+    }
+
+    /* Radar Pulse in Logo */
+    @keyframes radarPingLoop {
+      0% { transform: scale(0.85); opacity: 0.9; }
+      70% { transform: scale(1.4); opacity: 0; }
+      100% { transform: scale(1.4); opacity: 0; }
+    }
+    .radar-ping-ring {
+      animation: radarPingLoop 2s cubic-bezier(0, 0, 0.2, 1) infinite;
     }
 
     /* Glass Cards */
     .luxury-card {
-      background: linear-gradient(135deg, rgba(19, 25, 38, 0.75) 0%, rgba(13, 17, 26, 0.85) 100%);
+      background: linear-gradient(135deg, rgba(21, 28, 44, 0.75) 0%, rgba(15, 20, 32, 0.85) 100%);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -115,13 +127,13 @@
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .luxury-card:hover {
-      border-color: rgba(245, 158, 11, 0.35);
+      border-color: rgba(16, 185, 129, 0.4);
       transform: translateY(-3px);
-      box-shadow: 0 20px 40px -15px rgba(245, 158, 11, 0.15);
+      box-shadow: 0 20px 40px -15px rgba(16, 185, 129, 0.15);
     }
 
     .luxury-card-gold {
-      background: linear-gradient(135deg, rgba(28, 36, 54, 0.85) 0%, rgba(19, 25, 38, 0.95) 100%);
+      background: linear-gradient(135deg, rgba(31, 41, 61, 0.85) 0%, rgba(21, 28, 44, 0.95) 100%);
       backdrop-filter: blur(16px);
       border: 1px solid rgba(245, 158, 11, 0.45);
       box-shadow: 0 15px 45px -10px rgba(245, 158, 11, 0.2);
@@ -138,7 +150,7 @@
     input[type=range] {
       -webkit-appearance: none;
       appearance: none;
-      background: #1C2436;
+      background: #1F293D;
       height: 8px;
       border-radius: 9999px;
       outline: none;
@@ -158,14 +170,6 @@
     input[type=range]::-webkit-slider-thumb:hover {
       transform: scale(1.15);
     }
-
-    /* Glow utility */
-    .gold-glow {
-      box-shadow: 0 0 25px rgba(245, 158, 11, 0.3);
-    }
-    .gold-glow-lg {
-      box-shadow: 0 0 45px rgba(245, 158, 11, 0.4);
-    }
   </style>
 </head>
 <body class="selection:bg-solar selection:text-slate-950 text-slate-100">
@@ -175,15 +179,15 @@
   <!-- ========================================== -->
   <div class="bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-slate-950 px-4 sm:px-8 py-2 text-xs font-bold tracking-wide flex flex-wrap items-center justify-between shadow-sm z-50 relative">
     <div class="flex items-center gap-2">
-      <span class="inline-block w-2 h-2 rounded-full bg-slate-950 animate-ping"></span>
+      <span class="inline-block w-2.5 h-2.5 rounded-full bg-slate-950 animate-ping"></span>
       <span class="font-mono uppercase tracking-wider text-[11px] sm:text-xs">
-        Radar Tático Google Maps 2026 • Inteligência Comercial B2B • Padrão GBP Check & Tour 360°
+        Radar Tático Google Maps 2026 • Inteligência Comercial B2B • Tour 360° & Auditoria de Atividade
       </span>
     </div>
     <div class="flex items-center gap-6 mt-1 sm:mt-0">
-      <a href="https://wa.me/5511970558412?text=Ol%C3%A1%20Ricardo!%20Vim%20pelo%20RadarMaps%20PRO%20e%20gostaria%20de%20um%20atendimento%20VIP." target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 hover:opacity-80 transition font-mono">
+      <a href="https://wa.me/5511970558412?text=Ol%C3%A1!%20Gostaria%20de%20falar%20com%20o%20Plant%C3%A3o%20de%20Vendas%20do%20RadarMaps%20PRO%20sobre%20as%20licen%C3%A7as." target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 hover:opacity-80 transition font-mono whitespace-nowrap">
         <span class="text-sm">💬</span>
-        <span>Atendimento VIP: (11) 97055-8412</span>
+        <span>Plantão de Vendas & Licenças: (11) 97055-8412</span>
       </a>
       <span class="hidden md:inline-block px-2 py-0.5 rounded bg-slate-950/15 text-[10px] uppercase font-mono tracking-widest font-black">
         Enterprise Live
@@ -192,50 +196,47 @@
   </div>
 
   <!-- ========================================== -->
-  <!-- 2. DIGITAL LOBBY HEADER (STICKY LUXURY)    -->
+  <!-- 2. DIGITAL LOBBY HEADER (COM RESPIRO & ESPAÇO) -->
   <!-- ========================================== -->
-  <header class="sticky top-0 z-40 bg-obsidian-900/90 backdrop-blur-xl border-b border-white/10 transition-all duration-300">
-    <div class="max-w-7xl mx-auto px-4 sm:px-8 h-20 flex items-center justify-between">
+  <header class="sticky top-0 z-40 bg-obsidian-900/95 backdrop-blur-xl border-b border-white/10 transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8 h-20 flex items-center justify-between gap-6">
       
-      <!-- Brand Logo com Ícone de Radar Dourado -->
-      <a href="#top" class="flex items-center gap-3 group">
-        <div class="relative w-11 h-11 rounded-xl bg-obsidian-700 border border-solar/40 flex items-center justify-center shadow-lg group-hover:border-solar transition-all">
-          <svg class="w-6 h-6 text-solar group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <path d="m4.93 4.93 4.24 4.24"></path>
-            <path d="m14.83 9.17 4.24-4.24"></path>
-            <path d="m14.83 14.83 4.24 4.24"></path>
-            <path d="m9.17 14.83-4.24 4.24"></path>
-            <circle cx="12" cy="12" r="2" fill="currentColor"></circle>
-          </svg>
-          <span class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-signal-emerald ring-2 ring-obsidian-900"></span>
+      <!-- Brand Logo com Radar HUD Pulsante do Print do Usuário -->
+      <a href="#top" class="flex items-center gap-3.5 group flex-shrink-0">
+        <!-- Ícone do Radar com imagem do print e anel de pulso contínuo -->
+        <div class="relative w-12 h-12 rounded-full overflow-hidden border-2 border-emerald-400 bg-black flex items-center justify-center shadow-[0_0_18px_rgba(16,185,129,0.5)] group-hover:scale-105 transition-all">
+          <img src="assets/images/radar-hud.png" alt="RadarMaps PRO" class="w-full h-full object-cover scale-110" />
+          <!-- Anel de Ping que se expande do radar -->
+          <span class="absolute inset-0 rounded-full border border-emerald-400/90 radar-ping-ring pointer-events-none"></span>
+          <!-- Centro iluminado do feixe -->
+          <span class="absolute w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#10B981] pointer-events-none"></span>
         </div>
+
         <div class="flex flex-col">
           <div class="flex items-center gap-1.5">
-            <span class="font-display font-extrabold text-xl tracking-tight text-white">RadarMaps</span>
+            <span class="font-display font-extrabold text-xl tracking-tight text-white group-hover:text-emerald-300 transition-colors">RadarMaps</span>
             <span class="px-2 py-0.5 text-xs font-black rounded-md bg-gradient-to-r from-solar to-amber-400 text-slate-950 font-mono tracking-wider shadow-sm">PRO</span>
           </div>
-          <span class="text-[11px] font-mono text-slate-400 tracking-wider">INTELIGÊNCIA TÁTICA 2026</span>
+          <span class="text-[10px] font-mono text-emerald-400 tracking-wider font-semibold">RADAR TÁTICO 2026</span>
         </div>
       </a>
 
-      <!-- Desktop Navigation Menu -->
-      <nav class="hidden lg:flex items-center gap-7 text-sm font-semibold text-slate-300">
-        <a href="#demo" class="hover:text-solar transition-colors">Simulador Radar</a>
-        <a href="#modulos" class="hover:text-solar transition-colors">Os 6 Módulos</a>
-        <a href="#gbp-check" class="hover:text-solar transition-colors">Padrão GBP Check</a>
-        <a href="#comparativo" class="hover:text-solar transition-colors">Método Tático</a>
-        <a href="#roi" class="hover:text-solar transition-colors">Calculadora ROI</a>
-        <a href="#planos" class="hover:text-solar transition-colors">Planos & Preços</a>
-        <a href="#faq" class="hover:text-solar transition-colors">FAQ</a>
+      <!-- Desktop Navigation Menu com Respiro Generoso e Sem Micro-fontes -->
+      <nav class="hidden xl:flex items-center gap-8 text-sm font-semibold text-slate-300 flex-1 justify-center">
+        <a href="#demo" class="hover:text-solar transition-colors whitespace-nowrap">Simulador Radar</a>
+        <a href="#modulos" class="hover:text-solar transition-colors whitespace-nowrap">Módulos Táticos</a>
+        <a href="#comparativo" class="hover:text-solar transition-colors whitespace-nowrap">Método Tático</a>
+        <a href="#roi" class="hover:text-solar transition-colors whitespace-nowrap">Calculadora ROI</a>
+        <a href="#planos" class="hover:text-solar transition-colors whitespace-nowrap">Planos & Preços</a>
+        <a href="#faq" class="hover:text-solar transition-colors whitespace-nowrap">FAQ</a>
       </nav>
 
       <!-- CTA Actions -->
-      <div class="flex items-center gap-3">
-        <a href="painel/index.html" class="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-slate-300 hover:text-white transition-colors border border-white/10 rounded-xl hover:bg-white/5">
+      <div class="flex items-center gap-3 flex-shrink-0">
+        <a href="painel/index.html" class="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-slate-300 hover:text-white transition-colors border border-white/10 rounded-xl hover:bg-white/5 whitespace-nowrap">
           <span>Área do Assinante</span>
         </a>
-        <a href="painel/index.html" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-solar via-amber-400 to-yellow-400 text-slate-950 font-bold text-xs sm:text-sm tracking-wide shadow-lg hover:shadow-solar/30 hover:scale-[1.02] transition-all">
+        <a href="painel/index.html" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-solar via-amber-400 to-yellow-400 text-slate-950 font-bold text-xs sm:text-sm tracking-wide shadow-lg hover:shadow-solar/30 hover:scale-[1.02] transition-all whitespace-nowrap">
           <span>Abrir Ferramenta</span>
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
         </a>
@@ -245,23 +246,40 @@
   </header>
 
   <!-- ========================================== -->
-  <!-- 3. HERO SECTION COM RADAR TÁTICO & ALGORITMO -->
+  <!-- 3. HERO SECTION COM VÍDEO DE LUXO & RADAR HUD -->
   <!-- ========================================== -->
-  <section id="top" class="relative pt-12 pb-24 md:pt-20 md:pb-32 overflow-hidden">
+  <section id="top" class="relative pt-16 pb-24 md:pt-24 md:pb-32 overflow-hidden">
     
-    <!-- Radar Ambient Background -->
-    <div class="absolute inset-0 pointer-events-none radar-grid-bg opacity-30"></div>
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-solar/5 blur-[120px] pointer-events-none"></div>
+    <!-- VÍDEO HERO CONTÍNUO DE LUXO EM BACKGROUND (MAPS / 3D GLOBE / SATELLITE) -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none z-0">
+      <video 
+        autoplay 
+        muted 
+        loop 
+        playsinline 
+        preload="auto"
+        class="w-full h-full object-cover object-center opacity-30 scale-105"
+      >
+        <source src="assets/videos/maps-bg.mp4" type="video/mp4">
+      </video>
+      <!-- Película de Scrim em Gradiente de Alto Luxo (Obsidian) para máxima nitidez da leitura -->
+      <div class="absolute inset-0 bg-gradient-to-b from-obsidian-900/90 via-obsidian-900/80 to-obsidian-900 pointer-events-none"></div>
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.1)_0%,transparent_65%)] pointer-events-none"></div>
+      <div class="absolute inset-0 radar-grid-bg opacity-25 pointer-events-none"></div>
+    </div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-8 relative z-10">
       
       <div class="text-center max-w-4xl mx-auto space-y-6">
         
-        <!-- Live Status Pill -->
-        <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-solar/30 bg-solar/10 backdrop-blur-md shadow-sm">
-          <span class="w-2 h-2 rounded-full bg-signal-emerald animate-pulse"></span>
-          <span class="font-mono text-xs font-bold text-solar tracking-wider uppercase">
-            ⚡ Algoritmo Cirúrgico 2026 • Varredura de Alta Conversão B2B
+        <!-- Live Status Pill com Radar Pulsante -->
+        <div class="inline-flex items-center gap-3 px-4 py-2 rounded-full border border-emerald-500/30 bg-emerald-950/40 backdrop-blur-md shadow-lg">
+          <div class="relative w-5 h-5 rounded-full overflow-hidden border border-emerald-400">
+            <img src="assets/images/radar-hud.png" alt="Radar Status" class="w-full h-full object-cover" />
+            <span class="absolute inset-0 rounded-full border border-emerald-300 animate-ping"></span>
+          </div>
+          <span class="font-mono text-xs font-bold text-emerald-300 tracking-wider uppercase">
+            ⚡ Radar Tático Ativo • Algoritmo de Varredura Geográfica 2026
           </span>
         </div>
 
@@ -270,50 +288,52 @@
           Detecte falhas invisíveis no Google Maps e feche contratos de <span class="text-gold-gradient">R$ 1.500 a R$ 5.000/mês.</span>
         </h1>
 
-        <!-- Subheadline com Autoridade e Alma -->
+        <!-- Subheadline Tática & Autoridade -->
         <p class="text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed font-normal">
-          O primeiro radar inteligente que combina <strong class="text-white font-semibold">extração de leads com WhatsApp validado</strong>, 
-          auditoria cirúrgica de <strong class="text-white font-semibold">22 pontos</strong>, aferição de postagens recentes (<strong class="text-solar font-semibold">Padrão GBP Check</strong>), 
+          O primeiro radar inteligente que combina <strong class="text-white font-semibold">extração cirúrgica com WhatsApp validado</strong>, 
+          auditoria de <strong class="text-white font-semibold">22 pontos de SEO Local</strong>, aferição de <strong class="text-emerald-400 font-semibold">inatividade e postagens recentes</strong>, 
           detecção de <strong class="text-white font-semibold">Tour Virtual 360°</strong> e <strong class="text-white font-semibold">GeoGrid GPS</strong> com relatórios executivos white-label prontos para envio.
         </p>
 
         <!-- CTA Buttons Row -->
         <div class="pt-4 flex flex-wrap items-center justify-center gap-4">
           <a href="painel/index.html" class="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-gradient-to-r from-solar via-amber-400 to-yellow-400 text-slate-950 font-extrabold text-base tracking-wide shadow-xl hover:shadow-solar/40 hover:scale-[1.03] transition-all">
-            <svg class="w-5 h-5 text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
+            <div class="w-5 h-5 rounded-full overflow-hidden border border-slate-900">
+              <img src="assets/images/radar-hud.png" alt="Radar Icon" class="w-full h-full object-cover" />
+            </div>
             <span>Iniciar Varredura no Painel</span>
           </a>
 
-          <a href="#demo" class="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl border border-white/15 bg-obsidian-800/80 hover:bg-obsidian-700 text-white font-bold text-base hover:border-solar/40 transition-all backdrop-blur-md">
-            <span>Ver Demonstração Interativa</span>
-            <svg class="w-4 h-4 text-solar" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+          <a href="#demo" class="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl border border-white/15 bg-obsidian-800/80 hover:bg-obsidian-700 text-white font-bold text-base hover:border-emerald-400/40 transition-all backdrop-blur-md">
+            <span>Ver Demonstração do Radar</span>
+            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
           </a>
 
-          <a href="https://wa.me/5511970558412?text=Ol%C3%A1%20Ricardo!%20Gostaria%20de%20conhecer%20o%20RadarMaps%20PRO%20e%20tirar%20algumas%20d%C3%BAvidas." target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl border border-emerald-500/30 bg-emerald-950/20 hover:bg-emerald-950/40 text-emerald-300 font-bold text-base hover:border-emerald-400/60 transition-all">
+          <a href="https://wa.me/5511970558412?text=Ol%C3%A1!%20Gostaria%20de%20falar%20com%20o%20Plant%C3%A3o%20de%20Vendas%20do%20RadarMaps%20PRO." target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl border border-emerald-500/30 bg-emerald-950/30 hover:bg-emerald-950/50 text-emerald-300 font-bold text-base hover:border-emerald-400/60 transition-all">
             <span class="text-lg">💬</span>
-            <span>WhatsApp VIP com Ricardo</span>
+            <span>Plantão de Vendas no WhatsApp</span>
           </a>
         </div>
 
         <!-- Trust Badges Bar (Sem micro-fontes) -->
         <div class="pt-8 flex flex-wrap items-center justify-center gap-3 text-xs sm:text-sm font-mono text-slate-300">
           <span class="px-3.5 py-1.5 rounded-lg bg-obsidian-800/90 border border-white/10 flex items-center gap-1.5">
-            <span class="text-solar">✓</span> Extração Ilimitada
+            <span class="text-emerald-400">✓</span> Extração Ilimitada
           </span>
           <span class="px-3.5 py-1.5 rounded-lg bg-obsidian-800/90 border border-white/10 flex items-center gap-1.5">
-            <span class="text-solar">✓</span> Auditoria 22 Itens
+            <span class="text-emerald-400">✓</span> Auditoria 22 Itens
           </span>
           <span class="px-3.5 py-1.5 rounded-lg bg-obsidian-800/90 border border-white/10 flex items-center gap-1.5">
-            <span class="text-solar">✓</span> Padrão GBP Check (Postagens)
+            <span class="text-emerald-400">✓</span> Aferição de Inatividade
           </span>
           <span class="px-3.5 py-1.5 rounded-lg bg-obsidian-800/90 border border-white/10 flex items-center gap-1.5">
-            <span class="text-solar">✓</span> Detecção Tour 360°
+            <span class="text-emerald-400">✓</span> Detecção Tour 360°
           </span>
           <span class="px-3.5 py-1.5 rounded-lg bg-obsidian-800/90 border border-white/10 flex items-center gap-1.5">
-            <span class="text-solar">✓</span> GeoGrid GPS 1-20km
+            <span class="text-emerald-400">✓</span> GeoGrid GPS 1-20km
           </span>
           <span class="px-3.5 py-1.5 rounded-lg bg-obsidian-800/90 border border-white/10 flex items-center gap-1.5">
-            <span class="text-solar">✓</span> Relatório White-Label
+            <span class="text-emerald-400">✓</span> Relatório White-Label
           </span>
         </div>
 
@@ -323,10 +343,10 @@
       <!-- 4. HUD TÁTICO AO VIVO: CONSOLE RADAR MAPS  -->
       <!-- ========================================== -->
       <div id="demo" class="mt-16 sm:mt-24 max-w-5xl mx-auto">
-        <div class="luxury-card rounded-3xl p-2 sm:p-3 border border-solar/30 shadow-2xl relative">
+        <div class="luxury-card rounded-3xl p-2 sm:p-3 border border-emerald-500/30 shadow-2xl relative">
           
           <!-- Top Window Controls -->
-          <div class="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-obsidian-900/80 rounded-t-2xl">
+          <div class="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-obsidian-900/90 rounded-t-2xl">
             <div class="flex items-center gap-2">
               <span class="w-3 h-3 rounded-full bg-rose-500/80"></span>
               <span class="w-3 h-3 rounded-full bg-amber-500/80"></span>
@@ -334,20 +354,20 @@
               <span class="ml-3 font-mono text-xs text-slate-400">radar.radarmaps.pro/live-hud</span>
             </div>
             <div class="flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-signal-emerald animate-ping"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-signal-emerald animate-ping"></span>
               <span class="font-mono text-xs text-emerald-400 font-bold uppercase tracking-wider">Telemetria em Tempo Real</span>
             </div>
           </div>
 
           <!-- Live Interactive Tabs Selector -->
           <div class="grid grid-cols-3 border-b border-white/10 bg-obsidian-800/50">
-            <button id="tabDemoGeoGrid" onclick="switchDemoTab('geogrid')" class="demo-tab-btn py-3.5 px-3 text-xs sm:text-sm font-bold border-b-2 border-solar text-solar flex items-center justify-center gap-2 transition-all">
+            <button id="tabDemoGeoGrid" onclick="switchDemoTab('geogrid')" class="demo-tab-btn py-3.5 px-3 text-xs sm:text-sm font-bold border-b-2 border-emerald-400 text-emerald-400 flex items-center justify-center gap-2 transition-all">
               <span>🎯</span>
               <span>GeoGrid GPS de Ranking</span>
             </button>
             <button id="tabDemoAuditoria" onclick="switchDemoTab('auditoria')" class="demo-tab-btn py-3.5 px-3 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-white flex items-center justify-center gap-2 transition-all">
               <span>📋</span>
-              <span>Auditoria 22 Itens & GBP Check</span>
+              <span>Auditoria 22 Itens & Inatividade</span>
             </button>
             <button id="tabDemoPitch" onclick="switchDemoTab('pitch')" class="demo-tab-btn py-3.5 px-3 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-white flex items-center justify-center gap-2 transition-all">
               <span>💬</span>
@@ -359,17 +379,20 @@
           <div id="contentDemoGeoGrid" class="p-6 sm:p-8">
             <div class="grid lg:grid-cols-12 gap-8 items-center">
               
-              <!-- 9-Point Interactive Grid -->
-              <div class="lg:col-span-6 bg-obsidian-900/90 rounded-2xl p-6 border border-white/10 relative overflow-hidden">
-                <div class="absolute inset-0 radar-grid-bg opacity-30 pointer-events-none"></div>
+              <!-- 9-Point Interactive Grid com Radar HUD de Fundo -->
+              <div class="lg:col-span-6 bg-obsidian-900/95 rounded-2xl p-6 border border-white/10 relative overflow-hidden">
+                <!-- Fundo sutil do radar real do print -->
+                <div class="absolute inset-0 flex items-center justify-center opacity-15 pointer-events-none">
+                  <img src="assets/images/radar-hud.png" alt="Radar HUD" class="w-80 h-80 object-contain animate-spin-slow" />
+                </div>
                 
-                <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center justify-between mb-4 relative z-10">
                   <span class="font-mono text-xs text-slate-400 uppercase tracking-wider">Mapa de Calor (Raio 5.0 km)</span>
-                  <span class="text-xs font-mono text-solar bg-solar/10 px-2.5 py-1 rounded-md border border-solar/20">9 Pontos GPS</span>
+                  <span class="text-xs font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/30">9 Pontos GPS</span>
                 </div>
 
                 <!-- Interactive 9-Pin Grid -->
-                <div class="grid grid-cols-3 gap-3.5 my-2">
+                <div class="grid grid-cols-3 gap-3.5 my-2 relative z-10">
                   <button onclick="selectPin(0, '#1', '0.0 km (Centro)', 'Domina o Top 3 no raio imediato. Fortaleça postagens semanais.', 'bg-emerald-500 text-slate-950', 'Baixo (R$ 0/mês)')" class="pin-btn aspect-square rounded-2xl font-mono text-base font-black flex flex-col items-center justify-center transition-all bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20 hover:scale-105 ring-2 ring-white">
                     <span>#1</span>
                     <span class="text-[10px] font-sans font-semibold opacity-90">Centro</span>
@@ -386,7 +409,7 @@
                     <span>#3</span>
                     <span class="text-[10px] font-sans font-semibold opacity-90">Oeste</span>
                   </button>
-                  <button onclick="selectPin(4, '#1', 'Sede da Empresa', 'Ponto de origem. Perfeito, mas perde relevância assim que o consumidor se afasta 800m.', 'bg-emerald-500 text-slate-950', 'Excelente')", class="pin-btn aspect-square rounded-2xl font-mono text-base font-black flex flex-col items-center justify-center transition-all bg-emerald-500 text-slate-950 shadow-lg ring-4 ring-solar hover:scale-105">
+                  <button onclick="selectPin(4, '#1', 'Sede da Empresa', 'Ponto de origem. Perfeito, mas perde relevância assim que o consumidor se afasta 800m.', 'bg-emerald-500 text-slate-950', 'Excelente')" class="pin-btn aspect-square rounded-2xl font-mono text-base font-black flex flex-col items-center justify-center transition-all bg-emerald-500 text-slate-950 shadow-lg ring-4 ring-solar hover:scale-105">
                     <span>#1</span>
                     <span class="text-[10px] font-sans font-semibold opacity-90">Sede</span>
                   </button>
@@ -408,7 +431,7 @@
                   </button>
                 </div>
 
-                <p class="text-center font-mono text-[11px] text-slate-400 mt-4">
+                <p class="text-center font-mono text-[11px] text-slate-400 mt-4 relative z-10">
                   💡 Clique nos números para simular a auditoria geográfica em tempo real
                 </p>
               </div>
@@ -418,7 +441,7 @@
                 <div class="p-5 rounded-2xl bg-obsidian-800/80 border border-white/10 space-y-4">
                   <div class="flex items-center justify-between">
                     <div>
-                      <span class="font-mono text-xs text-solar uppercase font-bold tracking-wider">Telemetria de Posição</span>
+                      <span class="font-mono text-xs text-emerald-400 uppercase font-bold tracking-wider">Telemetria de Posição</span>
                       <h4 class="text-lg font-bold text-white mt-0.5">Clínica Odonto Sorriso Tatuapé</h4>
                     </div>
                     <span id="pinBadgePosition" class="font-mono text-2xl font-black px-3.5 py-1.5 rounded-xl bg-emerald-500 text-slate-950 shadow-md">#1</span>
@@ -444,7 +467,7 @@
 
                   <div class="flex items-center justify-between pt-2">
                     <span class="font-mono text-xs text-slate-400">Lat: -23.5412 • Lng: -46.5742</span>
-                    <a href="painel/index.html" class="inline-flex items-center gap-1.5 text-xs font-bold text-solar hover:underline font-mono">
+                    <a href="painel/index.html" class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400 hover:underline font-mono">
                       <span>Auditar Meus Clientes</span>
                       <span>→</span>
                     </a>
@@ -455,7 +478,7 @@
             </div>
           </div>
 
-          <!-- TAB 2: AUDITORIA 22 ITENS & PADRÃO GBP CHECK -->
+          <!-- TAB 2: AUDITORIA 22 ITENS & INATIVIDADE DE POSTAGENS -->
           <div id="contentDemoAuditoria" class="p-6 sm:p-8 hidden">
             <div class="grid lg:grid-cols-12 gap-8">
               
@@ -480,7 +503,7 @@
                     <span class="text-xs text-slate-400">/mês para a concorrência</span>
                   </div>
                   <p class="text-xs text-slate-300 mt-2 leading-relaxed">
-                    Com base no ticket médio odontológico e taxa de conversão perdida pela ausência de Tour 360°, agendamento e postagens.
+                    Com base no ticket médio odontológico e taxa de conversão perdida pela ausência de Tour 360°, agendamento e inatividade de postagens.
                   </p>
                 </div>
 
@@ -507,10 +530,10 @@
                     <span class="text-rose-500 text-lg">✕</span>
                     <div>
                       <div class="flex items-center gap-2">
-                        <span class="text-sm font-bold text-white">Frequência de Postagens no Google (Padrão GBP Check)</span>
+                        <span class="text-sm font-bold text-white">Frequência de Postagens no Google Maps</span>
                         <span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 text-[10px] font-mono font-bold">34 DIAS SEM POST</span>
                       </div>
-                      <p class="text-xs text-slate-400 mt-0.5">O perfil está estagnado. O algoritmo do Google rebaixa fichas que passam mais de 7 dias sem postagens de produtos/ofertas.</p>
+                      <p class="text-xs text-slate-400 mt-0.5">O perfil está estagnado. O algoritmo do Google rebaixa fichas que passam mais de 7 dias sem postagens de produtos, fotos ou ofertas.</p>
                     </div>
                   </div>
 
@@ -558,7 +581,7 @@
             <div class="max-w-3xl mx-auto space-y-5">
               <div class="flex items-center justify-between">
                 <div>
-                  <span class="font-mono text-xs text-solar font-bold uppercase tracking-wider">Script de Abordagem Cirúrgico</span>
+                  <span class="font-mono text-xs text-emerald-400 font-bold uppercase tracking-wider">Script de Abordagem Cirúrgico</span>
                   <h4 class="text-lg font-bold text-white">Mensagem Personalizada Gerada Automaticamente</h4>
                 </div>
                 <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 font-mono text-xs font-bold flex items-center gap-1.5">
@@ -570,14 +593,14 @@
               <!-- Message Bubble -->
               <div class="p-5 sm:p-6 rounded-2xl bg-obsidian-900 border border-white/10 text-slate-200 font-mono text-xs sm:text-sm leading-relaxed space-y-3">
                 <p>Olá, Dr. Responsável da <strong>Clínica Odonto Sorriso</strong>! Tudo bem?</p>
-                <p>Aqui é o Ricardo, especialista em posicionamento no Google Maps na região do Tatuapé.</p>
-                <p>Fiz uma auditoria tática gratuita do perfil de vocês no Google Maps e identifiquei <strong>3 falhas críticas</strong> que estão custando cerca de <span class="text-solar font-bold">R$ 6.200/mês</span> em pacientes perdidos:</p>
+                <p>Aqui é da assessoria de posicionamento no Google Maps na região do Tatuapé.</p>
+                <p>Fizemos uma auditoria tática do perfil de vocês no Google Maps e identificamos <strong>3 falhas críticas</strong> que estão custando cerca de <span class="text-solar font-bold">R$ 6.200/mês</span> em pacientes perdidos:</p>
                 <ul class="list-disc pl-5 space-y-1 text-slate-300">
                   <li>O perfil está há <strong>34 dias sem novas postagens</strong> (o algoritmo rebaixa quem fica inativo);</li>
                   <li>Vocês não possuem <strong>Tour Virtual 360°</strong> ativo no Street View;</li>
                   <li>Na busca a 2km do consultório, vocês caem para a <strong>12ª posição</strong> do mapa.</li>
                 </ul>
-                <p>Preparei um relatório executivo de 22 páginas em PDF mostrando como recuperar o Top 3. Posso te enviar por aqui em 2 minutos?</p>
+                <p>Preparamos um relatório executivo de 22 páginas em PDF mostrando como recuperar o Top 3. Posso te enviar por aqui em 2 minutos?</p>
               </div>
 
               <!-- Action Row -->
@@ -585,8 +608,8 @@
                 <span class="text-xs text-slate-400 font-mono">
                   💡 O RadarMaps PRO já puxa o WhatsApp validado da empresa direto do Google Maps.
                 </span>
-                <a href="https://wa.me/5511970558412?text=Ol%C3%A1%20Ricardo!%20Adorei%20o%20script%20de%20WhatsApp%20do%20RadarMaps%20PRO.%20Quero%20acesso%20ao%20sistema!" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-signal-emerald hover:bg-signal-emeraldDark text-white font-bold text-xs sm:text-sm shadow-lg transition-all">
-                  <span>💬 Enviar Teste no WhatsApp</span>
+                <a href="https://wa.me/5511970558412?text=Ol%C3%A1!%20Gostaria%20de%20falar%20com%20o%20Plant%C3%A3o%20de%20Vendas%20do%20RadarMaps%20PRO." target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-signal-emerald hover:bg-signal-emeraldDark text-white font-bold text-xs sm:text-sm shadow-lg transition-all">
+                  <span>💬 Falar com Plantão de Vendas</span>
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                 </a>
               </div>
@@ -606,12 +629,12 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-8">
       
       <div class="max-w-2xl mb-16">
-        <span class="font-mono text-xs uppercase tracking-widest text-solar font-bold">Tecnologia Tática 2026</span>
+        <span class="font-mono text-xs uppercase tracking-widest text-emerald-400 font-bold">Tecnologia Tática 2026</span>
         <h2 class="mt-3 text-3xl sm:text-5xl font-display font-extrabold text-white tracking-tight">
           A engenharia completa dos 6 módulos do RadarMaps PRO.
         </h2>
         <p class="mt-4 text-slate-300 text-base sm:text-lg">
-          Cada ferramenta foi desenhada para uma única missão: transformar pesquisas locais em contratos mensais recorrentes para sua agência ou consultoria.
+          Cada módulo foi construído para uma única missão: transformar buscas no Google Maps em contratos mensais recorrentes para sua agência ou consultoria.
         </p>
       </div>
 
@@ -641,21 +664,21 @@
           </div>
         </div>
 
-        <!-- Módulo 2: Padrão GBP Check -->
-        <div id="gbp-check" class="luxury-card rounded-3xl p-8 relative overflow-hidden group border-solar/30">
+        <!-- Módulo 2: Aferição de Postagens e Inatividade -->
+        <div class="luxury-card rounded-3xl p-8 relative overflow-hidden group border-emerald-500/30">
           <div class="flex items-center justify-between mb-6">
-            <span class="w-12 h-12 rounded-2xl bg-solar/10 border border-solar/30 flex items-center justify-center text-solar text-xl font-bold">
+            <span class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-xl font-bold">
               02
             </span>
             <span class="px-3 py-1 rounded-full bg-signal-emerald/20 text-emerald-400 font-mono text-xs font-bold">
-              PADRÃO GBP CHECK
+              ALGORITMO DE ATIVIDADE
             </span>
           </div>
           <h3 class="text-xl font-display font-extrabold text-white">
-            Aferição de Postagens Recentes no Google
+            Aferição de Postagens Recentes no Google Maps
           </h3>
           <p class="mt-3 text-slate-300 text-sm leading-relaxed">
-            Identifique com exatidão há quantos dias o cliente não posta nada no perfil do Google Maps. Mostre que o perfil dele está inativo e perdendo autoridade para concorrentes locais que postam semanalmente.
+            Identifique com exatidão há quantos dias o cliente não publica nada no perfil do Google Maps. Mostre que o perfil dele está inativo e perdendo autoridade para concorrentes locais que postam semanalmente.
           </p>
           <div class="mt-5 p-3 rounded-xl bg-obsidian-900/80 border border-white/10 font-mono text-xs text-slate-300">
             ⚠️ <em>"Seu perfil está há 38 dias sem postagens no Google. O algoritmo penaliza perfis parados."</em>
@@ -669,7 +692,7 @@
               03
             </span>
             <span class="px-3 py-1 rounded-full bg-white/10 font-mono text-xs text-slate-300 font-bold">
-              EXCLUSIVO RICARDO
+              DIFERENCIAL DE ALTO VALOR
             </span>
           </div>
           <h3 class="text-xl font-display font-extrabold text-white">
@@ -758,7 +781,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-8">
       
       <div class="text-center max-w-3xl mx-auto mb-16">
-        <span class="font-mono text-xs uppercase tracking-widest text-solar font-bold">A Quebra de Paradigma</span>
+        <span class="font-mono text-xs uppercase tracking-widest text-emerald-400 font-bold">A Quebra de Paradigma</span>
         <h2 class="mt-3 text-3xl sm:text-5xl font-display font-extrabold text-white tracking-tight">
           Pare de prospectar como um amador.
         </h2>
@@ -804,29 +827,29 @@
         <div class="luxury-card-gold p-8 sm:p-10 rounded-3xl relative space-y-6">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-3">
-              <span class="w-10 h-10 rounded-xl bg-solar/20 border border-solar flex items-center justify-center text-solar font-bold text-lg">✓</span>
+              <span class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400 flex items-center justify-center text-emerald-400 font-bold text-lg">✓</span>
               <h3 class="text-xl font-bold text-white">Com RadarMaps PRO</h3>
             </div>
-            <span class="px-3 py-1 rounded-full bg-solar text-slate-950 font-mono text-xs font-black">
+            <span class="px-3 py-1 rounded-full bg-emerald-400 text-slate-950 font-mono text-xs font-black">
               CONSULTOR DE ELITE
             </span>
           </div>
 
           <ul class="space-y-4 text-sm text-slate-200">
             <li class="flex items-start gap-3">
-              <span class="text-solar font-bold text-base mt-0.5">✓</span>
+              <span class="text-emerald-400 font-bold text-base mt-0.5">✓</span>
               <span>Extração instantânea com filtro exclusivo de WhatsApp válido e celular.</span>
             </li>
             <li class="flex items-start gap-3">
-              <span class="text-solar font-bold text-base mt-0.5">✓</span>
+              <span class="text-emerald-400 font-bold text-base mt-0.5">✓</span>
               <span>Auditoria completa de 22 itens gerada em menos de 30 segundos.</span>
             </li>
             <li class="flex items-start gap-3">
-              <span class="text-solar font-bold text-base mt-0.5">✓</span>
+              <span class="text-emerald-400 font-bold text-base mt-0.5">✓</span>
               <span>Abordagem cirúrgica: <em>"Seu perfil está há 34 dias sem postar e na posição #12 do bairro"</em>.</span>
             </li>
             <li class="flex items-start gap-3">
-              <span class="text-solar font-bold text-base mt-0.5">✓</span>
+              <span class="text-emerald-400 font-bold text-base mt-0.5">✓</span>
               <span>O cliente vê a perda financeira em números e contrata sua consultoria recorrente.</span>
             </li>
           </ul>
@@ -848,7 +871,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-8">
       
       <div class="max-w-3xl mx-auto text-center mb-16">
-        <span class="font-mono text-xs uppercase tracking-widest text-solar font-bold">Simulador Financeiro</span>
+        <span class="font-mono text-xs uppercase tracking-widest text-emerald-400 font-bold">Simulador Financeiro</span>
         <h2 class="mt-3 text-3xl sm:text-5xl font-display font-extrabold text-white tracking-tight">
           Quanto o RadarMaps PRO pode render para você?
         </h2>
@@ -938,7 +961,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-8">
       
       <div class="text-center max-w-3xl mx-auto mb-16">
-        <span class="font-mono text-xs uppercase tracking-widest text-solar font-bold">Investimento & Licenças</span>
+        <span class="font-mono text-xs uppercase tracking-widest text-emerald-400 font-bold">Investimento & Licenças</span>
         <h2 class="mt-3 text-3xl sm:text-5xl font-display font-extrabold text-white tracking-tight">
           Acesso liberado sem limites de extração.
         </h2>
@@ -965,33 +988,33 @@
 
             <ul class="mt-8 space-y-3.5 text-sm text-slate-300">
               <li class="flex items-center gap-2.5">
-                <span class="text-solar font-bold">✓</span>
+                <span class="text-emerald-400 font-bold">✓</span>
                 <span>Extração Ilimitada no Google Maps</span>
               </li>
               <li class="flex items-center gap-2.5">
-                <span class="text-solar font-bold">✓</span>
+                <span class="text-emerald-400 font-bold">✓</span>
                 <span>Validação Automática de WhatsApp e Celular</span>
               </li>
               <li class="flex items-center gap-2.5">
-                <span class="text-solar font-bold">✓</span>
+                <span class="text-emerald-400 font-bold">✓</span>
                 <span>Auditoria Cirúrgica de 22 Pontos</span>
               </li>
               <li class="flex items-center gap-2.5">
-                <span class="text-solar font-bold">✓</span>
-                <span>Padrão GBP Check (Postagens Recentes)</span>
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span>Aferição de Inatividade de Postagens</span>
               </li>
               <li class="flex items-center gap-2.5">
-                <span class="text-solar font-bold">✓</span>
+                <span class="text-emerald-400 font-bold">✓</span>
                 <span>GeoGrid GPS de 1km a 20km</span>
               </li>
               <li class="flex items-center gap-2.5">
-                <span class="text-solar font-bold">✓</span>
+                <span class="text-emerald-400 font-bold">✓</span>
                 <span>Relatórios White-Label em PDF</span>
               </li>
             </ul>
           </div>
 
-          <a href="https://wa.me/5511970558412?text=Ol%C3%A1%20Ricardo!%20Quero%20assinar%20o%20Plano%20Mensal%20Pro%20(R%24%2097%2Fm%C3%AAs)%20do%20RadarMaps%20PRO." target="_blank" rel="noopener noreferrer" class="w-full py-4 rounded-xl border border-white/20 bg-obsidian-800 hover:bg-obsidian-700 text-white font-bold text-sm text-center tracking-wide transition-all">
+          <a href="https://wa.me/5511970558412?text=Ol%C3%A1!%20Quero%20assinar%20o%20Plano%20Mensal%20Pro%20(R%24%2097%2Fm%C3%AAs)%20com%20o%20Plant%C3%A3o%20de%20Vendas." target="_blank" rel="noopener noreferrer" class="w-full py-4 rounded-xl border border-white/20 bg-obsidian-800 hover:bg-obsidian-700 text-white font-bold text-sm text-center tracking-wide transition-all">
             Assinar Mensal Pro
           </a>
         </div>
@@ -1030,7 +1053,7 @@
               </li>
               <li class="flex items-center gap-2.5">
                 <span class="text-solar font-bold">✓</span>
-                <span>Auditoria de 22 Itens + GBP Check sem travas</span>
+                <span>Auditoria de 22 Itens + Aferição de Postagens sem travas</span>
               </li>
               <li class="flex items-center gap-2.5">
                 <span class="text-solar font-bold">✓</span>
@@ -1038,7 +1061,7 @@
               </li>
               <li class="flex items-center gap-2.5">
                 <span class="text-solar font-bold">✓</span>
-                <span>Acesso Direto ao Suporte VIP no WhatsApp com Ricardo</span>
+                <span>Acesso Direto ao Plantão de Vendas & Suporte no WhatsApp</span>
               </li>
               <li class="flex items-center gap-2.5">
                 <span class="text-solar font-bold">✓</span>
@@ -1047,7 +1070,7 @@
             </ul>
           </div>
 
-          <a href="https://wa.me/5511970558412?text=Ol%C3%A1%20Ricardo!%20Quero%20aproveitar%20a%20condi%C3%A7%C3%A3o%20especial%20do%20Plano%20Anual%20VIP%20(R%24%20497%2Fano)%20do%20RadarMaps%20PRO!" target="_blank" rel="noopener noreferrer" class="w-full py-4 rounded-xl bg-gradient-to-r from-solar via-amber-400 to-yellow-400 text-slate-950 font-black text-sm text-center tracking-wide shadow-xl hover:scale-[1.02] transition-all">
+          <a href="https://wa.me/5511970558412?text=Ol%C3%A1!%20Quero%20aproveitar%20o%20Plano%20Anual%20VIP%20(R%24%20497%2Fano)%20com%20o%20Plant%C3%A3o%20de%20Vendas%20do%20RadarMaps%20PRO." target="_blank" rel="noopener noreferrer" class="w-full py-4 rounded-xl bg-gradient-to-r from-solar via-amber-400 to-yellow-400 text-slate-950 font-black text-sm text-center tracking-wide shadow-xl hover:scale-[1.02] transition-all">
             Quero o Plano Anual VIP (Acesso Imediato)
           </a>
         </div>
@@ -1057,13 +1080,13 @@
       <!-- Trust Assurance -->
       <div class="mt-12 flex flex-wrap justify-center gap-8 text-xs font-mono text-slate-400">
         <span class="flex items-center gap-2">
-          <span class="text-solar">🛡️</span> Pagamento Seguro via PIX ou Cartão em até 12x
+          <span class="text-emerald-400">🛡️</span> Pagamento Seguro via PIX ou Cartão em até 12x
         </span>
         <span class="flex items-center gap-2">
-          <span class="text-solar">⚡</span> Liberação Imediata de Chave de Licença
+          <span class="text-emerald-400">⚡</span> Liberação Imediata de Chave de Licença
         </span>
         <span class="flex items-center gap-2">
-          <span class="text-solar">💬</span> Atendimento Direto com Ricardo (11 97055-8412)
+          <span class="text-emerald-400">💬</span> Plantão Comercial & Atendimento: (11) 97055-8412
         </span>
       </div>
 
@@ -1077,7 +1100,7 @@
     <div class="max-w-4xl mx-auto px-4 sm:px-8">
       
       <div class="text-center mb-16">
-        <span class="font-mono text-xs uppercase tracking-widest text-solar font-bold">Dúvidas Frequentes</span>
+        <span class="font-mono text-xs uppercase tracking-widest text-emerald-400 font-bold">Dúvidas Frequentes</span>
         <h2 class="mt-3 text-3xl sm:text-4xl font-display font-extrabold text-white">
           Perguntas Frequentes sobre o RadarMaps PRO
         </h2>
@@ -1088,8 +1111,8 @@
         <!-- FAQ 1 -->
         <div class="luxury-card rounded-2xl p-6 cursor-pointer" onclick="toggleFaq(this)">
           <div class="flex items-center justify-between">
-            <h4 class="text-base sm:text-lg font-bold text-white">Como funciona a aferição de postagens recentes (Padrão GBP Check)?</h4>
-            <span class="faq-icon text-solar font-bold text-xl transition-transform duration-200">+</span>
+            <h4 class="text-base sm:text-lg font-bold text-white">Como funciona a aferição de postagens recentes no Google Maps?</h4>
+            <span class="faq-icon text-emerald-400 font-bold text-xl transition-transform duration-200">+</span>
           </div>
           <div class="faq-content hidden mt-4 text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-3">
             O algoritmo do RadarMaps PRO se conecta à ficha oficial da empresa no Google Maps e afere a data da última postagem de produto, oferta ou atualização. Se a empresa estiver há mais de 7, 15 ou 30 dias sem publicar nada, a plataforma alerta o consultor, que usa esse argumento de urgência para fechar contratos de gestão mensal de perfil.
@@ -1100,7 +1123,7 @@
         <div class="luxury-card rounded-2xl p-6 cursor-pointer" onclick="toggleFaq(this)">
           <div class="flex items-center justify-between">
             <h4 class="text-base sm:text-lg font-bold text-white">Eu preciso comprar chaves de API caras para usar o sistema?</h4>
-            <span class="faq-icon text-solar font-bold text-xl transition-transform duration-200">+</span>
+            <span class="faq-icon text-emerald-400 font-bold text-xl transition-transform duration-200">+</span>
           </div>
           <div class="faq-content hidden mt-4 text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-3">
             Não! O RadarMaps PRO já vem pronto para uso, configurado com inteligência de busca integrada. Você não precisa se preocupar com infraestrutura técnica, cobranças em dólar ou integrações complicadas.
@@ -1111,7 +1134,7 @@
         <div class="luxury-card rounded-2xl p-6 cursor-pointer" onclick="toggleFaq(this)">
           <div class="flex items-center justify-between">
             <h4 class="text-base sm:text-lg font-bold text-white">O relatório PDF sai com o nome do RadarMaps ou com a marca da minha agência?</h4>
-            <span class="faq-icon text-solar font-bold text-xl transition-transform duration-200">+</span>
+            <span class="faq-icon text-emerald-400 font-bold text-xl transition-transform duration-200">+</span>
           </div>
           <div class="faq-content hidden mt-4 text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-3">
             O relatório é <strong>100% White-Label</strong>! Você personaliza o nome da sua agência, seu logotipo, telefone de contato e termos de consultoria. O seu cliente recebe um dossiê corporativo assinado exclusivamente por você.
@@ -1122,10 +1145,10 @@
         <div class="luxury-card rounded-2xl p-6 cursor-pointer" onclick="toggleFaq(this)">
           <div class="flex items-center justify-between">
             <h4 class="text-base sm:text-lg font-bold text-white">Como recebo meu acesso após o pagamento?</h4>
-            <span class="faq-icon text-solar font-bold text-xl transition-transform duration-200">+</span>
+            <span class="faq-icon text-emerald-400 font-bold text-xl transition-transform duration-200">+</span>
           </div>
           <div class="faq-content hidden mt-4 text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-3">
-            Assim que você confirmar o pagamento via PIX ou Cartão, sua Chave de Licença Exclusiva é ativada no sistema pelo Ricardo e enviada diretamente para o seu WhatsApp e E-mail, acompanhada de um passo a passo em vídeo.
+            Assim que você confirmar o pagamento via PIX ou Cartão, sua Chave de Licença Exclusiva é ativada no sistema pelo Plantão de Vendas e enviada diretamente para o seu WhatsApp e E-mail, acompanhada de instruções completas de acesso.
           </div>
         </div>
 
@@ -1133,10 +1156,10 @@
         <div class="luxury-card rounded-2xl p-6 cursor-pointer" onclick="toggleFaq(this)">
           <div class="flex items-center justify-between">
             <h4 class="text-base sm:text-lg font-bold text-white">Tenho suporte caso precise de ajuda com prospecções?</h4>
-            <span class="faq-icon text-solar font-bold text-xl transition-transform duration-200">+</span>
+            <span class="faq-icon text-emerald-400 font-bold text-xl transition-transform duration-200">+</span>
           </div>
           <div class="faq-content hidden mt-4 text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-3">
-            Sim! Você conta com canal direto de suporte VIP via WhatsApp com o próprio Ricardo ((11) 97055-8412), tirando dúvidas técnicas, estratégicas e de abordagem comercial.
+            Sim! Você conta com canal direto com o Plantão Comercial via WhatsApp ((11) 97055-8412), tirando dúvidas técnicas, estratégicas e de abordagem comercial.
           </div>
         </div>
 
@@ -1155,9 +1178,9 @@
         
         <!-- Coluna 1: Marca & Descrição -->
         <div class="space-y-4 md:col-span-2">
-          <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-lg bg-solar/10 border border-solar/40 flex items-center justify-center text-solar">
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
+          <div class="flex items-center gap-3">
+            <div class="relative w-9 h-9 rounded-full overflow-hidden border border-emerald-400 bg-black flex items-center justify-center">
+              <img src="assets/images/radar-hud.png" alt="RadarMaps Logo" class="w-full h-full object-cover" />
             </div>
             <span class="font-display font-extrabold text-lg text-white">RadarMaps</span>
             <span class="px-1.5 py-0.5 text-[10px] font-black rounded bg-solar text-slate-950 font-mono">PRO</span>
@@ -1176,23 +1199,23 @@
           <span class="font-mono text-xs font-bold text-white uppercase tracking-wider block">Navegação</span>
           <ul class="space-y-2 text-xs">
             <li><a href="#demo" class="hover:text-solar transition-colors">Simulador Radar</a></li>
-            <li><a href="#modulos" class="hover:text-solar transition-colors">Os 6 Módulos Táticos</a></li>
-            <li><a href="#gbp-check" class="hover:text-solar transition-colors">Padrão GBP Check</a></li>
+            <li><a href="#modulos" class="hover:text-solar transition-colors">Módulos Táticos</a></li>
+            <li><a href="#comparativo" class="hover:text-solar transition-colors">Método Tático</a></li>
             <li><a href="#roi" class="hover:text-solar transition-colors">Calculadora ROI</a></li>
             <li><a href="#planos" class="hover:text-solar transition-colors">Planos & Preços</a></li>
           </ul>
         </div>
 
-        <!-- Coluna 3: Acesso & Contato Oficial -->
+        <!-- Coluna 3: Plantão de Vendas & Administração -->
         <div class="space-y-3">
-          <span class="font-mono text-xs font-bold text-white uppercase tracking-wider block">Atendimento Oficial</span>
+          <span class="font-mono text-xs font-bold text-white uppercase tracking-wider block">Plantão & Administração</span>
           <div class="space-y-2 text-xs">
-            <p class="font-semibold text-white">Ricardo Rick Bony</p>
+            <p class="font-semibold text-white">Plantão de Vendas & Licenças</p>
             <p class="font-mono">WhatsApp: (11) 97055-8412</p>
             <p class="font-mono text-slate-500">São Paulo — SP • Brasil</p>
             <div class="pt-2">
-              <a href="painel/index.html" class="inline-block px-3 py-1.5 rounded-lg bg-obsidian-800 border border-white/10 text-solar hover:text-white text-xs font-bold font-mono transition-colors">
-                🔐 Login do Assinante
+              <a href="painel/index.html" class="inline-block px-3 py-1.5 rounded-lg bg-obsidian-800 border border-white/10 text-emerald-400 hover:text-white text-xs font-bold font-mono transition-colors">
+                🔐 Acesso do Assinante
               </a>
             </div>
           </div>
@@ -1201,7 +1224,7 @@
       </div>
 
       <div class="pt-8 flex flex-wrap items-center justify-between gap-4 text-xs font-mono text-slate-500">
-        <p>© 2026 RadarMaps PRO • Todos os direitos reservados. Padrão Ricardo & Severino.</p>
+        <p>© 2026 RadarMaps PRO • Todos os direitos reservados. Plataforma de Inteligência Comercial.</p>
         <p>Google Maps™ é marca registrada da Google LLC. Plataforma independente de inteligência B2B.</p>
       </div>
 
@@ -1209,20 +1232,22 @@
   </footer>
 
   <!-- ========================================== -->
-  <!-- 11. BOTÃO INTELIGENTE DE WHATSAPP (REALTIME)-->
+  <!-- 11. BOTÃO INTELIGENTE DE WHATSAPP (PLANTÃO DE VENDAS) -->
   <!-- ========================================== -->
   <div id="smartWhatsAppContainer" class="fixed bottom-6 right-6 z-50">
-    <a id="smartWhatsAppBtn" href="https://wa.me/5511970558412?text=Ol%C3%A1%20Ricardo!%20Vim%20pelo%20RadarMaps%20PRO%20e%20gostaria%20de%20um%20atendimento%20VIP." target="_blank" rel="noopener noreferrer" class="group flex items-center gap-3 px-4 py-3 rounded-2xl bg-signal-emerald hover:bg-signal-emeraldDark text-white font-bold text-sm shadow-2xl hover:scale-105 transition-all ring-2 ring-emerald-400/40">
+    <a id="smartWhatsAppBtn" href="https://wa.me/5511970558412?text=Ol%C3%A1!%20Gostaria%20de%20falar%20com%20o%20Plant%C3%A3o%20de%20Vendas%20do%20RadarMaps%20PRO%20sobre%20as%20licen%C3%A7as." target="_blank" rel="noopener noreferrer" class="group flex items-center gap-3 px-4 py-3 rounded-2xl bg-signal-emerald hover:bg-signal-emeraldDark text-white font-bold text-sm shadow-2xl hover:scale-105 transition-all ring-2 ring-emerald-400/50">
       <div class="relative">
-        <span class="text-xl">💬</span>
+        <div class="w-8 h-8 rounded-full overflow-hidden border border-white/60">
+          <img src="assets/images/radar-hud.png" alt="Radar Plantão" class="w-full h-full object-cover" />
+        </div>
         <span id="waStatusDot" class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-white ring-2 ring-emerald-600 animate-pulse"></span>
       </div>
       <div class="flex flex-col text-left">
         <span id="waStatusText" class="text-[10px] uppercase font-mono tracking-wider font-extrabold text-emerald-100">
-          Suporte VIP Online
+          Plantão de Vendas Online
         </span>
         <span class="text-xs font-extrabold text-white">
-          Falar com Ricardo
+          Plantão Comercial WhatsApp
         </span>
       </div>
     </a>
@@ -1239,11 +1264,11 @@
         const btn = document.getElementById('tabDemo' + t.charAt(0).toUpperCase() + t.slice(1));
         const content = document.getElementById('contentDemo' + t.charAt(0).toUpperCase() + t.slice(1));
         if (t === tab) {
-          btn.classList.add('border-solar', 'text-solar');
+          btn.classList.add('border-emerald-400', 'text-emerald-400');
           btn.classList.remove('border-transparent', 'text-slate-400');
           content.classList.remove('hidden');
         } else {
-          btn.classList.remove('border-solar', 'text-solar');
+          btn.classList.remove('border-emerald-400', 'text-emerald-400');
           btn.classList.add('border-transparent', 'text-slate-400');
           content.classList.add('hidden');
         }
@@ -1318,15 +1343,15 @@
         const dot = document.getElementById('waStatusDot');
         const text = document.getElementById('waStatusText');
 
-        // Horário de Atendimento VIP: Seg a Sex das 08h às 20h, Sábado das 09h às 15h
-        const isWeekday = day >= 1 && day <= 5 && hours >= 8 && hours < 20;
-        const isSaturday = day === 6 && hours >= 9 && hours < 15;
+        // Horário de Plantão de Vendas: Seg a Sex das 08h às 21h, Sábado das 09h às 18h
+        const isWeekday = day >= 1 && day <= 5 && hours >= 8 && hours < 21;
+        const isSaturday = day === 6 && hours >= 9 && hours < 18;
 
         if (isWeekday || isSaturday) {
-          text.textContent = 'Atendimento VIP Online';
+          text.textContent = 'Plantão de Vendas Online';
           dot.className = 'absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-white ring-2 ring-emerald-600 animate-pulse';
         } else {
-          text.textContent = 'Plantão WhatsApp';
+          text.textContent = 'Plantão Comercial WhatsApp';
           dot.className = 'absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-300 ring-2 ring-emerald-600';
         }
       } catch (e) {

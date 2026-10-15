@@ -160,7 +160,7 @@ function saveVerifiedPostsBusiness(empresaName, isVerified) {
 window.saveVerifiedPostsBusiness = saveVerifiedPostsBusiness;
 
 // --------------------------------------------------------------------------
-// 1.92 Módulo Cirúrgico de Auditoria de Postagens & Mídia (Padrão GBP Check)
+// 1.92 Módulo Cirúrgico de Auditoria de Postagens & Mídia Recente
 // --------------------------------------------------------------------------
 function getLeadPostDaysCache() {
   try {
@@ -1838,7 +1838,7 @@ function renderTable() {
               </a>
             </div>
             <div>
-              <button type="button" onclick="window.openPostAuditModal(${lead.id})" class="cursor-pointer transition-transform hover:scale-105 active:scale-95 text-left inline-block" title="Auditoria de Postagens & Mídia (Padrão GBP Check): Clique para definir dias sem postar">
+              <button type="button" onclick="window.openPostAuditModal(${lead.id})" class="cursor-pointer transition-transform hover:scale-105 active:scale-95 text-left inline-block" title="Auditoria de Postagens & Mídia Recente: Clique para definir dias sem postar">
                 <span class="badge-pill badge-${postAudit.badgeColor}">${postAudit.badgeLabel} ✎</span>
               </button>
             </div>
@@ -2386,7 +2386,7 @@ window.openDiagnostic = function(id) {
         <div class="flex-1">
           <div class="flex items-center justify-between gap-1">
             <span class="font-bold text-white">${p.nome}</span>
-            <button type="button" onclick="${btnClickAction}" title="${isPostPillar ? 'Auditoria Cirúrgica de Postagens & Mídia (GBP Check): Clique para definir dias sem postar' : 'Clique para alternar status deste pilar no diagnóstico'}" class="px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${btnBadgeColorClass}">
+            <button type="button" onclick="${btnClickAction}" title="${isPostPillar ? 'Auditoria Cirúrgica de Postagens & Mídia: Clique para definir dias sem postar' : 'Clique para alternar status deste pilar no diagnóstico'}" class="px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${btnBadgeColorClass}">
               ${btnBadgeText}
             </button>
           </div>
@@ -3691,7 +3691,7 @@ window.openWhiteLabelReport = function(lead) {
           <h2 class="text-2xl font-extrabold text-slate-800">Postagens & Mídia</h2>
         </div>
 
-        <!-- Diagnóstico de Postagens (Padrão GBP Check) -->
+        <!-- Diagnóstico de Postagens e Atividade Recente -->
         <div class="rounded-2xl border ${postAudit.isAtivo ? 'border-emerald-200 bg-emerald-50/40' : (postAudit.isAlerta ? 'border-amber-200 bg-amber-50/40' : 'border-rose-200 bg-rose-50/40')} p-6 text-center space-y-4 print-avoid-break">
           <div class="text-3xl">${postAudit.isAtivo ? '🌟' : (postAudit.isAlerta ? '⚠️' : '🚨')}</div>
           <h3 class="text-lg font-extrabold ${postAudit.isAtivo ? 'text-emerald-800' : (postAudit.isAlerta ? 'text-amber-800' : 'text-rose-800')}">
@@ -5142,7 +5142,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
                 updateMetrics();
                 renderTable();
 
-                showToast(`🎯 Perfil "${singleLead.empresa}" confirmado e auditado com precisão GBP!`);
+                showToast(`🎯 Perfil "${singleLead.empresa}" confirmado e auditado com precisão!`);
                 verifyContainer?.classList.add('hidden');
                 window.openDiagnostic(singleLead.id);
               } catch (err) {
