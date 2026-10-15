@@ -137,7 +137,7 @@ window.haversineDistanceMeters = haversineDistanceMeters;
 
 async function detectTour360ViaStreetViewMetadata(lat, lng, customKey = null) {
   if (typeof lat !== 'number' || typeof lng !== 'number') return null;
-  const key = customKey || State.settings?.googleApiKey || localStorage.getItem('leadmaps_google_maps_key');
+  const key = customKey || State.settings?.googleApiKey || localStorage.getItem('leadmaps_google_maps_key') || 'AIzaSyCpX4OvspP46gZecs5PO9-1ao5_XzQQFLQ';
   if (!key || !key.trim()) return null;
 
   try {
@@ -6346,7 +6346,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     const apiKeyEl = document.getElementById('settingApiKey');
     if (apiKeyEl) apiKeyEl.value = savedKey;
 
-    const savedMapsKey = localStorage.getItem('leadmaps_google_maps_key') || State.settings.googleApiKey || '';
+    const savedMapsKey = localStorage.getItem('leadmaps_google_maps_key') || State.settings.googleApiKey || 'AIzaSyCpX4OvspP46gZecs5PO9-1ao5_XzQQFLQ';
     const googleApiKeyEl = document.getElementById('settingGoogleApiKey');
     if (googleApiKeyEl) googleApiKeyEl.value = savedMapsKey;
 
