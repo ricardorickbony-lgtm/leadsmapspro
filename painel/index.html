@@ -2248,12 +2248,100 @@
     </div>
   </div>
 
+  <!-- Modal de Auditoria & Homologação de Tour 360° -->
+  <div id="tourAuditModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+    <div class="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-950 p-6 shadow-2xl space-y-5">
+      <!-- Header -->
+      <div class="flex items-start justify-between border-b border-slate-800 pb-3">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-500/20 text-base">📸</span>
+            <div>
+              <h3 class="text-base font-extrabold text-white">Auditoria & Homologação de Tour 360°</h3>
+              <p class="text-[11px] text-cyan-400 font-medium">Verificação de Fotos Esféricas e Street View no Google Maps</p>
+            </div>
+          </div>
+          <p class="mt-2 text-xs text-slate-300">
+            Empresa: <strong id="tourAuditModalLeadName" class="text-white"></strong>
+          </p>
+        </div>
+        <button type="button" onclick="window.closeTourAuditModal()" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer" aria-label="Fechar">✕</button>
+      </div>
+
+      <!-- Caixa de Status Técnico do Radar -->
+      <div id="tourAuditStatusBox" class="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs text-amber-200 space-y-1.5 leading-relaxed">
+        <p class="font-bold flex items-center gap-1.5 text-amber-300">
+          <span>🔍</span> <span id="tourAuditStatusTitle">Status do Radar Street View:</span>
+        </p>
+        <p id="tourAuditStatusDesc" class="text-[11px] text-slate-300 leading-normal">
+          A chave de API do Google Maps requer faturamento ativo para responder de forma 100% automatizada. Você pode conferir diretamente as fotos no Google Maps sem pagar nada ao Google.
+        </p>
+      </div>
+
+      <!-- Passo a Passo de Homologação em 1 Clique -->
+      <div class="space-y-3">
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">
+          ⚡ Passo a Passo de Validação (Zero Custo):
+        </label>
+        
+        <!-- Passo 1: Abrir Maps -->
+        <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-3 flex items-center justify-between gap-3">
+          <div class="space-y-0.5">
+            <p class="text-xs font-bold text-white">1. Conferir Fotos no Google Maps</p>
+            <p class="text-[11px] text-slate-400">Abre o perfil oficial no Maps para conferir a aba de fotos e Tour 360°.</p>
+          </div>
+          <a id="tourAuditMapsLink" href="#" target="_blank" rel="noopener noreferrer" class="btn-ghost-dark px-3 py-1.5 text-xs font-bold text-sky-400 border border-sky-500/40 hover:bg-sky-500/10 whitespace-nowrap cursor-pointer flex items-center gap-1">
+            <span>Maps ↗</span>
+          </a>
+        </div>
+
+        <!-- Passo 2: Decisão de 1 Clique -->
+        <div class="space-y-1.5">
+          <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            2. Defina o Status do Pilar com 1 Clique:
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <!-- Botão CONFORME -->
+            <button type="button" onclick="window.confirmTour360Status(true)" class="rounded-xl border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/25 p-3 text-left cursor-pointer transition-all hover:scale-[1.01]">
+              <div class="flex items-center gap-2">
+                <span class="text-base text-emerald-400 font-bold">✓</span>
+                <div>
+                  <p class="text-xs font-black text-emerald-400">Possui Tour 360°</p>
+                  <p class="text-[10px] text-emerald-300/80 font-medium">Marcar como Conforme</p>
+                </div>
+              </div>
+            </button>
+
+            <!-- Botão GARGALO -->
+            <button type="button" onclick="window.confirmTour360Status(false)" class="rounded-xl border border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/25 p-3 text-left cursor-pointer transition-all hover:scale-[1.01]">
+              <div class="flex items-center gap-2">
+                <span class="text-base text-rose-400 font-bold">✕</span>
+                <div>
+                  <p class="text-xs font-black text-rose-400">Sem Tour 360°</p>
+                  <p class="text-[10px] text-rose-300/80 font-medium">Manter como Gargalo de Venda</p>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="flex items-center justify-between border-t border-slate-800 pt-3 text-[11px] text-slate-400">
+        <span>💡 Atualiza Digital Health, 7 Pilares e memoriza no navegador</span>
+        <button type="button" onclick="window.closeTourAuditModal()" class="btn-ghost-dark px-3 py-1.5 text-xs font-semibold cursor-pointer">
+          Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Flutuante -->
   <div id="toastNotification" class="fixed bottom-5 left-1/2 z-[90] -translate-x-1/2 hidden rounded-xl border border-[color-mix(in_oklab,var(--emerald-signal)_40%,transparent)] bg-[color-mix(in_oklab,var(--surface-1)_95%,transparent)] px-4 py-2.5 text-sm font-semibold shadow-2xl backdrop-blur-xl text-white">
     <!-- Message injected here -->
   </div>
 
-  <script src="js/app.js?v=20261014_v7_plan900"></script>
-  <script src="js/security-shield.js?v=20261014_v7_plan900"></script>
+  <script src="js/app.js?v=20261015_v8_tour360"></script>
+  <script src="js/security-shield.js?v=20261015_v8_tour360"></script>
 </body>
 </html>

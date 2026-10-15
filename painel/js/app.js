@@ -259,16 +259,227 @@ async function verifyBusiness360TourDeep(lead, onResultCallback) {
 
           showToast(`📸 Tour 360° confirmado no Street View para ${lead.empresa}!`);
           if (typeof onResultCallback === 'function') onResultCallback(true);
+          return;
         }
       }
     }
+    if (typeof onResultCallback === 'function') onResultCallback(false);
   } catch (err) {
     console.warn("Verificação profunda 360° indisponível:", err);
+    if (typeof onResultCallback === 'function') onResultCallback(false);
   } finally {
     lead._verificando360 = false;
   }
 }
 window.verifyBusiness360TourDeep = verifyBusiness360TourDeep;
+
+let _activeTourAuditLeadId = null;
+
+window.openTourAuditModal = function(leadId, metaResult = null) {
+  const targetId = leadId || (State.currentLead ? State.currentLead.id : null);
+  const lead = State.leads.find(l => l.id === targetId) || State.currentLead;
+  if (!lead) return;
+  _activeTourAuditLeadId = lead.id;
+
+  const modal = document.getElementById('tourAuditModal');
+  const nameEl = document.getElementById('tourAuditModalLeadName');
+  const mapsLink = document.getElementById('tourAuditMapsLink');
+  const statusBox = document.getElementById('tourAuditStatusBox');
+  const statusTitle = document.getElementById('tourAuditStatusTitle');
+  const statusDesc = document.getElementById('tourAuditStatusDesc');
+
+  if (nameEl) nameEl.textContent = lead.empresa;
+  if (mapsLink) mapsLink.href = getGoogleMapsUrl(lead);
+
+  if (metaResult?.reason === 'REQUEST_DENIED') {
+    if (statusTitle) statusTitle.textContent = "Google Cloud: Chave Requer Faturamento Ativo";
+    if (statusDesc) statusDesc.innerHTML = "A API Street View Metadata retornou que a chave requer ativação de Billing no Google Cloud (que exige depósito/caução de R$ 200). <strong class='text-amber-300'>Você não precisa pagar nada ao Google!</strong> Você pode conferir as fotos e 360° pelo botão <strong>Maps ↗</strong> e homologar o status abaixo com 1 clique.";
+    if (statusBox) {
+      statusBox.className = "rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs text-amber-200 space-y-1.5 leading-relaxed";
+    }
+  } else if (metaResult?.reason === 'no_coords') {
+    if (statusTitle) statusTitle.textContent = "Coordenadas GPS Não Vinculadas";
+    if (statusDesc) statusDesc.innerHTML = "Este lead não possui coordenadas de latitude/longitude cadastradas para a verificação via Street View. Confira as fotos no <strong>Maps ↗</strong> e selecione o status abaixo.";
+    if (statusBox) {
+      statusBox.className = "rounded-xl border border-sky-500/30 bg-sky-500/10 p-3.5 text-xs text-sky-200 space-y-1.5 leading-relaxed";
+    }
+  } else if (metaResult?.hasTour360 === false) {
+    if (statusTitle) statusTitle.textContent = "Nenhum Tour 360° Localizado nas Coordenadas";
+    if (statusDesc) statusDesc.innerHTML = "Nenhum panorama esférico público foi detectado a menos de 35 metros deste endereço. Caso o proprietário tenha adicionado fotos 360° diretamente na aba de fotos, confira no <strong>Maps ↗</strong> e homologue abaixo.";
+    if (statusBox) {
+      statusBox.className = "rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs text-amber-200 space-y-1.5 leading-relaxed";
+    }
+  } else {
+    if (statusTitle) statusTitle.textContent = "Auditoria & Homologação Manual de Tour 360°";
+    if (statusDesc) statusDesc.innerHTML = "Inspecione as fotos da empresa no Google Maps e defina se ela possui Tour Virtual 360° ou apenas fotos estáticas/foto de rua do carro do Google.";
+    if (statusBox) {
+      statusBox.className = "rounded-xl border border-slate-700 bg-slate-900/60 p-3.5 text-xs text-slate-300 space-y-1.5 leading-relaxed";
+    }
+  }
+
+  if (modal) modal.classList.remove('hidden');
+};
+
+window.closeTourAuditModal = function() {
+  const modal = document.getElementById('tourAuditModal');
+  if (modal) modal.classList.add('hidden');
+  _activeTourAuditLeadId = null;
+};
+
+window.confirmTour360Status = function(hasTour) {
+  const targetId = _activeTourAuditLeadId || (State.currentLead ? State.currentLead.id : null);
+  const lead = State.leads.find(l => l.id === targetId) || State.currentLead;
+  if (!lead) return;
+
+  saveVerifiedTourBusiness(lead.empresa, hasTour);
+  lead.temTour360 = hasTour;
+
+  // Sincroniza pilar tour360
+  if (lead.auditPillars) {
+    const pilar = lead.auditPillars.find(p => p.id === 'tour360');
+    if (pilar) {
+      pilar.ok = hasTour;
+      pilar.status = hasTour 
+        ? "✓ Conforme: Tour Virtual 360° verificado e homologado no Google Maps."
+        : "⚠️ Alerta: Perfil sem Tour Virtual 360° interno (Gargalo de conversão e oportunidade de venda de tour).";
+    }
+    const passed = lead.auditPillars.filter(x => x.ok).length;
+    lead.score = Math.round((passed / 7) * 100);
+  }
+
+  // Sincroniza gaps
+  if (Array.isArray(lead.gaps)) {
+    if (hasTour) {
+      lead.gaps = lead.gaps.filter(g => !g.toLowerCase().includes('360'));
+    } else if (!lead.gaps.some(g => g.toLowerCase().includes('360'))) {
+      lead.gaps.push("Sem tour 360°");
+    }
+  }
+
+  // Sincroniza 22 itens de saúde
+  if (lead.fullHealthItems) {
+    const tourItem = lead.fullHealthItems.find(i => i.id === 'tour360');
+    if (tourItem) {
+      tourItem.score = hasTour ? 100 : 0;
+      tourItem.finding = hasTour
+        ? "O negócio possui Tour Virtual 360° interno oficial publicado e verificado no Google Street View."
+        : "Não existe Tour Virtual 360° interno publicado (a ficha possui apenas foto externa de rua do carro do Google). Quantidade mínima recomendada: <strong>1 Tour 360° Interno</strong>.";
+    }
+  }
+
+  // Sincroniza CRM
+  const crmLead = State.crmLeads.find(c => c.id === lead.id || c.empresa.toLowerCase() === lead.empresa.toLowerCase());
+  if (crmLead) {
+    crmLead.temTour360 = hasTour;
+    if (typeof saveCrmToStorage === 'function') saveCrmToStorage();
+    if (typeof renderCrmKanban === 'function') renderCrmKanban();
+  }
+
+  window.closeTourAuditModal();
+
+  // Re-renderiza views abertas
+  if (document.getElementById('diagnosticModal') && !document.getElementById('diagnosticModal').classList.contains('hidden')) {
+    openDiagnostic(lead.id);
+  }
+  if (document.getElementById('pdfReportHubModal') && !document.getElementById('pdfReportHubModal').classList.contains('hidden')) {
+    openWhiteLabelReport(lead);
+  }
+  updateMetrics();
+  renderTable();
+
+  if (hasTour) {
+    showToast(`✓ Tour 360° de "${lead.empresa}" homologado como CONFORME!`);
+  } else {
+    showToast(`⚠️ Tour 360° de "${lead.empresa}" mantido como GARGALO de prospecção.`);
+  }
+};
+
+window.handleManualCheck360 = async function(event, leadId) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  const targetId = leadId || (State.currentLead ? State.currentLead.id : null);
+  const lead = State.leads.find(l => l.id === targetId) || State.currentLead;
+  if (!lead) return;
+
+  const btn = event?.currentTarget || event?.target;
+  const originalHtml = btn ? btn.innerHTML : '🔍 Checar 360°';
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Checando...';
+    btn.classList.add('opacity-75', 'cursor-wait');
+  }
+
+  showToast(`🔍 Verificando Street View & Fotos 360° de "${lead.empresa}"...`);
+
+  try {
+    // 1. Se já está na lista mestre ou memória de homologados
+    if (isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone)) {
+      lead.temTour360 = true;
+      if (lead.auditPillars) {
+        const pilar = lead.auditPillars.find(p => p.id === 'tour360');
+        if (pilar) {
+          pilar.ok = true;
+          pilar.status = "✓ Conforme: Tour Virtual 360° verificado e memorizado.";
+        }
+        const passed = lead.auditPillars.filter(x => x.ok).length;
+        lead.score = Math.round((passed / 7) * 100);
+      }
+      showToast(`📸 Tour 360° já homologado para ${lead.empresa}!`);
+      openDiagnostic(lead.id);
+      renderTable();
+      return;
+    }
+
+    // 2. Se não possui lat/lng
+    if (typeof lead.lat !== 'number' || typeof lead.lng !== 'number') {
+      window.openTourAuditModal(lead.id, { reason: 'no_coords' });
+      return;
+    }
+
+    // 3. Consulta Street View Metadata API oficial
+    const metaResult = await detectTour360ViaStreetViewMetadata(lead.lat, lead.lng);
+
+    if (metaResult && metaResult.hasTour360) {
+      saveVerifiedTourBusiness(lead.empresa, true);
+      lead.temTour360 = true;
+      lead.tour360Meta = metaResult;
+
+      if (lead.auditPillars) {
+        const pilar = lead.auditPillars.find(p => p.id === 'tour360');
+        if (pilar) {
+          pilar.ok = true;
+          pilar.status = `✓ Conforme: Tour Virtual 360° verificado no Street View (${metaResult.distanceMeters}m do local, Pano: ${metaResult.panoId ? metaResult.panoId.substring(0, 10) + '...' : 'OK'}).`;
+        }
+        const passed = lead.auditPillars.filter(x => x.ok).length;
+        lead.score = Math.round((passed / 7) * 100);
+      }
+      if (lead.gaps) {
+        lead.gaps = lead.gaps.filter(g => !g.toLowerCase().includes('360'));
+      }
+
+      showToast(`📸 Tour 360° oficial confirmado no Street View para ${lead.empresa}!`);
+      openDiagnostic(lead.id);
+      renderTable();
+      return;
+    }
+
+    // 4. Se a API retornou REQUEST_DENIED ou hasTour360 = false
+    window.openTourAuditModal(lead.id, metaResult || { hasTour360: false });
+
+  } catch (err) {
+    console.warn("Erro ao checar Tour 360:", err);
+    window.openTourAuditModal(lead.id, { reason: 'error' });
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+      btn.classList.remove('opacity-75', 'cursor-wait');
+    }
+  }
+};
 
 // --------------------------------------------------------------------------
 // 1.91 Gerenciador de Clientes com Postagens & Atualizações Ativas (Memória Permanente)
@@ -1367,6 +1578,8 @@ function generateCityLeads(niche, city, targetCount = 35) {
       whatsappVerificado: true,
       cidade: `${cleanCity} - ${bairro}`,
       endereco: `${rua}, ${numRua} - ${bairro}, ${cleanCity}`,
+      lat: +(-23.665000 + (Math.random() - 0.5) * 0.04).toFixed(6),
+      lng: +(-46.525000 + (Math.random() - 0.5) * 0.04).toFixed(6),
       temSite: hasSite,
       temTour360: has360,
       techStack: techStack,
@@ -1396,6 +1609,9 @@ const INITIAL_CRM_LEADS = [
     whatsappVerificado: true,
     categoria: "Loja de Carros",
     cidade: "Santo André - SP",
+    endereco: "Av. Cap. Mário Toledo de Camargo, 4200 - Santo André - SP",
+    lat: -23.676100,
+    lng: -46.513200,
     stage: "novo",
     servico: "Site de Alta Conversão",
     valor: 1800,
@@ -1413,6 +1629,9 @@ const INITIAL_CRM_LEADS = [
     whatsappVerificado: true,
     categoria: "Revendedora de Veículos",
     cidade: "Santo André - SP",
+    endereco: "Av. Cap. Mário Toledo de Camargo, 3800 - Santo André - SP",
+    lat: -23.682100,
+    lng: -46.505200,
     stage: "contatado",
     servico: "Tour Virtual 360°",
     valor: 950,
@@ -1430,6 +1649,9 @@ const INITIAL_CRM_LEADS = [
     whatsappVerificado: true,
     categoria: "Loja de Carros",
     cidade: "Santo André - SP",
+    endereco: "Av. Industrial, 1200 - Santo André - SP",
+    lat: -23.639100,
+    lng: -46.512300,
     stage: "negociacao",
     servico: "Pacote Completo Presença 360°",
     valor: 2800,
@@ -1447,6 +1669,9 @@ const INITIAL_CRM_LEADS = [
     whatsappVerificado: true,
     categoria: "Revendedora de Veículos",
     cidade: "Santo André - SP",
+    endereco: "Av. Cap. Mário Toledo de Camargo, 4000 - Santo André - SP",
+    lat: -23.676500,
+    lng: -46.512500,
     stage: "proposta",
     servico: "Site de Alta Conversão",
     valor: 1500,
@@ -1464,6 +1689,9 @@ const INITIAL_CRM_LEADS = [
     whatsappVerificado: true,
     categoria: "Concessionária de Veículos",
     cidade: "Santo André - SP",
+    endereco: "Auto Shopping Global - Santo André - SP",
+    lat: -23.677500,
+    lng: -46.510800,
     stage: "fechado",
     servico: "Pacote Completo Presença 360°",
     valor: 3200,
@@ -2223,6 +2451,12 @@ window.togglePillarStatus = function(leadId, pillarId) {
   if (p.id === 'tour360') {
     lead.temTour360 = p.ok;
     saveVerifiedTourBusiness(lead.empresa, p.ok);
+    p.status = p.ok 
+      ? "✓ Conforme: Tour Virtual 360° verificado e homologado no Google Maps." 
+      : "⚠️ Tour 360° a Homologar: Pendente de verificação (Conferir fotos no Maps ↗ ou re-checar).";
+    if (p.ok && Array.isArray(lead.gaps)) {
+      lead.gaps = lead.gaps.filter(g => !g.toLowerCase().includes('360'));
+    }
   }
   if (p.id === 'posts') {
     const postAudit = getLeadPostAudit(lead);
@@ -2534,7 +2768,9 @@ window.openDiagnostic = function(id) {
 
       const btnClickAction = isPostPillar 
         ? `window.openPostAuditModal(${lead.id})` 
-        : `togglePillarStatus(${lead.id}, '${p.id}')`;
+        : (isTourPillar 
+            ? `window.openTourAuditModal(${lead.id})` 
+            : `togglePillarStatus(${lead.id}, '${p.id}')`);
 
       const btnBadgeColorClass = isPostPillar
         ? (postAudit.isAtivo ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : (postAudit.isAlerta ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30' : 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30'))
@@ -2554,9 +2790,9 @@ window.openDiagnostic = function(id) {
             <div class="flex items-center gap-1.5 flex-wrap">
               <span class="font-bold text-white">${p.nome}</span>
               ${p.id === 'tour360' ? `<a href="${getGoogleMapsUrl(lead)}" target="_blank" rel="noopener noreferrer" class="text-[9px] text-cyan-400 hover:text-cyan-300 font-semibold px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20" title="Ver fotos e 360° no Google Maps">Maps ↗</a>` : ''}
-              ${p.id === 'tour360' && !p.ok ? `<button type="button" onclick="verifyBusiness360TourDeep(State.currentLead, () => openDiagnostic(State.currentLead.id))" class="text-[9px] text-amber-400 hover:text-amber-300 font-semibold px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 cursor-pointer" title="Verificar Tour 360 no Street View (Metadata API / n8n)">🔍 Checar 360°</button>` : ''}
+              ${p.id === 'tour360' && !p.ok ? `<button type="button" onclick="handleManualCheck360(event, ${lead.id})" class="text-[9px] text-amber-400 hover:text-amber-300 font-semibold px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 cursor-pointer flex items-center gap-1" title="Verificar Tour 360 no Street View / Google Maps"><span>🔍</span> <span>Checar 360°</span></button>` : ''}
             </div>
-            <button type="button" onclick="${btnClickAction}" title="${isPostPillar ? 'Auditoria Cirúrgica de Postagens & Mídia: Clique para definir dias sem postar' : 'Clique para alternar status deste pilar no diagnóstico'}" class="px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${btnBadgeColorClass}">
+            <button type="button" onclick="${btnClickAction}" title="${isPostPillar ? 'Auditoria Cirúrgica de Postagens & Mídia: Clique para definir dias sem postar' : (isTourPillar ? 'Auditoria & Homologação de Tour 360°: Clique para verificar ou validar' : 'Clique para alternar status deste pilar no diagnóstico')}" class="px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${btnBadgeColorClass}">
               ${btnBadgeText}
             </button>
           </div>
