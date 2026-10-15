@@ -3053,28 +3053,28 @@ function buildLeadFullAuditItems(lead) {
   lead.fullHealthItems = [
     {
       id: 'unanswered_reviews',
-      title: 'Avaliações - Taxa de Resposta de Avaliações',
-      desc: 'Os seus clientes investiram tempo escrevendo uma avaliação. Responder mostra o quanto você se importa com as suas opiniões e indexa palavras-chave de SEO local.',
+      title: 'Gestão de Prova Social & SLA de Retorno a Clientes',
+      desc: 'Cada avaliação pública é um ativo de reputação e uma âncora direta de indexação no Google Maps. Responder com presteza e contexto transmite credibilidade imediata ao consumidor indeciso e eleva a relevância da empresa no ranking regional.',
       finding: isRespOk
-        ? `O negócio possui uma taxa de resposta de avaliações exemplar (<strong>${respPct}%</strong> das avaliações recentes respondidas com comentários atenciosos pelo proprietário). Quantidade total de avaliações: <strong>${totalRev}</strong>.`
-        : `Atenção: Apenas <strong>${respPct}%</strong> das avaliações recentes possuem resposta do proprietário na amostragem pública. Quantidade total de avaliações: <strong>${totalRev}</strong>.`,
+        ? `O perfil mantém taxa de resposta exemplar (<strong>${respPct}%</strong> das avaliações recentes respondidas pelo proprietário com cordialidade e atenção). Volume total: <strong>${totalRev} avaliações</strong>.`
+        : `Atenção: Apenas <strong>${respPct}%</strong> das avaliações recentes possuem resposta do proprietário na amostragem pública. Volume total: <strong>${totalRev} avaliações</strong>.`,
       score: isRespOk ? 100 : 0
     },
     {
       id: 'reviews_trend',
-      title: 'Avaliações - Comparativo de Avaliações',
-      desc: 'Analisa o seu histórico de avaliações recentes e mostra se a média das avaliações está aumentando, estável ou diminuindo frente aos concorrentes.',
+      title: 'Consistência & Frequência de Avaliações',
+      desc: 'Mapeia a cadência de entrada de novas provas sociais. O algoritmo do Google prioriza perfis que recebem feedbacks frequentes e consistentes ao longo do ano.',
       finding: totalRev >= 40
-        ? `A média de avaliações mantém alta estabilidade e solidez histórica (<strong>${totalRev} avaliações</strong>, Nota <strong>${rating.toFixed(1)}★</strong>).`
-        : 'O ritmo de captação de novas avaliações recentes pode ser acelerado com campanha ativa de QR Code.',
+        ? `A média de avaliações apresenta estabilidade consolidada e solidez histórica (<strong>${totalRev} avaliações</strong> com nota média <strong>${rating.toFixed(1)}★</strong>).`
+        : 'O ritmo de captação de novas avaliações recentes pode ser acelerado com estratégias ativas de QR Code e incentivo no pós-atendimento.',
       score: totalRev >= 30 ? 100 : 50
     },
     {
       id: 'last_post_date',
-      title: 'Data da Última Postagem (Google Posts)',
-      desc: 'Criar e compartilhar novidades, falar sobre produtos, serviços ou detalhes de eventos demonstra que o seu negócio é ativo no Google e ajuda na visibilidade online.',
+      title: 'Frescor Algorítmico & Atualizações de Conteúdo (Google Posts)',
+      desc: 'O envio semanal de comunicados, ofertas e fotos de bastidores sinaliza atividade ininterrupta para o motor de busca, aumentando a taxa de cliques da ficha.',
       finding: postAudit.isAtivo
-        ? `A data da última publicação está super atualizada (${postAudit.dataTexto}). Quantidade de dias desde a última postagem: <strong>${postAudit.diasSemPostar}</strong>. Quantidade máxima recomendada: <strong>7 a 14 dias</strong>.`
+        ? `O cronograma de postagens está atualizado (${postAudit.dataTexto}). Intervalo desde a última publicação: <strong>${postAudit.diasSemPostar} dias</strong>. Padrão recomendado: <strong>7 a 14 dias</strong>.`
         : (postAudit.isAlerta
             ? `Atenção: A última postagem foi feita há <strong>${postAudit.diasSemPostar} dias</strong>. O Google recomenda pelo menos 1 postagem a cada 7 a 14 dias para manter a relevância da ficha ativa.`
             : `🚨 Alerta Crítico (Gargalo de Prospecção): O perfil está há <strong>${postAudit.diasSemPostar} dias</strong> sem nenhuma postagem no Google Posts. O algoritmo do Google prioriza concorrentes com atividade semanal, rebaixando fichas inativas.`),
@@ -3082,145 +3082,145 @@ function buildLeadFullAuditItems(lead) {
     },
     {
       id: 'media_videos',
-      title: 'Mídia - Acervo Visual & Fotos',
-      desc: 'Estudos mostram que perfis com rica galeria visual atraem e fidelizam clientes mais do que perfis básicos.',
-      finding: 'O perfil conta com acervo visual ativo e fotos de alta resolução cadastradas na ficha.',
+      title: 'Catálogo Visual & Imagens de Alta Definição',
+      desc: 'A nitidez e a riqueza visual das imagens transmitem autoridade imediata, elevando o tempo de permanência do usuário no perfil e acelerando a decisão de compra.',
+      finding: 'O perfil conta com acervo visual ativo e fotos em boa resolução cadastradas na ficha corporativa.',
       score: 100
     },
     {
       id: 'tour360',
-      title: 'Mídia - Tour Virtual 360° Interno (Street View)',
-      desc: 'O Tour Virtual 360° interno permite que o cliente caminhe por dentro do estabelecimento pelo celular ou computador, gerando 2x mais confiança e retenção na ficha do Google.',
+      title: 'Experiência Imersiva 360° (Google Street View Interno)',
+      desc: 'Permite que o cliente visite os ambientes internos da empresa de forma interativa pelo celular. Perfis com Tour 360° geram 2x mais confiança e engajamento comprovado.',
       finding: lead.temTour360
-        ? 'O negócio possui Tour Virtual 360° interno oficial publicado e verificado no Google Street View.'
-        : 'Não existe Tour Virtual 360° interno publicado (a ficha possui apenas foto externa de rua do carro do Google). Quantidade mínima recomendada: <strong>1 Tour 360° Interno</strong>.',
+        ? 'A empresa possui Tour Virtual 360° interno oficial publicado e verificado no ecossistema do Google Street View.'
+        : 'Ausência de Tour Virtual 360° interno (a ficha exibe apenas imagens estáticas e fotos externas de rua). Mínimo recomendado: <strong>1 Tour 360° Interno Homologado</strong>.',
       score: lead.temTour360 ? 100 : 0
     },
     {
       id: 'company_desc',
-      title: 'Descrição da Empresa',
-      desc: 'Descrever o seu negócio é uma oportunidade de contar a potenciais clientes a sua história e o que o torna único.',
-      finding: 'O negócio possui uma descrição com quantidade de caracteres suficiente. Quantidade atual de caracteres: <strong>498</strong>. Quantidade mínima recomendada: <strong>50 caracteres</strong>.',
+      title: 'Posicionamento Institucional & Termos Relevantes',
+      desc: 'Campo essencial para apresentar os diferenciais competitivos da empresa e integrar palavras-chave estratégicas pesquisadas pelos clientes locais.',
+      finding: 'A empresa possui descrição institucional cadastrada com densidade textual adequada (<strong>498 caracteres</strong>).',
       score: 100
     },
     {
       id: 'special_hours',
-      title: 'Horário Especial',
-      desc: 'É importante definir o seu horário especial informando se o seu negócio irá funcionar em feriados ou informar mudanças breves de horário. Definir um horário especial não altera o horário normal.',
-      finding: 'O negócio possui horário especial definido para o ano de 2026.',
+      title: 'Calendário de Feriados & Atendimento Especial',
+      desc: 'Manter horários especiais e feriados programados evita atritos com clientes que se deslocam até o local e encontram as portas fechadas.',
+      finding: 'A empresa mantém a programação de horários especiais configurada para o ano vigente.',
       score: 100
     },
     {
       id: 'media_logo',
-      title: 'Mídia - Imagem do Logotipo',
-      desc: 'Ajude os seus clientes a reconhecerem a identidade da sua empresa no Google.',
-      finding: 'Existe uma imagem de logotipo definida.',
+      title: 'Identidade de Marca & Logotipo Corporativo',
+      desc: 'Garante o reconhecimento instantâneo da marca nos resultados de busca do Google e na navegação por rotas do Google Maps.',
+      finding: 'Logotipo corporativo oficial definido e visível na ficha.',
       score: 100
     },
     {
       id: 'client_media',
-      title: 'Mídias Publicadas por Clientes',
-      desc: 'Para estabelecer confiança e mostrar que o seu negócio é real, é importante ter fotos publicadas por clientes.',
-      finding: `O negócio possui uma quantidade mínima de mídia publicada por clientes. Quantidade atual: <strong>${clientMedia}</strong>. Quantidade recomendada: <strong>3</strong>.`,
+      title: 'Conteúdo Gerado por Clientes (UGC & Prova Social)',
+      desc: 'Fotografias espontâneas registradas por clientes funcionam como prova de movimento e atestado de confiança autêntico para novos consumidores.',
+      finding: `A empresa possui fotos publicadas espontaneamente por clientes. Volume atual: <strong>${clientMedia}</strong> fotos na galeria.`,
       score: 100
     },
     {
       id: 'reviews_count',
-      title: 'Avaliações - Quantidade de Avaliações',
-      desc: 'Analisa se possui uma quantidade mínima de avaliações.',
-      finding: `O negócio possui quantidade de avaliações suficiente. Quantidade atual: <strong>${totalRev}</strong>. Quantidade mínima recomendada: <strong>3</strong>.`,
+      title: 'Densidade de Prova Social Acumulada',
+      desc: 'O volume total de depoimentos é o primeiro filtro de validação utilizado pelo consumidor antes de ligar ou pedir rotas.',
+      finding: `Volume de avaliações apurado em <strong>${totalRev} depoimentos</strong>. Requisito mínimo para tração local: <strong>5 avaliações</strong>.`,
       score: totalRev >= 5 ? 100 : 0
     },
     {
       id: 'reviews_avg',
-      title: 'Avaliações - Média de Avaliações',
-      desc: 'Analisa se a pontuação média de avaliação está boa ou se pode ser melhorada. Uma pontuação adequada nas avaliações transmite segurança e conforto para o cliente.',
-      finding: `A média de avaliações está normal (<strong>${rating.toFixed(1)} estrelas</strong>).`,
+      title: 'Classificação Média de Satisfação (Rating Geral)',
+      desc: 'Indica o padrão percebido de entrega e serviço. Uma classificação média sólida sustenta a posição de liderança nos blocos de recomendação do Google.',
+      finding: `Classificação média consolidada em <strong>${rating.toFixed(1)} estrelas</strong>.`,
       score: rating >= 4.0 ? 100 : 0
     },
     {
       id: 'reviews_comments',
-      title: 'Avaliações - Avaliações Sem Comentários',
-      desc: 'As pessoas confiam nos comentários online dos clientes. Incentive-os a deixar avaliações com comentários.',
-      finding: 'O negócio possui quantidade de avaliações suficientes que possuem comentários.',
+      title: 'Profundidade Qualitativa dos Depoimentos',
+      desc: 'Avaliações com depoimentos detalhados contêm termos contextuais orgânicos que alimentam as buscas semânticas da região.',
+      finding: 'A empresa possui volume consistente de avaliações enriquecidas com depoimentos textuais.',
       score: 100
     },
     {
       id: 'services_list',
-      title: 'Serviços',
-      desc: 'Adicionar serviços que seu negócio oferece, faz com que clientes te encontrem mais facilmente, além de entenderem mais rapidamente o que você faz.',
-      finding: 'O negócio possui serviços adicionados.',
+      title: 'Catálogo Estruturado de Soluções & Serviços',
+      desc: 'Apresentar detalhadamente os serviços oferecidos permite que o algoritmo associe a empresa às buscas específicas do público comprador.',
+      finding: 'Catálogo de serviços cadastrado e vinculado à ficha.',
       score: 100
     },
     {
       id: 'foundation_date',
-      title: 'Data de Fundação',
-      desc: 'Informe aos seus clientes quando o seu negócio foi fundado.',
-      finding: 'O negócio possui data de fundação adicionada.',
+      title: 'Histórico & Tradição de Mercado',
+      desc: 'A data de fundação atesta a solidez, estabilidade e tempo de atuação do negócio perante a comunidade local.',
+      finding: 'Data de início das operações devidamente informada no cadastro corporativo.',
       score: 100
     },
     {
       id: 'business_name',
-      title: 'Nome do Negócio',
-      desc: 'O nome deve refletir o nome real do seu negócio, conforme é conhecido pelos clientes e apresentado na sua loja ou site.',
-      finding: `O nome do negócio está definido com uma quantidade adequada de caracteres. Quantidade de caracteres atual: <strong>${charNameLen}</strong>. Quantidade máxima de caracteres recomendada: <strong>98</strong>.`,
+      title: 'Integridade da Razão Comercial (Brand Integrity)',
+      desc: 'Conformidade com os padrões oficiais de nomenclatura comercial do Google, evitando penalidades e suspensões por termos abusivos.',
+      finding: `Nome comercial compatível com as diretrizes do Google Maps (extensão atual: <strong>${charNameLen} caracteres</strong>).`,
       score: 100
     },
     {
       id: 'phone_number',
-      title: 'Número de Telefone',
-      desc: 'O número de telefone é uma das informações chave para o seu negócio.',
-      finding: `O negócio possui número de telefone definido (<strong>${lead.telefone || 'Verificado'}</strong>).`,
+      title: 'Canal de Atendimento Telefônico Direto',
+      desc: 'Canal de voz verificado que viabiliza a ação de chamada em um clique a partir de dispositivos móveis.',
+      finding: `Telefone comercial validado e habilitado para ligação instantânea (<strong>${lead.telefone || 'Verificado'}</strong>).`,
       score: lead.telefone ? 100 : 0
     },
     {
       id: 'owner_media_count',
-      title: 'Quantidade Total de Mídia Pelo Proprietário',
-      desc: 'Fotos publicadas pelo proprietário revelam o compromisso que você tem com o seu negócio e demonstram como gostaria que este fosse apresentado.',
-      finding: `O negócio possui uma quantidade mínima de mídia (fotos ou vídeos) publicadas pelo proprietário. Quantidade atual: <strong>${ownerMedia}</strong>. Quantidade mínima recomendada: <strong>3</strong>.`,
+      title: 'Galeria Oficial Publicada pela Empresa',
+      desc: 'Mídias institucionais publicadas pelo administrador que definem o padrão visual e destacam produtos, equipe e estrutura física.',
+      finding: `A empresa possui acervo corporativo ativo com <strong>${ownerMedia} fotos oficiais</strong> cadastradas.`,
       score: 100
     },
     {
       id: 'total_media_count',
-      title: 'Quantidade Total de Mídia',
-      desc: 'Para oferecer uma melhor experiência aos seus clientes, espera-se que você possua uma quantidade mínima de fotos.',
-      finding: `O negócio possui uma quantidade mínima de mídia (fotos ou vídeos). Quantidade atual: <strong>${totalMedia}</strong>. Quantidade mínima recomendada: <strong>3</strong>.`,
+      title: 'Densidade Visual Combinada da Ficha',
+      desc: 'A somatória do acervo da empresa com as fotos dos clientes compõe o ecossistema visual que retém a atenção do comprador.',
+      finding: `Volume total de mídia combinada: <strong>${totalMedia} fotos e mídias</strong>.`,
       score: 100
     },
     {
       id: 'website',
-      title: 'Website',
-      desc: 'Ter um website transmite a impressão de um negócio bem sucedido, dá credibilidade e oferece aos clientes a oportunidade de entrar em contato com a empresa.',
+      title: 'Canal Próprio de Conversão (Website Institucional)',
+      desc: 'Ter um site próprio (.com.br) converte visitantes em orçamentos no WhatsApp 24h por dia e é indispensável para o SEO Local de alta relevância.',
       finding: (() => {
         const webAnalysis = lead.websiteAnalysis || analyzeWebsiteUrl(lead.websiteUrl);
-        if (lead.temSite) return `Endereço de website próprio institucional definido e ativo (${lead.websiteUrl || 'verificado'}).`;
-        if (webAnalysis.isSocial) return `⚠️ Alerta Crítico: O perfil utiliza link de rede social (<strong>${webAnalysis.label}</strong>: <em>${lead.websiteUrl}</em>) no campo de website. O Google desvaloriza perfis sem domínio próprio (.com.br). Recomendado: <strong>1 Website Próprio de Alta Conversão</strong>.`;
-        if (webAnalysis.isDeprecatedGoogleSite) return `🚨 Link Descontinuado (Erro 404): O perfil aponta para o antigo Google Business Site (<em>${lead.websiteUrl}</em>), desligado pelo Google em março/2024.`;
-        return 'O negócio NÃO possui website institucional próprio cadastrado no perfil. Recomendado: <strong>Website Mobile-First de Alta Conversão</strong>.';
+        if (lead.temSite) return `Canal próprio institucional ativo e conectado ao perfil (<strong>${lead.websiteUrl || 'domínio verificado'}</strong>).`;
+        if (webAnalysis.isSocial) return `⚠️ Alerta Crítico: O perfil utiliza link de rede social (<strong>${webAnalysis.label}</strong>: <em>${lead.websiteUrl}</em>) no lugar de um site próprio. O Google penaliza perfis sem domínio institucional independente (.com.br). Recomendado: <strong>1 Website Próprio de Alta Conversão</strong>.`;
+        if (webAnalysis.isDeprecatedGoogleSite) return `🚨 Link Descontinuado (Erro 404): O perfil aponta para o antigo Google Business Site (<em>${lead.websiteUrl}</em>), desativado oficialmente pelo Google.`;
+        return 'O negócio NÃO possui canal próprio institucional (website) vinculado ao perfil. Recomendado: <strong>Website Mobile-First com WhatsApp Integrado</strong>.';
       })(),
       score: lead.temSite ? 100 : 0
     },
     {
       id: 'cover_photo',
-      title: 'Mídia - Foto de Capa',
-      desc: 'A foto de capa geralmente aparece como foto principal do perfil do seu negócio.',
-      finding: 'O negócio possui foto de capa definida.',
+      title: 'Imagem de Apresentação Principal (Foto de Capa)',
+      desc: 'O primeiro ponto de contato visual do consumidor nos resultados de busca. Define a atratividade imediata e a taxa de cliques.',
+      finding: 'Foto de capa corporativa selecionada e visível nas buscas do Google.',
       score: 100
     },
     {
       id: 'last_owner_media_date',
-      title: 'Data da Última Mídia pelo Proprietário',
-      desc: 'Publicar periodicamente fotos ou vídeos demonstra que o seu perfil está ativo e envolvido com o Google.',
+      title: 'Recorrência de Uploads Visuais pelo Administrador',
+      desc: 'O envio constante de novas fotos sinaliza que a empresa segue dinâmica, atraindo maior prioridade no algoritmo de exibição.',
       finding: (postAudit.diasSemPostar <= 30)
-        ? `A data da postagem da última mídia está atualizada. Quantidade de dias desde a última mídia: <strong>${Math.min(postAudit.diasSemPostar, 20)}</strong>. Quantidade máxima recomendada: <strong>30 dias</strong>.`
-        : `🚨 Mídia do Proprietário Desatualizada: A última foto/mídia publicada pelo proprietário foi há <strong>${postAudit.diasSemPostar} dias</strong>. Quantidade máxima recomendada: <strong>30 dias</strong>.`,
+        ? `Envio de fotos e mídias em dia. Intervalo desde a última mídia: <strong>${Math.min(postAudit.diasSemPostar, 20)} dias</strong>. Padrão recomendado: <strong>até 30 dias</strong>.`
+        : `🚨 Galeria Institucional Desatualizada: A última imagem enviada pelo administrador foi há <strong>${postAudit.diasSemPostar} dias</strong>. Padrão recomendado: <strong>máximo 30 dias</strong>.`,
       score: postAudit.scoreMedia
     },
     {
       id: 'business_hours',
-      title: 'Horário de Funcionamento',
-      desc: 'É uma informação chave para que os clientes possam saber quando podem entrar em contato ou visitá-lo.',
-      finding: 'Horário de funcionamento definido.',
+      title: 'Grade Semanal de Expediente & Horários de Funcionamento',
+      desc: 'Informação essencial para orientar os clientes e alimentar os filtros "Aberto Agora" do Google Maps, captando tráfego de urgência.',
+      finding: 'Horários de expediente devidamente parametrizados para os dias da semana.',
       score: 100
     }
   ];
@@ -3254,50 +3254,58 @@ window.cycleHealthItemScore = function(leadId, itemId) {
   lead.score = avgScore;
   renderTable();
   openWhiteLabelReport(lead);
-  showToast(`Item "${item.title}" ajustado para nota ${item.score} (${item.score === 100 ? 'BOM' : item.score === 50 ? 'RAZOÁVEL' : 'FRACO'})`);
+  showToast(`Item "${item.title}" ajustado para nota ${item.score} (${item.score === 100 ? 'CONFORME' : item.score === 50 ? 'OTIMIZAÇÃO' : 'GARGALO'})`);
 };
 
 function renderHealthThermometerCard(item, leadId) {
   const isGood = item.score >= 80;
   const isMid = item.score >= 40 && item.score < 80;
-  const iconBg = isGood ? 'bg-emerald-500' : isMid ? 'bg-amber-400' : 'bg-rose-500';
-  const iconChar = isGood ? '✓' : isMid ? '!' : '✕';
-  const pointerPos = item.score >= 80 ? '93%' : item.score >= 40 ? '50%' : '3%';
+
+  const statusBadge = isGood
+    ? `<span class="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-50 px-3 py-1 text-[11px] font-extrabold text-emerald-800">
+        <span class="h-2 w-2 rounded-full bg-emerald-500"></span> Conforme · Alta Relevância
+      </span>`
+    : (isMid
+        ? `<span class="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-50 px-3 py-1 text-[11px] font-extrabold text-amber-800">
+            <span class="h-2 w-2 rounded-full bg-amber-500"></span> Oportunidade de Otimização
+          </span>`
+        : `<span class="inline-flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-50 px-3 py-1 text-[11px] font-extrabold text-rose-800">
+            <span class="h-2 w-2 rounded-full bg-rose-500"></span> Gargalo Crítico de Vendas
+          </span>`);
+
+  const barColor = isGood ? 'bg-emerald-500' : (isMid ? 'bg-amber-400' : 'bg-rose-500');
 
   return `
-    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm print-avoid-break transition-all hover:border-slate-300">
-      <div class="flex items-center justify-between gap-3">
-        <div class="flex items-center gap-3">
-          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${iconBg} text-white font-bold text-sm shadow-sm">
-            ${iconChar}
+    <div class="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm print-avoid-break transition-all hover:border-slate-300 space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2.5">
+          <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${isGood ? 'bg-emerald-500/10 text-emerald-700' : (isMid ? 'bg-amber-500/10 text-amber-700' : 'bg-rose-500/10 text-rose-700')} font-black text-xs">
+            ${isGood ? '✓' : (isMid ? '▲' : '✕')}
           </span>
-          <h4 class="text-sm sm:text-base font-bold text-slate-800">${item.title}</h4>
+          <h4 class="text-sm sm:text-base font-extrabold text-slate-900">${item.title}</h4>
         </div>
-        <button type="button" onclick="window.cycleHealthItemScore(${leadId}, '${item.id}')" class="no-print rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 cursor-pointer" title="Clique para alternar a nota deste item (0 Fraco / 50 Razoável / 100 Bom)">
-          Nota: ${item.score} ✎
-        </button>
+        <div class="flex items-center gap-2">
+          ${statusBadge}
+          <button type="button" onclick="window.cycleHealthItemScore(${leadId}, '${item.id}')" class="no-print rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 cursor-pointer" title="Clique para alternar a nota deste item (0 Gargalo / 50 Otimização / 100 Conforme)">
+            Nota: ${item.score} ✎
+          </button>
+        </div>
       </div>
 
-      <p class="mt-3 text-xs text-slate-600 leading-relaxed">${item.desc}</p>
-      <p class="mt-2.5 text-xs text-slate-700 leading-relaxed">${item.finding}</p>
+      <p class="text-xs text-slate-600 leading-relaxed">${item.desc}</p>
+      
+      <div class="rounded-xl bg-slate-50 border border-slate-100 p-3 text-xs text-slate-700 leading-relaxed">
+        <strong class="text-slate-900 font-bold">Diagnóstico Técnico:</strong> ${item.finding}
+      </div>
 
-      <!-- Barra Termômetro 0 a 100 -->
-      <div class="mt-5 pt-4 relative">
-        <div class="relative h-6 mb-1">
-          <div style="left: ${pointerPos}; transform: translateX(-50%);" class="absolute -top-2 flex flex-col items-center">
-            <span class="text-xl font-black text-slate-800 leading-none">${item.score}</span>
-            <span class="text-[9px] text-slate-700 leading-none mt-0.5">▼</span>
-          </div>
+      <!-- Barra Executiva de Conformidade -->
+      <div class="pt-1">
+        <div class="flex items-center justify-between text-[11px] mb-1">
+          <span class="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Maturidade Técnica</span>
+          <span class="font-black text-slate-700 text-xs">${item.score}/100</span>
         </div>
-        <div class="h-2 w-full flex rounded-full overflow-hidden gap-0.5 bg-slate-100">
-          <div class="w-1/3 ${!isGood && !isMid ? 'bg-rose-500' : 'bg-rose-300'}"></div>
-          <div class="w-1/3 ${isMid ? 'bg-amber-400' : 'bg-amber-200'}"></div>
-          <div class="w-1/3 ${isGood ? 'bg-emerald-500' : 'bg-emerald-400'}"></div>
-        </div>
-        <div class="mt-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider">
-          <span class="rounded px-2 py-0.5 ${!isGood && !isMid ? 'bg-rose-100 text-rose-600' : 'bg-rose-50 text-rose-400'}">FRACO</span>
-          <span class="rounded px-2 py-0.5 ${isMid ? 'bg-amber-100 text-amber-600' : 'text-amber-300'}">RAZOÁVEL</span>
-          <span class="rounded px-2 py-0.5 ${isGood ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'}">BOM</span>
+        <div class="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
+          <div class="h-full rounded-full ${barColor} transition-all duration-500" style="width: ${Math.max(6, item.score)}%;"></div>
         </div>
       </div>
     </div>
@@ -3522,1026 +3530,603 @@ window.openWhiteLabelReport = function(lead) {
   const paper = document.getElementById('whiteLabelPaper');
   if (paper) {
     paper.innerHTML = `
-      <!-- CABEÇALHO CORPORATIVO DA AGÊNCIA WHITE-LABEL -->
+      <!-- CABEÇALHO EXECUTIVO AUTORAL — RADARMAPS PRO -->
       <div class="flex flex-wrap items-center justify-between border-b-2 border-slate-200 pb-5 gap-4">
-        <div class="flex items-center gap-3">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-600 font-extrabold text-white text-2xl shadow-md">
-            📊
+        <div class="flex items-center gap-3.5">
+          <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 text-amber-400 font-extrabold text-2xl shadow-md border border-slate-700">
+            ⚡
           </div>
           <div>
-            <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">${agencyName}</h2>
-            <p class="text-xs font-bold uppercase tracking-wider text-slate-600">Dossiê Oficial de Auditoria, Saúde & Performance no Google</p>
+            <div class="flex items-center gap-2">
+              <h2 class="text-xl font-black text-slate-900 tracking-tight">${agencyName}</h2>
+              <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-300 px-2.5 py-0.5 text-[10px] font-black text-emerald-800 uppercase tracking-wide">
+                ● Dossiê Técnico Oficial
+              </span>
+            </div>
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-500 mt-0.5">Auditoria de Maturidade & Inteligência Local no Google Maps</p>
           </div>
         </div>
         <div class="text-right">
-          <span class="inline-block rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-bold text-emerald-700">Relatório Completo · 5 Seções</span>
-          <p class="mt-1 text-xs text-slate-400">Emitido em: ${dateStr}</p>
+          <span class="inline-block rounded-xl bg-slate-100 border border-slate-200 px-3 py-1 font-mono text-[11px] font-bold text-slate-700">Protocolo: RM-${Math.abs(lead.id || 100)}-${new Date().getFullYear()}</span>
+          <p class="mt-1 text-xs text-slate-400">Emissão Técnica: ${dateStr}</p>
         </div>
       </div>
 
-      <!-- IDENTIFICAÇÃO DA EMPRESA AUDITADA -->
-      <div class="rounded-2xl bg-slate-50 border border-slate-200 p-5">
-        <div class="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Diagnóstico Completo do Perfil Empresarial no Google</span>
-            <h1 class="text-2xl font-black text-slate-900 mt-0.5">${lead.empresa}</h1>
-            <p class="mt-1.5 text-xs text-slate-600 leading-relaxed">
+      <!-- IDENTIFICAÇÃO DA EMPRESA AUDITADA & SCORE EXECUTIVO -->
+      <div class="rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border border-slate-800 p-6 text-white shadow-xl">
+        <div class="flex flex-wrap items-center justify-between gap-5">
+          <div class="space-y-1.5 max-w-xl">
+            <div class="inline-flex items-center gap-2 rounded-full bg-amber-400/10 border border-amber-400/30 px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-widest text-amber-300">
+              Perfil Corporativo sob Auditoria
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">${lead.empresa}</h1>
+            <p class="text-xs text-slate-300 leading-relaxed pt-1">
               📍 <strong>Endereço:</strong> ${lead.endereco || lead.cidade || 'Santo André - SP'} &nbsp;·&nbsp;
               📞 <strong>Telefone:</strong> ${lead.telefone || 'Verificado'} &nbsp;·&nbsp;
-              🏷️ <strong>Categoria:</strong> ${lead.categoria || 'Comércio Local'} &nbsp;·&nbsp;
-              <a href="${getGoogleMapsUrl(lead)}" target="_blank" rel="noopener noreferrer" class="text-emerald-700 font-bold underline">📍 Abrir Ficha no Google Maps ↗</a>
+              🏷️ <strong>Segmento:</strong> ${lead.categoria || 'Comércio Local'}
             </p>
-          </div>
-          <div class="flex items-center gap-2">
-            <div class="text-center rounded-xl bg-white border border-slate-200 px-4 py-2.5 shadow-sm">
-              <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Saúde Geral</p>
-              <p class="text-2xl font-black ${overallScore >= 75 ? 'text-emerald-600' : overallScore >= 50 ? 'text-amber-500' : 'text-rose-600'}">${overallScore}/100</p>
+            <div class="pt-2">
+              <a href="${getGoogleMapsUrl(lead)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-xs font-bold text-amber-300 hover:text-amber-200 underline">
+                <span>📍</span> <span>Verificar Ficha Pública no Google Maps ↗</span>
+              </a>
             </div>
-            <div class="text-center rounded-xl bg-white border border-slate-200 px-4 py-2.5 shadow-sm">
-              <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Reputação ISR</p>
-              <p class="text-2xl font-black text-emerald-600">${isrScore}%</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="text-center rounded-2xl bg-slate-800/80 border border-slate-700 px-5 py-3.5 shadow-inner">
+              <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Radar Score</p>
+              <p class="text-3xl font-black ${overallScore >= 75 ? 'text-emerald-400' : overallScore >= 50 ? 'text-amber-400' : 'text-rose-400'} mt-0.5">${overallScore}<span class="text-sm text-slate-400 font-normal">/100</span></p>
+              <span class="inline-block mt-1 text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full ${overallScore >= 75 ? 'bg-emerald-500/20 text-emerald-300' : overallScore >= 50 ? 'bg-amber-500/20 text-amber-300' : 'bg-rose-500/20 text-rose-300'}">
+                ${overallScore >= 75 ? 'ALTO DESEMPENHO' : overallScore >= 50 ? 'ATENÇÃO TÉCNICA' : 'CRÍTICO'}
+              </span>
+            </div>
+            <div class="text-center rounded-2xl bg-slate-800/80 border border-slate-700 px-5 py-3.5 shadow-inner">
+              <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Índice de Reputação</p>
+              <p class="text-3xl font-black text-emerald-400 mt-0.5">${isrScore}%</p>
+              <span class="inline-block mt-1 text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">
+                ${totalReviews} Depoimentos
+              </span>
             </div>
           </div>
         </div>
       </div>
 
       <!-- =====================================================================
-           SEÇÃO 1: ANÁLISE DE SAÚDE (PÁGINAS 2 A 8 DO MODELO)
+           SEÇÃO 1: MATRIZ DE RELEVÂNCIA ALGORÍTMICA (22 PILARES DE RANQUEAMENTO)
            ===================================================================== -->
       <section data-section-id="saude" class="report-section-block space-y-6 ${activeTab !== 'all' && activeTab !== 'saude' ? 'hidden' : ''}">
         <div class="text-center border-b border-slate-200 pb-4">
-          <h2 class="text-2xl font-extrabold text-slate-800">Análise de Saúde</h2>
-        </div>
-
-        <div>
-          <h3 class="text-lg font-bold text-slate-800">Análise de Saúde</h3>
-          <p class="mt-1 text-xs text-slate-500 leading-relaxed">
-            A análise de saúde é como um check-up médico do negócio no Google. Ele analisa automaticamente informações importantes, verificando a qualidade do perfil no Google.
+          <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">1. Matriz de Relevância Algorítmica & Eficiência Local</h2>
+          <p class="mt-1 text-xs text-slate-500 max-w-2xl mx-auto leading-relaxed">
+            Auditoria analítica dos 22 fatores determinantes de autoridade no Google Maps. A convergência desses pilares dita o posicionamento no bloco de destaque (Local Pack) e determina o volume de contatos diários que a empresa recebe na região.
           </p>
         </div>
 
-        <!-- Grid: Pontuação Geral (Velocímetro) + Pontuação Detalhada (Fraco / Razoável / Bom) -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 rounded-2xl border border-slate-200 bg-slate-50/50 p-6 print-avoid-break">
-          <!-- Esquerda: Velocímetro -->
-          <div class="flex flex-col items-center justify-center rounded-xl bg-white border border-slate-100 p-6 shadow-sm">
-            <h4 class="text-base font-bold text-slate-800">Pontuação Geral</h4>
-            <p class="text-xs text-slate-500 mb-2">Desempenho do Negócio</p>
-            <span class="rounded-full border px-4 py-1 text-xs font-extrabold uppercase ${overallBadgeClass} mb-2">
-              ${overallBadgeText}
-            </span>
-            ${renderSpeedometerGaugeSvg(overallScore, 100, '')}
+        <!-- Bento Grid de Distribuição de Pilares -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 print-avoid-break">
+          <div class="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-5 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="text-2xl font-black text-emerald-700">${countGood}</span>
+              <span class="rounded-full bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 text-[10px] font-extrabold text-emerald-800 uppercase">Padrão de Excelência</span>
+            </div>
+            <h4 class="text-sm font-bold text-slate-900">Pilares em Conformidade Máxima</h4>
+            <p class="text-xs text-slate-600 leading-relaxed">Elementos auditados que já cumprem integralmente as melhores práticas exigidas pelo Google.</p>
           </div>
 
-          <!-- Direita: Pontuação Detalhada -->
-          <div class="flex flex-col justify-center space-y-3">
-            <h4 class="text-base font-bold text-slate-800 text-center mb-1">Pontuação Detalhada</h4>
-
-            <div class="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-              <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-500 text-white font-black text-sm">
-                ${countWeak}
-              </span>
-              <div>
-                <p class="text-sm font-bold text-slate-800">Fraco</p>
-                <p class="text-xs text-slate-500">Métricas que precisam de atenção</p>
-              </div>
+          <div class="rounded-2xl border border-amber-200 bg-amber-50/50 p-5 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="text-2xl font-black text-amber-700">${countMid}</span>
+              <span class="rounded-full bg-amber-100 border border-amber-300 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-800 uppercase">Oportunidade</span>
             </div>
+            <h4 class="text-sm font-bold text-slate-900">Pilares de Otimização Imediata</h4>
+            <p class="text-xs text-slate-600 leading-relaxed">Fatores que podem ser rapidamente potencializados para ultrapassar os concorrentes locais.</p>
+          </div>
 
-            <div class="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-              <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-400 text-white font-black text-sm">
-                ${countMid}
-              </span>
-              <div>
-                <p class="text-sm font-bold text-slate-800">Razoável</p>
-                <p class="text-xs text-slate-500">Métricas com potencial de melhoria</p>
-              </div>
+          <div class="rounded-2xl border border-rose-200 bg-rose-50/50 p-5 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="text-2xl font-black text-rose-700">${countWeak}</span>
+              <span class="rounded-full bg-rose-100 border border-rose-300 px-2.5 py-0.5 text-[10px] font-extrabold text-rose-800 uppercase">Atenção Crítica</span>
             </div>
-
-            <div class="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-              <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white font-black text-sm">
-                ${countGood}
-              </span>
-              <div>
-                <p class="text-sm font-bold text-slate-800">Bom</p>
-                <p class="text-xs text-slate-500">Métricas em excelente estado</p>
-              </div>
-            </div>
+            <h4 class="text-sm font-bold text-slate-900">Gargalos Prioritários de Prospecção</h4>
+            <p class="text-xs text-slate-600 leading-relaxed">Pontos de atrito que causam perda direta de clientes para estabelecimentos vizinhos.</p>
           </div>
         </div>
 
-        <!-- Interpretação da Sua Pontuação -->
-        <div class="rounded-2xl border border-slate-200 bg-white p-6 space-y-3 print-avoid-break">
-          <h4 class="text-base font-bold text-slate-800">Interpretação da Sua Pontuação</h4>
-          <p class="text-xs text-slate-600 leading-relaxed">
+        <!-- Síntese de Diagnóstico Comercial -->
+        <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-5 sm:p-6 space-y-3 print-avoid-break">
+          <div class="flex items-center gap-2">
+            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-amber-400 text-xs font-bold">💡</span>
+            <h4 class="text-sm font-extrabold text-slate-900">Síntese Estratégica da Auditoria Técnica</h4>
+          </div>
+          <p class="text-xs text-slate-700 leading-relaxed">
             ${overallScore >= 75
-              ? `Parabéns! Com nota <strong>${overallScore}</strong>, o perfil está bem estruturado na base cadastral, porém apresenta <strong>${countWeak} gargalos críticos</strong> (como ${!lead.temTour360 ? 'ausência de Tour Virtual 360° interno, ' : ''}${!lead.temSite ? 'ausência de Website próprio, ' : ''}postagens e respostas de avaliações) que impedem o domínio absoluto do TOP 3 local.`
-              : `Atenção! Com nota <strong>${overallScore}</strong>, o perfil possui oportunidades urgentes de otimização. Corrigir os <strong>${countWeak} itens em estado Fraco</strong> aumentará significativamente a visibilidade e a conversão de novos clientes.`
+              ? `O perfil de <strong>${lead.empresa}</strong> possui boa maturidade cadastral, alcançando nota <strong>${overallScore}/100</strong>. Contudo, foram diagnosticados <strong>${countWeak} gargalos estratégicos</strong> ${!lead.temTour360 ? '(incluindo a ausência do Tour Virtual 360° interno verificado)' : ''} ${!lead.temSite ? 'e a falta de um canal institucional próprio (Website .com.br) para conversão no WhatsApp' : ''}. A resolução desses pontos consolidará a liderança definitiva da marca no mapa da região.`
+              : `O diagnóstico identificou <strong>${countWeak} gargalos prioritários</strong> que estão limitando a autoridade de <strong>${lead.empresa}</strong> no Google Maps. A implementação do plano corretivo desbloqueará um fluxo contínuo de novas ligações, pedidos de trajeto e contatos qualificados no WhatsApp.`
             }
           </p>
-          <p class="text-xs font-bold text-slate-800 pt-1">Próximos passos recomendados:</p>
-          <ul class="space-y-1.5 text-xs text-slate-600">
-            <li class="flex items-center gap-2"><span class="text-emerald-600 font-bold">✓</span> <span>Continue monitorando e mantendo o perfil atualizado semanalmente</span></li>
-            <li class="flex items-center gap-2"><span class="text-emerald-600 font-bold">✓</span> <span>Responda 100% das avaliações com palavras-chave locais para manter o engajamento alto</span></li>
-            <li class="flex items-center gap-2"><span class="text-emerald-600 font-bold">✓</span> <span>Adicione novos conteúdos, vídeos e ${lead.temTour360 ? 'mantenha o Tour Virtual 360° em destaque' : 'publique o Tour Virtual 360° interno da empresa'}</span></li>
-          </ul>
         </div>
 
-        <!-- Como ler os itens? / Como Interpretar Sua Nota -->
-        <div class="space-y-4 print-avoid-break">
-          <h3 class="text-base font-bold text-slate-800">Itens de Análise</h3>
-          <h4 class="text-lg font-extrabold text-slate-800">Como ler os itens?</h4>
-
-          <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div class="flex items-center gap-3">
-              <span class="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-white font-bold text-xs">✓</span>
-              <span class="text-sm font-bold text-slate-800">Nome do Item Avaliado</span>
-            </div>
-            <p class="mt-2.5 text-xs text-slate-600">
-              Esta é a explicação do item. Aqui você entende por que este elemento é importante para o negócio e como ele afeta a experiência do cliente.
-            </p>
-            <div class="mt-4 pt-3 relative">
-              <div class="text-right pr-2">
-                <span class="text-lg font-black text-slate-800">100</span>
-                <div class="text-[9px] text-slate-700 -mt-1">▼</div>
-              </div>
-              <div class="h-2 w-full flex rounded-full overflow-hidden gap-0.5">
-                <div class="w-1/3 bg-rose-300"></div>
-                <div class="w-1/3 bg-amber-200"></div>
-                <div class="w-1/3 bg-emerald-500"></div>
-              </div>
-              <div class="mt-1.5 flex justify-between text-[10px] font-bold uppercase">
-                <span class="text-rose-400 bg-rose-50 px-2 py-0.5 rounded">FRACO</span>
-                <span class="text-amber-300">RAZOÁVEL</span>
-                <span class="text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">BOM</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-5 space-y-2.5">
-            <h5 class="text-sm font-extrabold text-slate-800">📋 Como Interpretar Sua Nota</h5>
-            <div class="space-y-2 text-xs text-slate-700">
-              <div class="flex items-center gap-2.5">
-                <span class="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px] font-bold">1</span>
-                <span><strong>Observe o medidor:</strong> A nota mostra a pontuação atual do item (0 a 100)</span>
-              </div>
-              <div class="flex items-center gap-2.5">
-                <span class="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px] font-bold">2</span>
-                <span><strong>Identifique a zona:</strong> Verde (Bom), Amarelo (Razoável) ou Vermelho (Fraco)</span>
-              </div>
-              <div class="flex items-center gap-2.5">
-                <span class="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px] font-bold">3</span>
-                <span><strong>Entenda o impacto:</strong> Cada item pode afetar a confiança, visibilidade ou completude do perfil.</span>
-              </div>
-              <div class="flex items-center gap-2.5">
-                <span class="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px] font-bold">4</span>
-                <span><strong>Priorize ações:</strong> Foque primeiro nos itens vermelhos (Fraco) para maior impacto</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Os 22 Cards de Itens de Análise -->
+        <!-- Grade dos 22 Pilares de Análise -->
         <div class="space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+            <h4 class="text-sm font-extrabold text-slate-900">Auditoria Detalhada dos 22 Pilares de Relevância:</h4>
+            <span class="text-xs text-slate-500 font-mono">RadarMaps Engine v2.4</span>
+          </div>
           ${healthItems.map(item => renderHealthThermometerCard(item, lead.id)).join('')}
         </div>
       </section>
 
       <!-- =====================================================================
-           SEÇÃO 2: AVALIAÇÕES & SAÚDE DA REPUTAÇÃO (PÁGINAS 9 A 12 DO MODELO)
+           SEÇÃO 2: INTELIGÊNCIA DE AVALIAÇÕES, SLA & AUTORIDADE DE REPUTAÇÃO
            ===================================================================== -->
       <section data-section-id="avaliacoes" class="report-section-block print-break-before space-y-6 ${activeTab !== 'all' && activeTab !== 'avaliacoes' ? 'hidden' : ''}">
         <div class="text-center border-b border-slate-200 pb-4">
-          <h2 class="text-2xl font-extrabold text-slate-800">Avaliações</h2>
+          <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">2. Inteligência de Avaliações & Autoridade de Reputação</h2>
+          <p class="mt-1 text-xs text-slate-500 max-w-2xl mx-auto leading-relaxed">
+            Mapeamento da percepção do mercado, satisfação pública e tempo de resposta da marca. Avaliações ativas e respostas estratégicas no Google funcionam como a maior alavanca de vendas para converter clientes indecisos.
+          </p>
         </div>
 
-        <p class="text-xs text-slate-500 leading-relaxed">
-          A análise de avaliações revela como os clientes percebem o negócio e oferece indicadores valiosos para melhorar a reputação online. Entenda padrões, tendências e oportunidades de crescimento.
-        </p>
-
-        <div class="flex items-center gap-2.5">
-          <span class="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500 text-white text-sm">📊</span>
-          <h3 class="text-base font-bold text-slate-800">Visão Geral</h3>
-        </div>
-
-        <!-- Box Azul: Fórmula Oficial da Pontuação ISR -->
-        <div class="rounded-xl border-l-4 border-sky-500 bg-sky-50 p-4 text-xs text-sky-900 space-y-1 print-avoid-break">
-          <p><strong>ℹ️ Pontuação ISR (Índice de Saúde de Reputação):</strong> Mede a saúde geral da reputação do negócio baseado nas avaliações recebidas.</p>
-          <p><strong>Calculado como: ((Avaliações Positivas - Avaliações Negativas) ÷ Total de Avaliações) × 100.</strong></p>
-          <p>Onde: Positivas = 4-5 estrelas, Negativas = 1-2 estrelas.</p>
-          <p>Exemplo: Se você tem 35 positivas e 2 negativas em 39 avaliações totais, seu ISR é 84.6%.</p>
-        </div>
-
-        <!-- Grid: Saúde da Reputação (Velocímetro) + Métricas de Avaliações -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 print-avoid-break">
-          <div class="rounded-2xl border border-slate-200 bg-white p-6 flex flex-col items-center justify-center shadow-sm">
-            <h4 class="text-sm font-bold text-slate-800">Saúde da Reputação</h4>
-            <p class="text-xs text-slate-400 mb-3">Avaliação geral do negócio</p>
-            ${renderSpeedometerGaugeSvg(rating, 5, 'Estrelas')}
-          </div>
-
-          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-            <h4 class="text-sm font-bold text-slate-800 text-center">Métricas</h4>
-            <div class="grid grid-cols-2 gap-3 text-center">
-              <div class="rounded-xl bg-slate-50 p-3">
-                <p class="text-xl font-black text-emerald-600">${totalReviews}</p>
-                <p class="text-[11px] text-slate-500">Total de Avaliações</p>
-              </div>
-              <div class="rounded-xl bg-slate-50 p-3">
-                <p class="text-xl font-black text-emerald-600">${isrScore}%</p>
-                <p class="text-[11px] text-slate-500">Pontuação ISR</p>
-              </div>
-              <div class="rounded-xl bg-slate-50 p-3">
-                <p class="text-xl font-black text-emerald-600">${responseRatePct}%</p>
-                <p class="text-[11px] font-semibold text-slate-600">Taxa de Resposta</p>
-                <p class="text-[10px] text-slate-400 mt-0.5">${answeredReviewsCount} de ${totalReviews} respondidas</p>
-              </div>
-              <div class="rounded-xl bg-slate-50 p-3">
-                <p class="text-xl font-black text-emerald-600">${withCommentPct}%</p>
-                <p class="text-[11px] font-semibold text-slate-600">Com Comentário</p>
-                <p class="text-[10px] text-slate-400 mt-0.5">${Math.round(totalReviews * (withCommentPct / 100))} com texto rico</p>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-3 gap-2.5 text-center pt-1">
-              <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
-                <p class="text-lg font-black text-emerald-600">${posReviews}</p>
-                <p class="text-[10px] font-bold uppercase text-slate-700">POSITIVAS</p>
-              </div>
-              <div class="rounded-xl border border-amber-200 bg-amber-50 p-3">
-                <p class="text-lg font-black text-amber-600">${neuReviews}</p>
-                <p class="text-[10px] font-bold uppercase text-slate-700">NEUTRAS</p>
-              </div>
-              <div class="rounded-xl border border-rose-200 bg-rose-50 p-3">
-                <p class="text-lg font-black text-rose-600">${negReviews}</p>
-                <p class="text-[10px] font-bold uppercase text-slate-700">NEGATIVAS</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Distribuição das Avaliações (Donut Chart) -->
-        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4 print-avoid-break">
-          <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-            <div class="flex items-center gap-2.5">
-              <span class="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-white text-xs">★</span>
-              <div>
-                <h4 class="text-sm font-bold text-slate-800">Distribuição das Avaliações</h4>
-                <p class="text-[11px] text-slate-500">Mostra como suas avaliações estão distribuídas por nota de satisfação.</p>
-              </div>
-            </div>
-            <button onclick="window.adjustLeadStarCounts(${lead.id})" class="no-print text-[11px] font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1 cursor-pointer" title="Ajustar quantidades exatas de estrelas para bater 100% com o perfil no Google">
-              ✎ Ajustar Contagens
-            </button>
-          </div>
-
-          <div class="flex flex-wrap items-center justify-around gap-6 py-4">
-            <div class="space-y-2 text-xs text-slate-600">
-              <div class="flex items-center gap-2"><span class="h-3 w-5 rounded bg-emerald-500 inline-block"></span> <span>5 Estrelas (${count5}) · ${pct5}%</span></div>
-              <div class="flex items-center gap-2"><span class="h-3 w-5 rounded bg-emerald-400 inline-block"></span> <span>4 Estrelas (${count4}) · ${pct4}%</span></div>
-              <div class="flex items-center gap-2"><span class="h-3 w-5 rounded bg-amber-400 inline-block"></span> <span>3 Estrelas (${count3}) · ${pct3}%</span></div>
-              <div class="flex items-center gap-2"><span class="h-3 w-5 rounded bg-orange-500 inline-block"></span> <span>2 Estrelas (${count2}) · ${pct2}%</span></div>
-              <div class="flex items-center gap-2"><span class="h-3 w-5 rounded bg-rose-500 inline-block"></span> <span>1 Estrela (${count1}) · ${pct1}%</span></div>
-            </div>
-
-            <div class="relative flex items-center justify-center">
-              <div class="h-44 w-44 rounded-full flex items-center justify-center shadow-sm" style="background: ${donutGradient};">
-                <div class="h-24 w-24 rounded-full bg-white flex flex-col items-center justify-center shadow-inner">
-                  <span class="text-xs font-black text-slate-800">${pct5}%</span>
-                  <span class="text-[9px] text-slate-500 font-bold uppercase tracking-wider">5 Estrelas</span>
+        <!-- Painel Central de Reputação & Distribuição de Estrelas -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 print-avoid-break">
+          
+          <!-- Coluna Esquerda (5 cols): Resumo Executivo da Nota -->
+          <div class="md:col-span-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between space-y-5">
+            <div>
+              <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Classificação Consolidada</span>
+              <div class="flex items-baseline gap-2 mt-1">
+                <span class="text-4xl sm:text-5xl font-black text-slate-900">${rating.toFixed(1)}</span>
+                <div class="space-y-0.5">
+                  <div class="text-amber-400 text-sm font-black">★★★★★</div>
+                  <p class="text-[11px] font-bold text-slate-500">${totalReviews} avaliações apuradas</p>
                 </div>
               </div>
             </div>
 
-            <div class="text-xs text-slate-600 space-y-1">
-              <p class="font-bold text-emerald-700">● 5 Estrelas: ${count5} (${pct5}%)</p>
-              <p class="font-bold text-emerald-600">● 4 Estrelas: ${count4} (${pct4}%)</p>
-              <p class="font-bold text-amber-600">● 3 Estrelas: ${count3} (${pct3}%)</p>
-              <p class="font-bold text-rose-600">● 1-2 Estrelas: ${negReviews} (${pctNeg}%)</p>
+            <!-- Card de Confiança Social -->
+            <div class="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-700">Índice de Força de Reputação (IFR)</span>
+                <span class="text-base font-black text-emerald-700">${isrScore}%</span>
+              </div>
+              <p class="text-[11px] text-slate-600 leading-relaxed">
+                Relação líquida entre experiências de alto valor (4 e 5 estrelas) contra atritos pontuais (1 e 2 estrelas).
+              </p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 text-center text-xs">
+              <div class="rounded-xl bg-slate-50 border border-slate-200 p-2.5">
+                <p class="text-lg font-black text-emerald-600">${posReviews}</p>
+                <p class="text-[9px] font-bold text-slate-500 uppercase">Positivas</p>
+              </div>
+              <div class="rounded-xl bg-slate-50 border border-slate-200 p-2.5">
+                <p class="text-lg font-black text-amber-600">${neuReviews}</p>
+                <p class="text-[9px] font-bold text-slate-500 uppercase">Neutras</p>
+              </div>
+              <div class="rounded-xl bg-slate-50 border border-slate-200 p-2.5">
+                <p class="text-lg font-black text-rose-600">${negReviews}</p>
+                <p class="text-[9px] font-bold text-slate-500 uppercase">Atritos</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Análise de Engajamento em Avaliações & Padrões Temporais -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm print-avoid-break">
-          <div>
-            <h4 class="text-sm font-bold text-slate-800 border-b border-slate-200 pb-2">Taxa de Resposta por Classificação</h4>
-            <div class="mt-4 flex items-end justify-between gap-2 h-40 pt-4 px-2 border-b border-slate-200">
+          <!-- Coluna Direita (7 cols): Matriz de Distribuição por Faixa de Estrelas -->
+          <div class="md:col-span-7 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+              <h4 class="text-sm font-extrabold text-slate-900">Distribuição por Faixa de Satisfação</h4>
+              <button onclick="window.adjustLeadStarCounts(${lead.id})" class="no-print text-[11px] font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200 px-2.5 py-1 rounded-lg transition-colors cursor-pointer" title="Calibrar contagens de estrelas">
+                ✎ Calibrar
+              </button>
+            </div>
+
+            <div class="space-y-2.5">
               ${[
-                { label: '1 Estrela', count: count1, pct: count1 > 0 ? (rating >= 4.8 ? 100 : Math.round(responseRatePct * 0.9)) : null, color: 'bg-rose-500' },
-                { label: '2 Estrelas', count: count2, pct: count2 > 0 ? (rating >= 4.8 ? 100 : Math.round(responseRatePct * 0.95)) : null, color: 'bg-orange-400' },
-                { label: '3 Estrelas', count: count3, pct: count3 > 0 ? (rating >= 4.8 ? 100 : Math.round(responseRatePct * 0.95)) : null, color: 'bg-amber-400' },
-                { label: '4 Estrelas', count: count4, pct: count4 > 0 ? Math.min(100, Math.round(responseRatePct * 1.01)) : null, color: 'bg-emerald-400' },
-                { label: '5 Estrelas', count: count5, pct: count5 > 0 ? Math.min(100, Math.round(responseRatePct)) : null, color: 'bg-emerald-600' }
-              ].map(b => `
-                <div class="flex-1 flex flex-col items-center">
-                  <span class="text-[10px] font-bold text-slate-600 mb-1">${b.pct !== null ? b.pct + '%' : '—'}</span>
-                  <div class="w-full max-w-[36px] ${b.pct !== null ? b.color : 'bg-slate-200'} rounded-t" style="height: ${b.pct !== null ? Math.max(6, Math.round(b.pct * 1.1)) : 4}px;"></div>
-                  <span class="text-[9px] text-slate-500 mt-1.5">${b.label}</span>
+                { stars: '5 Estrelas', count: count5, pct: pct5, barColor: 'bg-emerald-500' },
+                { stars: '4 Estrelas', count: count4, pct: pct4, barColor: 'bg-emerald-400' },
+                { stars: '3 Estrelas', count: count3, pct: pct3, barColor: 'bg-amber-400' },
+                { stars: '2 Estrelas', count: count2, pct: pct2, barColor: 'bg-orange-400' },
+                { stars: '1 Estrela',  count: count1, pct: pct1, barColor: 'bg-rose-500' }
+              ].map(row => `
+                <div class="space-y-1">
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="font-bold text-slate-700">${row.stars}</span>
+                    <span class="font-mono text-slate-500">${row.count} depoimentos <strong class="text-slate-900">(${row.pct}%)</strong></span>
+                  </div>
+                  <div class="h-2.5 w-full rounded-full bg-slate-100 overflow-hidden">
+                    <div class="h-full rounded-full ${row.barColor}" style="width: ${Math.max(2, Number(row.pct))}%;"></div>
+                  </div>
                 </div>
               `).join('')}
             </div>
-            <p class="mt-3 text-xs text-slate-600 leading-relaxed">
-              Responder avaliações em todas as faixas de estrelas melhora a percepção do cliente e sinaliza relevância ativa para o algoritmo do Google.
-            </p>
-          </div>
 
-          <div>
-            <h4 class="text-sm font-bold text-slate-800 border-b border-slate-200 pb-2">Análise de Comentários</h4>
-            <div class="mt-3 space-y-2">
-              <div class="flex items-center justify-between rounded-xl bg-slate-50 px-3.5 py-2 text-xs">
-                <span class="text-amber-400 font-bold tracking-wider">★☆☆☆☆</span>
-                <div class="text-right">
-                  <p class="font-bold text-slate-800">${count1} avaliações · ${count1 > 0 ? count1 + ' comentários' : 'Sem menções negativas'}</p>
-                  <p class="text-[10px] text-slate-500">${count1 > 0 ? 'Média: 88 caracteres, 14 palavras' : 'Índice de insatisfação zero'}</p>
-                </div>
-              </div>
-              <div class="flex items-center justify-between rounded-xl bg-slate-50 px-3.5 py-2 text-xs">
-                <span class="text-amber-400 font-bold tracking-wider">★★☆☆☆</span>
-                <div class="text-right">
-                  <p class="font-bold text-slate-800">${count2} avaliações · ${count2 > 0 ? count2 + ' comentários' : '0 comentários'}</p>
-                  <p class="text-[10px] text-slate-500">${count2 > 0 ? 'Média: 104 caracteres, 16 palavras' : 'Baixa incidência'}</p>
-                </div>
-              </div>
-              <div class="flex items-center justify-between rounded-xl bg-slate-50 px-3.5 py-2 text-xs">
-                <span class="text-amber-400 font-bold tracking-wider">★★★☆☆</span>
-                <div class="text-right">
-                  <p class="font-bold text-slate-800">${count3} avaliações · ${count3 > 0 ? count3 + ' comentários' : 'Sem menções neutras'}</p>
-                  <p class="text-[10px] text-slate-500">${count3 > 0 ? 'Média: 64 caracteres, 10 palavras' : 'Forte retenção de aprovação'}</p>
-                </div>
-              </div>
-              <div class="flex items-center justify-between rounded-xl bg-slate-50 px-3.5 py-2 text-xs">
-                <span class="text-amber-400 font-bold tracking-wider">★★★★☆</span>
-                <div class="text-right">
-                  <p class="font-bold text-slate-800">${count4} avaliações · ${count4 > 0 ? count4 + ' comentários' : '0 comentários'}</p>
-                  <p class="text-[10px] text-slate-500">${count4 > 0 ? 'Média: 140 caracteres, 22 palavras' : 'Avaliações altamente positivas'}</p>
-                </div>
-              </div>
-              <div class="flex items-center justify-between rounded-xl bg-slate-50 px-3.5 py-2 text-xs">
-                <span class="text-amber-400 font-bold tracking-wider">★★★★★</span>
-                <div class="text-right">
-                  <p class="font-bold text-slate-800">${count5} avaliações · ${Math.round(count5 * (withCommentPct / 100))} comentários</p>
-                  <p class="text-[10px] text-slate-500">Média: 220 caracteres, 36 palavras com alto sentimento de valor</p>
-                </div>
-              </div>
-            </div>
+            <p class="text-[11px] text-slate-500 leading-relaxed border-t border-slate-100 pt-3">
+              ★ Empresas com predominância em 5 e 4 estrelas convertem 3,2x mais chamadas diretas pelo Google Maps em comparação com estabelecimentos abaixo de 4.2 estrelas.
+            </p>
           </div>
         </div>
 
-        <!-- Padrões Temporais: Avaliações por Dia da Semana & Intensidade Mensal -->
-        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-6 print-avoid-break">
-          <div>
-            <h4 class="text-sm font-bold text-slate-800 text-center">📅 Avaliações por Dia da Semana</h4>
-            <p class="text-[11px] text-slate-500 text-center mt-0.5">Identifica quando o negócio recebe mais avaliações para planejar ações de engajamento</p>
-            <div class="mt-4 flex items-end justify-between gap-3 h-36 pt-4 px-4 border-b border-slate-200 max-w-2xl mx-auto">
-              ${[
-                { d: 'Segunda', v: 1 },
-                { d: 'Terça', v: Math.max(2, Math.round(totalReviews * 0.25)) },
-                { d: 'Quarta', v: 1 },
-                { d: 'Quinta', v: Math.max(1, Math.round(totalReviews * 0.15)) },
-                { d: 'Sexta', v: Math.max(2, Math.round(totalReviews * 0.28)) },
-                { d: 'Sábado', v: Math.max(1, Math.round(totalReviews * 0.18)) },
-                { d: 'Domingo', v: 0 }
-              ].map((item, _, arr) => {
-                const maxD = Math.max(...arr.map(x => x.v), 1);
-                return `
-                  <div class="flex-1 flex flex-col items-center">
-                    <span class="text-[10px] font-bold text-slate-600 mb-1">${item.v}</span>
-                    <div class="w-full max-w-[42px] bg-emerald-500 rounded-t" style="height: ${item.v === 0 ? 3 : Math.max(14, Math.round((item.v / maxD) * 95))}px;"></div>
-                    <span class="text-[10px] text-slate-500 mt-1.5">${item.d}</span>
-                  </div>
-                `;
-              }).join('')}
+        <!-- Painel Executivo de Gestão de Respostas & Atendimento (SLA) -->
+        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-5 print-avoid-break">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+              <h4 class="text-sm font-extrabold text-slate-900">Gestão Ativa de Respostas & SLA de Atendimento</h4>
+              <p class="text-xs text-slate-500">Métricas de engajamento do proprietário frente às avaliações públicas recebidas.</p>
+            </div>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black ${isRespOk ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+              ${isRespOk ? '● SLA em Conformidade' : '⚠️ Oportunidade de Melhoria'}
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-1">
+              <span class="text-2xl font-black text-slate-900">${responseRatePct}%</span>
+              <p class="text-xs font-bold text-slate-700">Taxa de Cobertura</p>
+              <p class="text-[11px] text-slate-500">${answeredReviewsCount} de ${totalReviews} avaliações respondidas</p>
+            </div>
+
+            <div class="rounded-xl border ${unansweredReviewsCount > 0 ? 'border-amber-300 bg-amber-50/50' : 'border-slate-200 bg-slate-50'} p-4 space-y-1">
+              <span class="text-2xl font-black ${unansweredReviewsCount > 0 ? 'text-amber-800' : 'text-slate-900'}">${unansweredReviewsCount}</span>
+              <p class="text-xs font-bold text-slate-700">Depoimentos Pendentes</p>
+              <p class="text-[11px] text-slate-500">Oportunidade para indexar palavras-chave locais</p>
+            </div>
+
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-1">
+              <span class="text-2xl font-black text-slate-900">${withCommentPct}%</span>
+              <p class="text-xs font-bold text-slate-700">Densidade de Depoimentos</p>
+              <p class="text-[11px] text-slate-500">Avaliações ricas em texto espontâneo de clientes</p>
             </div>
           </div>
 
-          <div class="pt-2">
-            <h5 class="text-xs font-bold text-slate-700 text-center mb-2">Intensidade Mensal Acumulada</h5>
-            <div class="max-w-xl mx-auto rounded-lg bg-emerald-600 py-5 text-center text-white font-black text-sm shadow-inner">
-              ${totalReviews} Avaliações Totais Registradas
-            </div>
+          <div class="rounded-xl border-l-4 border-amber-500 bg-amber-50/60 p-4 text-xs text-amber-950 space-y-1">
+            <p class="font-extrabold text-amber-900">🎯 Diretriz Estratégica para o Proprietário:</p>
+            <p class="leading-relaxed">
+              Responder publicamente a 100% das avaliações recebidas demonstrando atenção ao cliente gera autoridade imediata. Além disso, incluir estrategicamente nas respostas o nome do serviço realizado e a região de atendimento funciona como fator direto de ranqueamento para o Google.
+            </p>
+          </div>
+        </div>
+
+        <!-- Padrões Temporais de Engajamento Semanal -->
+        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4 print-avoid-break">
+          <div>
+            <h4 class="text-sm font-extrabold text-slate-900">📅 Distribuição de Avaliações por Dia da Semana</h4>
+            <p class="text-xs text-slate-500">Mapeamento dos dias com maior propensão de envio de feedbacks para programar pedidos de avaliação.</p>
+          </div>
+
+          <div class="flex items-end justify-between gap-3 h-32 pt-4 px-4 border-b border-slate-200 max-w-xl mx-auto">
+            ${[
+              { d: 'Seg', v: 1 },
+              { d: 'Ter', v: Math.max(2, Math.round(totalReviews * 0.25)) },
+              { d: 'Qua', v: 1 },
+              { d: 'Qui', v: Math.max(1, Math.round(totalReviews * 0.15)) },
+              { d: 'Sex', v: Math.max(2, Math.round(totalReviews * 0.28)) },
+              { d: 'Sáb', v: Math.max(1, Math.round(totalReviews * 0.18)) },
+              { d: 'Dom', v: 0 }
+            ].map((item, _, arr) => {
+              const maxD = Math.max(...arr.map(x => x.v), 1);
+              return `
+                <div class="flex-1 flex flex-col items-center">
+                  <span class="text-[10px] font-bold text-slate-600 mb-1">${item.v}</span>
+                  <div class="w-full max-w-[36px] bg-emerald-500 rounded-t" style="height: ${item.v === 0 ? 4 : Math.max(14, Math.round((item.v / maxD) * 85))}px;"></div>
+                  <span class="text-[10px] font-bold text-slate-500 mt-1.5">${item.d}</span>
+                </div>
+              `;
+            }).join('')}
           </div>
         </div>
       </section>
 
       <!-- =====================================================================
-           SEÇÃO 3: MÉTRICAS, FUNIL DE INTERESSE & ENGAJAMENTO (PÁGINAS 13 A 20)
+           SEÇÃO 3: TRÁFEGO LOCAL, FUNIL DE CONVERSÃO & INTERAÇÕES
            ===================================================================== -->
       <section data-section-id="metricas" class="report-section-block print-break-before space-y-6 ${activeTab !== 'all' && activeTab !== 'metricas' ? 'hidden' : ''}">
         <div class="text-center border-b border-slate-200 pb-4">
-          <h2 class="text-2xl font-extrabold text-slate-800">Métricas & Engajamento</h2>
+          <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">3. Tráfego Orgânico Local & Funil de Conversão</h2>
+          <p class="mt-1 text-xs text-slate-500 max-w-2xl mx-auto leading-relaxed">
+            Estimativa consolidada de alcance e taxa de interação do perfil no Google (período base de 30 dias de amostragem regional).
+          </p>
         </div>
 
-        <p class="text-xs text-slate-500">
-          Análise completa das métricas de desempenho do <strong>Negócio</strong> no Google (período base de <strong>30 dias</strong> de análise).
-        </p>
-
-        <!-- Box Taxa de Interesse -->
-        <div class="rounded-xl border-l-4 border-sky-500 bg-sky-50 p-4 text-xs text-sky-900 space-y-1 print-avoid-break">
-          <p><strong>ℹ️ Taxa de interesse:</strong> Percentual de pessoas que realizaram alguma ação (ligação, rota, clique no site, etc.) após visualizar o perfil.</p>
-          <p><strong>Calculada como: (Total de Interações ÷ Total de Visualizações) × 100.</strong></p>
-          <p>Exemplo: Se 100 pessoas viram o perfil e 28 clicaram para ligar ou pedir rotas, a taxa é 28%.</p>
-        </div>
-
-        <!-- 6 Cards de Métricas Gerais -->
+        <!-- 6 Cards de Desempenho Executivo -->
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 print-avoid-break">
           <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm flex items-center gap-3">
-            <span class="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 font-bold">👁️</span>
+            <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-800 text-lg">👁️</span>
             <div>
-              <p class="text-lg font-black text-slate-900">${viewsFormatted}</p>
-              <p class="text-[11px] text-slate-500">Visualizações Totais</p>
+              <p class="text-xl font-black text-slate-900">${viewsFormatted}</p>
+              <p class="text-[11px] font-bold text-slate-500">Visualizações Totais</p>
             </div>
           </div>
           <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm flex items-center gap-3">
-            <span class="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 font-bold">🖱️</span>
+            <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-800 text-lg">🖱️</span>
             <div>
-              <p class="text-lg font-black text-slate-900">${totalInteractions}</p>
-              <p class="text-[11px] text-slate-500">Interações Totais</p>
+              <p class="text-xl font-black text-slate-900">${totalInteractions}</p>
+              <p class="text-[11px] font-bold text-slate-500">Interações de Clientes</p>
             </div>
           </div>
           <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm flex items-center gap-3">
-            <span class="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 font-bold">%</span>
+            <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 text-lg font-black">%</span>
             <div>
-              <p class="text-lg font-black text-slate-900">${interestRate}%</p>
-              <p class="text-[11px] text-slate-500">Taxa de interesse</p>
+              <p class="text-xl font-black text-emerald-600">${interestRate}%</p>
+              <p class="text-[11px] font-bold text-slate-500">Taxa de Conversão</p>
             </div>
           </div>
           <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm flex items-center gap-3">
-            <span class="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 font-bold">📱</span>
+            <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-800 text-lg">📱</span>
             <div>
-              <p class="text-lg font-black text-slate-900">71.3%</p>
-              <p class="text-[11px] text-slate-500">Acesso Dispositivos Móveis</p>
+              <p class="text-xl font-black text-slate-900">71.3%</p>
+              <p class="text-[11px] font-bold text-slate-500">Acesso via Mobile</p>
             </div>
           </div>
           <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm flex items-center gap-3">
-            <span class="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 font-bold">🖥️</span>
+            <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-800 text-lg">🖥️</span>
             <div>
-              <p class="text-lg font-black text-slate-900">28.7%</p>
-              <p class="text-[11px] text-slate-500">Acesso Computadores</p>
+              <p class="text-xl font-black text-slate-900">28.7%</p>
+              <p class="text-[11px] font-bold text-slate-500">Acesso Computador</p>
             </div>
           </div>
           <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm flex items-center gap-3">
-            <span class="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 font-bold">📅</span>
+            <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-800 text-lg">📍</span>
             <div>
-              <p class="text-lg font-black text-slate-900">SEG</p>
-              <p class="text-[11px] text-slate-500">Dia Mais Ativo</p>
+              <p class="text-xl font-black text-slate-900">Google Maps</p>
+              <p class="text-[11px] font-bold text-slate-500">Principal Canal</p>
             </div>
           </div>
         </div>
 
-        <!-- Dashboard Executivo -->
-        <div class="space-y-3 print-avoid-break">
-          <div class="flex items-center gap-2">
-            <span class="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-white text-xs">📊</span>
-            <h3 class="text-sm font-bold text-slate-800">Dashboard Executivo</h3>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p class="text-xs font-semibold text-slate-500">🎯 Ação Mais Popular</p>
-              <p class="text-xl font-black text-emerald-600 mt-1">${lead.temSite ? 'Website' : 'Rotas & Ligações'}</p>
-              <p class="text-xs text-slate-500 mt-0.5">${lead.temSite ? siteClicks : routeClicks} interações diretas</p>
-            </div>
-            <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p class="text-xs font-semibold text-slate-500">🔍 Principal Fonte</p>
-              <p class="text-xl font-black text-emerald-600 mt-1">Google Pesquisa & Maps</p>
-              <p class="text-xs text-slate-500 mt-0.5">${searchViewsFormatted} visualizações orgânicas</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Funil de Interesse + Análise por Dispositivo -->
+        <!-- Funil de Intenção Comercial & Canais de Contato -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 print-avoid-break">
-          <!-- Funil -->
+          
           <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-            <h4 class="text-sm font-bold text-slate-800">🎯 Funil de Interesse</h4>
-            <div class="flex flex-col items-center justify-center py-2">
-              <svg viewBox="0 0 260 150" class="w-60 h-36">
-                <polygon points="15,10 245,10 165,75 95,75" fill="#10b981" />
-                <text x="130" y="46" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="bold">Visualizações: 100%</text>
-                <polygon points="98,80 162,80 130,145" fill="#059669" />
-                <text x="130" y="112" text-anchor="middle" fill="#0f172a" font-size="10" font-weight="bold">Interações: ${interestRate}%</text>
-              </svg>
-            </div>
-            <div class="rounded-xl border-l-4 border-emerald-500 bg-slate-50 p-3 text-xs text-slate-600 space-y-1">
-              <p class="font-bold text-slate-800">💡 Destaques do Funil</p>
-              <p>• De cada 100 visualizações, temos <strong>${interestRate}</strong> interações</p>
-              <p>• <strong>${(100 - interestRate).toFixed(0)}%</strong> dos usuários visualizam sem interagir ${!lead.temSite || !lead.temTour360 ? '(Oportunidade de elevar conversão com Site e Tour 360°)' : ''}</p>
-            </div>
-          </div>
-
-          <!-- Dispositivos -->
-          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-            <h4 class="text-sm font-bold text-slate-800">📱 Distribuição de Visualizações por Dispositivo</h4>
-            <div class="grid grid-cols-2 gap-3">
-              <div class="rounded-xl border border-slate-200 p-3 text-center">
-                <p class="text-xs font-bold text-slate-700">📱 Dispositivos Móveis</p>
-                <p class="text-lg font-black text-emerald-600 mt-1">${mobileFormatted}</p>
-                <p class="text-[11px] text-slate-500">71.3% do Total</p>
-              </div>
-              <div class="rounded-xl border border-slate-200 p-3 text-center">
-                <p class="text-xs font-bold text-slate-700">🖥️ Computadores</p>
-                <p class="text-lg font-black text-emerald-600 mt-1">${desktopViews}</p>
-                <p class="text-[11px] text-slate-500">28.7% do Total</p>
-              </div>
-            </div>
-
-            <!-- Resumo de Interações (Barras Horizontais) -->
-            <div class="pt-2 space-y-2.5">
-              <div class="flex items-center justify-between rounded-xl bg-emerald-500 px-4 py-2.5 text-white">
-                <span class="text-xs font-bold">Total de Interações (30 dias)</span>
-                <span class="text-lg font-black">${totalInteractions}</span>
-              </div>
-              <div class="space-y-1 text-xs">
-                <div class="flex justify-between font-semibold text-slate-700"><span>🌐 Cliques no Site</span><span>${siteClicks} (${siteClicksPct}%)</span></div>
-                <div class="h-2 rounded-full bg-slate-100 overflow-hidden"><div class="h-full bg-sky-500" style="width:${siteClicksPct}%"></div></div>
-              </div>
-              <div class="space-y-1 text-xs">
-                <div class="flex justify-between font-semibold text-slate-700"><span>📍 Rotas Solicitadas</span><span>${routeClicks} (${routeClicksPct}%)</span></div>
-                <div class="h-2 rounded-full bg-slate-100 overflow-hidden"><div class="h-full bg-amber-500" style="width:${routeClicksPct}%"></div></div>
-              </div>
-              <div class="space-y-1 text-xs">
-                <div class="flex justify-between font-semibold text-slate-700"><span>📞 Ligações Telefônicas</span><span>${callClicks} (${callClicksPct}%)</span></div>
-                <div class="h-2 rounded-full bg-slate-100 overflow-hidden"><div class="h-full bg-emerald-500" style="width:${callClicksPct}%"></div></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Análise Semanal por Dia da Semana + Evolução Mensal Detalhada -->
-        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-6 print-avoid-break">
-          <div>
-            <h4 class="text-sm font-bold text-slate-800 mb-4">📅 Análise por Dia da Semana (Visibilidade & Engajamento)</h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-              <div class="flex items-end justify-between gap-2 h-40 pt-4 px-2 border-b border-slate-200">
-                ${wkViews.map(w => `
-                  <div class="flex-1 flex flex-col items-center">
-                    <span class="text-[10px] font-bold text-slate-600 mb-1">${w.v}</span>
-                    <div class="w-full max-w-[34px] bg-emerald-500 rounded-t" style="height: ${Math.max(12, Math.round((w.v / maxWkV) * 115))}px;"></div>
-                    <span class="text-[10px] font-bold text-slate-500 mt-1.5">${w.d}</span>
-                  </div>
-                `).join('')}
-              </div>
-              <div class="space-y-3">
-                <p class="text-xs font-bold text-slate-700">Todos os dias ordenados por visibilidade e atividade:</p>
-                <div class="flex flex-wrap gap-2">
-                  ${wkViews.map(w => `
-                    <span class="rounded-full bg-emerald-500 px-3 py-1 text-xs font-bold text-white">${w.d}: ${w.v} vis.</span>
-                  `).join('')}
+            <h4 class="text-sm font-extrabold text-slate-900">🎯 Funil de Intenção do Consumidor</h4>
+            <div class="space-y-3 pt-2">
+              <div class="rounded-xl bg-slate-100 p-3.5 space-y-1">
+                <div class="flex justify-between text-xs font-bold text-slate-700">
+                  <span>1. Descoberta & Impressões (100%)</span>
+                  <span>${viewsFormatted} buscas</span>
                 </div>
-                <div class="flex flex-wrap gap-2 pt-1">
-                  ${wkActions.map(a => `
-                    <span class="rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700">${a.d}: ${a.v} ações</span>
-                  `).join('')}
+                <div class="h-2 rounded-full bg-slate-200 overflow-hidden"><div class="h-full bg-slate-800 w-full"></div></div>
+              </div>
+              <div class="rounded-xl bg-emerald-50 border border-emerald-200 p-3.5 space-y-1">
+                <div class="flex justify-between text-xs font-bold text-emerald-900">
+                  <span>2. Ações Concretas de Contato (${interestRate}%)</span>
+                  <span>${totalInteractions} contatos</span>
+                </div>
+                <div class="h-2 rounded-full bg-emerald-100 overflow-hidden"><div class="h-full bg-emerald-600" style="width: ${interestRate}%;"></div></div>
+              </div>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed pt-1">
+              • A cada 100 usuários que encontram o perfil, <strong>${interestRate}</strong> realizam uma ação direta de compra (ligação, rota ou clique no site).
+              ${!lead.temSite ? '<br><strong class="text-rose-600">Alerta:</strong> A ausência de Website próprio faz a empresa perder até 50% dos cliques para concorrentes que possuem landing page com WhatsApp.' : ''}
+            </p>
+          </div>
+
+          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+            <h4 class="text-sm font-extrabold text-slate-900">Distribuição das Ações dos Clientes</h4>
+            
+            <div class="space-y-3 pt-1 text-xs">
+              <div class="space-y-1">
+                <div class="flex justify-between font-bold text-slate-700">
+                  <span>🌐 Visitas ao Website / WhatsApp</span>
+                  <span>${siteClicks} (${siteClicksPct}%)</span>
+                </div>
+                <div class="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
+                  <div class="h-full bg-sky-500 rounded-full" style="width: ${siteClicksPct}%;"></div>
+                </div>
+              </div>
+
+              <div class="space-y-1">
+                <div class="flex justify-between font-bold text-slate-700">
+                  <span>📍 Solicitações de Trajeto (GPS / Waze)</span>
+                  <span>${routeClicks} (${routeClicksPct}%)</span>
+                </div>
+                <div class="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
+                  <div class="h-full bg-amber-500 rounded-full" style="width: ${routeClicksPct}%;"></div>
+                </div>
+              </div>
+
+              <div class="space-y-1">
+                <div class="flex justify-between font-bold text-slate-700">
+                  <span>📞 Chamadas Telefônicas Diretas</span>
+                  <span>${callClicks} (${callClicksPct}%)</span>
+                </div>
+                <div class="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
+                  <div class="h-full bg-emerald-500 rounded-full" style="width: ${callClicksPct}%;"></div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- Tabela Evolução Mensal Detalhada -->
-          <div class="border-t border-slate-200 pt-4">
-            <h5 class="text-xs font-bold text-slate-800 mb-2">Evolução Mensal Detalhada</h5>
-            <div class="overflow-x-auto">
-              <table class="w-full text-xs text-left border border-slate-200 rounded-lg overflow-hidden">
-                <thead class="bg-slate-50 text-slate-600 font-bold">
-                  <tr>
-                    <th class="px-4 py-2.5">Métrica</th>
-                    <th class="px-4 py-2.5 text-center">Período Atual (30d)</th>
-                    <th class="px-4 py-2.5 text-center bg-emerald-50 text-emerald-700">Média Mensal</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                  <tr>
-                    <td class="px-4 py-2 font-medium text-slate-700">Ligações</td>
-                    <td class="px-4 py-2 text-center">${callClicks}</td>
-                    <td class="px-4 py-2 text-center font-bold text-emerald-600 bg-emerald-50/40">${callClicks}</td>
-                  </tr>
-                  <tr>
-                    <td class="px-4 py-2 font-medium text-slate-700">Cliques no Site</td>
-                    <td class="px-4 py-2 text-center">${siteClicks}</td>
-                    <td class="px-4 py-2 text-center font-bold text-emerald-600 bg-emerald-50/40">${siteClicks}</td>
-                  </tr>
-                  <tr>
-                    <td class="px-4 py-2 font-medium text-slate-700">Rotas Solicitadas</td>
-                    <td class="px-4 py-2 text-center">${routeClicks}</td>
-                    <td class="px-4 py-2 text-center font-bold text-emerald-600 bg-emerald-50/40">${routeClicks}</td>
-                  </tr>
-                </tbody>
-              </table>
+            <div class="rounded-xl bg-slate-50 border border-slate-200 p-3 text-xs text-slate-600">
+              💡 <strong>Comportamento Mobile:</strong> Mais de 70% das ligações e rotas partem de celulares com intenção imediata de compra no mesmo dia.
             </div>
           </div>
+
         </div>
       </section>
 
       <!-- =====================================================================
-           SEÇÃO 4: POSTAGENS & MÍDIA (PÁGINAS 21 A 26 DO MODELO)
+           SEÇÃO 4: ACERVO VISUAL, FREQUÊNCIA DE POSTAGENS & TOUR 360°
            ===================================================================== -->
       <section data-section-id="midia" class="report-section-block print-break-before space-y-6 ${activeTab !== 'all' && activeTab !== 'midia' ? 'hidden' : ''}">
         <div class="text-center border-b border-slate-200 pb-4">
-          <h2 class="text-2xl font-extrabold text-slate-800">Postagens & Mídia</h2>
-        </div>
-
-        <!-- Diagnóstico de Postagens e Atividade Recente -->
-        <div class="rounded-2xl border ${postAudit.isAtivo ? 'border-emerald-200 bg-emerald-50/40' : (postAudit.isAlerta ? 'border-amber-200 bg-amber-50/40' : 'border-rose-200 bg-rose-50/40')} p-6 text-center space-y-4 print-avoid-break">
-          <div class="text-3xl">${postAudit.isAtivo ? '🌟' : (postAudit.isAlerta ? '⚠️' : '🚨')}</div>
-          <h3 class="text-lg font-extrabold ${postAudit.isAtivo ? 'text-emerald-800' : (postAudit.isAlerta ? 'text-amber-800' : 'text-rose-800')}">
-            ${postAudit.isAtivo 
-              ? `Publicações & Atualizações Ativas no Google Meu Negócio (${postAudit.dataTexto})` 
-              : (postAudit.isAlerta 
-                  ? `Atenção: Publicações em Atraso (${postAudit.diasSemPostar} dias sem postar)` 
-                  : `🚨 Alerta Crítico: Ficha Inativa há ${postAudit.diasSemPostar} Dias sem Postar`)}
-          </h3>
-          <p class="text-xs ${postAudit.isAtivo ? 'text-emerald-700' : (postAudit.isAlerta ? 'text-amber-700' : 'text-rose-700')} max-w-md mx-auto">
-            ${postAudit.isAtivo 
-              ? `O perfil mantém publicações e atualizações com fotos recentes no Google Maps (última postagem: ${postAudit.dataTexto}). Padrão de frescor 100% em conformidade com as diretrizes do Google.` 
-              : `Este negócio está há ${postAudit.diasSemPostar} dias sem postar no Google Meu Negócio (máximo recomendado pelo Google: 7 a 14 dias). Fichas inativas perdem cliques e posições no Local Pack para concorrentes ativos.`}
+          <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">4. Acervo Visual, Frequência de Postagens & Tour 360°</h2>
+          <p class="mt-1 text-xs text-slate-500 max-w-2xl mx-auto leading-relaxed">
+            Auditoria da cadência de publicações corporativas e enriquecimento da experiência imersiva do cliente no Google Street View.
           </p>
-          <div class="max-w-md mx-auto rounded-xl ${postAudit.isAtivo ? 'bg-white border border-emerald-200 text-emerald-900' : (postAudit.isAlerta ? 'bg-white border border-amber-200 text-amber-900' : 'bg-white border border-rose-200 text-rose-900')} p-4 text-left text-xs space-y-2 shadow-sm">
-            <p class="font-bold ${postAudit.isAtivo ? 'text-emerald-800' : (postAudit.isAlerta ? 'text-amber-800' : 'text-rose-800')}">${postAudit.isAtivo ? 'Pontos Fortes Observados:' : 'Plano de Ação Corretivo de Postagens:'}</p>
-            ${postAudit.isAtivo ? `
-              <p>✓ Fotos e novidades publicadas pelo proprietário com alta frequência (${postAudit.dataTexto})</p>
-              <p>✓ Procedimentos, produtos e bastidores atualizados na ficha</p>
-              <p>✓ Ativação constante de sinais de relevância e frescor no algoritmo do Google Maps</p>
-              <p class="text-[11px] text-emerald-600 font-semibold mt-1">Recomendação Estratégica: Conectar as postagens a uma Landing Page própria (.com.br) para conversão imediata.</p>
-            ` : `
-              <p>→ Publicar imediatamente novidades com fotos de alta qualidade no perfil</p>
-              <p>→ Implementar calendário de postagens semanais (1 a 2 posts por semana)</p>
-              <p>→ Destacar ofertas, produtos sazonais e fotos da equipe/estrutura</p>
-              <p>→ Inserir botões de chamada para ação (Ligue Agora / WhatsApp) em todas as postagens</p>
-            `}
+        </div>
+
+        <!-- Box de Diagnóstico de Frescor de Postagens (Google Posts) -->
+        <div class="rounded-2xl border ${postAudit.isAtivo ? 'border-emerald-200 bg-emerald-50/50' : (postAudit.isAlerta ? 'border-amber-200 bg-amber-50/50' : 'border-rose-200 bg-rose-50/50')} p-6 text-center space-y-3 print-avoid-break">
+          <div class="text-3xl">${postAudit.isAtivo ? '🌟' : (postAudit.isAlerta ? '⚠️' : '🚨')}</div>
+          <h3 class="text-lg font-black ${postAudit.isAtivo ? 'text-emerald-900' : (postAudit.isAlerta ? 'text-amber-900' : 'text-rose-900')}">
+            ${postAudit.isAtivo 
+              ? `Cronograma de Publicações Atualizado (${postAudit.dataTexto})` 
+              : (postAudit.isAlerta 
+                  ? `Publicações em Atraso: ${postAudit.diasSemPostar} dias sem novidades` 
+                  : `🚨 Ficha Inativa: ${postAudit.diasSemPostar} dias sem publicações no Google Posts`)}
+          </h3>
+          <p class="text-xs ${postAudit.isAtivo ? 'text-emerald-800' : (postAudit.isAlerta ? 'text-amber-800' : 'text-rose-800')} max-w-xl mx-auto leading-relaxed">
+            ${postAudit.isAtivo 
+              ? `O perfil mantém rotina exemplar de envio de fotos e comunicados no Google Maps. A última postagem ocorreu há ${postAudit.diasSemPostar} dias, em plena conformidade com as diretrizes.` 
+              : `A empresa está há ${postAudit.diasSemPostar} dias sem publicar no Google Posts (máximo recomendado: 7 a 14 dias). O algoritmo rebaixa gradativamente fichas estagnadas em favor de concorrentes que publicam semanalmente.`}
+          </p>
+        </div>
+
+        <!-- Visão Geral de Mídia & Tour Virtual 360° -->
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 print-avoid-break">
+          <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <p class="text-2xl font-black text-slate-900">${totalMediaCount}</p>
+            <p class="text-xs font-bold text-slate-700">Acervo Total de Fotos</p>
+            <p class="text-[11px] text-slate-400">Galeria Combinada</p>
+          </div>
+          <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <p class="text-2xl font-black text-sky-600">${ownerPhotosCount}</p>
+            <p class="text-xs font-bold text-slate-700">Fotos Oficiais</p>
+            <p class="text-[11px] text-slate-400">Enviadas pela Empresa</p>
+          </div>
+          <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <p class="text-2xl font-black text-purple-600">${clientPhotosCount}</p>
+            <p class="text-xs font-bold text-slate-700">Fotos de Clientes</p>
+            <p class="text-[11px] text-slate-400">Depoimentos Visuais UGC</p>
+          </div>
+          <div class="rounded-xl border ${lead.temTour360 ? 'border-emerald-300 bg-emerald-50' : 'border-rose-300 bg-rose-50'} p-4 shadow-sm">
+            <p class="text-lg font-black ${lead.temTour360 ? 'text-emerald-700' : 'text-rose-600'}">${lead.temTour360 ? '✓ HOMOLOGADO' : '✕ NÃO IDENTIFICADO'}</p>
+            <p class="text-xs font-bold text-slate-800">Tour Virtual 360° Interno</p>
+            <p class="text-[10px] ${lead.temTour360 ? 'text-emerald-700' : 'text-rose-600'}">${lead.temTour360 ? 'Street View Interno Verificado' : 'Apenas foto de fachada da rua'}</p>
           </div>
         </div>
 
-        <!-- Visão Geral de Mídia + Tour Virtual 360° -->
-        <div class="space-y-4 print-avoid-break">
-          <div class="flex items-center gap-2">
-            <span class="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-white text-xs">🖼️</span>
-            <h3 class="text-base font-bold text-slate-800">Visão Geral de Mídia & Tour Virtual 360°</h3>
+        <!-- Destaque Comercial do Tour Virtual 360° -->
+        ${!lead.temTour360 ? `
+          <div class="rounded-2xl border-2 border-amber-400/80 bg-amber-50/70 p-5 space-y-2 text-xs text-amber-950 print-avoid-break">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">📸</span>
+              <h4 class="font-extrabold text-amber-900 text-sm">Oportunidade Comercial: Homologação do Tour Virtual 360° Oficial</h4>
+            </div>
+            <p class="leading-relaxed">
+              O perfil atualmente exibe apenas fotos estáticas e imagens antigas do carro de rua do Google. A produção e publicação do <strong>Tour Virtual 360° em alta definição</strong> permite que o consumidor caminhe pelo interior do estabelecimento antes de decidir a visita, gerando mais de 2x mais retenção e transmitindo alto padrão estético.
+            </p>
           </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p class="text-2xl font-black text-slate-900">${totalMediaCount}</p>
-              <p class="text-xs font-bold text-slate-700">Total de Mídias</p>
-              <p class="text-[11px] text-slate-400">Proprietário + Clientes</p>
-            </div>
-            <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p class="text-2xl font-black text-sky-600">${ownerPhotosCount}</p>
-              <p class="text-xs font-bold text-slate-700">Mídias do Proprietário</p>
-              <p class="text-[11px] text-slate-400">${ownerPhotosCount} fotos • 0 vídeos</p>
-            </div>
-            <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p class="text-2xl font-black text-purple-600">${clientPhotosCount}</p>
-              <p class="text-xs font-bold text-slate-700">Mídias de Clientes</p>
-              <p class="text-[11px] text-slate-400">${clientPhotosCount} fotos • 0 vídeos</p>
-            </div>
-            <div class="rounded-xl border ${lead.temTour360 ? 'border-emerald-300 bg-emerald-50' : 'border-rose-300 bg-rose-50'} p-4 shadow-sm">
-              <p class="text-lg font-black ${lead.temTour360 ? 'text-emerald-700' : 'text-rose-600'}">${lead.temTour360 ? '✓ ATIVO' : '✕ AUSENTE'}</p>
-              <p class="text-xs font-bold text-slate-800">Tour Virtual 360° Interno</p>
-              <p class="text-[10px] ${lead.temTour360 ? 'text-emerald-700' : 'text-rose-600'}">${lead.temTour360 ? 'Street View Interno Verificado' : 'Apenas foto externa de rua'}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Distribuição de Qualidade (Resolução da Imagem + Donut) -->
-        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-5 print-avoid-break">
-          <div>
-            <h4 class="text-sm font-bold text-slate-800">Distribuição de Qualidade</h4>
-            <p class="text-xs text-slate-500">Critério de qualidade: Resolução da Imagem</p>
-          </div>
-
-          <div class="rounded-xl bg-slate-50 border border-slate-200 p-4 text-xs text-slate-700 space-y-2">
-            <p class="font-bold text-emerald-700">ℹ️ Como a qualidade é avaliada:</p>
-            <ul class="list-disc list-inside space-y-1">
-              <li><strong>Alta qualidade:</strong> Imagens com resolução acima de 1080p (1920x1080 pixels) e Panorâmicas 360°</li>
-              <li><strong>Média qualidade:</strong> Imagens entre 720p (1280x720) e 1080p</li>
-              <li><strong>Baixa qualidade:</strong> Imagens abaixo de 720p</li>
-            </ul>
-            <div class="mt-2 pt-2 border-t border-slate-200 text-slate-600">
-              <strong>⚠️ Por que a qualidade importa:</strong> Imagens de baixa resolução transmitem uma impressão negativa e não profissional do negócio. Com a maioria dos usuários acessando através de dispositivos móveis com telas de alta definição, fotos profissionais e um <strong>Tour Virtual 360°</strong> aumentam a credibilidade imediata da empresa.
-            </div>
-          </div>
-
-          <!-- Donut de Qualidade de Resolução + Novos Uploads por Mês -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center pt-2">
-            <div class="flex flex-col items-center">
-              <div class="h-40 w-40 rounded-full flex items-center justify-center" style="background: conic-gradient(#10b981 0deg ${lead.temTour360 ? 140 : 25}deg, #f59e0b ${lead.temTour360 ? 140 : 25}deg 360deg);">
-                <div class="h-24 w-24 rounded-full bg-white flex flex-col items-center justify-center shadow-inner">
-                  <span class="text-xs font-black text-slate-800">${lead.temTour360 ? 'Alta 360°' : '96.3%'}</span>
-                  <span class="text-[9px] text-slate-500">${lead.temTour360 ? 'Qualidade HD' : 'Média Qualidade'}</span>
-                </div>
-              </div>
-              <div class="mt-3 flex items-center gap-3 text-[11px] font-semibold text-slate-600">
-                <span class="flex items-center gap-1"><span class="h-2.5 w-4 rounded bg-emerald-500 inline-block"></span> Alta Qualidade</span>
-                <span class="flex items-center gap-1"><span class="h-2.5 w-4 rounded bg-amber-500 inline-block"></span> Média Qualidade</span>
-                <span class="flex items-center gap-1"><span class="h-2.5 w-4 rounded bg-rose-500 inline-block"></span> Baixa</span>
-              </div>
-            </div>
-
-            <div class="space-y-2">
-              <h5 class="text-xs font-bold text-slate-800">Evolução Temporal — Novos Uploads</h5>
-              <div class="flex items-end justify-center gap-6 h-32 pt-4 px-4 border-b border-slate-200">
-                <div class="flex flex-col items-center">
-                  <span class="text-[10px] font-bold text-sky-600 mb-1">${ownerPhotosCount}</span>
-                  <div class="w-16 bg-sky-500 rounded-t" style="height: 85px;"></div>
-                  <span class="text-[10px] text-slate-500 mt-1">Fotos Proprietário</span>
-                </div>
-                <div class="flex flex-col items-center">
-                  <span class="text-[10px] font-bold text-purple-600 mb-1">${clientPhotosCount}</span>
-                  <div class="w-16 bg-purple-600 rounded-t" style="height: 18px;"></div>
-                  <span class="text-[10px] text-slate-500 mt-1">Fotos Clientes</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        ` : ''}
       </section>
 
       <!-- =====================================================================
-           SEÇÃO 5: REPUTAÇÃO, SENTIMENTO & PALAVRAS-CHAVE (PÁGINAS 27 A 35)
+           SEÇÃO 5: INTELIGÊNCIA COMPETITIVA & PLANO DE AÇÃO
            ===================================================================== -->
       <section data-section-id="reputacao" class="report-section-block print-break-before space-y-6 ${activeTab !== 'all' && activeTab !== 'reputacao' ? 'hidden' : ''}">
         <div class="text-center border-b border-slate-200 pb-4">
-          <h2 class="text-2xl font-extrabold text-slate-800">Reputação & Inteligência Contextual</h2>
+          <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">5. Inteligência Competitiva & Matriz de Sentimento</h2>
+          <p class="mt-1 text-xs text-slate-500 max-w-2xl mx-auto leading-relaxed">
+            Análise contextual dos termos espontâneos mais citados pelos clientes e mapeamento estratégico de mercado contra a concorrência local.
+          </p>
         </div>
 
-        <p class="text-xs text-slate-500">
-          A análise de reputação oferece indicadores profundos sobre como os clientes percebem o negócio. Identificamos padrões, sentimentos e oportunidades de melhoria através de análise contextual avançada.
-        </p>
-
-        <!-- Card Troféu: Status da Reputação -->
-        <div class="rounded-2xl border-t-4 border-emerald-500 border border-slate-200 bg-white p-6 text-center shadow-sm space-y-2 print-avoid-break">
-          <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-2xl">🏆</div>
-          <h3 class="text-lg font-extrabold text-slate-800">Status: ${repScore >= 85 ? 'Excelente' : 'Bom com Oportunidades'}</h3>
-          <p class="text-xs text-slate-500">Percepção positiva dos clientes atuais, com espaço para expansão de alcance orgânico no Google.</p>
-          <div class="text-4xl font-black text-slate-800 pt-1">${repScore}</div>
-          <p class="text-[11px] text-slate-400">Pontuação de Reputação</p>
-          <div class="h-3 w-full max-w-lg mx-auto rounded-full bg-slate-100 overflow-hidden mt-2">
-            <div class="h-full bg-emerald-500 rounded-full" style="width:${repScore}%"></div>
-          </div>
-        </div>
-
-        <!-- Principais Pontos Fortes & Vulnerabilidades -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 print-avoid-break">
-          <div class="rounded-2xl border border-slate-200 bg-white p-5 space-y-2.5">
-            <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2"><span class="text-emerald-600">🛡️</span> Principais pontos fortes</h4>
-            <ul class="space-y-1.5 text-xs text-slate-600">
-              <li class="flex items-center gap-2"><span class="text-emerald-600 font-bold">✓</span> <span>Atendimento de excelência e alta satisfação dos clientes</span></li>
-              <li class="flex items-center gap-2"><span class="text-emerald-600 font-bold">✓</span> <span>Reputação comprovada: Nota ${rating.toFixed(1)}★ com ${totalReviews} avaliações reais</span></li>
-              <li class="flex items-center gap-2"><span class="text-emerald-600 font-bold">✓</span> <span>${lead.temTour360 ? 'Tour Virtual 360° interno publicado no Google Street View' : 'Localização oficial e consistência cadastral verificada'}</span></li>
-              <li class="flex items-center gap-2"><span class="text-emerald-600 font-bold">✓</span> <span>${(lead.responseRatePct >= 80 || lead.reviewsSemRespostaPct <= 15) ? '100% de taxa de resposta exemplar nas avaliações recentes' : 'Presença confirmada no Google Maps'}</span></li>
-              ${hasPosts ? '<li class="flex items-center gap-2"><span class="text-emerald-600 font-bold">✓</span> <span>Publicações e fotos frequentes no Google Meu Negócio</span></li>' : ''}
-            </ul>
-          </div>
-
-          <div class="rounded-2xl border border-slate-200 bg-white p-5 space-y-2.5">
-            <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2"><span class="text-amber-600">⚡</span> Oportunidades & Pontos de Alavancagem</h4>
-              <li class="flex items-center gap-2">
-                <span class="${lead.temSite ? 'text-emerald-500' : 'text-rose-500'} font-bold">${lead.temSite ? '✓' : '!'}</span>
-                <span>${lead.temSite 
-                  ? `Website oficial ativo (${lead.websiteUrl || 'domínio institucional'}): enriquecer com Schema LocalBusiness JSON-LD` 
-                  : (lead.isSocialAsWebsite 
-                      ? `⚠️ Alerta Crítico: Perfil utiliza link de rede social (${lead.websiteAnalysis?.label || 'Instagram'}) no lugar de site próprio institucional (.com.br)` 
-                      : (lead.websiteAnalysis?.isDeprecatedGoogleSite 
-                          ? '🚨 Erro 404: Antigo Google Business Site descontinuado pelo Google' 
-                          : 'Ausência de Website oficial próprio para converter pesquisas em clientes'))}</span>
-              </li>
-              <li class="flex items-center gap-2"><span class="${lead.temTour360 ? 'text-emerald-500' : 'text-amber-500'} font-bold">${lead.temTour360 ? '✓' : '!'}</span> <span>${lead.temTour360 ? 'Tour 360° verificado: integrar com campanhas de mídia e anúncios locais' : 'Ausência de Tour Virtual 360° interno no Google Street View'}</span></li>
-              <li class="flex items-center gap-2"><span class="${(lead.reviewsSemRespostaPct > 20) ? 'text-rose-500' : 'text-emerald-500'} font-bold">${(lead.reviewsSemRespostaPct > 20) ? '!' : '✓'}</span> <span>${(lead.reviewsSemRespostaPct > 20) ? 'Avaliações sem resposta estratégica com palavras-chave locais' : 'Expansão de raio no GeoGrid GPS (raio de 1 km a 20 km) para municípios vizinhos'}</span></li>
-            </ul>
-          </div>
-        </div>
-
-        <!-- Análise de Sentimento, Emoções Detectadas & Matriz de Impactos Negativos -->
-        <div class="rounded-2xl border border-slate-200 bg-white p-6 space-y-5 print-avoid-break">
-          <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2">💜 Análise de Sentimento & Emoções Detectadas</h4>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="space-y-3 text-xs">
-              <div>
-                <p class="font-bold text-slate-700 mb-1">🏷️ Principais Temas Mencionados</p>
-                <div class="flex flex-wrap gap-1.5">
-                  <span class="rounded border border-slate-200 bg-slate-50 px-2.5 py-1 text-slate-700">atendimento</span>
-                  <span class="rounded border border-slate-200 bg-slate-50 px-2.5 py-1 text-slate-700">confiança</span>
-                  <span class="rounded border border-slate-200 bg-slate-50 px-2.5 py-1 text-slate-700">qualidade em ${cleanCat}</span>
-                  <span class="rounded border border-slate-200 bg-slate-50 px-2.5 py-1 text-slate-700">localização</span>
-                </div>
-              </div>
-              <div class="space-y-1.5 pt-1">
-                <p class="font-bold text-slate-700">💡 Destaques Contextuais</p>
-                <p class="text-slate-600">→ Clientes destacam com grande entusiasmo a presteza, gentileza e alto nível técnico da equipe.</p>
-                <p class="text-slate-600">→ ${lead.temTour360 ? 'A presença do Tour 360° e fotos imersivas reduz o atrito e consolida a preferência do consumidor.' : 'Consumidores valorizam imagens reais e imersivas da loja física antes da visita.'}</p>
-              </div>
-            </div>
-
-            <div class="space-y-2.5 text-xs">
-              <p class="font-bold text-slate-700">📊 Emoções Detectadas nas Avaliações</p>
-              <div>
-                <div class="flex justify-between mb-1"><span>Satisfação</span><span class="font-bold">${rating >= 4.9 ? '85%' : '65%'}</span></div>
-                <div class="h-3 rounded bg-slate-100 overflow-hidden"><div class="h-full bg-emerald-500" style="width:${rating >= 4.9 ? '85%' : '65%'}"></div></div>
-              </div>
-              <div>
-                <div class="flex justify-between mb-1"><span>Confiança</span><span class="font-bold">${rating >= 4.9 ? '15%' : '25%'}</span></div>
-                <div class="h-3 rounded bg-slate-100 overflow-hidden"><div class="h-full bg-emerald-500" style="width:${rating >= 4.9 ? '15%' : '25%'}"></div></div>
-              </div>
-              <div>
-                <div class="flex justify-between mb-1"><span>Gratidão & Recomendação</span><span class="font-bold">${rating >= 4.9 ? '100%' : '10%'}</span></div>
-                <div class="h-3 rounded bg-slate-100 overflow-hidden"><div class="h-full bg-emerald-500" style="width:${rating >= 4.9 ? '100%' : '10%'}"></div></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Matriz 2D: Visualização de Impactos Negativos -->
-          <div class="border-t border-slate-200 pt-4">
-            <h5 class="text-xs font-bold text-slate-800 mb-1">⚠️ Visualização de Impactos Estratégicos (Frequência vs Relevância)</h5>
-            <p class="text-[11px] text-slate-500 mb-3">Mapeamento visual dos fatores de influência no algoritmo do Google Maps.</p>
-            <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-4 flex justify-center">
-              <svg viewBox="0 0 460 170" class="w-full max-w-lg h-40">
-                <!-- Linhas de Grade -->
-                <line x1="60" y1="20" x2="430" y2="20" stroke="#e2e8f0" stroke-width="1"/>
-                <line x1="60" y1="75" x2="430" y2="75" stroke="#e2e8f0" stroke-width="1"/>
-                <line x1="60" y1="130" x2="430" y2="130" stroke="#94a3b8" stroke-width="1.5"/>
-                <line x1="60" y1="15" x2="60" y2="135" stroke="#94a3b8" stroke-width="1.5"/>
-                <!-- Rótulos Eixo Y -->
-                <text x="52" y="25" text-anchor="end" fill="#64748b" font-size="9">Alta</text>
-                <text x="52" y="78" text-anchor="end" fill="#64748b" font-size="9">Média</text>
-                <text x="52" y="128" text-anchor="end" fill="#64748b" font-size="9">Baixa</text>
-                <!-- Rótulos Eixo X -->
-                <text x="120" y="148" text-anchor="middle" fill="#64748b" font-size="9">Baixo</text>
-                <text x="215" y="148" text-anchor="middle" fill="#64748b" font-size="9">Moderado</text>
-                <text x="310" y="148" text-anchor="middle" fill="#64748b" font-size="9">Relevante</text>
-                <text x="400" y="148" text-anchor="middle" fill="#64748b" font-size="9">Estratégico</text>
-                <text x="245" y="164" text-anchor="middle" fill="#475569" font-size="9" font-weight="bold">Importância no Ranqueamento Local</text>
-                <!-- Bolhas de Risco / Oportunidade -->
-                <circle cx="135" cy="112" r="14" fill="#22c55e" fill-opacity="0.85"/>
-                <text x="135" y="92" text-anchor="middle" fill="#475569" font-size="8">Horários & NAP</text>
-                <circle cx="215" cy="110" r="14" fill="#22c55e" fill-opacity="0.85"/>
-                <text x="215" y="90" text-anchor="middle" fill="#475569" font-size="8">Respostas Reviews</text>
-                <circle cx="315" cy="76" r="16" fill="${lead.temTour360 ? '#10b981' : '#f59e0b'}" fill-opacity="0.85"/>
-                <text x="315" y="54" text-anchor="middle" fill="${lead.temTour360 ? '#047857' : '#b45309'}" font-size="8" font-weight="bold">${lead.temTour360 ? 'Tour 360° Ativo' : 'Tour 360° Pendente'}</text>
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <!-- Análise de Ocorrência de Palavras (Positivas 5★ e Pontos de Atenção 1-3★) -->
+        <!-- Bento Grid: Atributos de Valor Percebido -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 print-avoid-break">
-          <div class="rounded-2xl border-t-4 border-emerald-500 border border-slate-200 bg-white p-5 space-y-3">
-            <h4 class="text-sm font-bold text-slate-800">😊 Palavras Positivas em Destaque (5★)</h4>
-            ${[
-              { w: 'atendimento', freq: 'MÁXIMA', desc: 'Indica que o atendimento e presteza foram amplamente elogiados pelos clientes.', count: Math.max(5, Math.round(totalReviews * 0.45)) },
-              { w: 'excelente', freq: 'ALTA', desc: 'Qualifica a pontualidade, simpatia e qualidade impecável na entrega.', count: Math.max(4, Math.round(totalReviews * 0.35)) },
-              { w: 'recomendo', freq: 'ALTA', desc: 'Clientes recomendam o estabelecimento com fidelização comprovada.', count: Math.max(3, Math.round(totalReviews * 0.28)) },
-              { w: 'qualidade', freq: 'MÉDIA', desc: 'Produtos e acabamentos elogiados em detalhes nos depoimentos.', count: Math.max(2, Math.round(totalReviews * 0.22)) }
-            ].map(pw => `
-              <div class="rounded-xl border border-slate-200 p-3.5 space-y-1">
-                <div class="flex items-center justify-between">
-                  <span class="text-sm font-bold text-slate-800">${pw.w}</span>
-                  <span class="rounded bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">${pw.freq}</span>
+          
+          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+            <h4 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+              <span class="text-emerald-600">🛡️</span> Atributos Mais Elogiados pelos Clientes
+            </h4>
+            <div class="space-y-2.5 text-xs">
+              <div class="rounded-xl border border-slate-100 bg-slate-50 p-3 space-y-1">
+                <div class="flex justify-between font-bold text-slate-800">
+                  <span>Atendimento & Cordialidade</span>
+                  <span class="text-emerald-700 font-extrabold">Frequência Máxima</span>
                 </div>
-                <p class="text-xs text-slate-600">${pw.desc}</p>
-                <p class="text-[11px] text-slate-400">💬 ${pw.count} menções estimadas</p>
+                <p class="text-slate-600">Clientes relatam presteza, simpatia e alto nível de confiança no contato com a equipe.</p>
               </div>
-            `).join('')}
+              <div class="rounded-xl border border-slate-100 bg-slate-50 p-3 space-y-1">
+                <div class="flex justify-between font-bold text-slate-800">
+                  <span>Qualidade Técnica & Solução</span>
+                  <span class="text-emerald-700 font-extrabold">Alta Relevância</span>
+                </div>
+                <p class="text-slate-600">Reconhecimento da pontualidade e excelência na entrega do serviço ou produto.</p>
+              </div>
+            </div>
           </div>
 
-          <div class="rounded-2xl border-t-4 ${rating >= 4.9 ? 'border-emerald-500' : 'border-amber-500'} border border-slate-200 bg-white p-5 space-y-3">
-            <h4 class="text-sm font-bold text-slate-800">${rating >= 4.9 ? '🛡️ Auditoria de Atrito & Riscos' : '☹️ Pontos de Atenção (1-3★)'}</h4>
-            ${rating >= 4.9 ? `
-              <div class="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 space-y-2">
-                <div class="flex items-center gap-2">
-                  <span class="text-base text-emerald-600 font-bold">✓</span>
-                  <span class="text-xs font-bold text-emerald-800">Zero Atrito Crítico Detectado</span>
-                </div>
-                <p class="text-xs text-emerald-700 leading-relaxed">
-                  O perfil mantém padrão exemplar com nota <strong>${rating.toFixed(1)}★</strong> e 100% de satisfação pública. Não foram localizados atritos de atendimento ou insatisfações recorrentes.
+          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+            <h4 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+              <span class="text-amber-600">⚡</span> Alavancas de Expansão de Mercado
+            </h4>
+            <div class="space-y-2.5 text-xs text-slate-700">
+              <div class="rounded-xl border border-slate-100 bg-slate-50 p-3 space-y-1">
+                <p class="font-bold text-slate-900">1. Expansão de Raio Geográfico (GeoGrid GPS):</p>
+                <p class="text-slate-600">Com ${totalReviews} avaliações consolidadas, a empresa tem força para captar clientes em bairros vizinhos com otimização de palavras-chave locais.</p>
+              </div>
+              <div class="rounded-xl border border-slate-100 bg-slate-50 p-3 space-y-1">
+                <p class="font-bold text-slate-900">2. Conexão com Canal Direto de Conversão:</p>
+                <p class="text-slate-600">${lead.temSite ? 'Potencializar o site existente com botões inteligentes e rastreamento de conversão.' : 'Implementação de Landing Page institucional para reter os cliques que hoje não encontram link próprio.'}</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- =====================================================================
+             FECHAMENTO COMERCIAL: PLANO DE AÇÃO & ASSINATURA DA AGÊNCIA
+             ===================================================================== -->
+        <div class="rounded-2xl border-2 border-amber-400 bg-amber-50/70 p-6 print-avoid-break space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-amber-200 pb-3">
+            <h3 class="text-sm font-black uppercase tracking-wider text-amber-900">
+              🎯 Plano de Ação Estratégico para Conquista do TOP 3 no Google
+            </h3>
+            ${isProspectMode 
+              ? '<span class="rounded bg-amber-200 px-3 py-1 text-[10px] font-black text-amber-900">🔒 DIRETRIZES TÉCNICAS RESERVADAS</span>'
+              : '<span class="rounded bg-emerald-200 px-3 py-1 text-[10px] font-black text-emerald-900">🔓 MODO CONSULTOR (ABERTO)</span>'
+            }
+          </div>
+
+          ${isProspectMode ? `
+            <div class="blurred-solution-container">
+              <div class="blurred-content">
+                <ul class="space-y-2 text-xs text-slate-800">
+                  <li><strong>1. Implantação de Canal Próprio de Alta Conversão:</strong> Landing page mobile-first com botão inteligente de WhatsApp e status em tempo real.</li>
+                  <li><strong>2. Regularização dos Pilares Algorítmicos:</strong> Calibração de categorias secundárias, serviços estruturados e respostas estratégicas a 100% dos clientes.</li>
+                  <li><strong>3. Homologação do Tour Virtual 360° Interno:</strong> Publicação oficial no Google Street View para dobrar a retenção visual na ficha.</li>
+                  <li><strong>4. Cronograma de Frescor Algorítmico & Avaliações:</strong> Publicações semanais no Google Posts e estratégia contínua de prova social.</li>
+                </ul>
+              </div>
+              <div class="lock-overlay">
+                <span class="text-2xl mb-1">🔒</span>
+                <p class="text-xs font-black text-slate-900 uppercase tracking-wide">Plano de Execução Técnica Reservado</p>
+                <p class="text-[11px] text-slate-600 max-w-md mt-0.5">
+                  A metodologia de correção dos <strong>${countWeak} gargalos diagnosticados</strong> e o plano de ação para alcançar o <strong>TOP 3 do Google Maps</strong> fazem parte da assessoria especializada da <strong>${agencyName}</strong>.
                 </p>
               </div>
-            ` : [
-              { w: 'contato / retorno', freq: 'ALTA', desc: 'Clientes relatam oportunidade de agilizar respostas iniciais.', count: Math.max(1, negReviews) },
-              { w: 'horário de pico', freq: 'MÉDIA', desc: 'Avisos de funcionamento em horários especiais.', count: 1 }
-            ].map(nw => `
-              <div class="rounded-xl border border-slate-200 p-3.5 space-y-1">
-                <div class="flex items-center justify-between">
-                  <span class="text-sm font-bold text-slate-800">${nw.w}</span>
-                  <span class="rounded bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">${nw.freq}</span>
-                </div>
-                <p class="text-xs text-slate-600">${nw.desc}</p>
-                <p class="text-[11px] text-slate-400">💬 ${nw.count} menções</p>
-              </div>
-            `).join('')}
-
-            <!-- Benchmark Contra Concorrentes Locais -->
-            <div class="rounded-xl bg-slate-50 border border-slate-200 p-4 mt-2 space-y-2">
-              <p class="text-xs font-extrabold uppercase text-slate-700">📡 Comparativo Contra Concorrentes Locais</p>
-              <p class="text-xs text-slate-600 leading-relaxed">
-                ${totalReviews >= 60 ? `
-                  Com <strong>${totalReviews} avaliações</strong> e nota <strong>${rating.toFixed(1)}★</strong>, a empresa é líder destacada na região. A estratégia recomendada é a <strong>expansão de raio geográfico (GeoGrid GPS)</strong> para captar clientes em cidades vizinhas onde a concorrência é mais fraca.
-                ` : `
-                  Enquanto <strong>${lead.empresa}</strong> possui <strong>${totalReviews} avaliações</strong>, concorrentes no TOP 3 disputam relevância diária. Recomendada campanha contínua de QR Code e postagens semanais.
-                `}
-              </p>
             </div>
-          </div>
-        </div>
-          </div>
+          ` : `
+            <ul class="space-y-2 text-xs text-slate-800">
+              <li class="flex items-start gap-2">
+                <span class="text-amber-600 font-bold">1.</span>
+                <span><strong>Implantação de Canal Próprio de Alta Conversão:</strong> Landing page mobile-first com botão inteligente de WhatsApp e status em tempo real.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-amber-600 font-bold">2.</span>
+                <span><strong>Regularização dos Pilares Algorítmicos:</strong> Calibração de categorias secundárias, serviços estruturados e respostas estratégicas a 100% dos clientes com SEO local.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-amber-600 font-bold">3.</span>
+                <span><strong>Homologação do Tour Virtual 360° Interno:</strong> Publicação oficial no Google Street View para destacar as instalações da empresa frente aos concorrentes.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-amber-600 font-bold">4.</span>
+                <span><strong>Cronograma de Frescor Algorítmico & Avaliações:</strong> Publicações semanais de ofertas e sistema ativo de coleta de novos depoimentos 5 estrelas.</span>
+              </li>
+            </ul>
+          `}
         </div>
 
-        <!-- O Que os Clientes Mais Falam & Padrões Identificados -->
-        <div class="rounded-2xl border border-slate-200 bg-white p-6 space-y-4 print-avoid-break">
-          <h4 class="text-sm font-bold text-slate-800">💡 O Que os Clientes Mais Falam & Padrões Identificados</h4>
-          <div class="space-y-2 text-xs text-slate-700">
-            <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-              <span class="text-emerald-600 font-black mr-1">❝</span> Termos como <strong>'atendimento'</strong>, <strong>'excelente'</strong> e <strong>'recomendo'</strong> são frequentemente associados a experiências positivas, indicando alta taxa de satisfação de quem já conhece a empresa.
-            </div>
-            <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-              <span class="text-emerald-600 font-black mr-1">❝</span> Nos pontos de melhoria, a ausência de respostas estratégicas nas avaliações e a falta de atualização visual periódica reduzem a conversão de clientes novos vindos do Google.
-            </div>
+        <!-- RODAPÉ TIMBRADO COM ASSINATURA DA AGÊNCIA -->
+        <div class="border-t-2 border-slate-200 pt-5 flex flex-wrap items-center justify-between text-xs text-slate-600 gap-4 print-avoid-break">
+          <div>
+            <p class="font-bold text-slate-900">Consultor Responsável: ${senderName}</p>
+            <p class="text-[11px] text-slate-500">${agencyName} — Inteligência & Performance no Google Maps</p>
           </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-            <div class="rounded-xl border-l-4 border-emerald-500 border border-slate-200 p-4 space-y-1">
-              <div class="flex items-center justify-between">
-                <span class="rounded bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">FREQUÊNCIA: ALTA</span>
-                <span class="text-xs font-bold text-emerald-600">↑ Positivo</span>
-              </div>
-              <p class="text-xs font-bold text-slate-800 pt-1">Clientes satisfeitos com o atendimento presencial</p>
-              <p class="text-[11px] text-slate-500">Destacam cordialidade, segurança e confiança nos serviços prestados.</p>
-            </div>
-
-            <div class="rounded-xl border-l-4 border-rose-500 border border-slate-200 p-4 space-y-1">
-              <div class="flex items-center justify-between">
-                <span class="rounded bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-600">OPORTUNIDADE CRÍTICA</span>
-                <span class="text-xs font-bold text-rose-600">↓ Gargalo Digital</span>
-              </div>
-              <p class="text-xs font-bold text-slate-800 pt-1">Captação de Novos Clientes no Google Maps</p>
-              <p class="text-[11px] text-slate-500">Usuários que pesquisam no Google comparam fotos internas (Tour 360°), site e respostas recentes antes de entrar em contato.</p>
-            </div>
+          <div class="text-right">
+            <p class="font-bold text-slate-900">Agendar Apresentação do Diagnóstico:</p>
+            <p class="text-sm font-black text-emerald-600">${agencyPhone}</p>
           </div>
         </div>
       </section>
-
-      <!-- =====================================================================
-           FECHAMENTO COMERCIAL: PLANO DE AÇÃO & ASSINATURA DA AGÊNCIA
-           ===================================================================== -->
-      <div class="rounded-2xl border-2 border-amber-400 bg-amber-50/60 p-5 print-avoid-break">
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-          <h3 class="text-sm font-black uppercase tracking-wider text-amber-900">
-            🎯 Plano de Ação Estratégico & Soluções para Dominar o TOP 3 do Google
-          </h3>
-          ${isProspectMode 
-            ? '<span class="rounded bg-amber-200 px-2.5 py-0.5 text-[10px] font-black text-amber-900">🔒 PLANO TÉCNICO BLOQUEADO</span>'
-            : '<span class="rounded bg-emerald-200 px-2.5 py-0.5 text-[10px] font-black text-emerald-900">🔓 MODO CONSULTOR (ABERTO)</span>'
-          }
-        </div>
-
-        ${isProspectMode ? `
-          <div class="blurred-solution-container">
-            <div class="blurred-content">
-              <ul class="space-y-2 text-xs text-slate-800">
-                <li><strong>1. Criação de Site Institucional de Alta Conversão:</strong> Mobile-first, botão inteligente de WhatsApp com status online em tempo real.</li>
-                <li><strong>2. Otimização de SEO Local no Google:</strong> Cadastro das 9 categorias secundárias estratégicas e resposta de 100% das avaliações.</li>
-                <li><strong>3. Fotografia & Tour Virtual 360° Oficial Interno:</strong> Publicação certificada no Google Street View para dobrar a retenção na ficha.</li>
-                <li><strong>4. Automação de Avaliações 5 Estrelas & Postagens:</strong> Calendário mensal de Google Posts e QR Code inteligente para aumentar o ISR.</li>
-              </ul>
-            </div>
-            <div class="lock-overlay">
-              <span class="text-2xl mb-1">🔒</span>
-              <p class="text-xs font-black text-slate-900 uppercase tracking-wide">Plano de Execução Técnica Reservado</p>
-              <p class="text-[11px] text-slate-600 max-w-md mt-0.5">
-                A correção dos <strong>${countWeak} itens em estado Fraco</strong> e a implementação completa para alcançar o <strong>TOP 3 do Google Maps</strong> são liberadas na assessoria oficial da <strong>${agencyName}</strong>.
-              </p>
-            </div>
-          </div>
-        ` : `
-          <ul class="space-y-2 text-xs text-slate-800">
-            <li class="flex items-start gap-2">
-              <span class="text-amber-600 font-bold">1.</span>
-              <span><strong>Criação / Otimização de Site Institucional de Alta Conversão:</strong> Mobile-first, botão inteligente de WhatsApp com status online em tempo real.</span>
-            </li>
-            <li class="flex items-start gap-2">
-              <span class="text-amber-600 font-bold">2.</span>
-              <span><strong>Otimização Completa dos 22 Itens de Saúde no Google:</strong> Cadastro de categorias secundárias, atributos, serviços e resposta estratégica de 100% das avaliações com SEO local.</span>
-            </li>
-            <li class="flex items-start gap-2">
-              <span class="text-amber-600 font-bold">3.</span>
-              <span><strong>Fotografia & Tour Virtual 360° Oficial Interno:</strong> Captação e publicação oficial no Google Street View para destacar o interior da empresa frente aos concorrentes.</span>
-            </li>
-            <li class="flex items-start gap-2">
-              <span class="text-amber-600 font-bold">4.</span>
-              <span><strong>Cronograma de Google Posts & Elevação do ISR:</strong> Publicações semanais de ofertas/novidades e sistema ativo de coleta de avaliações 5 estrelas.</span>
-            </li>
-          </ul>
-        `}
-      </div>
-
-      <!-- RODAPÉ COM ASSINATURA DA AGÊNCIA -->
-      <div class="border-t-2 border-slate-200 pt-4 flex flex-wrap items-center justify-between text-xs text-slate-600 gap-3 print-avoid-break">
-        <div>
-          <p class="font-bold text-slate-900">Especialista Responsável: ${senderName}</p>
-          <p class="text-[11px] text-slate-500">${agencyName} — Inteligência & Performance no Google Maps</p>
-        </div>
-        <div class="text-right">
-          <p class="font-bold text-slate-900">Agende a Apresentação do Diagnóstico:</p>
-          <p class="text-sm font-black text-emerald-600">${agencyPhone}</p>
-        </div>
-      </div>
     `;
   }
 
