@@ -6865,7 +6865,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
         telefone: '(11) 98765-1122',
         chave: 'LMPRO-MEN-8K4P-92XA',
         plano: 'Mensal Pro',
-        valorMensal: 97,
+        valorMensal: 129.90,
         creditosDisponiveis: 500,
         creditosTotal: 500,
         expiraEm: now + (26 * dayMs),
@@ -6876,9 +6876,9 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
         nome: 'Fernanda Costa — Gestora GMN',
         email: 'fernanda@gmnpro.com.br',
         telefone: '(11) 97654-3344',
-        chave: 'LMPRO-ANU-7W2M-45TR',
-        plano: 'Anual VIP',
-        valorMensal: 97,
+        chave: 'LMPRO-MEN-7W2M-45TR',
+        plano: 'Mensal Pro',
+        valorMensal: 129.90,
         creditosDisponiveis: 500,
         creditosTotal: 500,
         expiraEm: now + (310 * dayMs),
@@ -6891,7 +6891,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
         telefone: '(21) 99887-6655',
         chave: 'LMPRO-MEN-3J9L-11QZ',
         plano: 'Mensal Pro',
-        valorMensal: 97,
+        valorMensal: 129.90,
         creditosDisponiveis: 465,
         creditosTotal: 500,
         expiraEm: now + (4 * dayMs),
@@ -6904,7 +6904,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
         telefone: '(31) 98443-2211',
         chave: 'LMPRO-MEN-5N8B-00XX',
         plano: 'Mensal Pro',
-        valorMensal: 97,
+        valorMensal: 129.90,
         creditosDisponiveis: 0,
         creditosTotal: 500,
         expiraEm: now - (3 * dayMs),
@@ -7009,7 +7009,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     const activeSubs = subs.filter(s => s.status === 'ativo' && s.expiraEm > now);
     const expiringSubs = activeSubs.filter(s => (s.expiraEm - now) <= (7 * dayMs));
     const blockedSubs = subs.filter(s => s.status === 'bloqueado' || s.expiraEm <= now);
-    const mrr = activeSubs.reduce((acc, s) => acc + (Number(s.valorMensal) || 97), 0);
+    const mrr = activeSubs.reduce((acc, s) => acc + (Number(s.valorMensal) || 129.90), 0);
 
     const elActive = document.getElementById('adminKpiActiveCount');
     const elMrr = document.getElementById('adminKpiMrrValue');
@@ -7062,7 +7062,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
           </td>
           <td class="px-4 py-3">
             <div class="font-semibold text-slate-200">${s.plano}</div>
-            <div class="text-[11px] font-mono text-amber-400">R$ ${Number(s.valorMensal || 97).toLocaleString('pt-BR')}/mês</div>
+            <div class="text-[11px] font-mono text-amber-400">R$ ${Number(s.valorMensal || 129.90).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}/mês</div>
             <div class="mt-1 font-mono text-[10px]">
               <span class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 ${(s.creditosDisponiveis !== undefined ? s.creditosDisponiveis : 500) > 80 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30'}">
                 ⚡ ${s.creditosDisponiveis !== undefined ? s.creditosDisponiveis : 500} / ${s.creditosTotal || 500} cr
@@ -7218,7 +7218,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
 
   document.getElementById('adminNewClientPlan')?.addEventListener('change', (e) => {
     const opt = e.target.selectedOptions?.[0];
-    const price = opt?.getAttribute('data-price') || '97';
+    const price = opt?.getAttribute('data-price') || '129.90';
     const priceInput = document.getElementById('adminNewClientPrice');
     if (priceInput) priceInput.value = price;
     if (newKeyInput) newKeyInput.value = generateLicenseKeyString(e.target.value);
@@ -7232,7 +7232,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     const opt = planSel?.selectedOptions?.[0];
     const days = parseInt(opt?.getAttribute('data-days') || '30');
     const planLabel = (opt?.textContent || 'Plano Mensal Pro').split('—')[0].replace(/^[^\w]+/, '').trim();
-    const valor = parseFloat(document.getElementById('adminNewClientPrice')?.value || '97');
+    const valor = parseFloat(document.getElementById('adminNewClientPrice')?.value || '129.90');
     const chave = document.getElementById('adminNewClientKey')?.value.trim() || generateLicenseKeyString('PRO');
 
     if (!nome || !email) {
@@ -7297,7 +7297,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       telefone: `(11) 98${Math.floor(1000000 + Math.random() * 8999999)}`,
       chave: autoKey,
       plano: 'Plano Mensal Pro (PIX Auto)',
-      valorMensal: 97,
+      valorMensal: 129.90,
       expiraEm: Date.now() + (30 * 86400000),
       creditosDisponiveis: 500,
       creditosTotal: 500,
@@ -7306,7 +7306,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
 
     State.subscribers.unshift(autoSub);
     saveSubscribers(State.subscribers);
-    showToast(`💸 Pagamento PIX de R$ 97 confirmado! Licença ${autoKey} criada e liberada automaticamente para ${escolhido}!`);
+    showToast(`💸 Pagamento PIX de R$ 129,90 confirmado! Licença ${autoKey} criada e liberada automaticamente para ${escolhido}!`);
   });
 
   // Controle da Tela de Login (#authGateOverlay) e Sessão Atual
@@ -7435,10 +7435,6 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     attemptLogin(em, ky);
   });
 
-  document.getElementById('btnQuickMasterLogin')?.addEventListener('click', () => {
-    attemptLogin('admin', 'ADMIN123');
-  });
-
   document.getElementById('btnLogoutSession')?.addEventListener('click', () => {
     try { sessionStorage.clear(); } catch(e) {}
     loginAlertBox?.classList.add('hidden');
@@ -7455,43 +7451,27 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     if (authOverlay) authOverlay.style.setProperty('display', 'flex', 'important');
   });
 
-  // Gestão de Plano Selecionado para Pagamento (Padrão: Anual VIP R$ 900)
-  State.selectedCheckoutPlan = 'anual';
+  // Gestão de Plano Selecionado para Pagamento (Padrão Oficial: Mensal Pro R$ 129,90)
+  State.selectedCheckoutPlan = 'mensal';
 
   window.selectPixPlan = function(planType) {
-    State.selectedCheckoutPlan = planType;
-    const isAnual = planType === 'anual';
+    State.selectedCheckoutPlan = 'mensal';
     const badge = document.getElementById('pixSelectedPlanBadge');
-    const btnMensal = document.getElementById('btnPlanSelectMensal');
-    const btnAnual = document.getElementById('btnPlanSelectAnual');
     const btnConfirmText = document.getElementById('btnConfirmPixText');
 
     if (badge) {
-      badge.textContent = isAnual ? '👑 Anual VIP (R$ 900)' : '🚀 Mensal Pro (R$ 97)';
-      badge.className = isAnual ? 'badge-pill badge-amber' : 'badge-pill badge-emerald';
-    }
-
-    if (btnMensal && btnAnual) {
-      if (isAnual) {
-        btnAnual.className = 'py-2 px-3 rounded-lg border border-amber-500/50 bg-amber-500/15 text-amber-300 font-extrabold text-center transition-all cursor-pointer shadow-sm';
-        btnMensal.className = 'py-2 px-3 rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-white font-bold text-center transition-all cursor-pointer';
-      } else {
-        btnMensal.className = 'py-2 px-3 rounded-lg border border-emerald-500/50 bg-emerald-500/15 text-emerald-300 font-extrabold text-center transition-all cursor-pointer shadow-sm';
-        btnAnual.className = 'py-2 px-3 rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-white font-bold text-center transition-all cursor-pointer';
-      }
+      badge.textContent = '🚀 Mensal Pro (R$ 129,90)';
+      badge.className = 'badge-pill badge-emerald';
     }
 
     if (btnConfirmText) {
-      btnConfirmText.textContent = isAnual 
-        ? 'Enviar Comprovante (R$ 900 Anual VIP) no WhatsApp'
-        : 'Enviar Comprovante (R$ 97 Mensal) no WhatsApp';
+      btnConfirmText.textContent = 'Enviar Comprovante (R$ 129,90 Mensal) no WhatsApp';
     }
   };
 
   window.openCheckoutPlan = function(planType) {
-    window.selectPixPlan(planType);
-    const isAnual = planType === 'anual';
-    const url = isAnual ? State.paymentConfig.checkoutYearly : State.paymentConfig.checkoutMonthly;
+    window.selectPixPlan('mensal');
+    const url = State.paymentConfig.checkoutMonthly;
     if (url && url.startsWith('http')) {
       window.open(url, '_blank');
       return;
@@ -7501,8 +7481,8 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     const pix = State.paymentConfig.pixKey || 'pix@radarmapspro.com.br';
     navigator.clipboard?.writeText(pix).catch(() => {});
 
-    const valorStr = isAnual ? 'R$ 900,00/ano' : 'R$ 97,00/mês';
-    const nomePlano = isAnual ? 'Plano Anual VIP' : 'Plano Mensal Pro';
+    const valorStr = 'R$ 129,90/mês';
+    const nomePlano = 'Plano Mensal Pro';
 
     // Abre WhatsApp oficial pré-configurado para o plano selecionado
     const rawPhone = State.settings?.agencyPhone || State.settings?.whatsapp || '11970558412';
@@ -7532,9 +7512,8 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       return;
     }
 
-    const isAnual = State.selectedCheckoutPlan === 'anual';
-    const valorPlano = isAnual ? 'R$ 900,00' : 'R$ 97,00';
-    const nomePlano = isAnual ? 'Plano Anual VIP (R$ 900,00)' : 'Plano Mensal Pro (R$ 97,00)';
+    const valorPlano = 'R$ 129,90';
+    const nomePlano = 'Plano Mensal Pro (R$ 129,90/mês)';
     const pixKey = State.paymentConfig.pixKey || 'pix@radarmapspro.com.br';
     const rawPhone = State.settings?.agencyPhone || State.settings?.whatsapp || '11970558412';
     const whatsappNum = formatBrazilWhatsAppNumber(rawPhone);
