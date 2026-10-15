@@ -95,7 +95,11 @@ function isTourVerifiedForBusiness(empresaName, address, phone) {
       "fisioterapia jardim",
       "clinica fisioterapia jardim",
       "ll car multimarcas",
-      "ll car"
+      "ll car",
+      "fenice multimarcas",
+      "fênice multimarcas",
+      "fenice",
+      "fênice"
     ];
     const fullSearchStr = `${empresaName || ''} ${address || ''} ${phone || ''}`.toLowerCase().trim();
     if (defaultClientsWithTour.some(c => fullSearchStr.includes(c))) return true;
