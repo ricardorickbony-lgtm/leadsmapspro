@@ -122,8 +122,63 @@ function saveVerifiedTourBusiness(empresaName, isVerified) {
 }
 
 // --------------------------------------------------------------------------
-// 1.90 Verificador Profundo de Tour 360° em Segundo Plano (Opção 1 - Webhook / n8n)
+// 1.90 Motor Híbrido de Detecção de Tour 360° (Google Street View Metadata API Oficial)
 // --------------------------------------------------------------------------
+function haversineDistanceMeters(lat1, lon1, lat2, lon2) {
+  if (lat1 === undefined || lon1 === undefined || lat2 === undefined || lon2 === undefined) return 99999;
+  const toRad = x => (x * Math.PI) / 180;
+  const R = 6371000; // Raio da Terra em metros
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+window.haversineDistanceMeters = haversineDistanceMeters;
+
+async function detectTour360ViaStreetViewMetadata(lat, lng, customKey = null) {
+  if (typeof lat !== 'number' || typeof lng !== 'number') return null;
+  const key = customKey || State.settings?.googleApiKey || localStorage.getItem('leadmaps_google_maps_key');
+  if (!key || !key.trim()) return null;
+
+  try {
+    const cleanKey = key.trim();
+    const urlAny = `https://maps.googleapis.com/maps/api/streetview/metadata?location=${lat},${lng}&radius=50&key=${cleanKey}`;
+    const urlOutdoor = `https://maps.googleapis.com/maps/api/streetview/metadata?location=${lat},${lng}&radius=50&source=outdoor&key=${cleanKey}`;
+
+    const [resAny, resOutdoor] = await Promise.all([
+      fetch(urlAny).then(r => r.json()).catch(() => null),
+      fetch(urlOutdoor).then(r => r.json()).catch(() => null)
+    ]);
+
+    if (!resAny || resAny.status !== 'OK') {
+      return { hasTour360: false, confidence: 'low', reason: resAny?.status || 'no_pano' };
+    }
+
+    const panoLat = resAny.location?.lat;
+    const panoLng = resAny.location?.lng;
+    const dist = haversineDistanceMeters(lat, lng, panoLat, panoLng);
+    const isClose = dist <= 35; // Raio de até 35m
+
+    const outdoorPanoId = resOutdoor?.status === 'OK' ? resOutdoor.pano_id : null;
+    const isNotPlainOutdoor = !outdoorPanoId || (outdoorPanoId !== resAny.pano_id);
+
+    const hasTour360 = isClose && isNotPlainOutdoor;
+
+    return {
+      hasTour360: hasTour360,
+      panoId: resAny.pano_id,
+      date: resAny.date,
+      distanceMeters: Math.round(dist),
+      confidence: hasTour360 ? 'high' : (isClose ? 'medium' : 'low'),
+      source: 'streetview_metadata'
+    };
+  } catch (err) {
+    console.warn('Erro ao consultar Street View Metadata API:', err);
+    return null;
+  }
+}
+window.detectTour360ViaStreetViewMetadata = detectTour360ViaStreetViewMetadata;
+
 async function verifyBusiness360TourDeep(lead, onResultCallback) {
   if (!lead || lead._verificando360) return;
   // Se já é verificado na memória local ou lista mestre, encerra
@@ -132,60 +187,83 @@ async function verifyBusiness360TourDeep(lead, onResultCallback) {
     return;
   }
 
-  const webhookUrl = State.settings?.webhook || localStorage.getItem('leadmaps_setting_webhook');
-  if (!webhookUrl || !webhookUrl.startsWith('http')) {
-    return;
-  }
-
   lead._verificando360 = true;
   try {
-    const payload = {
-      action: 'verify_360',
-      lead: {
-        id: lead.id,
-        empresa: lead.empresa,
-        lat: lead.lat,
-        lng: lead.lng,
-        placeId: lead.placeId,
-        cid: lead.cid,
-        endereco: lead.endereco || lead.cidade
-      }
-    };
-
-    const resp = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (resp.ok) {
-      const data = await resp.json();
-      if (data && data.hasTour360) {
+    // 1. TENTA PRIMEIRO A STREET VIEW METADATA API (Nativa, Gratuita e Instantânea)
+    if (typeof lead.lat === 'number' && typeof lead.lng === 'number') {
+      const metaResult = await detectTour360ViaStreetViewMetadata(lead.lat, lead.lng);
+      if (metaResult && metaResult.hasTour360) {
         saveVerifiedTourBusiness(lead.empresa, true);
         lead.temTour360 = true;
-        
-        // Atualiza pilar de fotos e 360 no diagnóstico
+        lead.tour360Meta = metaResult;
+
         if (lead.auditPillars) {
           const pilar = lead.auditPillars.find(p => p.id === 'tour360');
           if (pilar) {
             pilar.ok = true;
-            pilar.status = "Tour Virtual 360° interno interativo verificado no Google Street View.";
+            pilar.status = `✓ Conforme: Tour Virtual 360° verificado no Street View (${metaResult.distanceMeters}m do local, Pano: ${metaResult.panoId ? metaResult.panoId.substring(0, 10) + '...' : 'OK'}).`;
           }
           const passed = lead.auditPillars.filter(x => x.ok).length;
           lead.score = Math.round((passed / 7) * 100);
         }
-
-        // Remove dos gargalos
         if (lead.gaps) {
           lead.gaps = lead.gaps.filter(g => !g.toLowerCase().includes('360'));
         }
 
-        showToast(`📸 Tour 360° confirmado no Street View para ${lead.empresa}!`);
+        showToast(`📸 Tour 360° oficial confirmado no Street View para ${lead.empresa}!`);
         if (typeof onResultCallback === 'function') onResultCallback(true);
+        return;
+      }
+    }
+
+    // 2. FALLBACK PARA WEBHOOK EXTERNO (se configurado)
+    const webhookUrl = State.settings?.webhook || localStorage.getItem('leadmaps_setting_webhook');
+    if (webhookUrl && webhookUrl.startsWith('http')) {
+      const payload = {
+        action: 'verify_360',
+        lead: {
+          id: lead.id,
+          empresa: lead.empresa,
+          lat: lead.lat,
+          lng: lead.lng,
+          placeId: lead.placeId,
+          cid: lead.cid,
+          endereco: lead.endereco || lead.cidade
+        }
+      };
+
+      const resp = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data && data.hasTour360) {
+          saveVerifiedTourBusiness(lead.empresa, true);
+          lead.temTour360 = true;
+          
+          if (lead.auditPillars) {
+            const pilar = lead.auditPillars.find(p => p.id === 'tour360');
+            if (pilar) {
+              pilar.ok = true;
+              pilar.status = "Tour Virtual 360° interno interativo verificado no Google Street View.";
+            }
+            const passed = lead.auditPillars.filter(x => x.ok).length;
+            lead.score = Math.round((passed / 7) * 100);
+          }
+          if (lead.gaps) {
+            lead.gaps = lead.gaps.filter(g => !g.toLowerCase().includes('360'));
+          }
+
+          showToast(`📸 Tour 360° confirmado no Street View para ${lead.empresa}!`);
+          if (typeof onResultCallback === 'function') onResultCallback(true);
+        }
       }
     }
   } catch (err) {
-    console.warn("Verificação profunda 360° via Webhook indisponível:", err);
+    console.warn("Verificação profunda 360° indisponível:", err);
   } finally {
     lead._verificando360 = false;
   }
@@ -2334,7 +2412,7 @@ window.openDiagnostic = function(id) {
       {
         id: "tour360",
         nome: "Fotos & Tour Virtual 360°",
-        status: lead.temTour360 ? "Tour Virtual 360° no Street View verificado e ativo." : "Sem Tour Virtual 360° interno no Google Street View (apenas foto externa de rua).",
+        status: lead.temTour360 ? "Tour Virtual 360° no Street View verificado e ativo." : "⚠️ Tour 360° a Homologar: Pendente de verificação (Conferir fotos no Maps ↗ ou re-checar).",
         ok: Boolean(lead.temTour360),
         icon: "📸"
       },
@@ -2447,11 +2525,12 @@ window.openDiagnostic = function(id) {
       const isSocialGargalo = isWebPillar && !p.ok && webAnalysis && webAnalysis.isSocial;
       const isDeadGoogle = isWebPillar && !p.ok && webAnalysis && webAnalysis.isDeprecatedGoogleSite;
 
+      const isTourPillar = p.id === 'tour360';
       const btnBadgeText = isPostPillar 
         ? `${postAudit.badgeLabel} ✎` 
         : (p.ok 
             ? '✓ Conforme' 
-            : (isSocialGargalo ? `✕ Gargalo (${webAnalysis.name})` : (isDeadGoogle ? '🚨 Link 404' : '✕ Gargalo')));
+            : (isTourPillar ? '⚠️ A Homologar' : (isSocialGargalo ? `✕ Gargalo (${webAnalysis.name})` : (isDeadGoogle ? '🚨 Link 404' : '✕ Gargalo'))));
 
       const btnClickAction = isPostPillar 
         ? `window.openPostAuditModal(${lead.id})` 
@@ -2459,11 +2538,11 @@ window.openDiagnostic = function(id) {
 
       const btnBadgeColorClass = isPostPillar
         ? (postAudit.isAtivo ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : (postAudit.isAlerta ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30' : 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30'))
-        : (p.ok ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30');
+        : (p.ok ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : (isTourPillar ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30' : 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30'));
 
       const cardBorderBg = isPostPillar
         ? (postAudit.isAtivo ? 'border-[color-mix(in_oklab,var(--emerald-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--emerald-signal)_6%,transparent)]' : (postAudit.isAlerta ? 'border-amber-500/30 bg-amber-500/10' : 'border-[color-mix(in_oklab,var(--rose-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--rose-signal)_6%,transparent)]'))
-        : (p.ok ? 'border-[color-mix(in_oklab,var(--emerald-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--emerald-signal)_6%,transparent)]' : 'border-[color-mix(in_oklab,var(--rose-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--rose-signal)_6%,transparent)]');
+        : (p.ok ? 'border-[color-mix(in_oklab,var(--emerald-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--emerald-signal)_6%,transparent)]' : (isTourPillar ? 'border-amber-500/30 bg-amber-500/10' : 'border-[color-mix(in_oklab,var(--rose-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--rose-signal)_6%,transparent)]'));
 
       const pStatusText = isPostPillar ? postAudit.statusPilar : p.status;
 
@@ -2475,7 +2554,7 @@ window.openDiagnostic = function(id) {
             <div class="flex items-center gap-1.5 flex-wrap">
               <span class="font-bold text-white">${p.nome}</span>
               ${p.id === 'tour360' ? `<a href="${getGoogleMapsUrl(lead)}" target="_blank" rel="noopener noreferrer" class="text-[9px] text-cyan-400 hover:text-cyan-300 font-semibold px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20" title="Ver fotos e 360° no Google Maps">Maps ↗</a>` : ''}
-              ${p.id === 'tour360' && !p.ok ? `<button type="button" onclick="verifyBusiness360TourDeep(State.currentLead, () => openDiagnostic(State.currentLead.id))" class="text-[9px] text-amber-400 hover:text-amber-300 font-semibold px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 cursor-pointer" title="Verificar Tour 360 no Street View via n8n">🔍 Checar 360°</button>` : ''}
+              ${p.id === 'tour360' && !p.ok ? `<button type="button" onclick="verifyBusiness360TourDeep(State.currentLead, () => openDiagnostic(State.currentLead.id))" class="text-[9px] text-amber-400 hover:text-amber-300 font-semibold px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 cursor-pointer" title="Verificar Tour 360 no Street View (Metadata API / n8n)">🔍 Checar 360°</button>` : ''}
             </div>
             <button type="button" onclick="${btnClickAction}" title="${isPostPillar ? 'Auditoria Cirúrgica de Postagens & Mídia: Clique para definir dias sem postar' : 'Clique para alternar status deste pilar no diagnóstico'}" class="px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${btnBadgeColorClass}">
               ${btnBadgeText}
@@ -4512,7 +4591,7 @@ async function fetchSerperLivePlaces(niche, city, targetCount, apiKey) {
       }
     }
     if (!has360) {
-      gaps.push('Sem Tour Virtual 360° interno (Ficha possui apenas foto de rua do carro do Google)');
+      gaps.push('Tour 360° a homologar (Verificar fotos esféricas no Maps)');
     }
     if (!hasPosts) {
       gaps.push(`Ficha inativa há ${diasSemPostar} dias sem postar no Google`);
@@ -4809,7 +4888,7 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
       nome: "Fotos & Tour Virtual 360° (Street View)",
       status: has360 
         ? "Tour Virtual 360° interno interativo verificado no Google Street View." 
-        : "Sem Tour Virtual 360° interno no Google Street View (apenas foto externa de rua).",
+        : "⚠️ Tour 360° a Homologar: Pendente de verificação (Conferir fotos no Maps ↗ ou re-checar).",
       ok: has360,
       icon: "📸"
     },
@@ -4845,7 +4924,7 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
       gaps.push('Sem site institucional oficial (Gargalo crítico)');
     }
   }
-  if (!has360) gaps.push('Sem Tour Virtual 360° interno no Google Street View');
+  if (!has360) gaps.push('Tour 360° a homologar (Verificar fotos esféricas no Maps)');
   if (!reviewsOk) gaps.push(`Apenas ${responseRatePct}% das avaliações recentes respondidas`);
   if (!hasSecondaryCategories && !isEliteBusiness) gaps.push('Cadastrar categorias secundárias de atuação no Google Meu Negócio');
   if (!postsOk) gaps.push('Criar calendário de postagens semanais no Google Posts');
@@ -6267,6 +6346,10 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     const apiKeyEl = document.getElementById('settingApiKey');
     if (apiKeyEl) apiKeyEl.value = savedKey;
 
+    const savedMapsKey = localStorage.getItem('leadmaps_google_maps_key') || State.settings.googleApiKey || '';
+    const googleApiKeyEl = document.getElementById('settingGoogleApiKey');
+    if (googleApiKeyEl) googleApiKeyEl.value = savedMapsKey;
+
     btnSaveSettings.addEventListener('click', () => {
       State.settings.dailyLimit = parseInt(document.getElementById('settingDailyLimit')?.value || '120');
       State.settings.senderName = document.getElementById('settingSenderName')?.value || 'Ricardo';
@@ -6278,6 +6361,14 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       State.settings.apiKey = keyVal;
       if (keyVal) {
         localStorage.setItem('leadmaps_google_api_key', keyVal);
+      }
+
+      const mapsKeyVal = document.getElementById('settingGoogleApiKey')?.value?.trim() || '';
+      State.settings.googleApiKey = mapsKeyVal;
+      if (mapsKeyVal) {
+        localStorage.setItem('leadmaps_google_maps_key', mapsKeyVal);
+      } else {
+        localStorage.removeItem('leadmaps_google_maps_key');
       }
 
       localStorage.setItem('leadmaps_agency_name', State.settings.agencyName);
