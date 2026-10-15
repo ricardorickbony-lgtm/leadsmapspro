@@ -5131,6 +5131,7 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
   const reviewsOk = responseRatePct >= 80;
   const isEliteBusiness = (rating >= 4.8 && reviews >= 25) || isTourVerifiedForBusiness(mainTitle);
   const hasGoodRepCity = (reviews >= 80 && rating >= 4.6);
+  const hasPostsVerified = isPostsVerifiedForBusiness(mainTitle, mainPlace.address, mainPlace.phoneNumber);
   const diasSemPostar = hasPostsVerified ? (mainTitle.toLowerCase().includes('sou mais') ? 1 : ((mainTitle.toLowerCase().includes('lais') || mainTitle.toLowerCase().includes('laís')) ? 0 : 2)) : (hasGoodRepCity ? 1 : 42);
   const postsOk = hasPostsVerified || hasGoodRepCity;
 
@@ -5612,8 +5613,8 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
                 verifyContainer?.classList.add('hidden');
                 window.openDiagnostic(singleLead.id);
               } catch (err) {
-                console.error(err);
-                showToast("Erro durante a auditoria detalhada.");
+                console.error("Erro durante auditoria detalhada:", err);
+                showToast(`Erro na auditoria: ${err && err.message ? err.message : 'Falha ao processar'}`);
               } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalBtnText;
