@@ -7360,9 +7360,15 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     attemptLogin(em, ky);
   });
 
+  document.getElementById('btnQuickMasterLogin')?.addEventListener('click', () => {
+    attemptLogin('admin', 'ADMIN123');
+  });
+
   document.getElementById('btnLogoutSession')?.addEventListener('click', () => {
+    sessionStorage.removeItem(SESSION_USER_KEY);
     loginAlertBox?.classList.add('hidden');
     authOverlay?.classList.remove('hidden');
+    showToast('🔒 Sessão encerrada. Tela de login aberta.');
   });
 
   document.getElementById('btnOpenLoginPreview')?.addEventListener('click', () => {
@@ -7433,24 +7439,9 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
   // Inicializa painel admin
   renderAdminPanel();
 
-  // Verifica se há sessão ativa salva no sessionStorage
-  const savedSessionRaw = sessionStorage.getItem(SESSION_USER_KEY);
-  let sessionRestored = false;
-  if (savedSessionRaw) {
-    try {
-      const saved = JSON.parse(savedSessionRaw);
-      if (saved && (saved.role === 'master' || saved.role === 'client')) {
-        applySessionRole(saved);
-        authOverlay?.classList.add('hidden');
-        sessionRestored = true;
-      }
-    } catch (e) {}
-  }
-
-  // Se não houver sessão salva: O painel abre BLOQUEADO com a tela de login & compra!
-  if (!sessionRestored) {
-    authOverlay?.classList.remove('hidden');
-  }
+  // O painel SEMPRE abre bloqueado exigindo a tela de login (#authGateOverlay)
+  sessionStorage.removeItem(SESSION_USER_KEY);
+  authOverlay?.classList.remove('hidden');
 
   // ==========================================================================
   // 10. Módulo Oficial: Análise de Ranking Local (GeoGrid GPS de Alta Precisão)
