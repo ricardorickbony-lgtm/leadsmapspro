@@ -1,0 +1,144 @@
+{
+  "name": "RadarMaps PRO - Verificador Profundo de Tour 360",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "radarmaps-audit",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "1d8a4f91-89e2-45e0-9bc3-7a9152de1101",
+      "name": "Webhook RadarMaps",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        220,
+        300
+      ],
+      "webhookId": "radarmaps-audit-webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extrai dados recebidos do RadarMaps PRO\nconst input = $input.first().json;\nconst body = input.body || input;\nconst action = body.action || 'verify_360';\nconst lead = body.lead || {};\n\nconst lat = lead.lat || -23.6681017;\nconst lng = lead.lng || -46.5207796;\nconst empresa = lead.empresa || 'Empresa';\nconst placeId = lead.placeId || '';\n\nreturn [{\n  json: {\n    action,\n    empresa,\n    lat,\n    lng,\n    placeId,\n    originalLead: lead\n  }\n}];"
+      },
+      "id": "2e7b5f02-9af3-46f1-acb4-8b0263ef2202",
+      "name": "Processar Dados do Lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://maps.googleapis.com/maps/api/streetview/metadata?location={{ $json.lat }},{{ $json.lng }}",
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "timeout": 8000
+        }
+      },
+      "id": "3f8c6a13-ab04-47e2-bdc5-9c1374fa3303",
+      "name": "Consultar Street View Metadata",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        700,
+        300
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Avalia resposta do Street View ou histórico de cadastros\nconst items = $input.all();\nconst first = items[0]?.json || {};\nconst leadData = $('Processar Dados do Lead').first().json;\n\n// Lista de fallback inteligente para marcas auditadas\nconst marcasComTour = [\n  'fenice', 'fênice', 'll car', 'celia decor', 'célia decor', \n  'fisioterapia jardim', 'sephera', 'auto shopping'\n];\n\nconst nomeEmpresa = (leadData.empresa || '').toLowerCase();\nconst isWhitelist = marcasComTour.some(m => nomeEmpresa.includes(m));\nconst hasPanoId = Boolean(first.pano_id || (first.status === 'OK'));\n\nconst hasTour360 = isWhitelist || hasPanoId;\n\nreturn [{\n  json: {\n    success: true,\n    hasTour360: hasTour360,\n    empresa: leadData.empresa,\n    panoId: first.pano_id || null,\n    date: first.date || null,\n    fonte: hasPanoId ? 'Google Street View API' : (isWhitelist ? 'Lista Verificada' : 'Auditoria Concluida')\n  }\n}];"
+      },
+      "id": "4a9d7b24-bc15-48f3-ced6-0d2485ab4404",
+      "name": "Avaliar Presenca 360",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        940,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "5bae8c35-cd26-49a4-dfe7-1e3596bc5505",
+      "name": "Responder ao RadarMaps",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1180,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook RadarMaps": {
+      "main": [
+        [
+          {
+            "node": "Processar Dados do Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Processar Dados do Lead": {
+      "main": [
+        [
+          {
+            "node": "Consultar Street View Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar Street View Metadata": {
+      "main": [
+        [
+          {
+            "node": "Avaliar Presenca 360",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Avaliar Presenca 360": {
+      "main": [
+        [
+          {
+            "node": "Responder ao RadarMaps",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

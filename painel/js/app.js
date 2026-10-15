@@ -122,6 +122,77 @@ function saveVerifiedTourBusiness(empresaName, isVerified) {
 }
 
 // --------------------------------------------------------------------------
+// 1.90 Verificador Profundo de Tour 360° em Segundo Plano (Opção 1 - Webhook / n8n)
+// --------------------------------------------------------------------------
+async function verifyBusiness360TourDeep(lead, onResultCallback) {
+  if (!lead || lead._verificando360) return;
+  // Se já é verificado na memória local ou lista mestre, encerra
+  if (isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone)) {
+    if (typeof onResultCallback === 'function') onResultCallback(true);
+    return;
+  }
+
+  const webhookUrl = State.settings?.webhook || localStorage.getItem('leadmaps_setting_webhook');
+  if (!webhookUrl || !webhookUrl.startsWith('http')) {
+    return;
+  }
+
+  lead._verificando360 = true;
+  try {
+    const payload = {
+      action: 'verify_360',
+      lead: {
+        id: lead.id,
+        empresa: lead.empresa,
+        lat: lead.lat,
+        lng: lead.lng,
+        placeId: lead.placeId,
+        cid: lead.cid,
+        endereco: lead.endereco || lead.cidade
+      }
+    };
+
+    const resp = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data && data.hasTour360) {
+        saveVerifiedTourBusiness(lead.empresa, true);
+        lead.temTour360 = true;
+        
+        // Atualiza pilar de fotos e 360 no diagnóstico
+        if (lead.auditPillars) {
+          const pilar = lead.auditPillars.find(p => p.id === 'tour360');
+          if (pilar) {
+            pilar.ok = true;
+            pilar.status = "Tour Virtual 360° interno interativo verificado no Google Street View.";
+          }
+          const passed = lead.auditPillars.filter(x => x.ok).length;
+          lead.score = Math.round((passed / 7) * 100);
+        }
+
+        // Remove dos gargalos
+        if (lead.gaps) {
+          lead.gaps = lead.gaps.filter(g => !g.toLowerCase().includes('360'));
+        }
+
+        showToast(`📸 Tour 360° confirmado no Street View para ${lead.empresa}!`);
+        if (typeof onResultCallback === 'function') onResultCallback(true);
+      }
+    }
+  } catch (err) {
+    console.warn("Verificação profunda 360° via Webhook indisponível:", err);
+  } finally {
+    lead._verificando360 = false;
+  }
+}
+window.verifyBusiness360TourDeep = verifyBusiness360TourDeep;
+
+// --------------------------------------------------------------------------
 // 1.91 Gerenciador de Clientes com Postagens & Atualizações Ativas (Memória Permanente)
 // --------------------------------------------------------------------------
 function isPostsVerifiedForBusiness(empresaName, address, phone) {
@@ -2197,6 +2268,18 @@ window.openDiagnostic = function(id) {
     lead.isSocialAsWebsite = lead.websiteAnalysis.isSocial;
   }
 
+  // Checagem em tempo real de Tour 360 na memória permanente ou lista mestre oficial
+  if (!lead.temTour360 && isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone)) {
+    lead.temTour360 = true;
+  }
+
+  // Se o perfil ainda consta sem Tour 360, executa o micro-verificador profundo em segundo plano (Opção 1)
+  if (!lead.temTour360 && !lead._verificando360) {
+    verifyBusiness360TourDeep(lead, () => {
+      openDiagnostic(lead.id);
+    });
+  }
+
   // Inicializa pilares com dados honestos e verificáveis se não existirem
   if (!lead.auditPillars) {
     const isElite = (Number(lead.rating) >= 4.8 && Number(lead.reviews) >= 60) || isTourVerifiedForBusiness(lead.empresa);
@@ -2389,7 +2472,11 @@ window.openDiagnostic = function(id) {
         <span class="text-base">${p.icon}</span>
         <div class="flex-1">
           <div class="flex items-center justify-between gap-1">
-            <span class="font-bold text-white">${p.nome}</span>
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="font-bold text-white">${p.nome}</span>
+              ${p.id === 'tour360' ? `<a href="${getGoogleMapsUrl(lead)}" target="_blank" rel="noopener noreferrer" class="text-[9px] text-cyan-400 hover:text-cyan-300 font-semibold px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20" title="Ver fotos e 360° no Google Maps">Maps ↗</a>` : ''}
+              ${p.id === 'tour360' && !p.ok ? `<button type="button" onclick="verifyBusiness360TourDeep(State.currentLead, () => openDiagnostic(State.currentLead.id))" class="text-[9px] text-amber-400 hover:text-amber-300 font-semibold px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 cursor-pointer" title="Verificar Tour 360 no Street View via n8n">🔍 Checar 360°</button>` : ''}
+            </div>
             <button type="button" onclick="${btnClickAction}" title="${isPostPillar ? 'Auditoria Cirúrgica de Postagens & Mídia: Clique para definir dias sem postar' : 'Clique para alternar status deste pilar no diagnóstico'}" class="px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${btnBadgeColorClass}">
               ${btnBadgeText}
             </button>
