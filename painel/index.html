@@ -253,16 +253,13 @@
         </div>
       </div>
 
-      <!-- Navigation Tabs: Extrator Maps vs Análise de Ranking vs Google Business CRM vs Master Admin -->
+      <!-- Navigation Tabs: Extrator Maps vs Análise de Ranking vs Master Admin -->
       <div class="flex flex-wrap items-center gap-1 rounded-xl bg-slate-900/90 p-1 border border-slate-800">
         <button id="tabNavExtrator" class="tab-nav-btn active flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-950 bg-[var(--primary)] cursor-pointer">
           🔍 Extrator Google Maps
         </button>
         <button id="tabNavRanking" class="tab-nav-btn flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-emerald-300 hover:text-white cursor-pointer">
           🎯 Análise de Ranking <span class="rounded-full bg-emerald-500/20 px-1.5 py-0.2 font-mono text-[10px] text-emerald-400">GeoGrid</span>
-        </button>
-        <button id="tabNavCrm" class="tab-nav-btn flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-300 hover:text-white cursor-pointer">
-          📊 Google Business CRM <span id="crmTotalBadge" class="rounded-full bg-amber-500/20 px-1.5 py-0.2 font-mono text-[10px] text-amber-400">0</span>
         </button>
         <button id="tabNavAdmin" class="tab-nav-btn flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-amber-300 hover:text-white cursor-pointer">
           👑 Admin Assinantes <span id="adminActiveSubBadge" class="rounded-full bg-emerald-500/20 px-1.5 py-0.2 font-mono text-[10px] text-emerald-400">4</span>
@@ -516,12 +513,6 @@
           <p id="tableSummaryText" class="text-xs text-[var(--muted-foreground)]">12 de 12 leads · Clínicas Odontológicas em Campinas - SP</p>
         </div>
         <div class="flex items-center gap-2">
-          <button id="btnAddSelectedToCRM" class="hidden btn-ghost-dark px-3 py-2 text-xs font-bold text-amber-400 border-amber-500/30 hover:bg-amber-500/10">
-            📌 + CRM (<span id="crmSelectedCount">0</span>)
-          </button>
-          <button id="btnAddAllToCRM" class="btn-ghost-dark px-3 py-2 text-xs font-bold text-amber-400 border-amber-500/30 hover:bg-amber-500/10 cursor-pointer">
-            ⚡ Adicionar Todos ao CRM
-          </button>
           <button id="btnHeaderOpenPdfHub" type="button" class="btn-amber px-3.5 py-2 text-xs font-extrabold flex items-center gap-1.5 shadow-md hover:scale-105 transition-all cursor-pointer" title="Gerar e Baixar Relatório Oficial em PDF do primeiro lead ou do lead ativo">
             <span>📄</span> <span>Gerar PDF do Lead</span>
           </button>
@@ -554,159 +545,6 @@
 
     </div> <!-- End VIEW 1: viewExtrator -->
 
-    <!-- VIEW 2: Google Business CRM -->
-    <div id="viewCRM" class="hidden space-y-6">
-      
-      <!-- CRM Header & Funnel KPIs -->
-      <section class="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div class="glass-card p-4">
-          <div class="flex items-center justify-between">
-            <span class="text-xl">👥</span>
-            <span id="crmKpiTotal" class="font-mono text-2xl font-extrabold text-white">0</span>
-          </div>
-          <p class="mt-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Total no Funil</p>
-        </div>
-
-        <div class="glass-card p-4">
-          <div class="flex items-center justify-between">
-            <span class="text-xl">💼</span>
-            <span id="crmKpiPipelineValue" class="font-mono text-xl font-extrabold text-[var(--amber-glow)]">R$ 0</span>
-          </div>
-          <p class="mt-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Pipeline em Aberto</p>
-        </div>
-
-        <div class="glass-card p-4">
-          <div class="flex items-center justify-between">
-            <span class="text-xl">🚨</span>
-            <span id="crmKpiNoSite" class="font-mono text-2xl font-extrabold text-[var(--rose-signal)]">0</span>
-          </div>
-          <p class="mt-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Sem Site (Alta Chance)</p>
-        </div>
-
-        <div class="glass-card p-4">
-          <div class="flex items-center justify-between">
-            <span class="text-xl">🏆</span>
-            <span id="crmKpiWonValue" class="font-mono text-xl font-extrabold text-[var(--emerald-signal)]">R$ 0</span>
-          </div>
-          <p class="mt-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Contratos Fechados</p>
-        </div>
-      </section>
-
-      <!-- CRM Toolbar -->
-      <section class="glass-card p-4 flex flex-wrap items-center justify-between gap-3">
-        <div class="flex flex-wrap items-center gap-2 flex-1 min-w-[280px]">
-          <div class="relative flex-1 min-w-[220px]">
-            <input id="crmSearchInput" placeholder="Buscar no CRM por empresa, telefone ou nota..." class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs outline-none focus:border-amber-400 text-white">
-          </div>
-          <select id="crmFilterService" class="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs outline-none text-white">
-            <option value="todos">Todos os Serviços</option>
-            <option value="Site de Alta Conversão">Criação de Site</option>
-            <option value="Tour Virtual 360°">Tour Virtual 360°</option>
-            <option value="Otimização Google Perfil">Otimização Perfil Google</option>
-            <option value="Pacote Completo Presença 360°">Pacote Completo Presença 360°</option>
-          </select>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-2">
-          <button id="btnCrmNewLead" class="btn-amber px-3.5 py-2 text-xs font-bold flex items-center gap-1.5">
-            + Novo Lead Manual
-          </button>
-          <button id="btnCrmImportCurrent" class="btn-ghost-dark px-3 py-2 text-xs font-semibold flex items-center gap-1.5 text-amber-400 border-amber-500/30">
-            📥 Importar da Varredura (<span id="crmImportCount">0</span>)
-          </button>
-          <button id="btnCrmExportCSV" class="btn-ghost-dark px-3 py-2 text-xs font-semibold flex items-center gap-1.5">
-            ⬇ Exportar CRM
-          </button>
-          <button id="btnCrmClear" class="btn-ghost-dark px-2.5 py-2 text-xs font-semibold text-rose-400 hover:border-rose-500/40" title="Limpar Funil CRM">
-            🗑️
-          </button>
-        </div>
-      </section>
-
-      <!-- Kanban Board (5 Colunas) -->
-      <section class="kanban-board">
-        <!-- Coluna 1: Novos Leads -->
-        <div class="kanban-column col-novo" data-stage="novo">
-          <div class="kanban-column-header">
-            <div class="flex items-center gap-2">
-              <span class="h-2.5 w-2.5 rounded-full bg-sky-400"></span>
-              <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-200">1. Novos Leads</h3>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <span class="crm-col-count font-mono text-xs font-bold text-sky-400 bg-sky-500/10 border border-sky-500/20 px-2 py-0.5 rounded-full" id="countColNovo">0</span>
-            </div>
-          </div>
-          <div class="kanban-cards-container" id="kanbanCardsNovo">
-            <!-- Cards injetados via JS -->
-          </div>
-        </div>
-
-        <!-- Coluna 2: Contatados no WhatsApp -->
-        <div class="kanban-column col-contatado" data-stage="contatado">
-          <div class="kanban-column-header">
-            <div class="flex items-center gap-2">
-              <span class="h-2.5 w-2.5 rounded-full bg-purple-400"></span>
-              <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-200">2. Contatados</h3>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <span class="crm-col-count font-mono text-xs font-bold text-purple-400 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-full" id="countColContatado">0</span>
-            </div>
-          </div>
-          <div class="kanban-cards-container" id="kanbanCardsContatado">
-            <!-- Cards injetados via JS -->
-          </div>
-        </div>
-
-        <!-- Coluna 3: Em Negociação -->
-        <div class="kanban-column col-negociacao" data-stage="negociacao">
-          <div class="kanban-column-header">
-            <div class="flex items-center gap-2">
-              <span class="h-2.5 w-2.5 rounded-full bg-amber-400"></span>
-              <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-200">3. Em Negociação</h3>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <span class="crm-col-count font-mono text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full" id="countColNegociacao">0</span>
-            </div>
-          </div>
-          <div class="kanban-cards-container" id="kanbanCardsNegociacao">
-            <!-- Cards injetados via JS -->
-          </div>
-        </div>
-
-        <!-- Coluna 4: Proposta Enviada -->
-        <div class="kanban-column col-proposta" data-stage="proposta">
-          <div class="kanban-column-header">
-            <div class="flex items-center gap-2">
-              <span class="h-2.5 w-2.5 rounded-full bg-cyan-400"></span>
-              <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-200">4. Proposta Enviada</h3>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <span class="crm-col-count font-mono text-xs font-bold text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded-full" id="countColProposta">0</span>
-            </div>
-          </div>
-          <div class="kanban-cards-container" id="kanbanCardsProposta">
-            <!-- Cards injetados via JS -->
-          </div>
-        </div>
-
-        <!-- Coluna 5: Contrato Fechado -->
-        <div class="kanban-column col-fechado" data-stage="fechado">
-          <div class="kanban-column-header">
-            <div class="flex items-center gap-2">
-              <span class="h-2.5 w-2.5 rounded-full bg-emerald-400"></span>
-              <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-200">5. Fechado / Ganho</h3>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <span class="crm-col-count font-mono text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full" id="countColFechado">0</span>
-            </div>
-          </div>
-          <div class="kanban-cards-container" id="kanbanCardsFechado">
-            <!-- Cards injetados via JS -->
-          </div>
-        </div>
-      </section>
-
-    </div> <!-- End VIEW 2: viewCRM -->
 
     <!-- VIEW 3: Painel Master Admin — Gestão de Assinantes & Pagamentos Automáticos -->
     <div id="viewAdmin" class="hidden space-y-6">
@@ -1461,9 +1299,6 @@
 
         <!-- Modal Footer Actions -->
         <div class="flex flex-wrap gap-2 border-t border-[var(--border)] pt-5">
-          <button id="btnModalAddToCrm" class="btn-amber px-4 py-2.5 text-xs font-bold flex items-center gap-1.5 cursor-pointer">
-            📊 + Adicionar ao CRM
-          </button>
           <button id="btnModalOpenGeoGrid" type="button" class="btn-ghost-dark px-4 py-2.5 text-xs font-bold text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/10 cursor-pointer flex items-center gap-1.5">
             🎯 Analisar Ranking GeoGrid
           </button>
@@ -2052,95 +1887,7 @@
     </div>
   </div>
 
-  <!-- Modal: Editar / Criar Lead do Google Business CRM -->
-  <div id="crmLeadModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
-    <div class="glass-card max-h-[90vh] w-full max-w-lg overflow-y-auto border border-slate-700 bg-slate-950 p-6 shadow-2xl">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <h3 id="crmModalTitle" class="text-base font-extrabold text-white">Editar Negócio no Google Business CRM</h3>
-        <button id="btnCloseCrmModal" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white">✕</button>
-      </div>
 
-      <div class="mt-4 space-y-3.5 text-xs">
-        <input type="hidden" id="crmEditLeadId">
-
-        <div>
-          <label class="mb-1 block font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Nome da Empresa</label>
-          <input id="crmEditEmpresa" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400">
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="mb-1 block font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Telefone / WhatsApp</label>
-            <input id="crmEditTelefone" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400">
-          </div>
-          <div>
-            <label class="mb-1 block font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Nicho / Categoria</label>
-            <input id="crmEditCategoria" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400">
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="mb-1 block font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Estágio do Funil</label>
-            <select id="crmEditStage" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400">
-              <option value="novo">1. Novo Lead</option>
-              <option value="contatado">2. Contatado no WhatsApp</option>
-              <option value="negociacao">3. Em Negociação</option>
-              <option value="proposta">4. Proposta Enviada</option>
-              <option value="fechado">5. Fechado / Ganho</option>
-            </select>
-          </div>
-          <div>
-            <label class="mb-1 block font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Valor da Proposta (R$)</label>
-            <input id="crmEditValue" type="number" min="0" step="50" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 font-mono text-sm text-white outline-none focus:border-amber-400" placeholder="1500">
-          </div>
-        </div>
-
-        <div>
-          <label class="mb-1 block font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Serviço Oferecido</label>
-          <select id="crmEditService" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400">
-            <option value="Site de Alta Conversão">Criação de Site de Alta Conversão (R$ 1.500 - R$ 3.000)</option>
-            <option value="Tour Virtual 360°">Tour Virtual Google Street View 360° (R$ 800 - R$ 1.500)</option>
-            <option value="Otimização Google Perfil">Otimização de Ficha Google Meu Negócio (R$ 600 - R$ 1.200)</option>
-            <option value="Pacote Completo Presença 360°">Pacote Completo Presença 360° (R$ 2.500 - R$ 4.500)</option>
-            <option value="Consultoria Mensal">Consultoria & Tráfego Mensal (R$ 1.200/mês)</option>
-          </select>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="mb-1 block font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Status do Site</label>
-            <select id="crmEditHasSite" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400">
-              <option value="false">🚨 Sem Site (Oportunidade Alta)</option>
-              <option value="true">🌐 Com Site Ativo</option>
-            </select>
-          </div>
-          <div>
-            <label class="mb-1 block font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Tour 360° Street View</label>
-            <select id="crmEditHas360" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400">
-              <option value="false">Sem Tour 360°</option>
-              <option value="true">📷 Tour 360° Detectado</option>
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label class="mb-1 block font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Anotações do Ricardo / Histórico de Conversa</label>
-          <textarea id="crmEditNotes" rows="3" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400" placeholder="Ex: Falei com o proprietário Carlos. Ele quer um site novo e fotos da loja. Agendado retorno na quinta-feira..."></textarea>
-        </div>
-
-        <div class="flex items-center justify-between border-t border-slate-800 pt-3">
-          <button id="btnDeleteCrmLead" type="button" class="text-xs font-bold text-rose-400 hover:text-rose-300">
-            🗑️ Excluir do CRM
-          </button>
-          <div class="flex items-center gap-2">
-            <button id="btnCancelCrmModal" type="button" class="btn-ghost-dark px-3.5 py-2 text-xs font-semibold">Cancelar</button>
-            <button id="btnSaveCrmLead" type="button" class="btn-amber px-4 py-2 text-xs font-bold">Salvar Negócio</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- Modal de Auditoria de Postagens & Mídia Recente -->
   <div id="postAuditModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">

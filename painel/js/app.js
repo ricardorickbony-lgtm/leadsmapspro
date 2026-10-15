@@ -2281,9 +2281,6 @@ function renderTable() {
         </td>
         <td class="px-4 py-3 text-right">
           <div class="flex justify-end gap-1.5 flex-wrap">
-            <button onclick="addSingleLeadToCRM(${lead.id})" class="btn-ghost-dark px-2.5 py-1.5 text-[11px] font-bold cursor-pointer text-amber-400 border-amber-500/30 hover:bg-amber-500/10" title="Adicionar ao Google Business CRM">
-              📌 + CRM
-            </button>
             <button onclick="window.openLeadInGeoGrid(${lead.id})" class="btn-ghost-dark px-2.5 py-1.5 text-[11px] font-bold cursor-pointer text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/10" title="Analisar Posição e Ranking Local desta empresa na GeoGrade GPS">
               🎯 Ranking
             </button>
@@ -2308,21 +2305,14 @@ function renderTable() {
   // Atualiza botões em lote
   const btnBulk = document.getElementById('btnBulkWhatsApp');
   const selCount = document.getElementById('selectedCount');
-  const btnAddSelCrm = document.getElementById('btnAddSelectedToCRM');
-  const crmSelCount = document.getElementById('crmSelectedCount');
 
   if (State.selectedLeadIds.size > 0) {
     if (btnBulk && selCount) {
       btnBulk.classList.remove('hidden');
       selCount.textContent = State.selectedLeadIds.size;
     }
-    if (btnAddSelCrm && crmSelCount) {
-      btnAddSelCrm.classList.remove('hidden');
-      crmSelCount.textContent = State.selectedLeadIds.size;
-    }
   } else {
     if (btnBulk) btnBulk.classList.add('hidden');
-    if (btnAddSelCrm) btnAddSelCrm.classList.add('hidden');
   }
 
   // Event Listeners nos checkboxes individuais
@@ -2895,14 +2885,6 @@ window.openDiagnostic = function(id) {
   // Botão WhatsApp Modal
   const btnWA = document.getElementById('btnModalWhatsApp');
   if (btnWA) btnWA.href = buildWhatsAppUrl(lead, pitch);
-
-  // Botão Adicionar ao CRM no Modal
-  const btnModalCrm = document.getElementById('btnModalAddToCrm');
-  if (btnModalCrm) {
-    btnModalCrm.onclick = () => {
-      window.addSingleLeadToCRM(lead.id);
-    };
-  }
 
   document.getElementById('diagnosticModal').classList.remove('hidden');
 };
@@ -7103,19 +7085,17 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     showToast("Planilha do Google Business CRM exportada com sucesso!");
   }
 
-  // Configuração dos Listeners do CRM, Extrator, Ranking GeoGrid e Painel Master Admin
+  // Configuração dos Listeners do Extrator, Ranking GeoGrid e Painel Master Admin
   const tabNavExtrator = document.getElementById('tabNavExtrator');
   const tabNavRanking = document.getElementById('tabNavRanking');
-  const tabNavCrm = document.getElementById('tabNavCrm');
   const tabNavAdmin = document.getElementById('tabNavAdmin');
   const viewExtrator = document.getElementById('viewExtrator');
   const viewRanking = document.getElementById('viewRanking');
-  const viewCRM = document.getElementById('viewCRM');
   const viewAdmin = document.getElementById('viewAdmin');
 
   function activateMainView(viewName) {
-    [viewExtrator, viewRanking, viewCRM, viewAdmin].forEach(v => v?.classList.add('hidden'));
-    [tabNavExtrator, tabNavRanking, tabNavCrm, tabNavAdmin].forEach(t => {
+    [viewExtrator, viewRanking, viewAdmin].forEach(v => v?.classList.add('hidden'));
+    [tabNavExtrator, tabNavRanking, tabNavAdmin].forEach(t => {
       if (!t) return;
       t.classList.remove('active', 'bg-[var(--primary)]', 'text-slate-950');
       t.classList.add('text-slate-300');
@@ -7129,12 +7109,6 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       if (typeof window.initOrRefreshGeoGrid === 'function') {
         setTimeout(() => window.initOrRefreshGeoGrid(), 80);
       }
-    } else if (viewName === 'crm') {
-      viewCRM?.classList.remove('hidden');
-      tabNavCrm?.classList.add('active', 'bg-[var(--primary)]', 'text-slate-950');
-      tabNavCrm?.classList.remove('text-slate-300');
-      State.crmActiveTab = 'crm';
-      renderCRM();
     } else if (viewName === 'admin') {
       viewAdmin?.classList.remove('hidden');
       tabNavAdmin?.classList.add('active', 'bg-[var(--primary)]', 'text-slate-950');
@@ -7152,7 +7126,6 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
 
   tabNavExtrator?.addEventListener('click', () => activateMainView('extrator'));
   tabNavRanking?.addEventListener('click', () => activateMainView('ranking'));
-  tabNavCrm?.addEventListener('click', () => activateMainView('crm'));
   tabNavAdmin?.addEventListener('click', () => activateMainView('admin'));
 
   // Ações da Toolbar do CRM
