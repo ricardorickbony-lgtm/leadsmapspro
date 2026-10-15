@@ -273,12 +273,34 @@ async function verifyBusiness360TourDeep(lead, onResultCallback) {
 }
 window.verifyBusiness360TourDeep = verifyBusiness360TourDeep;
 
+// --------------------------------------------------------------------------
+// 1.905 Resolução Universal de Leads Multi-Origem (Tabela, CRM, Busca)
+// --------------------------------------------------------------------------
+function getAnyLeadById(id) {
+  if (id === undefined || id === null) return State.currentLead || null;
+  if (State.leads && Array.isArray(State.leads)) {
+    const found = State.leads.find(l => l.id == id);
+    if (found) return found;
+  }
+  if (State.crmLeads && Array.isArray(State.crmLeads)) {
+    const foundCrm = State.crmLeads.find(l => l.id == id);
+    if (foundCrm) return foundCrm;
+  }
+  if (State.currentLead && State.currentLead.id == id) {
+    return State.currentLead;
+  }
+  return State.currentLead || null;
+}
+window.getAnyLeadById = getAnyLeadById;
+
 let _activeTourAuditLeadId = null;
 
 window.openTourAuditModal = function(leadId, metaResult = null) {
-  const targetId = leadId || (State.currentLead ? State.currentLead.id : null);
-  const lead = State.leads.find(l => l.id === targetId) || State.currentLead;
-  if (!lead) return;
+  const lead = getAnyLeadById(leadId);
+  if (!lead) {
+    console.warn("openTourAuditModal: Lead não encontrado para id", leadId);
+    return;
+  }
   _activeTourAuditLeadId = lead.id;
 
   const modal = document.getElementById('tourAuditModal');
@@ -288,7 +310,7 @@ window.openTourAuditModal = function(leadId, metaResult = null) {
   const statusTitle = document.getElementById('tourAuditStatusTitle');
   const statusDesc = document.getElementById('tourAuditStatusDesc');
 
-  if (nameEl) nameEl.textContent = lead.empresa;
+  if (nameEl) nameEl.textContent = lead.empresa || 'Empresa Selecionada';
   if (mapsLink) mapsLink.href = getGoogleMapsUrl(lead);
 
   if (metaResult?.reason === 'REQUEST_DENIED') {
@@ -298,8 +320,8 @@ window.openTourAuditModal = function(leadId, metaResult = null) {
       statusBox.className = "rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs text-amber-200 space-y-1.5 leading-relaxed";
     }
   } else if (metaResult?.reason === 'no_coords') {
-    if (statusTitle) statusTitle.textContent = "Coordenadas GPS Não Vinculadas";
-    if (statusDesc) statusDesc.innerHTML = "Este lead não possui coordenadas de latitude/longitude cadastradas para a verificação via Street View. Confira as fotos no <strong>Maps ↗</strong> e selecione o status abaixo.";
+    if (statusTitle) statusTitle.textContent = "Validação Manual de Fotos & 360°";
+    if (statusDesc) statusDesc.innerHTML = "Abra o perfil no <strong>Maps ↗</strong> para conferir se há Tour Virtual 360° ou fotos esféricas e selecione uma das opções abaixo.";
     if (statusBox) {
       statusBox.className = "rounded-xl border border-sky-500/30 bg-sky-500/10 p-3.5 text-xs text-sky-200 space-y-1.5 leading-relaxed";
     }
@@ -317,18 +339,24 @@ window.openTourAuditModal = function(leadId, metaResult = null) {
     }
   }
 
-  if (modal) modal.classList.remove('hidden');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.style.setProperty('display', 'flex', 'important');
+  }
 };
 
 window.closeTourAuditModal = function() {
   const modal = document.getElementById('tourAuditModal');
-  if (modal) modal.classList.add('hidden');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.style.setProperty('display', 'none', 'important');
+  }
   _activeTourAuditLeadId = null;
 };
 
 window.confirmTour360Status = function(hasTour) {
   const targetId = _activeTourAuditLeadId || (State.currentLead ? State.currentLead.id : null);
-  const lead = State.leads.find(l => l.id === targetId) || State.currentLead;
+  const lead = getAnyLeadById(targetId);
   if (!lead) return;
 
   saveVerifiedTourBusiness(lead.empresa, hasTour);
@@ -368,11 +396,13 @@ window.confirmTour360Status = function(hasTour) {
   }
 
   // Sincroniza CRM
-  const crmLead = State.crmLeads.find(c => c.id === lead.id || c.empresa.toLowerCase() === lead.empresa.toLowerCase());
-  if (crmLead) {
-    crmLead.temTour360 = hasTour;
-    if (typeof saveCrmToStorage === 'function') saveCrmToStorage();
-    if (typeof renderCrmKanban === 'function') renderCrmKanban();
+  if (State.crmLeads && Array.isArray(State.crmLeads)) {
+    const crmLead = State.crmLeads.find(c => c.id == lead.id || (c.empresa && lead.empresa && c.empresa.toLowerCase() === lead.empresa.toLowerCase()));
+    if (crmLead) {
+      crmLead.temTour360 = hasTour;
+      if (typeof saveCrmToStorage === 'function') saveCrmToStorage();
+      if (typeof renderCrmKanban === 'function') renderCrmKanban();
+    }
   }
 
   window.closeTourAuditModal();
@@ -382,10 +412,10 @@ window.confirmTour360Status = function(hasTour) {
     openDiagnostic(lead.id);
   }
   if (document.getElementById('pdfReportHubModal') && !document.getElementById('pdfReportHubModal').classList.contains('hidden')) {
-    openWhiteLabelReport(lead);
+    if (typeof openWhiteLabelReport === 'function') openWhiteLabelReport(lead);
   }
-  updateMetrics();
-  renderTable();
+  if (typeof updateMetrics === 'function') updateMetrics();
+  if (typeof renderTable === 'function') renderTable();
 
   if (hasTour) {
     showToast(`✓ Tour 360° de "${lead.empresa}" homologado como CONFORME!`);
@@ -399,86 +429,59 @@ window.handleManualCheck360 = async function(event, leadId) {
     event.preventDefault();
     event.stopPropagation();
   }
-  const targetId = leadId || (State.currentLead ? State.currentLead.id : null);
-  const lead = State.leads.find(l => l.id === targetId) || State.currentLead;
+  const lead = getAnyLeadById(leadId);
   if (!lead) return;
 
   const btn = event?.currentTarget || event?.target;
   const originalHtml = btn ? btn.innerHTML : '🔍 Checar 360°';
 
-  if (btn) {
-    btn.disabled = true;
-    btn.innerHTML = '⏳ Checando...';
-    btn.classList.add('opacity-75', 'cursor-wait');
+  // 1. Se já está na lista mestre ou memória de homologados
+  if (isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone)) {
+    lead.temTour360 = true;
+    confirmTour360Status(true);
+    showToast(`📸 Tour 360° já homologado para ${lead.empresa}!`);
+    return;
   }
 
-  showToast(`🔍 Verificando Street View & Fotos 360° de "${lead.empresa}"...`);
-
-  try {
-    // 1. Se já está na lista mestre ou memória de homologados
-    if (isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone)) {
-      lead.temTour360 = true;
-      if (lead.auditPillars) {
-        const pilar = lead.auditPillars.find(p => p.id === 'tour360');
-        if (pilar) {
-          pilar.ok = true;
-          pilar.status = "✓ Conforme: Tour Virtual 360° verificado e memorizado.";
-        }
-        const passed = lead.auditPillars.filter(x => x.ok).length;
-        lead.score = Math.round((passed / 7) * 100);
-      }
-      showToast(`📸 Tour 360° já homologado para ${lead.empresa}!`);
-      openDiagnostic(lead.id);
-      renderTable();
-      return;
-    }
-
-    // 2. Se não possui lat/lng
-    if (typeof lead.lat !== 'number' || typeof lead.lng !== 'number') {
-      window.openTourAuditModal(lead.id, { reason: 'no_coords' });
-      return;
-    }
-
-    // 3. Consulta Street View Metadata API oficial
-    const metaResult = await detectTour360ViaStreetViewMetadata(lead.lat, lead.lng);
-
-    if (metaResult && metaResult.hasTour360) {
-      saveVerifiedTourBusiness(lead.empresa, true);
-      lead.temTour360 = true;
-      lead.tour360Meta = metaResult;
-
-      if (lead.auditPillars) {
-        const pilar = lead.auditPillars.find(p => p.id === 'tour360');
-        if (pilar) {
-          pilar.ok = true;
-          pilar.status = `✓ Conforme: Tour Virtual 360° verificado no Street View (${metaResult.distanceMeters}m do local, Pano: ${metaResult.panoId ? metaResult.panoId.substring(0, 10) + '...' : 'OK'}).`;
-        }
-        const passed = lead.auditPillars.filter(x => x.ok).length;
-        lead.score = Math.round((passed / 7) * 100);
-      }
-      if (lead.gaps) {
-        lead.gaps = lead.gaps.filter(g => !g.toLowerCase().includes('360'));
-      }
-
-      showToast(`📸 Tour 360° oficial confirmado no Street View para ${lead.empresa}!`);
-      openDiagnostic(lead.id);
-      renderTable();
-      return;
-    }
-
-    // 4. Se a API retornou REQUEST_DENIED ou hasTour360 = false
-    window.openTourAuditModal(lead.id, metaResult || { hasTour360: false });
-
-  } catch (err) {
-    console.warn("Erro ao checar Tour 360:", err);
-    window.openTourAuditModal(lead.id, { reason: 'error' });
-  } finally {
+  // 2. Se tem coordenadas, tenta uma checagem ultra rápida com timeout protetor de 1.5s
+  if (typeof lead.lat === 'number' && typeof lead.lng === 'number') {
     if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = originalHtml;
-      btn.classList.remove('opacity-75', 'cursor-wait');
+      btn.disabled = true;
+      btn.innerHTML = '⏳ Checando...';
+      btn.classList.add('opacity-75', 'cursor-wait');
     }
+    showToast(`🔍 Verificando Street View & Fotos 360° de "${lead.empresa}"...`);
+
+    try {
+      const metaPromise = detectTour360ViaStreetViewMetadata(lead.lat, lead.lng);
+      const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(null), 1500));
+      const metaResult = await Promise.race([metaPromise, timeoutPromise]);
+
+      if (metaResult && metaResult.hasTour360) {
+        saveVerifiedTourBusiness(lead.empresa, true);
+        lead.tour360Meta = metaResult;
+        confirmTour360Status(true);
+        showToast(`📸 Tour 360° oficial confirmado no Street View para ${lead.empresa}!`);
+        return;
+      }
+
+      // Se não detectou automaticamente ou retornou falso/negado, abre o modal de homologação
+      window.openTourAuditModal(lead.id, metaResult || { hasTour360: false });
+    } catch (err) {
+      console.warn("Erro ao checar Tour 360:", err);
+      window.openTourAuditModal(lead.id, { reason: 'manual' });
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+        btn.classList.remove('opacity-75', 'cursor-wait');
+      }
+    }
+    return;
   }
+
+  // 3. Sem coordenadas: abre o modal de auditoria na hora
+  window.openTourAuditModal(lead.id, { reason: 'no_coords' });
 };
 
 // --------------------------------------------------------------------------
@@ -628,7 +631,7 @@ window.getLeadPostAudit = getLeadPostAudit;
 let _activePostAuditLeadId = null;
 
 window.openPostAuditModal = function(leadId) {
-  const lead = State.leads.find(l => l.id === leadId) || State.currentLead;
+  const lead = getAnyLeadById(leadId);
   if (!lead) return;
   _activePostAuditLeadId = lead.id;
 
@@ -637,12 +640,18 @@ window.openPostAuditModal = function(leadId) {
   const inputEl = document.getElementById('inputCustomPostDays');
   if (nameEl) nameEl.textContent = lead.empresa;
   if (inputEl) inputEl.value = (typeof lead.diasSemPostar === 'number') ? lead.diasSemPostar : 42;
-  if (modal) modal.classList.remove('hidden');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.style.setProperty('display', 'flex', 'important');
+  }
 };
 
 window.closePostAuditModal = function() {
   const modal = document.getElementById('postAuditModal');
-  if (modal) modal.classList.add('hidden');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.style.setProperty('display', 'none', 'important');
+  }
   _activePostAuditLeadId = null;
 };
 
@@ -667,7 +676,7 @@ window.applyCustomPostDaysInput = function() {
 };
 
 function setLeadPostDays(leadId, dias) {
-  const lead = State.leads.find(l => l.id === leadId) || State.currentLead;
+  const lead = getAnyLeadById(leadId);
   if (!lead) return;
   const numDias = parseInt(dias);
   if (isNaN(numDias) || numDias < 0) return;
@@ -1763,6 +1772,7 @@ const State = {
     whatsappPlatform: localStorage.getItem('leadmaps_wa_platform') || 'web'
   }
 };
+window.State = State;
 
 // --------------------------------------------------------------------------
 // 4. Funções de Suporte Visual e Copy
@@ -2005,7 +2015,7 @@ async function triggerWebhookWhatsAppDispatch(lead, customMessage = null) {
 }
 
 window.editLeadPhone = function(leadId) {
-  const lead = State.leads.find(l => l.id === leadId);
+  const lead = getAnyLeadById(leadId);
   if (!lead) return;
   const newPhone = window.prompt(
     `Editar número de WhatsApp para "${lead.empresa}":\n(Digite com DDD, ex: (11) 99999-8888)`,
@@ -2025,7 +2035,7 @@ window.editLeadPhone = function(leadId) {
 };
 
 window.handleDirectWhatsAppClick = function(event, leadId) {
-  const lead = State.leads.find(l => l.id === leadId);
+  const lead = getAnyLeadById(leadId);
   if (!lead) return true;
   const url = buildWhatsAppUrl(lead);
   if (url === '#') {
@@ -2044,7 +2054,7 @@ window.handleDirectWhatsAppClick = function(event, leadId) {
 
   State.sentCount++;
   updateMetrics();
-  const crmLead = State.crmLeads.find(c => c.id === lead.id || c.empresa.toLowerCase() === lead.empresa.toLowerCase());
+  const crmLead = State.crmLeads.find(c => c.id == lead.id || (c.empresa && lead.empresa && c.empresa.toLowerCase() === lead.empresa.toLowerCase()));
   if (crmLead && crmLead.stage === 'novo') {
     crmLead.stage = 'contatado';
     if (typeof saveCrmToStorage === 'function') saveCrmToStorage();
@@ -2054,7 +2064,7 @@ window.handleDirectWhatsAppClick = function(event, leadId) {
 };
 
 function openSingleLeadWhatsAppDirect(leadId) {
-  const lead = State.leads.find(l => l.id === leadId);
+  const lead = getAnyLeadById(leadId);
   if (!lead) return;
   const url = buildWhatsAppUrl(lead);
   if (url === '#') {
@@ -2429,14 +2439,14 @@ function generateSeoActionPlan(lead) {
 // 6. Funções Globais de Pré-Análise & Diagnóstico
 // --------------------------------------------------------------------------
 window.openPreAnalysisReport = function(id) {
-  const lead = State.leads.find(l => l.id === id);
+  const lead = getAnyLeadById(id);
   if (!lead) return;
   State.currentLead = lead;
   openWhiteLabelReport(lead);
 };
 
 window.togglePillarStatus = function(leadId, pillarId) {
-  const lead = State.leads.find(l => l.id === leadId);
+  const lead = getAnyLeadById(leadId);
   if (!lead || !lead.auditPillars) return;
   const p = lead.auditPillars.find(x => x.id === pillarId);
   if (!p) return;
@@ -2453,9 +2463,21 @@ window.togglePillarStatus = function(leadId, pillarId) {
     saveVerifiedTourBusiness(lead.empresa, p.ok);
     p.status = p.ok 
       ? "✓ Conforme: Tour Virtual 360° verificado e homologado no Google Maps." 
-      : "⚠️ Tour 360° a Homologar: Pendente de verificação (Conferir fotos no Maps ↗ ou re-checar).";
+      : "⚠️ Alerta: Perfil sem Tour Virtual 360° interno (Gargalo de prospecção).";
     if (p.ok && Array.isArray(lead.gaps)) {
       lead.gaps = lead.gaps.filter(g => !g.toLowerCase().includes('360'));
+    } else if (!p.ok && Array.isArray(lead.gaps) && !lead.gaps.some(g => g.toLowerCase().includes('360'))) {
+      lead.gaps.push("Sem tour 360°");
+    }
+
+    // Sincroniza CRM
+    if (State.crmLeads && Array.isArray(State.crmLeads)) {
+      const crmLead = State.crmLeads.find(c => c.id == lead.id || (c.empresa && lead.empresa && c.empresa.toLowerCase() === lead.empresa.toLowerCase()));
+      if (crmLead) {
+        crmLead.temTour360 = lead.temTour360;
+        if (typeof saveCrmToStorage === 'function') saveCrmToStorage();
+        if (typeof renderCrmKanban === 'function') renderCrmKanban();
+      }
     }
   }
   if (p.id === 'posts') {
@@ -2470,13 +2492,13 @@ window.togglePillarStatus = function(leadId, pillarId) {
   lead.score = Math.round((passed / 7) * 100);
 
   // Re-renderiza diagnóstico e tabela
-  openDiagnostic(leadId);
+  openDiagnostic(lead.id);
   renderTable();
   showToast(`Pilar "${p.nome}" atualizado para: ${p.ok ? '✓ Conforme' : '✕ Gargalo'}`);
 };
 
 window.toggleLeadWebsite = function(leadId) {
-  const lead = State.leads.find(l => l.id === leadId);
+  const lead = getAnyLeadById(leadId);
   if (!lead) return;
   lead.temSite = !lead.temSite;
   if (!lead.websiteAnalysis) {
@@ -2517,7 +2539,7 @@ window.toggleLeadWebsite = function(leadId) {
 };
 
 window.toggleLeadTour360 = function(leadId) {
-  const lead = State.leads.find(l => l.id === leadId);
+  const lead = getAnyLeadById(leadId);
   if (!lead) return;
 
   lead.temTour360 = !lead.temTour360;
@@ -2549,17 +2571,21 @@ window.toggleLeadTour360 = function(leadId) {
     if (pTour) {
       pTour.ok = lead.temTour360;
       pTour.status = lead.temTour360
-        ? "Tour Virtual 360° interno interativo verificado no Google Street View."
-        : "Sem Tour Virtual 360° interno no Google Street View (apenas foto de rua do carro do Google).";
+        ? "✓ Conforme: Tour Virtual 360° verificado e homologado no Google Maps."
+        : "⚠️ Alerta: Perfil sem Tour Virtual 360° interno (Gargalo de conversão e oportunidade de venda de tour).";
     }
+    const passed = lead.auditPillars.filter(x => x.ok).length;
+    lead.score = Math.round((passed / 7) * 100);
   }
 
   // Sincroniza com CRM se o lead existir no CRM
-  const crmLead = State.crmLeads.find(c => c.id === lead.id || c.empresa.toLowerCase() === lead.empresa.toLowerCase());
-  if (crmLead) {
-    crmLead.temTour360 = lead.temTour360;
-    if (typeof saveCrmToStorage === 'function') saveCrmToStorage();
-    if (typeof renderCrmKanban === 'function') renderCrmKanban();
+  if (State.crmLeads && Array.isArray(State.crmLeads)) {
+    const crmLead = State.crmLeads.find(c => c.id == lead.id || (c.empresa && lead.empresa && c.empresa.toLowerCase() === lead.empresa.toLowerCase()));
+    if (crmLead) {
+      crmLead.temTour360 = lead.temTour360;
+      if (typeof saveCrmToStorage === 'function') saveCrmToStorage();
+      if (typeof renderCrmKanban === 'function') renderCrmKanban();
+    }
   }
 
   updateMetrics();
@@ -2567,7 +2593,7 @@ window.toggleLeadTour360 = function(leadId) {
 };
 
 window.openDiagnostic = function(id) {
-  const lead = State.leads.find(l => l.id === id);
+  const lead = getAnyLeadById(id);
   if (!lead) return;
   State.currentLead = lead;
 
@@ -2583,13 +2609,6 @@ window.openDiagnostic = function(id) {
   // Checagem em tempo real de Tour 360 na memória permanente ou lista mestre oficial
   if (!lead.temTour360 && isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone)) {
     lead.temTour360 = true;
-  }
-
-  // Se o perfil ainda consta sem Tour 360, executa o micro-verificador profundo em segundo plano (Opção 1)
-  if (!lead.temTour360 && !lead._verificando360) {
-    verifyBusiness360TourDeep(lead, () => {
-      openDiagnostic(lead.id);
-    });
   }
 
   // Inicializa pilares com dados honestos e verificáveis se não existirem
@@ -3188,7 +3207,7 @@ function buildLeadFullAuditItems(lead) {
 }
 
 window.cycleHealthItemScore = function(leadId, itemId) {
-  const lead = State.leads.find(l => l.id === leadId) || State.currentLead;
+  const lead = getAnyLeadById(leadId);
   if (!lead) return;
   const items = buildLeadFullAuditItems(lead);
   const item = items.find(i => i.id === itemId);
@@ -7924,11 +7943,23 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
   // Inicializa painel admin
   renderAdminPanel();
 
-  // O painel SEMPRE abre bloqueado exigindo a tela de login (#authGateOverlay)
-  try { sessionStorage.clear(); } catch(e) {}
-  document.body.classList.remove('authenticated');
-  authOverlay?.classList.remove('authenticated', 'is-hidden');
-  if (authOverlay) authOverlay.style.setProperty('display', 'flex', 'important');
+  // Gestão de Sessão do Usuário / Master Ricardo
+  let savedSession = null;
+  try {
+    const raw = sessionStorage.getItem(SESSION_USER_KEY);
+    if (raw) savedSession = JSON.parse(raw);
+  } catch(e) {}
+
+  if (savedSession && savedSession.role) {
+    applySessionRole(savedSession);
+    document.body.classList.add('authenticated');
+    authOverlay?.classList.add('authenticated', 'is-hidden');
+    if (authOverlay) authOverlay.style.setProperty('display', 'none', 'important');
+  } else {
+    document.body.classList.remove('authenticated');
+    authOverlay?.classList.remove('authenticated', 'is-hidden');
+    if (authOverlay) authOverlay.style.setProperty('display', 'flex', 'important');
+  }
 
   // ==========================================================================
   // 10. Módulo Oficial: Análise de Ranking Local (GeoGrid GPS de Alta Precisão)
@@ -9706,7 +9737,7 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
 
   // Abre qualquer empresa diretamente na aba de Análise de Ranking (1-Click da Tabela ou do Modal)
   window.openLeadInGeoGrid = function(leadId) {
-    const lead = State.leads.find(l => l.id === leadId) || State.selectedLead || State.leads[0];
+    const lead = getAnyLeadById(leadId) || State.selectedLead || (State.leads && State.leads[0]);
     if (!lead) return;
 
     GeoState.selectedLeadId = lead.id;

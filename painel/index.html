@@ -32,6 +32,7 @@
       overflow-y: auto !important;
     }
 
+    html.authenticated #authGateOverlay,
     body.authenticated #authGateOverlay,
     #authGateOverlay.authenticated,
     #authGateOverlay.is-hidden {
@@ -42,14 +43,19 @@
     }
   </style>
   <script>
-    // Limpeza forçada de sessão ao carregar a página para garantir tela de login
-    try { sessionStorage.clear(); } catch(e) {}
+    // Se já houver sessão ativa salva, marca authenticated imediatamente para não piscar tela de login
+    try {
+      const activeSession = sessionStorage.getItem('leadmaps_active_session_v1');
+      if (activeSession) {
+        document.documentElement.classList.add('authenticated');
+      }
+    } catch(e) {}
   </script>
 </head>
 <body class="min-h-screen bg-[var(--background)] text-[var(--foreground)] selection:bg-[var(--primary)] selection:text-[var(--primary-foreground)]">
 
   <!-- Tela Exclusiva de Login, Ativação de Licença & Checkout Automático 24h -->
-  <div id="authGateOverlay" style="position:fixed!important;top:0!important;left:0!important;right:0!important;bottom:0!important;width:100vw!important;height:100vh!important;z-index:2147483647!important;background:#070b14!important;display:flex!important;align-items:center!important;justify-content:center!important;" class="fixed inset-0 z-[99999999] flex items-center justify-center bg-[#070b14] p-4 backdrop-blur-xl overflow-y-auto">
+  <div id="authGateOverlay" style="position:fixed!important;top:0!important;left:0!important;right:0!important;bottom:0!important;width:100vw!important;height:100vh!important;z-index:2147483647!important;background:#070b14!important;align-items:center!important;justify-content:center!important;" class="fixed inset-0 z-[99999999] flex items-center justify-center bg-[#070b14] p-4 backdrop-blur-xl overflow-y-auto">
     <div class="w-full max-w-5xl my-auto grid grid-cols-1 lg:grid-cols-12 rounded-2xl border border-slate-800 bg-slate-950 shadow-2xl overflow-hidden">
 
       <!-- Coluna Esquerda (6 cols): Login & Chave de Licença -->
@@ -2249,7 +2255,7 @@
   </div>
 
   <!-- Modal de Auditoria & Homologação de Tour 360° -->
-  <div id="tourAuditModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+  <div id="tourAuditModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
     <div class="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-950 p-6 shadow-2xl space-y-5">
       <!-- Header -->
       <div class="flex items-start justify-between border-b border-slate-800 pb-3">
