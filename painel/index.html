@@ -160,17 +160,17 @@
               <div>
                 <div class="flex items-center gap-2">
                   <span class="font-extrabold text-white text-sm">👑 Plano Anual VIP (Mais Escolhido)</span>
-                  <span class="rounded bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-300">Economize 57%</span>
+                  <span class="rounded bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-300">Economize R$ 264</span>
                 </div>
                 <p class="text-[11px] text-slate-400 mt-0.5">12 meses de acesso completo + Relatório White-Label + Extensão Chrome</p>
                 <div class="flex items-center gap-2 mt-1 text-[10px] text-amber-400 font-mono">
-                  <span>Apenas R$ 41,41/mês</span>
+                  <span>Apenas R$ 75,00/mês</span>
                   <span>·</span>
                   <span>⚡ Ativação Imediata via PIX</span>
                 </div>
               </div>
               <div class="text-right">
-                <p class="text-lg font-black text-amber-400">R$ 497<span class="text-[10px] text-slate-400 font-normal">/ano</span></p>
+                <p class="text-lg font-black text-amber-400">R$ 900<span class="text-[10px] text-slate-400 font-normal">/ano</span></p>
                 <button type="button" onclick="window.openCheckoutPlan('anual')" class="mt-1 rounded-lg bg-amber-500 px-3 py-1.5 text-[11px] font-black text-slate-950 hover:bg-amber-400 cursor-pointer flex items-center gap-1 shadow-md">
                   <span>👑</span> <span>Assinar Anual (VIP)</span>
                 </button>
@@ -179,8 +179,23 @@
           </div>
 
           <!-- Box PIX Instantâneo Copia e Cola -->
-          <div class="rounded-xl border border-slate-800 bg-slate-950 p-4 space-y-2.5 text-xs">
+          <div class="rounded-xl border border-slate-800 bg-slate-950 p-4 space-y-3 text-xs">
             <div class="flex items-center justify-between">
+              <span class="font-bold text-slate-300">Selecione o Plano Desejado:</span>
+              <span id="pixSelectedPlanBadge" class="badge-pill badge-amber">👑 Anual VIP (R$ 900)</span>
+            </div>
+
+            <!-- Alternador de Plano para o PIX -->
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button" id="btnPlanSelectMensal" onclick="window.selectPixPlan('mensal')" class="py-2 px-3 rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-white font-bold text-center transition-all cursor-pointer">
+                🚀 Mensal (R$ 97)
+              </button>
+              <button type="button" id="btnPlanSelectAnual" onclick="window.selectPixPlan('anual')" class="py-2 px-3 rounded-lg border border-amber-500/50 bg-amber-500/15 text-amber-300 font-extrabold text-center transition-all cursor-pointer shadow-sm">
+                👑 Anual VIP (R$ 900)
+              </button>
+            </div>
+
+            <div class="flex items-center justify-between pt-1">
               <span class="font-bold text-emerald-400">💠 Chave PIX Oficial (E-mail):</span>
               <button id="btnCopyPixKeyModal" type="button" class="rounded bg-emerald-500/20 border border-emerald-500/40 px-2.5 py-1 text-[11px] font-bold text-emerald-300 hover:bg-emerald-500/30 cursor-pointer">
                 📋 Copiar Chave PIX
@@ -191,7 +206,7 @@
             </p>
             <div class="flex flex-wrap gap-2 pt-1">
               <button id="btnConfirmPixAutoRelease" type="button" class="flex-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3 py-2.5 text-xs font-extrabold text-white cursor-pointer flex items-center justify-center gap-1.5 shadow-lg">
-                <span>📲</span> <span>Enviar Comprovante no WhatsApp (Validação & Liberação)</span>
+                <span>📲</span> <span id="btnConfirmPixText">Enviar Comprovante (R$ 900 Anual VIP) no WhatsApp</span>
               </button>
               <a id="btnBuyLicenseWhatsApp" href="https://wa.me/5511970558412?text=Ol%C3%A1!%20Gostaria%20de%20falar%20com%20o%20Plant%C3%A3o%20de%20Vendas%20do%20RadarMaps%20PRO%20sobre%20as%20licen%C3%A7as." target="_blank" rel="noopener noreferrer" class="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-bold text-slate-300 hover:text-white flex items-center gap-1">
                 <span>💬</span> <span>Falar com Plantão de Vendas</span>
@@ -785,7 +800,7 @@
               <label class="mb-1 block font-bold text-slate-300">Plano & Prazo de Validade</label>
               <select id="adminNewClientPlan" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white cursor-pointer">
                 <option value="mensal" data-days="30" data-price="97" selected>🚀 Plano Mensal Pro (30 Dias) — R$ 97</option>
-                <option value="anual" data-days="365" data-price="497">👑 Plano Anual VIP (365 Dias) — R$ 497</option>
+                <option value="anual" data-days="365" data-price="900">👑 Plano Anual VIP (365 Dias) — R$ 900</option>
               </select>
             </div>
             <div>
@@ -826,7 +841,7 @@
               <span class="text-[10px] text-slate-400 mt-0.5 block">💡 Crie no Asaas como "Assinatura Mensal" para cobrar todo mês no cartão do cliente automaticamente sem você precisar cobrar.</span>
             </div>
             <div>
-              <label class="mb-1 block font-bold text-slate-300">Link Checkout Asaas — Anual R$ 497 (À Vista ou Parcelado)</label>
+              <label class="mb-1 block font-bold text-slate-300">Link Checkout Asaas — Anual R$ 900 (À Vista ou Parcelado)</label>
               <input id="adminCheckoutYearlyInput" placeholder="https://www.asaas.com/c/xxxxxxxxxx ou Kiwify" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white font-mono text-xs">
             </div>
             <div>
@@ -2232,7 +2247,7 @@
     <!-- Message injected here -->
   </div>
 
-  <script src="js/app.js?v=20261014_v6_lock"></script>
-  <script src="js/security-shield.js?v=20261014_v6_lock"></script>
+  <script src="js/app.js?v=20261014_v7_plan900"></script>
+  <script src="js/security-shield.js?v=20261014_v7_plan900"></script>
 </body>
 </html>

@@ -7392,15 +7392,62 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     if (authOverlay) authOverlay.style.setProperty('display', 'flex', 'important');
   });
 
+  // Gestão de Plano Selecionado para Pagamento (Padrão: Anual VIP R$ 900)
+  State.selectedCheckoutPlan = 'anual';
+
+  window.selectPixPlan = function(planType) {
+    State.selectedCheckoutPlan = planType;
+    const isAnual = planType === 'anual';
+    const badge = document.getElementById('pixSelectedPlanBadge');
+    const btnMensal = document.getElementById('btnPlanSelectMensal');
+    const btnAnual = document.getElementById('btnPlanSelectAnual');
+    const btnConfirmText = document.getElementById('btnConfirmPixText');
+
+    if (badge) {
+      badge.textContent = isAnual ? '👑 Anual VIP (R$ 900)' : '🚀 Mensal Pro (R$ 97)';
+      badge.className = isAnual ? 'badge-pill badge-amber' : 'badge-pill badge-emerald';
+    }
+
+    if (btnMensal && btnAnual) {
+      if (isAnual) {
+        btnAnual.className = 'py-2 px-3 rounded-lg border border-amber-500/50 bg-amber-500/15 text-amber-300 font-extrabold text-center transition-all cursor-pointer shadow-sm';
+        btnMensal.className = 'py-2 px-3 rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-white font-bold text-center transition-all cursor-pointer';
+      } else {
+        btnMensal.className = 'py-2 px-3 rounded-lg border border-emerald-500/50 bg-emerald-500/15 text-emerald-300 font-extrabold text-center transition-all cursor-pointer shadow-sm';
+        btnAnual.className = 'py-2 px-3 rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-white font-bold text-center transition-all cursor-pointer';
+      }
+    }
+
+    if (btnConfirmText) {
+      btnConfirmText.textContent = isAnual 
+        ? 'Enviar Comprovante (R$ 900 Anual VIP) no WhatsApp'
+        : 'Enviar Comprovante (R$ 97 Mensal) no WhatsApp';
+    }
+  };
+
   window.openCheckoutPlan = function(planType) {
-    const url = planType === 'anual' ? State.paymentConfig.checkoutYearly : State.paymentConfig.checkoutMonthly;
+    window.selectPixPlan(planType);
+    const isAnual = planType === 'anual';
+    const url = isAnual ? State.paymentConfig.checkoutYearly : State.paymentConfig.checkoutMonthly;
     if (url && url.startsWith('http')) {
       window.open(url, '_blank');
-    } else {
-      const pix = State.paymentConfig.pixKey || 'pix@radarmapspro.com.br';
-      navigator.clipboard?.writeText(pix).catch(() => {});
-      showToast(`💳 Para pagar com Cartão Recorrente (Sem Atrasos) ou PIX Automático, configure o Link do Asaas no Painel Admin! Chave PIX (${pix}) copiada.`);
+      return;
     }
+
+    // Se ainda não houver link de checkout externo configurado:
+    const pix = State.paymentConfig.pixKey || 'pix@radarmapspro.com.br';
+    navigator.clipboard?.writeText(pix).catch(() => {});
+
+    const valorStr = isAnual ? 'R$ 900,00/ano' : 'R$ 97,00/mês';
+    const nomePlano = isAnual ? 'Plano Anual VIP' : 'Plano Mensal Pro';
+
+    // Abre WhatsApp oficial pré-configurado para o plano selecionado
+    const rawPhone = State.settings?.agencyPhone || State.settings?.whatsapp || '11970558412';
+    const whatsappNum = formatBrazilWhatsAppNumber(rawPhone);
+    const msg = `Olá! 👋 Gostaria de assinar o *${nomePlano} (${valorStr})* do *RadarMaps PRO* via PIX ou Cartão.`;
+    window.open(`https://wa.me/${whatsappNum}?text=${encodeURIComponent(msg)}`, '_blank');
+
+    showToast(`💳 Chave PIX (${pix}) copiada! WhatsApp aberto para liberação do ${nomePlano} (${valorStr}).`);
   };
 
   document.getElementById('btnCopyPixKeyModal')?.addEventListener('click', async () => {
@@ -7422,10 +7469,14 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       return;
     }
 
+    const isAnual = State.selectedCheckoutPlan === 'anual';
+    const valorPlano = isAnual ? 'R$ 900,00' : 'R$ 97,00';
+    const nomePlano = isAnual ? 'Plano Anual VIP (R$ 900,00)' : 'Plano Mensal Pro (R$ 97,00)';
     const pixKey = State.paymentConfig.pixKey || 'pix@radarmapspro.com.br';
     const rawPhone = State.settings?.agencyPhone || State.settings?.whatsapp || '11970558412';
     const whatsappNum = formatBrazilWhatsAppNumber(rawPhone);
-    const msg = `Olá! 👋\n\nAcabei de realizar o pagamento de *R$ 97,00 via PIX* para assinar o *RadarMaps PRO*.\n\n📧 *Meu E-mail:* ${emailDigitado}\n🔑 *Chave PIX Utilizada:* ${pixKey}\n\nEstou enviando o comprovante em anexo para você conferir no extrato e ativar minha Chave de Licença! 🚀`;
+
+    const msg = `Olá! 👋\n\nAcabei de realizar o pagamento de *${valorPlano} via PIX* para assinar o *${nomePlano}* do *RadarMaps PRO*.\n\n📧 *Meu E-mail:* ${emailDigitado}\n🔑 *Chave PIX Utilizada:* ${pixKey}\n\nEstou enviando o comprovante em anexo para você conferir no extrato e ativar minha Chave de Licença! 🚀`;
 
     // Abre o WhatsApp para envio seguro do comprovante
     window.open(`https://wa.me/${whatsappNum}?text=${encodeURIComponent(msg)}`, '_blank');
@@ -7433,12 +7484,12 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     // Exibe aviso oficial de segurança e antifraude na tela de login
     if (loginAlertBox && loginAlertTitle && loginAlertText) {
       loginAlertTitle.textContent = '⏳ Comprovante em Análise de Segurança';
-      loginAlertText.innerHTML = `Por segurança contra fraudes e estornos, <strong>o RadarMaps PRO não libera acessos sem conferência no extrato bancário</strong>.<br><br>Seu comprovante foi encaminhado ao administrador via WhatsApp. Assim que o pagamento for conferido na conta bancária, sua Chave de Licença será ativada e entregue para você!`;
+      loginAlertText.innerHTML = `Por segurança contra fraudes e estornos, <strong>o RadarMaps PRO não libera acessos sem conferência no extrato bancário</strong>.<br><br>Seu comprovante de <strong>${valorPlano} (${nomePlano})</strong> foi encaminhado ao administrador via WhatsApp. Assim que o pagamento for conferido na conta bancária, sua Chave de Licença será ativada e entregue para você!`;
       loginAlertBox.classList.remove('hidden', 'border-rose-500/40', 'bg-rose-950/40', 'text-rose-200');
       loginAlertBox.classList.add('border-amber-500/40', 'bg-amber-950/40', 'text-amber-200');
     }
 
-    showToast('📸 WhatsApp aberto! Envie o comprovante do PIX para o administrador liberar sua chave com segurança.');
+    showToast(`📸 WhatsApp aberto com valor de ${valorPlano}! Envie o comprovante do PIX para o administrador liberar sua chave com segurança.`);
   });
 
   // Sincroniza botão oficial "Falar com Suporte" com o WhatsApp
