@@ -2287,7 +2287,7 @@ function renderTable() {
             <button onclick="openPreAnalysisReport(${lead.id})" class="btn-ghost-dark px-2.5 py-1.5 text-[11px] font-bold cursor-pointer text-cyan-400 border-cyan-500/40 hover:bg-cyan-500/10" title="Gerar Relatório Executivo de Pré-Análise (1 Página)">
               ⚡ Pré-Análise
             </button>
-            <button onclick="window.openPdfHubModal(${lead.id})" class="btn-amber px-2.5 py-1.5 text-[11px] font-black cursor-pointer flex items-center gap-1 shadow-md hover:scale-105 transition-all" title="Gerar e Baixar Relatórios Oficiais em PDF deste Cliente">
+            <button onclick="window.downloadLeadPdf(${lead.id})" class="btn-amber px-2.5 py-1.5 text-[11px] font-black cursor-pointer flex items-center gap-1 shadow-md hover:scale-105 transition-all" title="Gerar e Baixar Dossiê Completo de Auditoria em PDF deste Cliente">
               📄 PDF
             </button>
             <button onclick="openDiagnostic(${lead.id})" class="btn-ghost-dark px-2.5 py-1.5 text-[11px] font-bold cursor-pointer">
@@ -3377,6 +3377,7 @@ window.openWhiteLabelReport = function(lead) {
     responseRatePct = totalReviews > 0 ? Number(((totalReviews - unansweredReviewsCount) / totalReviews * 100).toFixed(1)) : 100;
   }
   const answeredReviewsCount = Math.max(0, totalReviews - unansweredReviewsCount);
+  const isRespOk = responseRatePct >= 80;
 
   // Distribuição de Estrelas Factual e Realista (Estatística Calibrada do Google Maps):
   let count5, count4, count3, count2, count1;
@@ -4126,6 +4127,19 @@ window.openWhiteLabelReport = function(lead) {
             <p class="text-sm font-black text-emerald-600">${agencyPhone}</p>
           </div>
         </div>
+
+        <!-- Ações Rápidas no Rodapé (Ocultas na Impressão/PDF) -->
+        <div class="no-print mt-6 pt-4 border-t border-slate-200 flex flex-wrap items-center justify-end gap-2.5">
+          <button type="button" onclick="window.print()" class="btn-amber px-4 py-2.5 text-xs font-extrabold flex items-center gap-1.5 shadow-md cursor-pointer hover:scale-105 transition-all">
+            🖨️ Imprimir / Salvar Dossiê em PDF
+          </button>
+          <button type="button" onclick="document.getElementById('btnCopyWhiteLabelSummary')?.click()" class="btn-ghost-dark px-3.5 py-2.5 text-xs font-bold flex items-center gap-1.5 cursor-pointer">
+            📋 Copiar Resumo WhatsApp
+          </button>
+          <button type="button" onclick="document.getElementById('btnCloseWhiteLabelModal')?.click()" class="btn-ghost-dark px-3.5 py-2.5 text-xs font-bold cursor-pointer">
+            ✕ Fechar Dossiê
+          </button>
+        </div>
       </section>
     `;
   }
@@ -4187,10 +4201,21 @@ window.openWhiteLabelReport = function(lead) {
 
   const btnClose = document.getElementById('btnCloseWhiteLabelModal');
   if (btnClose) {
-    btnClose.onclick = () => document.getElementById('whiteLabelModal')?.classList.add('hidden');
+    btnClose.onclick = () => {
+      const modal = document.getElementById('whiteLabelModal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+      }
+    };
   }
 
-  document.getElementById('whiteLabelModal')?.classList.remove('hidden');
+  const modalEl = document.getElementById('whiteLabelModal');
+  if (modalEl) {
+    modalEl.classList.remove('hidden');
+    modalEl.style.display = 'flex';
+    modalEl.scrollTop = 0;
+  }
 };
 
 window.adjustLeadStarCounts = function(leadId) {
@@ -9712,14 +9737,19 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
     openRankingPdfReport(item);
   };
 
-  window.downloadLeadPdf = function(leadId) {
-    window.openPdfHubModal(leadId);
+  window.downloadLeadPdf = function(leadId = null) {
+    const lead = (leadId != null) ? getAnyLeadById(leadId) : (State.currentLead || State.leads[0]);
+    if (lead) {
+      openWhiteLabelReport(lead);
+    } else {
+      window.openPdfHubModal(leadId);
+    }
   };
 
   window.openPdfHubModal = function(leadId = null) {
     let lead = null;
-    if (leadId) {
-      lead = (State.leads || []).find(l => l.id === leadId);
+    if (leadId != null) {
+      lead = (State.leads || []).find(l => String(l.id) === String(leadId));
     }
     if (!lead) {
       lead = State.currentLead || State.selectedLead || (State.leads && State.leads[0]) || {
@@ -9745,6 +9775,8 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
     if (scoreEl) scoreEl.textContent = `Score: ${lead.score || 85}/100`;
 
     modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+    modal.scrollTop = 0;
   };
 
   // Alternador Dinâmico de Estilo de Mapa Leaflet
@@ -10463,27 +10495,37 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
   });
 
   document.getElementById('btnWhiteLabelReport')?.addEventListener('click', () => {
-    window.openPdfHubModal();
+    openWhiteLabelReport(State.currentLead || State.leads[0]);
   });
 
   document.getElementById('btnClosePdfHubModal')?.addEventListener('click', () => {
-    document.getElementById('pdfReportHubModal')?.classList.add('hidden');
+    const modal = document.getElementById('pdfReportHubModal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
+    }
   });
 
   document.getElementById('btnPdfHubDownloadAudit')?.addEventListener('click', () => {
     const lead = State.currentLead || State.leads[0];
     if (!lead) return;
-    document.getElementById('pdfReportHubModal')?.classList.add('hidden');
+    const hub = document.getElementById('pdfReportHubModal');
+    if (hub) {
+      hub.classList.add('hidden');
+      hub.style.display = 'none';
+    }
     openWhiteLabelReport(lead);
-    setTimeout(() => {
-      try { window.print(); } catch (e) {}
-    }, 450);
+    showToast("📄 Dossiê aberto! Toque em 'Imprimir / Salvar PDF' para gerar o arquivo.");
   });
 
   document.getElementById('btnPdfHubViewAudit')?.addEventListener('click', () => {
     const lead = State.currentLead || State.leads[0];
     if (!lead) return;
-    document.getElementById('pdfReportHubModal')?.classList.add('hidden');
+    const hub = document.getElementById('pdfReportHubModal');
+    if (hub) {
+      hub.classList.add('hidden');
+      hub.style.display = 'none';
+    }
     openWhiteLabelReport(lead);
   });
 
@@ -10493,13 +10535,21 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
       GeoState.selectedLeadName = lead.empresa;
       GeoState.selectedLeadAddress = lead.endereco || lead.cidade || '';
     }
-    document.getElementById('pdfReportHubModal')?.classList.add('hidden');
+    const hub = document.getElementById('pdfReportHubModal');
+    if (hub) {
+      hub.classList.add('hidden');
+      hub.style.display = 'none';
+    }
     window.downloadRankingPdf();
   });
 
   document.getElementById('btnPdfHubOpenGeoGrid')?.addEventListener('click', () => {
     const lead = State.currentLead || State.leads[0];
-    document.getElementById('pdfReportHubModal')?.classList.add('hidden');
+    const hub = document.getElementById('pdfReportHubModal');
+    if (hub) {
+      hub.classList.add('hidden');
+      hub.style.display = 'none';
+    }
     if (lead) {
       window.openLeadInGeoGrid(lead.id);
     } else {
@@ -10510,11 +10560,12 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
   document.getElementById('btnPdfHubDownloadPreAnalysis')?.addEventListener('click', () => {
     const lead = State.currentLead || State.leads[0];
     if (!lead) return;
-    document.getElementById('pdfReportHubModal')?.classList.add('hidden');
+    const hub = document.getElementById('pdfReportHubModal');
+    if (hub) {
+      hub.classList.add('hidden');
+      hub.style.display = 'none';
+    }
     openPreAnalysisReport(lead.id);
-    setTimeout(() => {
-      try { window.print(); } catch (e) {}
-    }, 450);
   });
 
   document.getElementById('btnPdfHubCopyWhatsAppSummary')?.addEventListener('click', async () => {
