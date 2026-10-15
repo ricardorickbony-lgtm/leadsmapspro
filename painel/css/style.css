@@ -387,3 +387,32 @@ body {
   padding: 1rem;
   text-align: center;
 }
+
+/* ==========================================================================
+   BLOQUEIO MANDATÓRIO DE TELA DE LOGIN — RADARMAPS PRO (RICARDO & SEVERINO)
+   ========================================================================== */
+#authGateOverlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 2147483647 !important;
+  background-color: #070b14 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow-y: auto !important;
+}
+
+body.authenticated #authGateOverlay,
+#authGateOverlay.authenticated,
+#authGateOverlay.is-hidden {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+

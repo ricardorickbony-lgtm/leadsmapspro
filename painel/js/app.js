@@ -6909,15 +6909,15 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       const raw = localStorage.getItem(PAY_CONFIG_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (parsed.pixKey === 'ricardo@leadmapspro.com.br' || !parsed.pixKey) {
-          parsed.pixKey = '11970558412';
+        if (parsed.pixKey === 'ricardo@leadmapspro.com.br' || parsed.pixKey === '11970558412' || !parsed.pixKey) {
+          parsed.pixKey = 'pix@radarmapspro.com.br';
           localStorage.setItem(PAY_CONFIG_KEY, JSON.stringify(parsed));
         }
         return parsed;
       }
     } catch (e) {}
     return {
-      pixKey: '11970558412',
+      pixKey: 'pix@radarmapspro.com.br',
       checkoutMonthly: '',
       checkoutYearly: ''
     };
@@ -6931,10 +6931,10 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     const yInput = document.getElementById('adminCheckoutYearlyInput');
     const authPixDisplay = document.getElementById('authPixKeyDisplay');
 
-    if (pixInput) pixInput.value = State.paymentConfig.pixKey || '11970558412';
+    if (pixInput) pixInput.value = State.paymentConfig.pixKey || 'pix@radarmapspro.com.br';
     if (mInput) mInput.value = State.paymentConfig.checkoutMonthly || '';
     if (yInput) yInput.value = State.paymentConfig.checkoutYearly || '';
-    if (authPixDisplay) authPixDisplay.textContent = State.paymentConfig.pixKey || '11970558412';
+    if (authPixDisplay) authPixDisplay.textContent = State.paymentConfig.pixKey || 'pix@radarmapspro.com.br';
   }
   syncPaymentConfigUi();
 
@@ -7121,17 +7121,25 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     if (!sub) return;
     const expStr = new Date(sub.expiraEm).toLocaleDateString('pt-BR');
     const msg = `Olá, *${sub.nome.split('—')[0].trim()}*! Seja muito bem-vindo(a) ao *RadarMaps PRO Enterprise*! 🚀\n\nSeu acesso oficial já está *ATIVO e LIBERADO*.\n\n🔐 *SEUS DADOS DE ACESSO:*\n👤 *Login (E-mail):* ${sub.email}\n🔑 *Chave de Licença:* ${sub.chave}\n📅 *Plano:* ${sub.plano} (Válido até ${expStr})\n\nBasta inserir seu e-mail e sua chave na tela de entrada para começar a extrair empresas, gerar relatórios completos de 22 itens e disparar no WhatsApp!\n\nQualquer dúvida estou à disposição. Bons negócios!`;
-    const phoneDigits = formatBrazilWhatsAppNumber(sub.telefone || '11970558412');
+    const phoneDigits = formatBrazilWhatsAppNumber(sub.telefone || '');
+    if (!phoneDigits) {
+      showToast('⚠️ Assinante sem telefone cadastrado.');
+      return;
+    }
     window.open(`https://web.whatsapp.com/send?phone=${phoneDigits}&text=${encodeURIComponent(msg)}`, '_blank');
   };
 
   window.sendBillingWhatsApp = function(subId) {
     const sub = State.subscribers.find(s => s.id === subId);
     if (!sub) return;
-    const pixKey = State.paymentConfig.pixKey || '11970558412';
+    const pixKey = State.paymentConfig.pixKey || 'pix@radarmapspro.com.br';
     const checkoutUrl = State.paymentConfig.checkoutMonthly || '';
     const msg = `Olá, *${sub.nome.split('—')[0].trim()}*! Tudo bem?\n\nPassando para avisar que a sua licença do *RadarMaps PRO* (${sub.chave}) está próxima do vencimento / renovação.\n\nPara manter seu acesso ativo sem interrupções:\n💠 *Chave PIX (R$ ${sub.valorMensal || 97},00):* ${pixKey}${checkoutUrl ? `\n💳 *Ou pelo Checkout Automático:* ${checkoutUrl}` : ''}\n\nAssim que confirmar, sua licença já renova por mais 30 dias automaticamente! 🚀`;
-    const phoneDigits = formatBrazilWhatsAppNumber(sub.telefone || '11970558412');
+    const phoneDigits = formatBrazilWhatsAppNumber(sub.telefone || '');
+    if (!phoneDigits) {
+      showToast('⚠️ Assinante sem telefone cadastrado.');
+      return;
+    }
     window.open(`https://web.whatsapp.com/send?phone=${phoneDigits}&text=${encodeURIComponent(msg)}`, '_blank');
   };
 
@@ -7198,7 +7206,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
 
   document.getElementById('btnSavePaymentConfig')?.addEventListener('click', () => {
     State.paymentConfig = {
-      pixKey: document.getElementById('adminPixKeyInput')?.value.trim() || '11970558412',
+      pixKey: document.getElementById('adminPixKeyInput')?.value.trim() || 'pix@radarmapspro.com.br',
       checkoutMonthly: document.getElementById('adminCheckoutMonthlyInput')?.value.trim() || '',
       checkoutYearly: document.getElementById('adminCheckoutYearlyInput')?.value.trim() || ''
     };
@@ -7277,7 +7285,9 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       key === 'ADMIN123'
     ) {
       applySessionRole({ role: 'master', name: 'Ricardo (Master)', email: 'ricardo@admin.com' });
-      authOverlay?.classList.add('hidden');
+      document.body.classList.add('authenticated');
+      authOverlay?.classList.add('authenticated', 'is-hidden');
+      if (authOverlay) authOverlay.style.setProperty('display', 'none', 'important');
       showToast('👑 Bem-vindo, Ricardo! Painel Master Admin liberado.');
       return;
     }
@@ -7313,7 +7323,9 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       email: sub.email,
       daysLeft
     });
-    authOverlay?.classList.add('hidden');
+    document.body.classList.add('authenticated');
+    authOverlay?.classList.add('authenticated', 'is-hidden');
+    if (authOverlay) authOverlay.style.setProperty('display', 'none', 'important');
     showToast(`✅ Acesso liberado! Bem-vindo(a), ${sub.nome.split('—')[0].trim()} (${daysLeft} dias restantes).`);
   }
 
@@ -7365,15 +7377,19 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
   });
 
   document.getElementById('btnLogoutSession')?.addEventListener('click', () => {
-    sessionStorage.removeItem(SESSION_USER_KEY);
+    try { sessionStorage.clear(); } catch(e) {}
     loginAlertBox?.classList.add('hidden');
-    authOverlay?.classList.remove('hidden');
+    document.body.classList.remove('authenticated');
+    authOverlay?.classList.remove('authenticated', 'is-hidden');
+    if (authOverlay) authOverlay.style.setProperty('display', 'flex', 'important');
     showToast('🔒 Sessão encerrada. Tela de login aberta.');
   });
 
   document.getElementById('btnOpenLoginPreview')?.addEventListener('click', () => {
     loginAlertBox?.classList.add('hidden');
-    authOverlay?.classList.remove('hidden');
+    document.body.classList.remove('authenticated');
+    authOverlay?.classList.remove('authenticated', 'is-hidden');
+    if (authOverlay) authOverlay.style.setProperty('display', 'flex', 'important');
   });
 
   window.openCheckoutPlan = function(planType) {
@@ -7381,14 +7397,14 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     if (url && url.startsWith('http')) {
       window.open(url, '_blank');
     } else {
-      const pix = State.paymentConfig.pixKey || '11970558412';
+      const pix = State.paymentConfig.pixKey || 'pix@radarmapspro.com.br';
       navigator.clipboard?.writeText(pix).catch(() => {});
       showToast(`💳 Para pagar com Cartão Recorrente (Sem Atrasos) ou PIX Automático, configure o Link do Asaas no Painel Admin! Chave PIX (${pix}) copiada.`);
     }
   };
 
   document.getElementById('btnCopyPixKeyModal')?.addEventListener('click', async () => {
-    const pix = State.paymentConfig.pixKey || '11970558412';
+    const pix = State.paymentConfig.pixKey || 'pix@radarmapspro.com.br';
     try {
       await navigator.clipboard.writeText(pix);
       showToast(`💠 Chave PIX copiada: ${pix}. Após transferir, envie o comprovante no WhatsApp.`);
@@ -7406,10 +7422,10 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       return;
     }
 
-    const pixKey = State.paymentConfig.pixKey || '11970558412';
+    const pixKey = State.paymentConfig.pixKey || 'pix@radarmapspro.com.br';
     const rawPhone = State.settings?.agencyPhone || State.settings?.whatsapp || '11970558412';
     const whatsappNum = formatBrazilWhatsAppNumber(rawPhone);
-    const msg = `Olá, Ricardo! 👋\n\nAcabei de realizar o pagamento de *R$ 97,00 via PIX* para assinar o *RadarMaps PRO*.\n\n📧 *Meu E-mail:* ${emailDigitado}\n🔑 *Chave PIX Utilizada:* ${pixKey}\n\nEstou enviando o comprovante em anexo para você conferir no extrato e ativar minha Chave de Licença! 🚀`;
+    const msg = `Olá! 👋\n\nAcabei de realizar o pagamento de *R$ 97,00 via PIX* para assinar o *RadarMaps PRO*.\n\n📧 *Meu E-mail:* ${emailDigitado}\n🔑 *Chave PIX Utilizada:* ${pixKey}\n\nEstou enviando o comprovante em anexo para você conferir no extrato e ativar minha Chave de Licença! 🚀`;
 
     // Abre o WhatsApp para envio seguro do comprovante
     window.open(`https://wa.me/${whatsappNum}?text=${encodeURIComponent(msg)}`, '_blank');
@@ -7425,13 +7441,13 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     showToast('📸 WhatsApp aberto! Envie o comprovante do PIX para o administrador liberar sua chave com segurança.');
   });
 
-  // Sincroniza botão oficial "Falar com Suporte" com o WhatsApp do Ricardo
+  // Sincroniza botão oficial "Falar com Suporte" com o WhatsApp
   function updateSupportWhatsAppBtn() {
     const btnSupport = document.getElementById('btnBuyLicenseWhatsApp');
     if (btnSupport) {
       const rawPhone = State.settings?.agencyPhone || State.settings?.whatsapp || '11970558412';
       const whatsappNum = formatBrazilWhatsAppNumber(rawPhone);
-      btnSupport.href = `https://wa.me/${whatsappNum}?text=${encodeURIComponent('Olá Ricardo! Quero adquirir minha licença do RadarMaps PRO!')}`;
+      btnSupport.href = `https://wa.me/${whatsappNum}?text=${encodeURIComponent('Olá! Gostaria de falar com o Plantão de Vendas do RadarMaps PRO sobre as licenças.')}`;
     }
   }
   updateSupportWhatsAppBtn();
@@ -7440,8 +7456,10 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
   renderAdminPanel();
 
   // O painel SEMPRE abre bloqueado exigindo a tela de login (#authGateOverlay)
-  sessionStorage.removeItem(SESSION_USER_KEY);
-  authOverlay?.classList.remove('hidden');
+  try { sessionStorage.clear(); } catch(e) {}
+  document.body.classList.remove('authenticated');
+  authOverlay?.classList.remove('authenticated', 'is-hidden');
+  if (authOverlay) authOverlay.style.setProperty('display', 'flex', 'important');
 
   // ==========================================================================
   // 10. Módulo Oficial: Análise de Ranking Local (GeoGrid GPS de Alta Precisão)
