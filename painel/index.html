@@ -73,6 +73,26 @@
     .lead-mobile-card:active {
       transform: scale(0.985);
     }
+    /* Estilo Dark Ultra-Luxo para Popups do Leaflet no GeoGrid */
+    .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+      background: rgba(10, 15, 29, 0.97) !important;
+      color: #f8fafc !important;
+      border: 1px solid rgba(245, 158, 11, 0.45) !important;
+      border-radius: 14px !important;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8) !important;
+      backdrop-filter: blur(12px) !important;
+    }
+    .leaflet-popup-content {
+      margin: 12px 14px !important;
+      line-height: 1.4 !important;
+    }
+    .leaflet-container a.leaflet-popup-close-button {
+      color: #94a3b8 !important;
+      padding: 6px !important;
+    }
+    .leaflet-container a.leaflet-popup-close-button:hover {
+      color: #ffffff !important;
+    }
   </style>
   <script>
     // Se já houver sessão ativa salva, marca authenticated imediatamente para não piscar tela de login
@@ -1062,6 +1082,8 @@
                 <span class="flex items-center gap-1 text-rose-400"><span class="h-3 w-3 rounded-full bg-rose-600 inline-block"></span> 11º ao 20º+ (Invisível)</span>
               </div>
             </div>
+          </div>
+
           <!-- Banner Placar do Duelo Head-to-Head (Visível quando o modo duelo está ativo) -->
           <div id="rankDuelScorecardBox" class="hidden rounded-xl border border-purple-500/40 bg-purple-950/30 p-4 space-y-3">
             <div class="flex flex-wrap items-center justify-between gap-3 border-b border-purple-500/30 pb-2.5">
@@ -2213,7 +2235,7 @@
   </div>
 
   <!-- Bottom Sheet Mobile: Inspeção Rápida de Ponto GeoGrid -->
-  <div id="rankMobileBottomSheet" class="fixed inset-x-0 bottom-0 z-50 transform translate-y-full transition-transform duration-300 ease-out bg-slate-950/95 border-t border-amber-500/40 p-4 shadow-2xl backdrop-blur-xl rounded-t-2xl max-h-[85vh] overflow-y-auto block lg:hidden">
+  <div id="rankMobileBottomSheet" class="fixed inset-x-0 bottom-0 z-[999] transform translate-y-full transition-transform duration-300 ease-out bg-slate-950/95 border-t border-amber-500/40 p-4 shadow-2xl backdrop-blur-xl rounded-t-2xl max-h-[85vh] overflow-y-auto block lg:hidden">
     <div class="flex items-center justify-between pb-2.5 border-b border-slate-800">
       <div class="flex items-center gap-2">
         <span class="h-2.5 w-2.5 rounded-full bg-amber-400 animate-pulse"></span>
@@ -2304,7 +2326,7 @@
     <!-- Message injected here -->
   </div>
 
-  <script src="js/app.js?v=20261016_v19_login_fixed"></script>
-  <script src="js/security-shield.js?v=20261016_v19_login_fixed"></script>
+  <script src="js/app.js?v=20261016_v20_geogrid_popup"></script>
+  <script src="js/security-shield.js?v=20261016_v20_geogrid_popup"></script>
 </body>
 </html>

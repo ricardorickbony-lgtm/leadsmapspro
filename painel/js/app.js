@@ -8267,6 +8267,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     duelCompetitorName: 'Santo André Automóveis | Loja de Carros em Santo André',
     isStandby: false
   };
+  window.GeoState = GeoState;
 
   function loadGeoHistory() {
     try {
@@ -9257,6 +9258,71 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     return '#e11d48'; // Vermelho (11-20+)
   }
 
+  // Constrói o balãozinho / popup de alta conversão para o pino do GeoGrid
+  function buildGeoGridPinPopup(pt) {
+    if (!pt) return '';
+    const rankLabel = pt.rank >= 20 ? '20+' : `${pt.rank}º`;
+    const rankColor = pt.rank <= 3 ? '#10b981' : (pt.rank <= 10 ? '#f59e0b' : '#f43f5e');
+    const rankBg = pt.rank <= 3 ? 'rgba(16,185,129,0.2)' : (pt.rank <= 10 ? 'rgba(245,158,11,0.2)' : 'rgba(244,63,94,0.2)');
+    
+    let competitorsList = '';
+    if (Array.isArray(pt.topCompetitors) && pt.topCompetitors.length > 0) {
+      competitorsList = pt.topCompetitors.slice(0, 5).map(c => `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;border-radius:8px;margin-bottom:4px;background:${c.isTarget ? 'rgba(16,185,129,0.18)' : 'rgba(15,23,42,0.75)'};border:1px solid ${c.isTarget ? 'rgba(16,185,129,0.5)' : 'rgba(51,65,85,0.6)'};">
+          <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;">
+            <span style="display:inline-flex;width:20px;height:20px;border-radius:9999px;align-items:center;justify-content:center;font-size:10px;font-weight:900;background:${c.pos <= 3 ? '#10b981' : (c.pos <= 10 ? '#f59e0b' : '#f43f5e')};color:${c.pos <= 10 ? '#020617' : '#ffffff'};flex-shrink:0;">
+              ${c.pos}º
+            </span>
+            <span style="font-weight:700;font-size:11px;color:${c.isTarget ? '#6ee7b7' : '#f8fafc'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:145px;" title="${c.empresa}">
+              ${c.empresa}${c.isTarget ? ' (Sua Empresa)' : ''}
+            </span>
+          </div>
+          <span style="font-size:10px;color:#94a3b8;font-family:monospace;white-space:nowrap;">
+            ⭐ ${Number(c.rating || 0).toFixed(1)} · ${c.distMeters || 0}m
+          </span>
+        </div>
+      `).join('');
+    } else {
+      competitorsList = `
+        <div style="padding:10px;background:rgba(15,23,42,0.6);border-radius:8px;border:1px solid rgba(51,65,85,0.5);text-align:center;">
+          <p style="font-size:11px;color:#94a3b8;margin:0;">Nenhum concorrente mapeado nesta coordenada.</p>
+        </div>
+      `;
+    }
+
+    return `
+      <div style="min-width:250px;max-width:300px;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#f8fafc;padding:2px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(51,65,85,0.7);padding-bottom:6px;margin-bottom:8px;">
+          <div>
+            <span style="font-size:10px;font-weight:800;letter-spacing:0.04em;color:#f59e0b;text-transform:uppercase;">
+              📍 Ponto #${pt.id} ${pt.isCenter ? '(Sede / Centro)' : `(${pt.distFromCenterKm || 0} km)`}
+            </span>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+              <span style="font-size:11px;color:#94a3b8;font-weight:600;">Posição Google:</span>
+              <span style="display:inline-block;padding:2px 7px;border-radius:6px;font-size:11px;font-weight:900;background:${rankBg};color:${rankColor};border:1px solid ${rankColor};">
+                #${rankLabel} Lugar
+              </span>
+            </div>
+          </div>
+        </div>
+        <p style="font-size:10px;color:#94a3b8;margin:0 0 6px;line-height:1.3;">
+          Top Concorrentes nesta esquina para <strong>"${GeoState.keyword || 'pesquisa'}"</strong>:
+        </p>
+        <div style="max-height:180px;overflow-y:auto;padding-right:2px;">
+          ${competitorsList}
+        </div>
+        <div style="margin-top:8px;padding-top:6px;border-top:1px solid rgba(51,65,85,0.7);display:flex;gap:6px;">
+          <button onclick="window.downloadRankingPdf()" type="button" style="flex:1;background:linear-gradient(135deg,#f59e0b,#d97706);color:#020617;font-weight:800;font-size:10px;padding:6px 8px;border-radius:6px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;">
+            <span>📄</span> <span>Baixar PDF</span>
+          </button>
+          <button onclick="document.getElementById('rankPointInspectionCard')?.scrollIntoView({behavior:'smooth'});" type="button" style="background:rgba(30,41,59,0.8);color:#cbd5e1;font-weight:700;font-size:10px;padding:6px 8px;border-radius:6px;border:1px solid rgba(71,85,105,0.8);cursor:pointer;white-space:nowrap;">
+            Ver Abaixo ↓
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
   // Renderiza o Mapa Interativo Real Leaflet com Pinos Numerados, Heatmap e Estrela Central Arrastável
   function renderGeoGridOnMap() {
     const mapContainer = document.getElementById('geoGridLeafletMap');
@@ -9482,8 +9548,20 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
         draggable: Boolean(pt.isCenter)
       }).addTo(GeoState.markersLayer);
 
-      // Clique esquerdo: Inspeciona quem está no Top 5 daquele ponto GPS
+      // Associa o popup nativo do Leaflet com a lista dos concorrentes
+      const popupHtml = buildGeoGridPinPopup(pt);
+      marker.bindPopup(popupHtml, {
+        className: 'custom-geogrid-popup',
+        maxWidth: 320,
+        minWidth: 260,
+        offset: [0, -14],
+        autoPan: true,
+        autoPanPadding: [20, 20]
+      });
+
+      // Clique esquerdo: Abre o popup imediatamente no pino e atualiza o raio-x
       marker.on('click', () => {
+        marker.openPopup();
         inspectGridPoint(pt);
       });
 
@@ -9935,6 +10013,24 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
       `).join('');
     }
 
+    // Destaque visual e scroll suave no card inferior (desktop)
+    const cardEl = document.getElementById('rankPointInspectionCard');
+    if (cardEl) {
+      cardEl.classList.remove('ring-2', 'ring-amber-400', 'shadow-[0_0_25px_rgba(245,158,11,0.3)]');
+      void cardEl.offsetWidth; // trigger reflow
+      cardEl.classList.add('ring-2', 'ring-amber-400', 'shadow-[0_0_25px_rgba(245,158,11,0.3)]');
+      setTimeout(() => {
+        cardEl.classList.remove('ring-2', 'ring-amber-400', 'shadow-[0_0_25px_rgba(245,158,11,0.3)]');
+      }, 2500);
+
+      if (window.innerWidth >= 1024) {
+        const rect = cardEl.getBoundingClientRect();
+        if (rect.top > window.innerHeight - 60 || rect.bottom < 60) {
+          cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }
+    }
+
     // No mobile, se o bottom sheet existir, popula e abre suavemente
     const sheetEl = document.getElementById('rankMobileBottomSheet');
     const sheetTitle = document.getElementById('rankMobileSheetTitle');
@@ -9974,6 +10070,8 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
       }
     }
   }
+  window.inspectGridPoint = inspectGridPoint;
+  window.buildGeoGridPinPopup = buildGeoGridPinPopup;
 
   function updateCoordsDisplayText() {
     const el = document.getElementById('rankCoordsDisplay');
