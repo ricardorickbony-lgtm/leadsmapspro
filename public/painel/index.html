@@ -967,6 +967,9 @@
               <button id="btnCenterOtherRegion" type="button" onclick="window.openNewRegionModal()" class="rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 font-bold text-slate-300 hover:border-sky-400 hover:text-white cursor-pointer flex items-center gap-1.5 shadow-sm" title="Pesquisar e analisar qualquer empresa em outra cidade ou região do Brasil">
                 <span>📍</span> <span>Analisar Outra Região</span>
               </button>
+              <button id="btnMapToolbarDownloadPdf" type="button" onclick="window.downloadRankingPdf()" class="rounded-lg border border-amber-500/50 bg-amber-500/15 hover:bg-amber-500/30 text-amber-300 hover:text-white px-3 py-1.5 font-extrabold cursor-pointer flex items-center gap-1.5 shadow-sm transition-all" title="Baixar relatório oficial em PDF com o mapa e as posições">
+                <span>📄</span> <span>Baixar PDF do Ranking</span>
+              </button>
               <span id="rankRulerDistanceBadge" class="hidden rounded-full bg-amber-500/20 border border-amber-500/50 px-2.5 py-1 font-mono text-[11px] font-bold text-amber-300">
                 📏 Distância: 0.00 km
               </span>
@@ -2148,7 +2151,7 @@
     <!-- Message injected here -->
   </div>
 
-  <script src="js/app.js?v=20261016_v12_floripa"></script>
-  <script src="js/security-shield.js?v=20261016_v12_floripa"></script>
+  <script src="js/app.js?v=20261016_v13_ranking_pdf"></script>
+  <script src="js/security-shield.js?v=20261016_v13_ranking_pdf"></script>
 </body>
 </html>
