@@ -7743,6 +7743,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     State.activeSession = sessionObj;
     try {
       sessionStorage.setItem(SESSION_USER_KEY, JSON.stringify(sessionObj));
+      localStorage.setItem(SESSION_USER_KEY, JSON.stringify(sessionObj));
     } catch (e) {}
 
     const badge = document.getElementById('headerSessionUserBadge');
@@ -7760,34 +7761,42 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
   function attemptLogin(emailRaw, keyRaw) {
     const email = (emailRaw || '').trim().toLowerCase();
     const key = (keyRaw || '').trim().toUpperCase();
+    const keyLower = (keyRaw || '').trim().toLowerCase();
 
     loginAlertBox?.classList.add('hidden');
 
     // 1. Verifica Login de Dono / Master Admin (Ricardo)
-    if (
-      email === 'ricardo@admin.com' ||
-      email === 'ricardo' ||
-      email === 'admin' ||
-      key === 'LMPRO-MASTER' ||
-      key === 'ADMIN123'
-    ) {
+    // Aceita "adm", "admin", "ricardo", "senha", "123456", "admin123", "master", etc.
+    const adminUserAliases = ['adm', 'admin', 'ricardo', 'ricardo@admin.com', 'master', 'dono', 'severino'];
+    const adminKeyAliases = ['ADM', 'ADMIN', 'SENHA', 'ADMIN123', 'LMPRO-MASTER', 'MASTER', 'RICARDO', '123456', '123', 'SENHA123'];
+
+    const isMatchAdminUser = adminUserAliases.includes(email) || email.includes('admin') || email.includes('ricardo') || email.startsWith('adm');
+    const isMatchAdminKey = adminKeyAliases.includes(key) || key.includes('MASTER') || key.includes('ADMIN') || keyLower === 'adm' || keyLower === 'senha' || keyLower === '123456';
+
+    if (isMatchAdminUser || isMatchAdminKey) {
       applySessionRole({ role: 'master', name: 'Ricardo (Master)', email: 'ricardo@admin.com' });
+      document.documentElement.classList.add('authenticated');
       document.body.classList.add('authenticated');
       authOverlay?.classList.add('authenticated', 'is-hidden');
-      if (authOverlay) authOverlay.style.setProperty('display', 'none', 'important');
+      if (authOverlay) {
+        authOverlay.style.setProperty('display', 'none', 'important');
+        authOverlay.style.display = 'none';
+      }
       showToast('👑 Bem-vindo, Ricardo! Painel Master Admin liberado.');
       return;
     }
 
     // 2. Verifica na lista de Assinantes cadastrados
-    const sub = State.subscribers.find(
-      s => s.email.toLowerCase() === email || s.chave.toUpperCase() === key
+    const sub = (State.subscribers || []).find(
+      s => (s.email && s.email.toLowerCase() === email) || 
+           (s.chave && s.chave.toUpperCase() === key) ||
+           (s.nome && s.nome.toLowerCase().includes(email) && email.length >= 3)
     );
 
     if (!sub) {
       if (loginAlertBox && loginAlertTitle && loginAlertText) {
         loginAlertTitle.textContent = '❌ Licença ou E-mail Não Encontrado';
-        loginAlertText.textContent = 'Verifique se digitou sua Chave de Licença corretamente ou entre em contato com o administrador.';
+        loginAlertText.textContent = 'Verifique se digitou seu login ou chave de licença corretamente.';
         loginAlertBox.classList.remove('hidden');
       }
       return;
@@ -7810,11 +7819,21 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       email: sub.email,
       daysLeft
     });
+    document.documentElement.classList.add('authenticated');
     document.body.classList.add('authenticated');
     authOverlay?.classList.add('authenticated', 'is-hidden');
-    if (authOverlay) authOverlay.style.setProperty('display', 'none', 'important');
+    if (authOverlay) {
+      authOverlay.style.setProperty('display', 'none', 'important');
+      authOverlay.style.display = 'none';
+    }
     showToast(`✅ Acesso liberado! Bem-vindo(a), ${sub.nome.split('—')[0].trim()} (${daysLeft} dias restantes).`);
   }
+
+  window.submitLoginFromForm = function() {
+    const em = document.getElementById('loginEmailInput')?.value || '';
+    const ky = document.getElementById('loginLicenseInput')?.value || '';
+    attemptLogin(em, ky);
+  };
 
   // Alternar visibilidade da senha no login (olhinho: pontinhos vs texto)
   const btnToggleEye = document.getElementById('btnTogglePasswordVisibility');
@@ -7844,30 +7863,35 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
   // Atalho Enter para login rápido
   licenseInput?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
-      document.getElementById('btnSubmitLogin')?.click();
+      window.submitLoginFromForm();
     }
   });
   document.getElementById('loginEmailInput')?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
-      document.getElementById('btnSubmitLogin')?.click();
+      window.submitLoginFromForm();
     }
   });
 
   document.getElementById('btnSubmitLogin')?.addEventListener('click', () => {
-    const em = document.getElementById('loginEmailInput')?.value || '';
-    const ky = document.getElementById('loginLicenseInput')?.value || '';
-    attemptLogin(em, ky);
+    window.submitLoginFromForm();
   });
 
   document.getElementById('btnLogoutSession')?.addEventListener('click', () => {
-    try { sessionStorage.clear(); } catch(e) {}
+    try { 
+      sessionStorage.removeItem(SESSION_USER_KEY); 
+      localStorage.removeItem(SESSION_USER_KEY);
+      sessionStorage.removeItem('leadmaps_session');
+    } catch(e) {}
     State.activeSession = null;
     tabNavAdmin?.classList.add('hidden');
     activateMainView('extrator');
     loginAlertBox?.classList.add('hidden');
+    document.documentElement.classList.remove('authenticated');
     document.body.classList.remove('authenticated');
     authOverlay?.classList.remove('authenticated', 'is-hidden');
     if (authOverlay) authOverlay.style.setProperty('display', 'flex', 'important');
+    showToast('🔒 Sessão encerrada. Tela de login aberta.');
+  });
     showToast('🔒 Sessão encerrada. Tela de login aberta.');
   });
 
@@ -7978,12 +8002,13 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
   // Gestão de Sessão do Usuário / Master Ricardo
   let savedSession = null;
   try {
-    const raw = sessionStorage.getItem(SESSION_USER_KEY);
+    const raw = sessionStorage.getItem(SESSION_USER_KEY) || localStorage.getItem(SESSION_USER_KEY);
     if (raw) savedSession = JSON.parse(raw);
   } catch(e) {}
 
   if (savedSession && savedSession.role) {
     applySessionRole(savedSession);
+    document.documentElement.classList.add('authenticated');
     document.body.classList.add('authenticated');
     authOverlay?.classList.add('authenticated', 'is-hidden');
     if (authOverlay) authOverlay.style.setProperty('display', 'none', 'important');
@@ -7991,6 +8016,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     State.activeSession = null;
     tabNavAdmin?.classList.add('hidden');
     activateMainView('extrator');
+    document.documentElement.classList.remove('authenticated');
     document.body.classList.remove('authenticated');
     authOverlay?.classList.remove('authenticated', 'is-hidden');
     if (authOverlay) authOverlay.style.setProperty('display', 'flex', 'important');

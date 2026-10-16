@@ -77,7 +77,7 @@
   <script>
     // Se já houver sessão ativa salva, marca authenticated imediatamente para não piscar tela de login
     try {
-      const activeSession = sessionStorage.getItem('leadmaps_active_session_v1');
+      const activeSession = sessionStorage.getItem('leadmaps_active_session_v1') || localStorage.getItem('leadmaps_active_session_v1') || sessionStorage.getItem('leadmaps_session');
       if (activeSession) {
         document.documentElement.classList.add('authenticated');
       }
@@ -120,16 +120,16 @@
           </div>
 
           <!-- Campos de Login -->
-          <div class="mt-5 space-y-3 text-xs">
+          <form id="authLoginForm" onsubmit="event.preventDefault(); window.submitLoginFromForm(); return false;" class="mt-5 space-y-3 text-xs">
             <div>
               <label class="mb-1.5 block font-bold uppercase tracking-wider text-slate-300">👤 E-mail ou Usuário</label>
-              <input id="loginEmailInput" type="text" placeholder="seu@email.com" class="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-none focus:border-amber-400">
+              <input id="loginEmailInput" type="text" placeholder="adm, ricardo ou seu e-mail" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" class="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-none focus:border-amber-400">
             </div>
 
             <div>
               <label class="mb-1.5 block font-bold uppercase tracking-wider text-slate-300">🔑 Chave de Licença / Senha</label>
               <div class="relative flex items-center">
-                <input id="loginLicenseInput" type="password" placeholder="LMPRO-XXXX-XXXX ou senha master" class="w-full rounded-xl border border-slate-700 bg-slate-900 pl-4 pr-11 py-3 font-mono text-sm text-emerald-400 font-bold outline-none focus:border-amber-400 transition-all">
+                <input id="loginLicenseInput" type="password" placeholder="senha, adm, ou LMPRO-XXXX-XXXX" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="current-password" class="w-full rounded-xl border border-slate-700 bg-slate-900 pl-4 pr-11 py-3 font-mono text-sm text-emerald-400 font-bold outline-none focus:border-amber-400 transition-all">
                 <button type="button" id="btnTogglePasswordVisibility" class="absolute right-3 p-1.5 text-slate-400 hover:text-amber-400 focus:outline-none transition-colors cursor-pointer" title="Visualizar senha">
                   <!-- Olho Aberto (quando senha visível) -->
                   <svg id="eyeIconOpen" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -144,10 +144,10 @@
               </div>
             </div>
 
-            <button id="btnSubmitLogin" type="button" class="btn-amber w-full py-3.5 text-sm font-extrabold cursor-pointer shadow-xl flex items-center justify-center gap-2">
+            <button id="btnSubmitLogin" type="submit" class="btn-amber w-full py-3.5 text-sm font-extrabold cursor-pointer shadow-xl flex items-center justify-center gap-2">
               <span>🔐</span> <span>Entrar na Plataforma</span>
             </button>
-          </div>
+          </form>
 
           <div class="mt-6 pt-4 border-t border-slate-800 text-center">
             <p class="text-[11px] text-slate-500">
@@ -2304,7 +2304,7 @@
     <!-- Message injected here -->
   </div>
 
-  <script src="js/app.js?v=20261016_v17_mobile_elite"></script>
-  <script src="js/security-shield.js?v=20261016_v17_mobile_elite"></script>
+  <script src="js/app.js?v=20261016_v18_login_universal"></script>
+  <script src="js/security-shield.js?v=20261016_v18_login_universal"></script>
 </body>
 </html>
