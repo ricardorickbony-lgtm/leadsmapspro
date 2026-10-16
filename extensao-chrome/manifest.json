@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "LeadMaps Pro — Minerador Google Maps & Auto-Sender WhatsApp",
+  "name": "RadarMaps PRO — Minerador Google Maps & Auto-Sender WhatsApp",
   "version": "2.0.0",
-  "description": "Minerador oficial do Google Maps e Robô de Disparo 100% Automático para WhatsApp Web (clica em Enviar sozinho).",
+  "description": "Minerador oficial do Google Maps e Robô de Disparo 100% Automático para WhatsApp Web (RadarMaps PRO).",
   "permissions": [
     "storage",
     "activeTab",
@@ -24,7 +24,7 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "LeadMaps Pro — Minerador & Auto-Sender WhatsApp"
+    "default_title": "RadarMaps PRO — Minerador & Auto-Sender WhatsApp"
   },
   "content_scripts": [
     {

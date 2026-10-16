@@ -837,7 +837,7 @@ window.addEventListener('message', (ev) => {
       const localCache = getLeadPostDaysCache();
       const updated = Object.assign({}, localCache, ev.data.cache);
       localStorage.setItem('leadmaps_post_days_cache', JSON.stringify(updated));
-      console.log('[LeadMaps Pro] Sincronização de postagens da extensão recebida:', ev.data.cache);
+      console.log('[RadarMaps PRO] Sincronização de postagens da extensão recebida:', ev.data.cache);
       if (State.currentLead) {
         const curName = (State.currentLead.empresa || '').toLowerCase().trim();
         if (ev.data.cache[curName] !== undefined) {
@@ -845,7 +845,7 @@ window.addEventListener('message', (ev) => {
         }
       }
     } catch(err) {
-      console.warn('[LeadMaps Pro] Erro ao sincronizar cache da extensão:', err);
+      console.warn('[RadarMaps PRO] Erro ao sincronizar cache da extensão:', err);
     }
   }
 });
@@ -4617,10 +4617,10 @@ function exportCSV() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `leadmaps-pro-${Date.now()}.csv`;
+  a.download = `radarmaps-pro-${Date.now()}.csv`;
   a.click();
   URL.revokeObjectURL(url);
-  showToast("CSV exportado com sucesso");
+  showToast("CSV exportado com sucesso (RadarMaps PRO)");
 }
 
 // --------------------------------------------------------------------------

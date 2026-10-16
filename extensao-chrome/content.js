@@ -1,7 +1,7 @@
-// LeadMaps Pro — Content Script Injetado no Google Maps
+// RadarMaps PRO — Content Script Injetado no Google Maps
 // Padrão Ricardo & Severino — Rastreamento Real e Auto-Scroll Automático
 
-console.log("[LeadMaps Pro] Extensão ativa no Google Maps.");
+console.log("[RadarMaps PRO] Extensão ativa no Google Maps.");
 
 // Localiza o painel rolável do Google Maps
 function getGoogleMapsFeed() {
@@ -347,7 +347,7 @@ function showFloatingDateSyncToast(title, days, snippet) {
   toast.innerHTML = `
     <div style="font-size: 18px;">⚡</div>
     <div>
-      <div style="font-weight: 800; color: #10b981;">LeadMaps Pro — Ficha Sincronizada!</div>
+      <div style="font-weight: 800; color: #10b981;">RadarMaps PRO — Ficha Sincronizada!</div>
       <div style="color: #cbd5e1; font-size: 11px;"><b>${title}</b>: Publicação/Foto identificada (${daysLabel}).</div>
       <div style="color: #94a3b8; font-size: 10px; margin-top: 2px;">Trecho no Maps: "<i>${snippet}</i>" ➔ Sincronizado com o Painel!</div>
     </div>
