@@ -527,6 +527,9 @@ function isPostsVerifiedForBusiness(empresaName, address, phone) {
       "sou mais carro",
       "sou mais carros",
       "sou mais",
+      "via certa",
+      "via certa multimarcas",
+      "viacerta",
       "hebron motors",
       "prata car",
       "santo andré automóveis",
@@ -587,16 +590,17 @@ function getLeadPostDaysCache() {
 function getLeadPostAudit(lead) {
   if (!lead) {
     return {
-      diasSemPostar: 42,
-      dataTexto: "Há 42 dias",
+      diasSemPostar: null,
+      dataTexto: "A Homologar",
       isAtivo: false,
-      isAlerta: false,
-      isCritico: true,
-      statusPilar: "🚨 Gargalo Crítico: Ficha inativa há 42 dias sem postar no Google.",
-      badgeLabel: "🚨 42d sem postar",
-      badgeColor: "rose",
-      scorePost: 0,
-      scoreMedia: 0
+      isAlerta: true,
+      isCritico: false,
+      isHomologar: true,
+      statusPilar: "⚠️ Postagens a Homologar: Verificar aba de Atualizações/Fotos no Google Maps (Clique em Maps ↗ ou no lápis ✏️ para registrar os dias).",
+      badgeLabel: "⚠️ A Homologar",
+      badgeColor: "amber",
+      scorePost: 60,
+      scoreMedia: 60
     };
   }
 
@@ -604,35 +608,43 @@ function getLeadPostAudit(lead) {
   const cleanEmpresa = (lead.empresa || '').toLowerCase().trim();
   const isVerifiedPosts = isPostsVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
 
-  let dias;
+  let dias = null;
+  let isHomologar = false;
+
   if (cache[cleanEmpresa] !== undefined) {
-    // Definido manualmente pelo usuário via modal de ajuste de dias
+    // Definido manualmente pelo usuário via modal ou sincronizado da extensão
     dias = Number(cache[cleanEmpresa]);
-  } else if (isVerifiedPosts || cleanEmpresa.includes('sou mais')) {
-    // Clientes conhecidos e verificados com fotos e posts ativos
-    if (cleanEmpresa.includes('sou mais')) {
-      dias = 1; // Ontem (fotos/posts recentes confirmados no Google Maps)
-    } else if (cleanEmpresa.includes('lais') || cleanEmpresa.includes('laís')) {
-      dias = 0; // Hoje
-    } else {
-      dias = 1; // Recente (ontem / poucos dias)
-    }
+  } else if (cleanEmpresa.includes('via certa') || cleanEmpresa.includes('viacerta')) {
+    // Ficha confirmada pelo Ricardo com fotos/posts recentes (1 dia atrás)
+    dias = 1;
+  } else if (cleanEmpresa.includes('sou mais')) {
+    // Clientes Santo André confirmados
+    dias = 1;
+  } else if (cleanEmpresa.includes('lais') || cleanEmpresa.includes('laís')) {
+    dias = 0; // Hoje
+  } else if (isVerifiedPosts) {
+    // Clientes conhecidos e homologados
+    dias = 1;
   } else if (lead.temPostsAtivos === true && typeof lead.diasSemPostar === 'number' && lead.diasSemPostar <= 7) {
     // Confirmação explícita de postagem recente
     dias = lead.diasSemPostar;
   } else if (typeof lead.diasSemPostar === 'number' && lead.diasSemPostar < 30 && lead.temPostsAtivos === true) {
     dias = lead.diasSemPostar;
+  } else if (typeof lead.diasSemPostar === 'number') {
+    dias = lead.diasSemPostar;
   } else {
-    // Regra Factual: No Google Maps, a grande maioria dos perfis NÃO publica no Google Posts.
-    // Sem confirmação explícita ou homologação, classifica com precisão como Inativo há 45+ dias.
-    dias = (typeof lead.diasSemPostar === 'number' && lead.diasSemPostar >= 30) ? lead.diasSemPostar : 45;
+    // Sem confirmação prévia: trata com precisão ética como "A Homologar"
+    isHomologar = true;
+    dias = null;
   }
 
   lead.diasSemPostar = dias;
 
   let dataTexto = "";
-  if (dias === 0) {
-    dataTexto = (cleanEmpresa.includes('lais') || cleanEmpresa.includes('laís')) ? "Hoje (há 2 horas)" : "Hoje (há poucas horas)";
+  if (isHomologar || dias === null) {
+    dataTexto = "A Homologar";
+  } else if (dias === 0) {
+    dataTexto = (cleanEmpresa.includes('lais') || cleanEmpresa.includes('laís')) ? "Hoje (há 2 horas)" : "Hoje";
   } else if (dias === 1) {
     dataTexto = "Ontem";
   } else {
@@ -640,23 +652,29 @@ function getLeadPostAudit(lead) {
   }
   lead.dataUltimaPostagemTexto = dataTexto;
 
-  const isAtivo = dias <= 7;
-  const isAlerta = dias > 7 && dias <= 30;
-  const isCritico = dias > 30;
+  const isAtivo = (dias !== null && dias <= 7);
+  const isAlerta = (dias !== null && dias > 7 && dias <= 30) || isHomologar;
+  const isCritico = (dias !== null && dias > 30);
 
   let statusPilar = "";
   let badgeLabel = "";
-  let badgeColor = "rose";
-  let scorePost = 0;
-  let scoreMedia = 0;
+  let badgeColor = "amber";
+  let scorePost = 60;
+  let scoreMedia = 60;
 
-  if (isAtivo) {
+  if (isHomologar || dias === null) {
+    statusPilar = "⚠️ Postagens a Homologar: Verificar aba de Atualizações/Fotos no Google Maps (Clique em Maps ↗ ou no lápis ✏️ para registrar os dias).";
+    badgeLabel = "⚠️ A Homologar";
+    badgeColor = "amber";
+    scorePost = 60;
+    scoreMedia = 60;
+  } else if (isAtivo) {
     statusPilar = `✓ Conforme: Perfil altamente dinâmico no Google Posts (última publicação: ${dataTexto}).`;
     badgeLabel = `🟢 ${dataTexto}`;
     badgeColor = "emerald";
     scorePost = 100;
     scoreMedia = 100;
-  } else if (isAlerta) {
+  } else if (dias <= 30) {
     statusPilar = `⚠️ Atenção: Ficha há ${dias} dias sem novas postagens no Google Posts. O Google recomenda postagens a cada 7 a 14 dias.`;
     badgeLabel = `🟡 ${dias}d sem postar`;
     badgeColor = "amber";
@@ -676,6 +694,7 @@ function getLeadPostAudit(lead) {
     isAtivo: isAtivo,
     isAlerta: isAlerta,
     isCritico: isCritico,
+    isHomologar: isHomologar,
     statusPilar: statusPilar,
     badgeLabel: badgeLabel,
     badgeColor: badgeColor,
@@ -694,9 +713,10 @@ window.openPostAuditModal = function(leadId) {
 
   const modal = document.getElementById('postAuditModal');
   const nameEl = document.getElementById('postAuditModalLeadName');
+  const inputEl = document.getElementById('inputCustomPostDays');
   const postAudit = getLeadPostAudit(lead);
   if (nameEl) nameEl.textContent = lead.empresa;
-  if (inputEl) inputEl.value = postAudit.diasSemPostar;
+  if (inputEl) inputEl.value = (typeof postAudit.diasSemPostar === 'number') ? postAudit.diasSemPostar : '';
   if (modal) {
     modal.classList.remove('hidden');
     modal.style.setProperty('display', 'flex', 'important');
@@ -788,6 +808,15 @@ function setLeadPostDays(leadId, dias) {
     }
   }
 
+  // Dispara sincronização para a extensão se a ponte estiver ativa
+  try {
+    window.postMessage({
+      type: "LEADMAPS_SET_POST_DAYS",
+      empresa: cleanEmpresa,
+      dias: numDias
+    }, "*");
+  } catch(e) {}
+
   // Re-renderiza onde estiver aberto
   closePostAuditModal();
   renderTable();
@@ -800,6 +829,26 @@ function setLeadPostDays(leadId, dias) {
   showToast(`⚡ Postagens de "${lead.empresa}" atualizadas: ${postInfo.dataTexto} (${numDias <= 7 ? '✓ Ativo' : numDias <= 30 ? '! Atenção' : '✕ Gargalo'})`);
 }
 window.setLeadPostDays = setLeadPostDays;
+
+// Escuta sincronizações automáticas enviadas pela extensão Chrome via leadmaps-bridge
+window.addEventListener('message', (ev) => {
+  if (ev.data && ev.data.type === 'LEADMAPS_POST_CACHE_SYNC' && ev.data.cache) {
+    try {
+      const localCache = getLeadPostDaysCache();
+      const updated = Object.assign({}, localCache, ev.data.cache);
+      localStorage.setItem('leadmaps_post_days_cache', JSON.stringify(updated));
+      console.log('[LeadMaps Pro] Sincronização de postagens da extensão recebida:', ev.data.cache);
+      if (State.currentLead) {
+        const curName = (State.currentLead.empresa || '').toLowerCase().trim();
+        if (ev.data.cache[curName] !== undefined) {
+          setLeadPostDays(State.currentLead.id, ev.data.cache[curName]);
+        }
+      }
+    } catch(err) {
+      console.warn('[LeadMaps Pro] Erro ao sincronizar cache da extensão:', err);
+    }
+  }
+});
 
 function getGoogleMapsUrl(lead) {
   if (!lead) return 'https://www.google.com/maps';
@@ -3248,18 +3297,22 @@ function buildLeadFullAuditItems(lead) {
     const postItem = lead.fullHealthItems.find(i => i.id === 'last_post_date');
     if (postItem) {
       postItem.score = postAudit.scorePost;
-      postItem.finding = postAudit.isAtivo
-        ? `A data da última publicação está super atualizada (${postAudit.dataTexto}). Quantidade de dias desde a última postagem: <strong>${postAudit.diasSemPostar}</strong>. Quantidade máxima recomendada: <strong>7 a 14 dias</strong>.`
-        : (postAudit.isAlerta
-            ? `Atenção: A última postagem foi feita há <strong>${postAudit.diasSemPostar} dias</strong>. O Google recomenda pelo menos 1 postagem a cada 7 a 14 dias para manter a relevância da ficha ativa.`
-            : `🚨 Alerta Crítico (Gargalo de Prospecção): O perfil está há <strong>${postAudit.diasSemPostar} dias</strong> sem nenhuma postagem no Google Posts. O algoritmo do Google prioriza concorrentes com atividade semanal, rebaixando fichas inativas.`);
+      postItem.finding = postAudit.isHomologar
+        ? `⚠️ Postagens a Homologar: Frequência de novidades e fotos pendente de validação visual. Acesse a ficha no Google Maps ↗ ou use o lápis ✏️ para registrar os dias da última postagem.`
+        : (postAudit.isAtivo
+            ? `A data da última publicação está super atualizada (${postAudit.dataTexto}). Quantidade de dias desde a última postagem: <strong>${postAudit.diasSemPostar}</strong>. Quantidade máxima recomendada: <strong>7 a 14 dias</strong>.`
+            : (postAudit.isAlerta
+                ? `Atenção: A última postagem foi feita há <strong>${postAudit.diasSemPostar} dias</strong>. O Google recomenda pelo menos 1 postagem a cada 7 a 14 dias para manter a relevância da ficha ativa.`
+                : `🚨 Alerta Crítico (Gargalo de Prospecção): O perfil está há <strong>${postAudit.diasSemPostar} dias</strong> sem nenhuma postagem no Google Posts. O algoritmo do Google prioriza concorrentes com atividade semanal, rebaixando fichas inativas.`));
     }
     const mediaItem = lead.fullHealthItems.find(i => i.id === 'last_owner_media_date');
     if (mediaItem) {
       mediaItem.score = postAudit.scoreMedia;
-      mediaItem.finding = (postAudit.diasSemPostar <= 30)
-        ? `A data da postagem da última mídia está atualizada. Quantidade de dias desde a última mídia: <strong>${Math.min(postAudit.diasSemPostar, 20)}</strong>. Quantidade máxima recomendada: <strong>30 dias</strong>.`
-        : `🚨 Mídia do Proprietário Desatualizada: A última foto/mídia publicada pelo proprietário foi há <strong>${postAudit.diasSemPostar} dias</strong>. Quantidade máxima recomendada: <strong>30 dias</strong>.`;
+      mediaItem.finding = postAudit.isHomologar
+        ? `⚠️ Mídia do Proprietário a Homologar: Pendente de validação na aba Fotos do Google Maps.`
+        : ((postAudit.diasSemPostar <= 30)
+            ? `A data da postagem da última mídia está atualizada. Quantidade de dias desde a última mídia: <strong>${Math.min(postAudit.diasSemPostar, 20)}</strong>. Quantidade máxima recomendada: <strong>30 dias</strong>.`
+            : `🚨 Mídia do Proprietário Desatualizada: A última foto/mídia publicada pelo proprietário foi há <strong>${postAudit.diasSemPostar} dias</strong>. Quantidade máxima recomendada: <strong>30 dias</strong>.`);
     }
     return lead.fullHealthItems;
   }
@@ -3311,11 +3364,13 @@ function buildLeadFullAuditItems(lead) {
       id: 'last_post_date',
       title: 'Frescor Algorítmico & Atualizações de Conteúdo (Google Posts)',
       desc: 'O envio semanal de comunicados, ofertas e fotos de bastidores sinaliza atividade ininterrupta para o motor de busca, aumentando a taxa de cliques da ficha.',
-      finding: postAudit.isAtivo
-        ? `O cronograma de postagens está atualizado (${postAudit.dataTexto}). Intervalo desde a última publicação: <strong>${postAudit.diasSemPostar} dias</strong>. Padrão recomendado: <strong>7 a 14 dias</strong>.`
-        : (postAudit.isAlerta
-            ? `Atenção: A última postagem foi feita há <strong>${postAudit.diasSemPostar} dias</strong>. O Google recomenda pelo menos 1 postagem a cada 7 a 14 dias para manter a relevância da ficha ativa.`
-            : `🚨 Alerta Crítico (Gargalo de Prospecção): O perfil está há <strong>${postAudit.diasSemPostar} dias</strong> sem nenhuma postagem no Google Posts. O algoritmo do Google prioriza concorrentes com atividade semanal, rebaixando fichas inativas.`),
+      finding: postAudit.isHomologar
+        ? `⚠️ Postagens a Homologar: Frequência de novidades e fotos pendente de validação visual. Acesse a ficha no Google Maps ↗ ou use o lápis ✏️ para registrar os dias da última postagem.`
+        : (postAudit.isAtivo
+            ? `O cronograma de postagens está atualizado (${postAudit.dataTexto}). Intervalo desde a última publicação: <strong>${postAudit.diasSemPostar} dias</strong>. Padrão recomendado: <strong>7 a 14 dias</strong>.`
+            : (postAudit.isAlerta
+                ? `Atenção: A última postagem foi feita há <strong>${postAudit.diasSemPostar} dias</strong>. O Google recomenda pelo menos 1 postagem a cada 7 a 14 dias para manter a relevância da ficha ativa.`
+                : `🚨 Alerta Crítico (Gargalo de Prospecção): O perfil está há <strong>${postAudit.diasSemPostar} dias</strong> sem nenhuma postagem no Google Posts. O algoritmo do Google prioriza concorrentes com atividade semanal, rebaixando fichas inativas.`)),
       score: postAudit.scorePost
     },
     {
@@ -3449,9 +3504,11 @@ function buildLeadFullAuditItems(lead) {
       id: 'last_owner_media_date',
       title: 'Recorrência de Uploads Visuais pelo Administrador',
       desc: 'O envio constante de novas fotos sinaliza que a empresa segue dinâmica, atraindo maior prioridade no algoritmo de exibição.',
-      finding: (postAudit.diasSemPostar <= 30)
-        ? `Envio de fotos e mídias em dia. Intervalo desde a última mídia: <strong>${Math.min(postAudit.diasSemPostar, 20)} dias</strong>. Padrão recomendado: <strong>até 30 dias</strong>.`
-        : `🚨 Galeria Institucional Desatualizada: A última imagem enviada pelo administrador foi há <strong>${postAudit.diasSemPostar} dias</strong>. Padrão recomendado: <strong>máximo 30 dias</strong>.`,
+      finding: postAudit.isHomologar
+        ? `⚠️ Mídia do Proprietário a Homologar: Pendente de validação na aba Fotos do Google Maps.`
+        : ((postAudit.diasSemPostar <= 30)
+            ? `Envio de fotos e mídias em dia. Intervalo desde a última mídia: <strong>${Math.min(postAudit.diasSemPostar, 20)} dias</strong>. Padrão recomendado: <strong>até 30 dias</strong>.`
+            : `🚨 Galeria Institucional Desatualizada: A última imagem enviada pelo administrador foi há <strong>${postAudit.diasSemPostar} dias</strong>. Padrão recomendado: <strong>máximo 30 dias</strong>.`),
       score: postAudit.scoreMedia
     },
     {
@@ -4713,10 +4770,25 @@ async function fetchSerperLivePlaces(niche, city, targetCount, apiKey) {
     const has360 = isVerifiedTour;
 
     const rating = typeof p.rating === 'number' ? p.rating : 4.5;
-    const reviews = typeof p.ratingCount === 'number' ? p.ratingCount : (p.reviews || 20);
     const isVerifiedPosts = isPostsVerifiedForBusiness(placeTitle, p.address, p.phoneNumber);
-    const hasPosts = isVerifiedPosts;
-    const diasSemPostar = isVerifiedPosts ? (placeTitle.toLowerCase().includes('sou mais') ? 1 : 0) : 45;
+    const postDaysCache = getLeadPostDaysCache();
+    const cleanTitle = (placeTitle || '').toLowerCase().trim();
+    let diasSemPostar = null;
+    let hasPosts = false;
+
+    if (postDaysCache[cleanTitle] !== undefined) {
+      diasSemPostar = Number(postDaysCache[cleanTitle]);
+      hasPosts = diasSemPostar <= 7;
+    } else if (cleanTitle.includes('via certa') || cleanTitle.includes('viacerta')) {
+      diasSemPostar = 1;
+      hasPosts = true;
+    } else if (isVerifiedPosts || cleanTitle.includes('sou mais')) {
+      diasSemPostar = 1;
+      hasPosts = true;
+    } else if (cleanTitle.includes('lais') || cleanTitle.includes('laís')) {
+      diasSemPostar = 0;
+      hasPosts = true;
+    }
 
     const techStack = [];
     if (hasSite) {
@@ -4728,7 +4800,8 @@ async function fetchSerperLivePlaces(niche, city, targetCount, apiKey) {
     let score = 85;
     if (!hasSite) score -= 35;
     if (!has360) score -= 25; // Dedução comercial se não tiver tour interno
-    if (!hasPosts) score -= 20; // Dedução por falta de atividade recente no Google Posts
+    if (!hasPosts && diasSemPostar !== null && diasSemPostar > 30) score -= 20; // Dedução factual por inatividade confirmada
+    else if (!hasPosts && diasSemPostar === null) score -= 5;
     if (!isVerifiedTour) score -= 15; // Dedução por falta de respostas às avaliações públicas
     if (techStack.length === 0) score -= 10;
     score = Math.max(15, Math.min(95, score));
@@ -4747,7 +4820,11 @@ async function fetchSerperLivePlaces(niche, city, targetCount, apiKey) {
       gaps.push('Tour 360° a homologar (Verificar fotos esféricas no Maps)');
     }
     if (!hasPosts) {
-      gaps.push(`Ficha inativa há ${diasSemPostar} dias sem postar no Google Posts`);
+      if (diasSemPostar !== null && diasSemPostar > 30) {
+        gaps.push(`Ficha inativa há ${diasSemPostar} dias sem postar no Google Posts`);
+      } else if (diasSemPostar === null) {
+        gaps.push('Postagens e fotos recentes a homologar no Google Maps');
+      }
     }
     if (!isVerifiedTour) {
       gaps.push('Perfil não responde às avaliações dos clientes no Google (0% de respostas)');
@@ -4982,9 +5059,43 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
 
   const reviewsOk = responseRatePct >= 80;
   const isEliteBusiness = isTourVerifiedForBusiness(mainTitle, mainPlace.address, mainPlace.phoneNumber);
+  const postDaysCache = getLeadPostDaysCache();
+  const cleanMainTitle = (mainTitle || '').toLowerCase().trim();
   const hasPostsVerified = isPostsVerifiedForBusiness(mainTitle, mainPlace.address, mainPlace.phoneNumber);
-  const diasSemPostar = hasPostsVerified ? (mainTitle.toLowerCase().includes('sou mais') ? 1 : ((mainTitle.toLowerCase().includes('lais') || mainTitle.toLowerCase().includes('laís')) ? 0 : 2)) : 45;
-  const postsOk = hasPostsVerified;
+
+  let diasSemPostar = null;
+  let postsOk = false;
+  let postsStatusTexto = "";
+
+  if (postDaysCache[cleanMainTitle] !== undefined) {
+    diasSemPostar = Number(postDaysCache[cleanMainTitle]);
+    postsOk = diasSemPostar <= 7;
+  } else if (cleanMainTitle.includes('via certa') || cleanMainTitle.includes('viacerta')) {
+    diasSemPostar = 1;
+    postsOk = true;
+  } else if (cleanMainTitle.includes('sou mais')) {
+    diasSemPostar = 1;
+    postsOk = true;
+  } else if (cleanMainTitle.includes('lais') || cleanMainTitle.includes('laís')) {
+    diasSemPostar = 0;
+    postsOk = true;
+  } else if (hasPostsVerified) {
+    diasSemPostar = 1;
+    postsOk = true;
+  }
+
+  if (postsOk) {
+    const dataTxt = diasSemPostar === 0 ? 'Hoje' : (diasSemPostar === 1 ? 'Ontem' : `há ${diasSemPostar} dias`);
+    postsStatusTexto = `✓ Conforme: Perfil altamente dinâmico no Google Posts (última publicação: ${dataTxt}).`;
+  } else if (diasSemPostar !== null) {
+    if (diasSemPostar <= 30) {
+      postsStatusTexto = `⚠️ Atenção: Ficha há ${diasSemPostar} dias sem novas postagens no Google Posts.`;
+    } else {
+      postsStatusTexto = `🚨 Gargalo Crítico: Ficha inativa há ${diasSemPostar} dias sem postagens no Google Posts.`;
+    }
+  } else {
+    postsStatusTexto = "⚠️ Postagens a Homologar: Verificar aba de Atualizações/Fotos no Google Maps (Clique em Maps ↗ ou no lápis ✏️ para registrar os dias).";
+  }
 
   const techStack = [];
   if (hasSite) {
@@ -5045,9 +5156,7 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
     {
       id: "posts",
       nome: "Frequência de Postagens / Novidades",
-      status: postsOk 
-        ? `✓ Conforme: Perfil altamente dinâmico no Google Posts (última publicação: ${diasSemPostar === 0 ? 'Hoje (há 2 horas)' : `há ${diasSemPostar} dias`}).` 
-        : `🚨 Gargalo Crítico: Ficha inativa há ${diasSemPostar} dias sem postagens no Google Posts.`,
+      status: postsStatusTexto,
       ok: postsOk,
       icon: "📰"
     },
@@ -5079,8 +5188,15 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
     if (responseRatePct === 0) gaps.push(`Perfil não responde às avaliações dos clientes no Google (0% de respostas — ${reviews} avaliações sem retorno)`);
     else gaps.push(`Apenas ${responseRatePct}% das avaliações recentes respondidas`);
   }
-  if (!hasSecondaryCategories && !isEliteBusiness) gaps.push('Cadastrar categorias secundárias de atuação no Google Meu Negócio');
-  if (!postsOk) gaps.push('Criar calendário de postagens semanais no Google Posts');
+  if (!postsOk) {
+    if (diasSemPostar !== null && diasSemPostar > 30) {
+      gaps.push(`Ficha inativa há ${diasSemPostar} dias sem postar no Google Posts`);
+    } else if (diasSemPostar === null) {
+      gaps.push('Postagens e fotos recentes a homologar no Google Maps');
+    } else {
+      gaps.push('Criar calendário de postagens semanais no Google Posts');
+    }
+  }
 
   // Para perfis de elite sem gargalos básicos, apresenta oportunidades estratégicas de expansão
   if (gaps.length === 0) {

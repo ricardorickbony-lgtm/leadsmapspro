@@ -1,0 +1,61 @@
+{
+  "manifest_version": 3,
+  "name": "LeadMaps Pro — Minerador Google Maps & Auto-Sender WhatsApp",
+  "version": "2.0.0",
+  "description": "Minerador oficial do Google Maps e Robô de Disparo 100% Automático para WhatsApp Web (clica em Enviar sozinho).",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "tabs",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://places.googleapis.com/*",
+    "https://google.serper.dev/*",
+    "https://www.google.com/maps/*",
+    "https://maps.google.com/*",
+    "https://www.google.com.br/maps/*",
+    "https://maps.google.com.br/*",
+    "https://web.whatsapp.com/*",
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "LeadMaps Pro — Minerador & Auto-Sender WhatsApp"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.google.com/maps/*",
+        "https://maps.google.com/*",
+        "https://www.google.com.br/maps/*",
+        "https://maps.google.com.br/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://web.whatsapp.com/*"
+      ],
+      "js": ["whatsapp-autosend.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": ["leadmaps-bridge.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["export.html"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

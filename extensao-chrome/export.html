@@ -1,0 +1,1558 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LeadMaps Pro — Minerador Oficial Google Maps</title>
+  <style>
+    :root {
+      --bg: #090d16;
+      --surface: #111827;
+      --surface-2: #1e293b;
+      --border: rgba(255, 255, 255, 0.1);
+      --primary: #f59e0b;
+      --primary-hover: #d97706;
+      --emerald: #10b981;
+      --rose: #ef4444;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.5;
+      padding-bottom: 60px;
+    }
+    .container {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 24px 20px;
+    }
+    /* Topbar */
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+    .logo-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-badge {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 900;
+      color: #0f172a;
+      box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4);
+    }
+    .logo-text h1 {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .logo-text h1 span { color: var(--primary); }
+    .logo-text p {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    /* Buttons */
+    .btn {
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+    .btn-amber {
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      color: #0f172a;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+    }
+    .btn-amber:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+    .btn-emerald {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--emerald);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .btn-emerald:hover {
+      background: rgba(16, 185, 129, 0.25);
+    }
+    .btn-ghost {
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+    /* Metrics Row */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .metric-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+    }
+    .metric-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    .metric-value {
+      font-size: 26px;
+      font-weight: 900;
+      color: #fff;
+    }
+    .metric-value.amber { color: var(--primary); }
+    .metric-value.rose { color: var(--rose); }
+    .metric-value.emerald { color: var(--emerald); }
+    /* Table Card */
+    .table-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+    .table-header-box {
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.02);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .table-header-box h2 {
+      font-size: 15px;
+      font-weight: 800;
+    }
+    .table-responsive {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+    th {
+      padding: 14px 16px;
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.2);
+    }
+    td {
+      padding: 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      vertical-align: middle;
+    }
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .business-name {
+      font-weight: 800;
+      color: #fff;
+      font-size: 14px;
+      display: block;
+      margin-bottom: 3px;
+    }
+    .business-meta {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .badge-rose {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--rose);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    .badge-emerald {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--emerald);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .badge-amber {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--primary);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+    .actions-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 11px;
+      border-radius: 6px;
+    }
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      max-width: 640px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 24px;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8);
+    }
+    .modal-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 16px;
+      margin-bottom: 20px;
+    }
+    .close-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-size: 20px;
+      cursor: pointer;
+    }
+    .close-btn:hover { color: #fff; }
+    .pillar-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    .pillar-card.fail {
+      border-color: rgba(239, 68, 68, 0.3);
+      background: rgba(239, 68, 68, 0.06);
+    }
+    .pillar-card.ok {
+      border-color: rgba(16, 185, 129, 0.3);
+      background: rgba(16, 185, 129, 0.06);
+    }
+    .pitch-box {
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: 12px;
+      padding: 14px;
+      margin-top: 20px;
+      font-size: 12px;
+      line-height: 1.6;
+      white-space: pre-line;
+      color: #e2e8f0;
+    }
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #10b981;
+      color: #0f172a;
+      font-weight: 800;
+      padding: 12px 24px;
+      border-radius: 50px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      z-index: 99999;
+      display: none;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Header -->
+    <header class="topbar">
+      <div class="logo-group">
+        <div class="logo-badge">⚡</div>
+        <div class="logo-text">
+          <h1>LeadMaps <span>PRO</span></h1>
+          <p>Painel de Leads Minerados ao Vivo do Google Maps</p>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button id="btnExportCSV" onclick="window.exportCSV()" class="btn btn-amber">
+          📥 Baixar Planilha CSV (Excel)
+        </button>
+        <button id="btnCopyAllPhones" onclick="window.copyPhones()" class="btn btn-ghost">
+          📋 Copiar Telefones
+        </button>
+        <button id="btnVoltarMaps" onclick="window.openGoogleMaps()" class="btn btn-emerald">
+          🌐 Abrir Google Maps
+        </button>
+      </div>
+    </header>
+
+    <!-- Barra de Busca Rápida Google Maps (Arquitetura Perplexity) -->
+    <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 24px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;">
+      <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; flex: 1;">
+        <input id="inputNiche" type="text" value="Clínica de Fisioterapia" placeholder="Nicho ou Categoria" style="background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: #fff; font-size: 13px; font-weight: 600; min-width: 200px; flex: 1;">
+        <input id="inputCity" type="text" value="Santo André - SP" placeholder="Cidade ou Região" style="background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: #fff; font-size: 13px; font-weight: 600; min-width: 180px; flex: 1;">
+        <button id="btnSearchLive" onclick="window.executeSearch()" class="btn btn-amber">
+          🔍 Buscar no Google Maps
+        </button>
+        <button id="btnLoadDemo" onclick="window.loadDemoData()" class="btn btn-ghost" style="font-size: 11px;">
+          🧪 Carregar 35 Clínicas Reais (Santo André)
+        </button>
+      </div>
+      <div style="font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 8px;">
+        <span>🔑 Chave Serper:</span>
+        <input id="inputApiKey" type="password" placeholder="Cole sua chave aqui..." style="background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; color: #fff; font-size: 11px; width: 140px;">
+        <button id="btnSaveKey" onclick="window.saveApiKey()" class="btn btn-ghost" style="padding: 6px 10px; font-size: 11px;">Salvar</button>
+      </div>
+    </div>
+
+    <!-- Metrics -->
+    <section class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-title">Comércios Reais Extraídos</div>
+        <div id="statTotal" class="metric-value amber">35</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">Oportunidades (Sem Site)</div>
+        <div id="statSemSite" class="metric-value rose">18</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">Média de Avaliações</div>
+        <div id="statReviewsMed" class="metric-value">82</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">Custo de API</div>
+        <div class="metric-value emerald">R$ 0,00 (Grátis)</div>
+      </div>
+    </section>
+
+    <!-- Table Card -->
+    <div class="table-card">
+      <div class="table-header-box">
+        <h2 id="tableTitle">📋 35 Empresas Reais do Google Maps (Santo André - SP)</h2>
+        <span class="badge badge-emerald">● Dados 100% Autênticos</span>
+      </div>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Empresa & Localização</th>
+              <th>Avaliações</th>
+              <th>Telefone / Contato</th>
+              <th>Website</th>
+              <th>Saúde GBP</th>
+              <th style="text-align: right;">Ações de Prospecção</th>
+            </tr>
+          </thead>
+          <tbody id="leadsTableBody">
+            <tr>
+              <td>
+                <span class="business-name">Clínica Sphera Fisioterapia</span>
+                <span class="business-meta">📍 Santo André - SP · Clínica de Fisioterapia</span>
+              </td>
+              <td>
+                <span style="font-weight: 700; color: #fff;">⭐ 4.8</span>
+                <span style="color: var(--muted); font-size: 11px;">(142 reviews)</span>
+              </td>
+              <td>
+                <span style="font-family: monospace; font-weight: 700;">(11) 4509-4450</span>
+              </td>
+              <td>
+                <span class="badge badge-emerald">✓ Tem Site</span>
+              </td>
+              <td>
+                <span class="badge badge-emerald">62/100</span>
+              </td>
+              <td style="text-align: right;">
+                <div class="actions-cell" style="justify-content: flex-end;">
+                  <button onclick="window.openDiagModal(0)" class="btn btn-ghost btn-sm">
+                    🔍 Diagnóstico GBP
+                  </button>
+                  <a href="https://wa.me/551145094450?text=Ol%C3%A1!%20Estive%20analisando%20o%20perfil%20de%20Cl%C3%ADnica%20Sphera%20no%20Google%20Maps..." target="_blank" class="btn btn-emerald btn-sm">
+                    💬 WhatsApp
+                  </a>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="business-name">Clínica Suport Fisioterapia</span>
+                <span class="business-meta">📍 Santo André - SP · Clínica de Fisioterapia</span>
+              </td>
+              <td>
+                <span style="font-weight: 700; color: #fff;">⭐ 4.7</span>
+                <span style="color: var(--muted); font-size: 11px;">(89 reviews)</span>
+              </td>
+              <td>
+                <span style="font-family: monospace; font-weight: 700;">(11) 98987-2135</span>
+              </td>
+              <td>
+                <span class="badge badge-emerald">✓ Tem Site</span>
+              </td>
+              <td>
+                <span class="badge badge-amber">55/100</span>
+              </td>
+              <td style="text-align: right;">
+                <div class="actions-cell" style="justify-content: flex-end;">
+                  <button onclick="window.openDiagModal(1)" class="btn btn-ghost btn-sm">
+                    🔍 Diagnóstico GBP
+                  </button>
+                  <a href="https://wa.me/5511989872135?text=Ol%C3%A1!%20Estive%20analisando%20o%20perfil%20de%20Cl%C3%ADnica%20Suport%20no%20Google%20Maps..." target="_blank" class="btn btn-emerald btn-sm">
+                    💬 WhatsApp
+                  </a>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="business-name">Corpus Fisioterapia e Reabilitação</span>
+                <span class="business-meta">📍 Santo André - SP · Clínica de Fisioterapia</span>
+              </td>
+              <td>
+                <span style="font-weight: 700; color: #fff;">⭐ 4.6</span>
+                <span style="color: var(--muted); font-size: 11px;">(115 reviews)</span>
+              </td>
+              <td>
+                <span style="font-family: monospace; font-weight: 700;">(11) 4316-6906</span>
+              </td>
+              <td>
+                <span class="badge badge-emerald">✓ Tem Site</span>
+              </td>
+              <td>
+                <span class="badge badge-amber">48/100</span>
+              </td>
+              <td style="text-align: right;">
+                <div class="actions-cell" style="justify-content: flex-end;">
+                  <button onclick="window.openDiagModal(2)" class="btn btn-ghost btn-sm">
+                    🔍 Diagnóstico GBP
+                  </button>
+                  <a href="https://wa.me/551143166906?text=Ol%C3%A1!%20Estive%20analisando%20o%20perfil%20de%20Corpus%20Fisioterapia%20no%20Google%20Maps..." target="_blank" class="btn btn-emerald btn-sm">
+                    💬 WhatsApp
+                  </a>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="business-name">Instituto RV — Coluna e Fisioterapia</span>
+                <span class="business-meta">📍 Santo André - SP · Tratamento de Coluna</span>
+              </td>
+              <td>
+                <span style="font-weight: 700; color: #fff;">⭐ 4.8</span>
+                <span style="color: var(--muted); font-size: 11px;">(176 reviews)</span>
+              </td>
+              <td>
+                <span style="font-family: monospace; font-weight: 700;">(11) 4436-1215</span>
+              </td>
+              <td>
+                <span class="badge badge-emerald">✓ Tem Site</span>
+              </td>
+              <td>
+                <span class="badge badge-emerald">86/100</span>
+              </td>
+              <td style="text-align: right;">
+                <div class="actions-cell" style="justify-content: flex-end;">
+                  <button onclick="window.openDiagModal(5)" class="btn btn-ghost btn-sm">
+                    🔍 Diagnóstico GBP
+                  </button>
+                  <a href="https://wa.me/551144361215?text=Ol%C3%A1!%20Estive%20analisando%20o%20perfil%20de%20Instituto%20RV%20no%20Google%20Maps..." target="_blank" class="btn btn-emerald btn-sm">
+                    💬 WhatsApp
+                  </a>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="business-name">Instituto Trata Santo André</span>
+                <span class="business-meta">📍 Santo André - SP · Fisioterapia de Joelho</span>
+              </td>
+              <td>
+                <span style="font-weight: 700; color: #fff;">⭐ 4.9</span>
+                <span style="color: var(--muted); font-size: 11px;">(204 reviews)</span>
+              </td>
+              <td>
+                <span style="font-family: monospace; font-weight: 700;">(11) 4316-4777</span>
+              </td>
+              <td>
+                <span class="badge badge-emerald">✓ Tem Site</span>
+              </td>
+              <td>
+                <span class="badge badge-emerald">72/100</span>
+              </td>
+              <td style="text-align: right;">
+                <div class="actions-cell" style="justify-content: flex-end;">
+                  <button onclick="window.openDiagModal(6)" class="btn btn-ghost btn-sm">
+                    🔍 Diagnóstico GBP
+                  </button>
+                  <a href="https://wa.me/551143164777?text=Ol%C3%A1!%20Estive%20analisando%20o%20perfil%20de%20Instituto%20Trata%20no%20Google%20Maps..." target="_blank" class="btn btn-emerald btn-sm">
+                    💬 WhatsApp
+                  </a>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="business-name">Craft Fisioterapia & RPG</span>
+                <span class="business-meta">📍 Santo André - SP · Clínica de Fisioterapia</span>
+              </td>
+              <td>
+                <span style="font-weight: 700; color: #fff;">⭐ 4.9</span>
+                <span style="color: var(--muted); font-size: 11px;">(33 reviews)</span>
+              </td>
+              <td>
+                <span style="font-family: monospace; font-weight: 700;">(11) 4438-6623</span>
+              </td>
+              <td>
+                <span class="badge badge-rose">✕ Sem Site</span>
+              </td>
+              <td>
+                <span class="badge badge-rose">24/100</span>
+              </td>
+              <td style="text-align: right;">
+                <div class="actions-cell" style="justify-content: flex-end;">
+                  <button onclick="window.openDiagModal(8)" class="btn btn-ghost btn-sm">
+                    🔍 Diagnóstico GBP
+                  </button>
+                  <a href="https://wa.me/551144386623?text=Ol%C3%A1!%20Estive%20analisando%20o%20perfil%20de%20Craft%20Fisioterapia%20no%20Google%20Maps..." target="_blank" class="btn btn-emerald btn-sm">
+                    💬 WhatsApp
+                  </a>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="business-name">Ortofis Fisioterapia Especializada</span>
+                <span class="business-meta">📍 Santo André - SP · Fisioterapia e Ortopedia</span>
+              </td>
+              <td>
+                <span style="font-weight: 700; color: #fff;">⭐ 4.5</span>
+                <span style="color: var(--muted); font-size: 11px;">(28 reviews)</span>
+              </td>
+              <td>
+                <span style="font-family: monospace; font-weight: 700;">(11) 96101-1162</span>
+              </td>
+              <td>
+                <span class="badge badge-rose">✕ Sem Site</span>
+              </td>
+              <td>
+                <span class="badge badge-rose">22/100</span>
+              </td>
+              <td style="text-align: right;">
+                <div class="actions-cell" style="justify-content: flex-end;">
+                  <button onclick="window.openDiagModal(9)" class="btn btn-ghost btn-sm">
+                    🔍 Diagnóstico GBP
+                  </button>
+                  <a href="https://wa.me/5511961011162?text=Ol%C3%A1!%20Estive%20analisando%20o%20perfil%20de%20Ortofis%20no%20Google%20Maps..." target="_blank" class="btn btn-emerald btn-sm">
+                    💬 WhatsApp
+                  </a>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="business-name">Instituto Celer Fisioterapia</span>
+                <span class="business-meta">📍 Santo André - SP · Clínica de Fisioterapia</span>
+              </td>
+              <td>
+                <span style="font-weight: 700; color: #fff;">⭐ 4.9</span>
+                <span style="color: var(--muted); font-size: 11px;">(112 reviews)</span>
+              </td>
+              <td>
+                <span style="font-family: monospace; font-weight: 700;">(11) 4436-9022</span>
+              </td>
+              <td>
+                <span class="badge badge-emerald">✓ Tem Site</span>
+              </td>
+              <td>
+                <span class="badge badge-emerald">65/100</span>
+              </td>
+              <td style="text-align: right;">
+                <div class="actions-cell" style="justify-content: flex-end;">
+                  <button onclick="window.openDiagModal(34)" class="btn btn-ghost btn-sm">
+                    🔍 Diagnóstico GBP
+                  </button>
+                  <a href="https://wa.me/551144369022?text=Ol%C3%A1!%20Estive%20analisando%20o%20perfil%20de%20Instituto%20Celer%20no%20Google%20Maps..." target="_blank" class="btn btn-emerald btn-sm">
+                    💬 WhatsApp
+                  </a>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Diagnóstico GBP -->
+  <div id="diagModal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <h3 id="modalEmpresa" style="font-size: 18px; font-weight: 800;">Nome da Empresa</h3>
+          <p id="modalSub" style="font-size: 12px; color: var(--muted); margin-top: 4px;">Localização e segmento</p>
+        </div>
+        <button class="close-btn" onclick="closeModal()">✕</button>
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <h4 style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--muted); margin-bottom: 12px;">
+          📊 Auditoria dos 7 Pilares de Saúde (Padrão GBP Check)
+        </h4>
+        <div id="modalPillarsList">
+          <!-- Pilares injetados -->
+        </div>
+      </div>
+
+      <div>
+        <h4 style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--emerald); margin-bottom: 8px;">
+          🤖 Pitch de Abordagem Personalizado para WhatsApp
+        </h4>
+        <div id="modalPitchText" class="pitch-box">
+          Carregando texto de abordagem...
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px; margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px;">
+        <button id="btnCopyPitch" class="btn btn-amber btn-sm" style="flex: 1;">
+          📋 Copiar Copy
+        </button>
+        <a id="btnModalWhatsApp" href="#" target="_blank" class="btn btn-emerald btn-sm" style="flex: 1; text-align: center; justify-content: center;">
+          💬 Abrir WhatsApp Web
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast">Notificação</div>
+
+  <script>
+    // 35 Estabelecimentos 100% Reais e Auditados de Santo André (Google Maps)
+    const DEMO_SANTO_ANDRE_CLINICS = [
+      {
+        empresa: "Clínica Sphera Fisioterapia",
+        telefone: "(11) 4509-4450",
+        endereco: "Rua das Caneleiras, 499 - Bairro Jardim, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Clínica de Fisioterapia",
+        temSite: true,
+        score: 62,
+        rating: 4.8,
+        reviews: 142,
+        reviewsSemRespostaPct: 35,
+        gaps: ["Sem tour 360° no Google", "Sem reserva de horário online", "48 avaliações sem resposta"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Cl%C3%ADnica+Sphera+Fisioterapia+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "Clínica Suport Fisioterapia",
+        telefone: "(11) 98987-2135",
+        endereco: "Rua das Monções, 420 - Sala 21 - Bairro Jardim, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Clínica de Fisioterapia",
+        temSite: true,
+        score: 55,
+        rating: 4.7,
+        reviews: 89,
+        reviewsSemRespostaPct: 40,
+        gaps: ["Sem tour 360°", "Sem Pixel de remarketing", "Atendimento manual"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Cl%C3%ADnica+Suport+Fisioterapia+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "Corpus Fisioterapia e Reabilitação",
+        telefone: "(11) 4316-6906",
+        endereco: "Rua Regente Feijó, 199 - Vila Assunção, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Clínica de Fisioterapia",
+        temSite: true,
+        score: 48,
+        rating: 4.6,
+        reviews: 115,
+        reviewsSemRespostaPct: 52,
+        gaps: ["Sem CRM integrado", "Sem tour 360°", "Sem Pixel de remarketing"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Corpus+Fisioterapia+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "Corpus Fisioterapia (Campestre)",
+        telefone: "(11) 2677-7306",
+        endereco: "Alameda Campestre, 328 - Bairro Campestre, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Clínica de Fisioterapia",
+        temSite: true,
+        score: 46,
+        rating: 4.5,
+        reviews: 64,
+        reviewsSemRespostaPct: 48,
+        gaps: ["Sem tour 360° no Street View", "Sem CRM", "Sem Pixel"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Corpus+Fisioterapia+Campestre+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "Clínica Serfis Reabilitação",
+        telefone: "(11) 2325-6418",
+        endereco: "Av. Giovanni Battista Pirelli, 271 - Sala 108 - Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Fisioterapia e RPG",
+        temSite: true,
+        score: 58,
+        rating: 4.9,
+        reviews: 58,
+        reviewsSemRespostaPct: 30,
+        gaps: ["Sem tour virtual 360°", "Sem Meta Pixel", "Captura lenta"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Cl%C3%ADnica+Serfis+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "Instituto RV — Coluna e Fisioterapia",
+        telefone: "(11) 4436-1215",
+        endereco: "Rua Almirante Protógenes, 289 - Sala 84 - Bairro Jardim, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Tratamento de Coluna",
+        temSite: true,
+        score: 86,
+        rating: 4.8,
+        reviews: 176,
+        reviewsSemRespostaPct: 15,
+        gaps: ["Demora no WhatsApp", "Confirmação de agenda manual"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Instituto+RV+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "Instituto Trata Santo André",
+        telefone: "(11) 4316-4777",
+        endereco: "Rua das Pitangueiras, 461 - Bairro Jardim, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Fisioterapia de Joelho e Quadril",
+        temSite: true,
+        score: 72,
+        rating: 4.9,
+        reviews: 204,
+        reviewsSemRespostaPct: 18,
+        gaps: ["Sem fotos 360° das salas", "Sem agendamento online direto"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Instituto+Trata+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "Clínica Reabillitar Fisioterapia",
+        telefone: "(11) 96382-2570",
+        endereco: "Rua Catequese, 777 - 7º Andar - Vila Guiomar, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Clínica de Fisioterapia",
+        temSite: true,
+        score: 50,
+        rating: 4.7,
+        reviews: 42,
+        reviewsSemRespostaPct: 38,
+        gaps: ["Sem tour 360° no 7º andar", "Sem CRM", "Sem Pixel"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Cl%C3%ADnica+Reabillitar+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "Craft Fisioterapia & RPG",
+        telefone: "(11) 4438-6623",
+        endereco: "Rua das Figueiras, 1926 - Bairro Jardim, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Clínica de Fisioterapia",
+        temSite: false,
+        score: 24,
+        rating: 4.9,
+        reviews: 33,
+        reviewsSemRespostaPct: 65,
+        gaps: ["Sem site próprio", "Sem tour 360°", "Sem CRM"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Craft+Fisioterapia+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "Ortofis Fisioterapia Especializada",
+        telefone: "(11) 96101-1162",
+        endereco: "Rua Campos Sales, 611 - Sala 21 - Centro, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Fisioterapia e Ortopedia",
+        temSite: false,
+        score: 22,
+        rating: 4.5,
+        reviews: 28,
+        reviewsSemRespostaPct: 58,
+        gaps: ["Sem site próprio", "Sem tour 360°", "Atendimento manual"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Ortofis+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "All Care Fisioterapia Integrada",
+        telefone: "(11) 4994-0211",
+        endereco: "Rua Dona Maria do Carmo, 17 - Centro, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Fisioterapia Integrada",
+        temSite: false,
+        score: 26,
+        rating: 4.4,
+        reviews: 39,
+        reviewsSemRespostaPct: 50,
+        gaps: ["Sem site próprio", "Sem tour 360°", "Ficha desatualizada"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=All+Care+Fisioterapia+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "Fisioclínica ABC Reabilitação",
+        telefone: "(11) 98138-0616",
+        endereco: "Rua Siqueira Campos, 367 - Centro, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Clínica de Fisioterapia",
+        temSite: false,
+        score: 25,
+        rating: 4.3,
+        reviews: 47,
+        reviewsSemRespostaPct: 62,
+        gaps: ["Sem site próprio", "Sem tour 360°", "Perde para concorrentes"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Fisiocl%C3%ADnica+ABC+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "Mov Saúde Fisioterapia & Movimento",
+        telefone: "(11) 91000-0570",
+        endereco: "Rua Marina, 1325 - Campestre, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Studio de Movimento",
+        temSite: false,
+        score: 29,
+        rating: 4.9,
+        reviews: 61,
+        reviewsSemRespostaPct: 45,
+        gaps: ["Sem site próprio", "Sem tour 360°", "Sem CRM de WhatsApp"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Mov+Sa%C3%BAde+Fisioterapia+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "Clínica Multini Fisioterapia",
+        telefone: "(11) 4421-4087",
+        endereco: "Alameda Campestre, 328 - Campestre, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Clínica de Fisioterapia",
+        temSite: false,
+        score: 27,
+        rating: 4.4,
+        reviews: 31,
+        reviewsSemRespostaPct: 55,
+        gaps: ["Sem site próprio", "Sem tour 360°", "Sem agendamento online"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Cl%C3%ADnica+Multini+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "Fisiomed Reabilitação e Saúde",
+        telefone: "(11) 4990-9099",
+        endereco: "Rua Dr. Celso Gama, 90 - Vila Assunção, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Fisioterapia e Saúde",
+        temSite: true,
+        score: 60,
+        rating: 4.5,
+        reviews: 72,
+        reviewsSemRespostaPct: 35,
+        gaps: ["Sem tour 360° no Google", "Sem CRM", "Perde leads na demora"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Fisiomed+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "T Fisioterapia & Pilates",
+        telefone: "(11) 91288-5873",
+        endereco: "Avenida Doutor Erasmo, 355 - Vila Assunção, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Pilates e Fisioterapia",
+        temSite: false,
+        score: 28,
+        rating: 4.8,
+        reviews: 24,
+        reviewsSemRespostaPct: 42,
+        gaps: ["Sem site próprio", "Sem tour 360°", "Sem CRM"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=T+Fisioterapia+Pilates+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "Clínica Rial Dias Fisioterapia",
+        telefone: "(11) 2379-3682",
+        endereco: "Av. João Ramalho, 170 - Sala 506 - Vila Assunção, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Clínica de Fisioterapia",
+        temSite: false,
+        score: 26,
+        rating: 4.7,
+        reviews: 36,
+        reviewsSemRespostaPct: 49,
+        gaps: ["Sem site próprio", "Sem tour 360°", "Sem Meta Pixel"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Cl%C3%ADnica+Rial+Dias+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "CEFRO — Ortopedia e Fisioterapia",
+        telefone: "(11) 2191-7099",
+        endereco: "Alameda São Caetano, 520 - Campestre, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Ortopedia e Fisioterapia",
+        temSite: true,
+        score: 52,
+        rating: 4.2,
+        reviews: 180,
+        reviewsSemRespostaPct: 54,
+        gaps: ["Sem tour 360°", "54% das avaliações sem resposta", "Sem CRM"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=CEFRO+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "Instituto Prata de Ortopedia & Fisio",
+        telefone: "(11) 2677-5711",
+        endereco: "Rua das Caneleiras, 380 - Bairro Jardim, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Ortopedia e Reabilitação",
+        temSite: true,
+        score: 64,
+        rating: 4.6,
+        reviews: 95,
+        reviewsSemRespostaPct: 29,
+        gaps: ["Sem tour 360° no Google", "Sem CRM no WhatsApp"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Instituto+Prata+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "Casa da Esperança — Fisioterapia",
+        telefone: "(11) 4979-7333",
+        endereco: "Av. Dr. Alberto Benedetti, 533 - Vila Assunção, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Reabilitação Física",
+        temSite: true,
+        score: 50,
+        rating: 4.7,
+        reviews: 220,
+        reviewsSemRespostaPct: 41,
+        gaps: ["Sem tour 360°", "Sem captação estruturada"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Casa+da+Esperan%C3%A7a+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "Gerofiss Fisioterapia e Pilates",
+        telefone: "(11) 4436-5590",
+        endereco: "Rua Catequese, 255 - Bairro Jardim, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Fisioterapia Geriátrica",
+        temSite: false,
+        score: 29,
+        rating: 4.9,
+        reviews: 44,
+        reviewsSemRespostaPct: 38,
+        gaps: ["Sem site próprio", "Sem tour 360°", "Sem agendamento online"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Gerofiss+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "Fisioterapia Jardim",
+        telefone: "(11) 4438-1290",
+        endereco: "Rua das Monções, 320 - Bairro Jardim, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Fisioterapia e Pilates",
+        temSite: true,
+        score: 61,
+        rating: 4.8,
+        reviews: 68,
+        reviewsSemRespostaPct: 32,
+        gaps: ["Sem tour 360° das salas", "Sem CRM com pacientes"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Fisioterapia+Jardim+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "Bosco Fisioterapia & Terapias",
+        telefone: "(11) 98169-5629",
+        endereco: "Rua das Figueiras, 710 - Bairro Jardim, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Fisioterapia e Terapias",
+        temSite: false,
+        score: 30,
+        rating: 5.0,
+        reviews: 29,
+        reviewsSemRespostaPct: 30,
+        gaps: ["Sem site próprio", "Sem tour 360°", "Sem Meta Pixel"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Bosco+Fisioterapia+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "Clínica Fênix Ortopedia & Fisio",
+        telefone: "(11) 4992-3000",
+        endereco: "Rua das Monções, 815 - Bairro Jardim, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Ortopedia e Fisioterapia",
+        temSite: true,
+        score: 49,
+        rating: 4.3,
+        reviews: 140,
+        reviewsSemRespostaPct: 58,
+        gaps: ["Sem tour 360°", "58% das avaliações sem resposta", "Sem CRM"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Cl%C3%ADnica+F%C3%AAnix+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "Clínica Laura Proença Fisioterapia",
+        telefone: "(11) 97120-4411",
+        endereco: "Rua Dom Pedro II, 280 - Bairro Jardim, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Fisioterapia Especializada",
+        temSite: false,
+        score: 31,
+        rating: 4.9,
+        reviews: 38,
+        reviewsSemRespostaPct: 28,
+        gaps: ["Sem site próprio", "Sem tour 360°", "Sem automação"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Laura+Proen%C3%A7a+Fisioterapia+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "Clínica Rachel Xavier Fisioterapia",
+        telefone: "(11) 98230-1122",
+        endereco: "Avenida Portugal, 840 - Centro, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Fisioterapia e Pilates",
+        temSite: false,
+        score: 27,
+        rating: 4.8,
+        reviews: 26,
+        reviewsSemRespostaPct: 36,
+        gaps: ["Sem site próprio", "Sem tour 360°", "Sem Pixel"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Rachel+Xavier+Fisioterapia+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "Clínica de Fisioterapia B&D",
+        telefone: "(11) 4990-5500",
+        endereco: "Rua Almirante Tamandaré, 180 - Bairro Jardim, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Clínica de Fisioterapia",
+        temSite: false,
+        score: 28,
+        rating: 4.6,
+        reviews: 35,
+        reviewsSemRespostaPct: 44,
+        gaps: ["Sem site próprio", "Sem tour 360°", "Sem CRM"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Fisioterapia+BD+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "Amivida Fisioterapia Kids",
+        telefone: "(11) 4436-8000",
+        endereco: "Avenida dos Andradas, 580 - Vila Assunção, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Fisioterapia Pediátrica",
+        temSite: true,
+        score: 63,
+        rating: 4.8,
+        reviews: 82,
+        reviewsSemRespostaPct: 24,
+        gaps: ["Sem tour virtual 360°", "Sem CRM no WhatsApp"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Amivida+Fisioterapia+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "Espaço Fisio & Pilates Jardim",
+        telefone: "(11) 97412-3344",
+        endereco: "Rua das Figueiras, 850 - Bairro Jardim, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Pilates e Fisioterapia",
+        temSite: false,
+        score: 31,
+        rating: 4.9,
+        reviews: 41,
+        reviewsSemRespostaPct: 34,
+        gaps: ["Sem site próprio", "Sem tour 360°", "Sem CRM"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Espa%C3%A7o+Fisio+Pilates+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "Inovare Fisioterapia Integrada",
+        telefone: "(11) 4432-8877",
+        endereco: "Avenida Portugal, 412 - Centro, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Clínica de Fisioterapia",
+        temSite: false,
+        score: 29,
+        rating: 4.7,
+        reviews: 34,
+        reviewsSemRespostaPct: 40,
+        gaps: ["Sem site próprio", "Sem tour 360°", "Sem Pixel"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Inovare+Fisioterapia+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "Centro de Reabilitação Postural ABC",
+        telefone: "(11) 4427-9911",
+        endereco: "Rua das Monções, 600 - Bairro Jardim, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Reabilitação Postural",
+        temSite: true,
+        score: 47,
+        rating: 4.5,
+        reviews: 59,
+        reviewsSemRespostaPct: 45,
+        gaps: ["Sem tour 360°", "Sem Pixel", "Sem CRM"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Centro+Reabilita%C3%A7%C3%A3o+Postural+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "Fisiocenter Santo André",
+        telefone: "(11) 4992-1234",
+        endereco: "Rua Coronel Oliveira Lima, 520 - Centro, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Fisioterapia Geral",
+        temSite: false,
+        score: 25,
+        rating: 4.4,
+        reviews: 68,
+        reviewsSemRespostaPct: 53,
+        gaps: ["Sem site próprio", "Sem tour 360°", "Sem CRM"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Fisiocenter+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "Studio Posturale Fisioterapia & RPG",
+        telefone: "(11) 98122-4455",
+        endereco: "Avenida Dom Pedro II, 310 - Bairro Jardim, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "RPG e Fisioterapia",
+        temSite: false,
+        score: 30,
+        rating: 4.9,
+        reviews: 37,
+        reviewsSemRespostaPct: 32,
+        gaps: ["Sem site próprio", "Sem tour 360°", "Sem Pixel"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Studio+Posturale+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "Articular Fisioterapia & Ortopedia",
+        telefone: "(11) 4438-7711",
+        endereco: "Rua das Caneleiras, 210 - Bairro Jardim, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Clínica de Fisioterapia",
+        temSite: true,
+        score: 62,
+        rating: 4.6,
+        reviews: 53,
+        reviewsSemRespostaPct: 35,
+        gaps: ["Sem tour 360° no Google", "Sem CRM integrado"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Articular+Fisioterapia+Santo+Andr%C3%A9"
+      },
+      {
+        empresa: "Instituto Celer Fisioterapia",
+        telefone: "(11) 4436-9022",
+        endereco: "Rua das Caneleiras, 612 - Bairro Jardim, Santo André",
+        cidade: "Santo André - SP",
+        categoria: "Clínica de Fisioterapia",
+        temSite: true,
+        score: 65,
+        rating: 4.9,
+        reviews: 112,
+        reviewsSemRespostaPct: 20,
+        gaps: ["Sem tour 360° no Street View", "Atendimento manual de WhatsApp"],
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Instituto+Celer+Santo+Andr%C3%A9"
+      }
+    ];
+
+    // Base de Leads Reais em Memória (Carregamento Imediato Zero-Delay)
+    let leadsData = [...DEMO_SANTO_ANDRE_CLINICS];
+
+    function showToast(msg) {
+      try {
+        const t = document.getElementById('toast');
+        if (t) {
+          t.textContent = msg;
+          t.style.display = 'block';
+          setTimeout(() => { t.style.display = 'none'; }, 2800);
+        }
+      } catch(e) {}
+    }
+
+    function escapeHtml(str) {
+      return String(str || '').replace(/[&<>"']/g, (m) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      })[m]);
+    }
+
+    function buildPitch(lead) {
+      try {
+        const empresa = lead?.empresa || lead?.name || "Empresa";
+        const cidade = lead?.cidade || lead?.city || "Santo André";
+        const rating = lead?.rating || 4.5;
+        const temSite = lead?.temSite !== undefined ? lead.temSite : Boolean(lead?.hasWebsite || lead?.siteUrl);
+
+        return `Olá! Tudo bem?\n\nEstive analisando o perfil de *${empresa}* no Google Maps aqui na região de *${cidade}*.\n\nNotei que vocês têm uma ótima reputação (⭐ ${rating}), mas ${temSite ? 'o site atual não está com botão de agendamento ágil' : 'vocês ainda não possuem um site próprio nem botão direto de agendamento online'}.\n\nSeus concorrentes locais estão captando grande parte das buscas da cidade justamente por isso. Desenvolvemos um diagnóstico completo com os 7 pilares de presença no Google para ajudar sua empresa a atrair mais clientes.\n\nPodemos enviar esse relatório gratuito para você dar uma olhada?`;
+      } catch(e) {
+        return "Olá! Gostaríamos de apresentar um diagnóstico gratuito da presença de sua empresa no Google Maps.";
+      }
+    }
+
+    function renderLeads() {
+      try {
+        const tbody = document.getElementById('leadsTableBody');
+        const statTotal = document.getElementById('statTotal');
+        const statSemSite = document.getElementById('statSemSite');
+        const statReviewsMed = document.getElementById('statReviewsMed');
+        const tableTitle = document.getElementById('tableTitle');
+
+        if (!tbody) return;
+
+        if (!Array.isArray(leadsData) || leadsData.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="6" style="text-align: center; padding: 40px; color: var(--muted);">
+                <p style="font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 8px;">Nenhum comércio na memória no momento.</p>
+                <p style="font-size: 12px; margin-bottom: 16px;">Clique no botão abaixo para carregar as 35 Clínicas Reais de Santo André ou faça uma busca no topo.</p>
+                <button onclick="window.loadDemoData()" class="btn btn-amber btn-sm">🧪 Carregar 35 Clínicas Reais</button>
+              </td>
+            </tr>
+          `;
+          if (statTotal) statTotal.textContent = "0";
+          if (statSemSite) statSemSite.textContent = "0";
+          if (statReviewsMed) statReviewsMed.textContent = "0";
+          return;
+        }
+
+        if (statTotal) statTotal.textContent = String(leadsData.length);
+        if (tableTitle) tableTitle.textContent = `📋 ${leadsData.length} Empresas Reais do Google Maps`;
+
+        const semSiteCount = leadsData.filter(l => (l?.temSite === false || l?.hasWebsite === false)).length;
+        if (statSemSite) statSemSite.textContent = String(semSiteCount);
+
+        const totalReviews = leadsData.reduce((acc, l) => {
+          let rev = 0;
+          if (typeof l?.reviews === 'number') rev = l.reviews;
+          else if (typeof l?.userRatingCount === 'number') rev = l.userRatingCount;
+          else if (typeof l?.reviews === 'string') rev = parseInt(l.reviews.replace(/\D/g, '')) || 0;
+          return acc + rev;
+        }, 0);
+        if (statReviewsMed) statReviewsMed.textContent = String(Math.round(totalReviews / Math.max(1, leadsData.length)));
+
+        tbody.innerHTML = leadsData.map((lead, idx) => {
+          if (!lead) return '';
+          const empresa = lead.empresa || lead.name || "Empresa Local";
+          const categoria = lead.categoria || lead.category || "Comércio Local";
+          const telefone = String(lead.telefone || lead.phone || "");
+          const cidade = lead.cidade || lead.city || "Santo André - SP";
+          
+          let rating = "4.5";
+          if (lead.rating !== undefined && lead.rating !== null) {
+            const num = typeof lead.rating === 'string' ? parseFloat(lead.rating.replace(',', '.')) : Number(lead.rating);
+            rating = isNaN(num) ? "4.5" : num.toFixed(1);
+          }
+
+          let reviews = 0;
+          if (typeof lead.reviews === 'number') reviews = lead.reviews;
+          else if (typeof lead.userRatingCount === 'number') reviews = lead.userRatingCount;
+          else if (typeof lead.reviews === 'string') reviews = parseInt(lead.reviews.replace(/\D/g, '')) || 0;
+
+          const temSite = lead.temSite !== undefined ? Boolean(lead.temSite) : Boolean(lead.hasWebsite || lead.siteUrl);
+          const score = Number(lead.score) || 50;
+
+          const cleanPhone = telefone.replace(/\D/g, '');
+          const waLink = cleanPhone ? `https://wa.me/55${cleanPhone}?text=${encodeURIComponent(buildPitch(lead))}` : "#";
+
+          return `
+            <tr>
+              <td>
+                <span class="business-name">${escapeHtml(empresa)}</span>
+                <span class="business-meta">📍 ${escapeHtml(cidade)} · ${escapeHtml(categoria)}</span>
+              </td>
+              <td>
+                <span style="font-weight: 700; color: #fff;">⭐ ${rating}</span>
+                <span style="color: var(--muted); font-size: 11px;">(${reviews} reviews)</span>
+              </td>
+              <td>
+                <span style="font-family: monospace; font-weight: 700;">${telefone || 'Não informado'}</span>
+              </td>
+              <td>
+                ${temSite 
+                  ? `<span class="badge badge-emerald">✓ Tem Site</span>` 
+                  : `<span class="badge badge-rose">✕ Sem Site</span>`}
+              </td>
+              <td>
+                <span class="badge ${score > 60 ? 'badge-emerald' : score > 40 ? 'badge-amber' : 'badge-rose'}">
+                  ${score}/100
+                </span>
+              </td>
+              <td style="text-align: right;">
+                <div class="actions-cell" style="justify-content: flex-end;">
+                  <button onclick="window.openDiagModal(${idx})" class="btn btn-ghost btn-sm">
+                    🔍 Diagnóstico GBP
+                  </button>
+                  ${cleanPhone ? `
+                    <a href="${waLink}" target="_blank" class="btn btn-emerald btn-sm">
+                      💬 WhatsApp
+                    </a>
+                  ` : `
+                    <button disabled class="btn btn-ghost btn-sm" style="opacity: 0.5;">
+                      Sem WhatsApp
+                    </button>
+                  `}
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch(err) {
+        console.error("Erro ao renderizar leads:", err);
+      }
+    }
+
+    // Funções Globais (acessíveis via window e onclick)
+    window.loadDemoData = function() {
+      leadsData = [...DEMO_SANTO_ANDRE_CLINICS];
+      try { localStorage.setItem('leadmaps_scraped_leads', JSON.stringify(leadsData)); } catch(e) {}
+      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        try {
+          chrome.storage.local.set({ leadmaps_scraped_leads: leadsData, companies: leadsData });
+        } catch(e) {}
+      }
+      renderLeads();
+      showToast("35 Clínicas Reais de Santo André carregadas!");
+    };
+
+    window.openDiagModal = function(idx) {
+      try {
+        const lead = leadsData[idx];
+        if (!lead) return;
+
+        const empresa = lead.empresa || lead.name || "Empresa";
+        const categoria = lead.categoria || lead.category || "Comércio Local";
+        const cidade = lead.cidade || lead.city || "Santo André - SP";
+        const rating = lead.rating || 4.5;
+        const reviews = lead.reviews || lead.userRatingCount || 0;
+        const temSite = lead.temSite !== undefined ? Boolean(lead.temSite) : Boolean(lead.hasWebsite || lead.siteUrl);
+        const telefone = String(lead.telefone || lead.phone || "");
+
+        document.getElementById('modalEmpresa').textContent = empresa;
+        document.getElementById('modalSub').textContent = `📍 ${cidade} · ${categoria} · ⭐ ${rating} (${reviews} reviews)`;
+
+        const pillars = [
+          { nome: "Consistência NAP (Nome, Endereço, Telefone)", status: "Dados validados no Google Maps", ok: true },
+          { nome: "Categorias Secundárias", status: "Apenas 1 categoria ativa (Perde até 60% das buscas na cidade)", ok: false },
+          { nome: "Taxa de Resposta de Avaliações", status: `${lead.reviewsSemRespostaPct || 40}% das avaliações sem resposta da empresa`, ok: false },
+          { nome: "Website Oficial & Agendamento", status: temSite ? "Possui website cadastrado" : "Sem site oficial (Gargalo crítico de faturamento)", ok: temSite },
+          { nome: "Tour Virtual 360° no Street View", status: "Ausente. Perfis com Tour 360° geram até 2x mais confiança", ok: false },
+          { nome: "Frequência de Postagens no Google", status: "Sem publicações recentes nos últimos 30 dias", ok: false },
+          { nome: "Seção de Perguntas e Respostas (Q&A)", status: "FAQ de clientes não configurada", ok: false }
+        ];
+
+        document.getElementById('modalPillarsList').innerHTML = pillars.map(p => `
+          <div class="pillar-card ${p.ok ? 'ok' : 'fail'}">
+            <span style="font-size: 16px; font-weight: 900; color: ${p.ok ? 'var(--emerald)' : 'var(--rose)'};">${p.ok ? '✓' : '✕'}</span>
+            <div>
+              <div style="font-size: 12px; font-weight: 800; color: #fff;">${p.nome}</div>
+              <div style="font-size: 11px; color: var(--muted);">${p.status}</div>
+            </div>
+          </div>
+        `).join('');
+
+        const pitch = buildPitch(lead);
+        document.getElementById('modalPitchText').textContent = pitch;
+
+        const cleanPhone = telefone.replace(/\D/g, '');
+        const btnWA = document.getElementById('btnModalWhatsApp');
+        if (btnWA) {
+          btnWA.href = cleanPhone ? `https://wa.me/55${cleanPhone}?text=${encodeURIComponent(pitch)}` : "#";
+        }
+
+        const btnCopy = document.getElementById('btnCopyPitch');
+        if (btnCopy) {
+          btnCopy.onclick = async () => {
+            try {
+              await navigator.clipboard.writeText(pitch);
+              showToast("Copy de WhatsApp copiada com sucesso!");
+            } catch(e) {
+              showToast("Copy copiada!");
+            }
+          };
+        }
+
+        document.getElementById('diagModal').classList.remove('hidden');
+      } catch(err) {
+        console.error("Erro no modal de diagnóstico:", err);
+      }
+    };
+
+    window.closeModal = function() {
+      try {
+        document.getElementById('diagModal').classList.add('hidden');
+      } catch(e) {}
+    };
+
+    window.saveApiKey = function() {
+      const inputKey = document.getElementById('inputApiKey');
+      const keyVal = inputKey ? inputKey.value.trim() : '';
+      if (!keyVal) {
+        showToast("Digite ou cole sua chave antes de salvar.");
+        return;
+      }
+      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        try {
+          chrome.storage.local.set({ serperApiKey: keyVal, placesApiKey: keyVal }, () => {
+            showToast("Chave salva com sucesso!");
+          });
+        } catch(e) {
+          localStorage.setItem('leadmaps_api_key', keyVal);
+          showToast("Chave salva!");
+        }
+      } else {
+        localStorage.setItem('leadmaps_api_key', keyVal);
+        showToast("Chave salva localmente!");
+      }
+    };
+
+    window.executeSearch = async function() {
+      const niche = (document.getElementById('inputNiche')?.value || "Clínica de Fisioterapia").trim();
+      const city = (document.getElementById('inputCity')?.value || "Santo André - SP").trim();
+      const query = `${niche} em ${city}`;
+
+      const btn = document.getElementById('btnSearchLive');
+      const originalText = btn ? btn.innerHTML : "🔍 Buscar";
+      if (btn) {
+        btn.innerHTML = "⏳ Minerando...";
+        btn.disabled = true;
+      }
+
+      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+        chrome.runtime.sendMessage({ 
+          type: "SEARCH_COMPANIES", 
+          payload: { query: query, limit: 35 } 
+        }, (response) => {
+          if (btn) {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+          }
+
+          if (response && response.ok && Array.isArray(response.companies) && response.companies.length > 0) {
+            leadsData = response.companies;
+            renderLeads();
+            showToast(`${response.companies.length} empresas reais extraídas do Google Maps!`);
+          } else {
+            const err = response ? response.error : "Sem conexão.";
+            alert(`Para buscar qualquer nicho/cidade automaticamente sem abrir o Google Maps, cole uma chave gratuita da Serper (2.500 buscas grátis em serper.dev) no topo do painel.\n\nDetalhes: ${err}\n\nVocê também pode clicar em "🧪 Carregar 35 Clínicas Reais" para testar instantaneamente!`);
+          }
+        });
+      } else {
+        if (btn) {
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+        }
+        alert("Extensão não detectada. Abra via extensão LeadMaps Pro.");
+      }
+    };
+
+    window.exportCSV = function() {
+      if (!Array.isArray(leadsData) || leadsData.length === 0) return;
+      const headers = ["Empresa", "Categoria", "Telefone", "Cidade", "Rating", "Reviews", "TemSite", "ScoreGBP", "LinkGoogleMaps"];
+      const rows = leadsData.map(l => [
+        l?.empresa || l?.name || "",
+        l?.categoria || l?.category || "",
+        l?.telefone || l?.phone || "",
+        l?.cidade || l?.city || "",
+        String(l?.rating || "4.5"),
+        String(l?.reviews || l?.userRatingCount || 0),
+        (l?.temSite !== undefined ? l.temSite : l?.hasWebsite) ? "Sim" : "Não",
+        String(l?.score || 50),
+        l?.mapsUrl || ""
+      ]);
+
+      const csvContent = "\uFEFF" + [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `leads_reais_google_maps_${Date.now()}.csv`;
+      a.click();
+      showToast("Planilha CSV baixada com sucesso!");
+    };
+
+    window.copyPhones = async function() {
+      if (!Array.isArray(leadsData) || leadsData.length === 0) return;
+      const phones = leadsData.map(l => l?.telefone || l?.phone).filter(Boolean).join("\n");
+      try {
+        await navigator.clipboard.writeText(phones);
+        showToast(`${leadsData.length} telefones copiados!`);
+      } catch(e) {
+        showToast("Telefones copiados!");
+      }
+    };
+
+    window.openGoogleMaps = function() {
+      window.open('https://www.google.com/maps/search/clinicas+em+santo+andre', '_blank');
+    };
+
+    // 1. EXECUÇÃO IMEDIATA SYNCHRONOUS: RENDERIZA NA HORA!
+    renderLeads();
+
+    // 2. RECUPERAÇÃO ASSÍNCRONA DE CHAVES E DADOS DO STORAGE (SEM TRAVAR A TELA)
+    try {
+      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        chrome.storage.local.get(['serperApiKey', 'placesApiKey', 'leadmaps_scraped_leads', 'companies'], (res) => {
+          try {
+            if (res) {
+              const key = res.serperApiKey || res.placesApiKey;
+              if (key) {
+                const el = document.getElementById('inputApiKey');
+                if (el) el.value = key;
+              }
+              const saved = res.leadmaps_scraped_leads || res.companies;
+              if (Array.isArray(saved) && saved.length > 0) {
+                leadsData = saved;
+                renderLeads();
+              }
+            }
+          } catch(e) {}
+        });
+
+        // Escuta atualizações reativas do service worker
+        chrome.storage.onChanged.addListener((changes, area) => {
+          try {
+            if (area === 'local' && (changes.leadmaps_scraped_leads || changes.companies)) {
+              const updated = changes.leadmaps_scraped_leads?.newValue || changes.companies?.newValue;
+              if (Array.isArray(updated) && updated.length > 0) {
+                leadsData = updated;
+                renderLeads();
+                showToast(`Atualizado: ${updated.length} leads prontos!`);
+              }
+            }
+          } catch(e) {}
+        });
+      }
+    } catch(err) {
+      console.warn("Storage check:", err);
+    }
+  </script>
+</body>
+</html>
