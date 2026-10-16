@@ -354,6 +354,39 @@ window.closeTourAuditModal = function() {
   _activeTourAuditLeadId = null;
 };
 
+// Central Global: Abertura e Fechamento do Modal de Análise em Outra Cidade / Região
+window.openNewRegionModal = function() {
+  const modal = document.getElementById('modalAnalyzeNewRegion');
+  if (!modal) {
+    console.warn("modalAnalyzeNewRegion ainda não disponível no DOM");
+    return;
+  }
+  modal.classList.remove('hidden');
+  modal.style.setProperty('display', 'flex', 'important');
+
+  const kwInp = document.getElementById('inputNewRegionKeyword');
+  if (kwInp) {
+    kwInp.value = (window.GeoState && window.GeoState.keyword) ? window.GeoState.keyword : 'loja de carros';
+  }
+  const nameInp = document.getElementById('inputNewRegionBusinessName');
+  if (nameInp) {
+    nameInp.value = '';
+    setTimeout(() => nameInp.focus(), 150);
+  }
+  const cityInp = document.getElementById('inputNewRegionCity');
+  if (cityInp) {
+    cityInp.value = '';
+  }
+};
+
+window.closeNewRegionModal = function() {
+  const modal = document.getElementById('modalAnalyzeNewRegion');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.style.setProperty('display', 'none', 'important');
+  }
+};
+
 window.confirmTour360Status = function(hasTour) {
   const targetId = _activeTourAuditLeadId || (State.currentLead ? State.currentLead.id : null);
   const lead = getAnyLeadById(targetId);
@@ -10808,6 +10841,7 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
     const modal = document.getElementById('modalAnalyzeNewRegion');
     if (!modal) return;
     modal.classList.remove('hidden');
+    modal.style.display = 'flex';
 
     const kwInp = document.getElementById('inputNewRegionKeyword');
     if (kwInp) {
@@ -10826,7 +10860,10 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
 
   window.closeNewRegionModal = function() {
     const modal = document.getElementById('modalAnalyzeNewRegion');
-    if (modal) modal.classList.add('hidden');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
+    }
   };
 
   window.enableMapClickMoveMode = function() {
@@ -11055,6 +11092,18 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
 
   document.getElementById('btnCenterOtherRegion')?.addEventListener('click', () => {
     window.openNewRegionModal();
+  });
+
+  document.getElementById('modalAnalyzeNewRegion')?.addEventListener('click', (e) => {
+    if (e.target && e.target.id === 'modalAnalyzeNewRegion') {
+      window.closeNewRegionModal();
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      window.closeNewRegionModal();
+    }
   });
 
   document.getElementById('rankMapOpacitySlider')?.addEventListener('input', (e) => {
