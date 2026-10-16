@@ -7532,7 +7532,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     if (!sub) {
       if (loginAlertBox && loginAlertTitle && loginAlertText) {
         loginAlertTitle.textContent = '❌ Licença ou E-mail Não Encontrado';
-        loginAlertText.textContent = 'Verifique se digitou sua Chave de Licença corretamente ou adquira seu acesso ao lado.';
+        loginAlertText.textContent = 'Verifique se digitou sua Chave de Licença corretamente ou entre em contato com o administrador.';
         loginAlertBox.classList.remove('hidden');
       }
       return;
@@ -7542,7 +7542,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     if (sub.status === 'bloqueado' || daysLeft <= 0) {
       if (loginAlertBox && loginAlertTitle && loginAlertText) {
         loginAlertTitle.textContent = '🔒 Acesso Suspenso / Licença Vencida';
-        loginAlertText.textContent = `Olá ${sub.nome.split('—')[0].trim()}, sua assinatura (${sub.chave}) está vencida ou bloqueada. Realize a renovação ao lado via PIX ou Cartão para destravar seu acesso imediatamente!`;
+        loginAlertText.textContent = `Olá ${sub.nome.split('—')[0].trim()}, sua assinatura (${sub.chave}) está vencida ou suspensa. Entre em contato com o suporte ou administrador para renovação ou liberação da sua conta!`;
         loginAlertBox.classList.remove('hidden');
       }
       return;

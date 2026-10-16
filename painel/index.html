@@ -56,10 +56,10 @@
 
   <!-- Tela Exclusiva de Login, Ativação de Licença & Checkout Automático 24h -->
   <div id="authGateOverlay" style="position:fixed!important;top:0!important;left:0!important;right:0!important;bottom:0!important;width:100vw!important;height:100vh!important;z-index:2147483647!important;background:#070b14!important;align-items:center!important;justify-content:center!important;" class="fixed inset-0 z-[99999999] flex items-center justify-center bg-[#070b14] p-4 backdrop-blur-xl overflow-y-auto">
-    <div class="w-full max-w-5xl my-auto grid grid-cols-1 lg:grid-cols-12 rounded-2xl border border-slate-800 bg-slate-950 shadow-2xl overflow-hidden">
+    <div class="w-full max-w-md my-auto rounded-2xl border border-slate-800 bg-slate-950 shadow-2xl overflow-hidden">
 
-      <!-- Coluna Esquerda (6 cols): Login & Chave de Licença -->
-      <div class="lg:col-span-6 p-6 sm:p-10 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900/90 to-amber-950/15">
+      <!-- Login & Chave de Licença (Centralizado & Focado) -->
+      <div class="p-6 sm:p-8 flex flex-col justify-between bg-gradient-to-br from-slate-950 via-slate-900/90 to-amber-950/15">
         <div>
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -84,7 +84,7 @@
           <!-- Alerta de Status de Login / Vencimento -->
           <div id="authLoginAlertBox" class="mt-4 hidden rounded-xl border border-rose-500/40 bg-rose-950/40 p-3.5 text-xs text-rose-200 space-y-1">
             <p id="authLoginAlertTitle" class="font-extrabold text-rose-400">⚠️ Licença Expirada ou Inválida</p>
-            <p id="authLoginAlertText">Sua chave de acesso venceu ou foi suspensa. Realize a renovação ao lado via PIX ou Cartão para liberação imediata.</p>
+            <p id="authLoginAlertText">Sua chave de acesso venceu ou foi suspensa. Entre em contato com o suporte ou administrador para renovação ou liberação da sua conta.</p>
           </div>
 
           <!-- Campos de Login -->
@@ -116,11 +116,17 @@
               <span>🔐</span> <span>Entrar na Plataforma</span>
             </button>
           </div>
-        </div>
 
+          <div class="mt-6 pt-4 border-t border-slate-800 text-center">
+            <p class="text-[11px] text-slate-500">
+              🔒 Ambiente Corporativo Seguro · RadarMaps PRO Enterprise
+            </p>
+          </div>
+        </div>
       </div>
 
-      <!-- Coluna Direita (6 cols): Checkout Automático 24h & Renovação via PIX/Cartão -->
+      <!-- COLUNA DE CHECKOUT E PREÇOS (OCULTA TEMPORARIAMENTE ANTES DO INÍCIO DAS VENDAS - PRESERVADA PARA REATIVAÇÃO FUTURA) -->
+      <!--
       <div class="lg:col-span-6 p-6 sm:p-10 bg-slate-900/60 flex flex-col justify-between space-y-5">
         <div class="space-y-4">
           <div class="flex items-center justify-between">
@@ -135,7 +141,6 @@
             </p>
           </div>
 
-          <!-- Cards de Planos (Exclusivo Mensal Pro R$ 129,90) -->
           <div class="space-y-2.5 text-xs">
             <div class="rounded-xl border border-emerald-500/50 bg-emerald-950/30 p-4 flex items-center justify-between shadow-lg">
               <div>
@@ -161,7 +166,6 @@
             </div>
           </div>
 
-          <!-- Box PIX Instantâneo Copia e Cola -->
           <div class="rounded-xl border border-slate-800 bg-slate-950 p-4 space-y-3 text-xs">
             <div class="flex items-center justify-between">
               <span class="font-bold text-slate-300">Plano Selecionado:</span>
@@ -195,6 +199,7 @@
           🔒 Ambiente Criptografado · Proteção Anti-Clonagem Ativa · RadarMaps PRO Enterprise
         </p>
       </div>
+      -->
 
     </div>
   </div>
@@ -2151,7 +2156,7 @@
     <!-- Message injected here -->
   </div>
 
-  <script src="js/app.js?v=20261016_v14_live_scanner"></script>
-  <script src="js/security-shield.js?v=20261016_v14_live_scanner"></script>
+  <script src="js/app.js?v=20261016_v15_hide_pricing"></script>
+  <script src="js/security-shield.js?v=20261016_v15_hide_pricing"></script>
 </body>
 </html>

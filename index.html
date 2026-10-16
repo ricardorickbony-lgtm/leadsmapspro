@@ -227,7 +227,6 @@
         <a href="#modulos" class="hover:text-solar transition-colors whitespace-nowrap">Módulos Táticos</a>
         <a href="#comparativo" class="hover:text-solar transition-colors whitespace-nowrap">Método Tático</a>
         <a href="#roi" class="hover:text-solar transition-colors whitespace-nowrap">Calculadora ROI</a>
-        <a href="#planos" class="hover:text-solar transition-colors whitespace-nowrap">Planos & Preços</a>
         <a href="#faq" class="hover:text-solar transition-colors whitespace-nowrap">FAQ</a>
       </nav>
 
@@ -937,13 +936,13 @@
           <div class="luxury-card-gold rounded-2xl p-6">
             <div class="flex items-center justify-between">
               <div>
-                <span class="text-xs uppercase font-mono tracking-wider text-amber-200 font-bold block">Retorno sobre a Mensalidade</span>
+                <span class="text-xs uppercase font-mono tracking-wider text-amber-200 font-bold block">Multiplicador de Retorno</span>
                 <div id="resultRoiX" class="text-4xl sm:text-5xl font-mono font-black text-white mt-1">31x</div>
               </div>
               <span class="text-4xl">🚀</span>
             </div>
             <p id="resultRoiDesc" class="text-xs text-slate-200 mt-2 leading-relaxed">
-              Com apenas 1 cliente fechado no mês você já paga mais de 10 vezes a mensalidade do RadarMaps PRO. Todo o restante é lucro líquido recorrente.
+              Com apenas 1 cliente fechado no mês você já cobre todo o seu custo de operação e gera lucro líquido recorrente.
             </p>
           </div>
 
@@ -954,9 +953,10 @@
     </div>
   </section>
 
-  <!-- ========================================== -->
-  <!-- 8. PLANOS & PREÇOS (TRANSPARÊNCIA EXECUTIVA)-->
-  <!-- ========================================== -->
+  <!-- ============================================================== -->
+  <!-- 8. PLANOS & PREÇOS (OCULTO TEMPORARIAMENTE ANTES DO INÍCIO DAS VENDAS) -->
+  <!-- Para reativar, basta descomentar este bloco quando Ricardo definir a abertura de vendas -->
+  <!--
   <section id="planos" class="py-24 sm:py-32 border-t border-white/10 bg-obsidian-900 relative">
     <div class="max-w-7xl mx-auto px-4 sm:px-8">
       
@@ -972,7 +972,6 @@
 
       <div class="max-w-xl mx-auto">
         
-        <!-- PLANO OFICIAL: MENSAL PRO (DESTAQUE SOLAR / LUXO) -->
         <div class="luxury-card-gold rounded-3xl p-8 sm:p-12 flex flex-col justify-between space-y-8 relative overflow-hidden ring-2 ring-solar shadow-2xl">
           
           <div class="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-gradient-to-r from-solar via-amber-400 to-yellow-400 px-5 py-1 font-mono text-[11px] font-black text-slate-950 shadow-md uppercase tracking-wider">
@@ -1039,7 +1038,6 @@
 
       </div>
 
-      <!-- Trust Assurance -->
       <div class="mt-12 flex flex-wrap justify-center gap-8 text-xs font-mono text-slate-400">
         <span class="flex items-center gap-2">
           <span class="text-emerald-400">🛡️</span> Pagamento Seguro via PIX ou Cartão em até 12x
@@ -1054,6 +1052,7 @@
 
     </div>
   </section>
+  -->
 
   <!-- ========================================== -->
   <!-- 9. FAQ EXECUTIVO (ACCORDION DE ALTO PADRÃO)-->
@@ -1164,7 +1163,7 @@
             <li><a href="#modulos" class="hover:text-solar transition-colors">Módulos Táticos</a></li>
             <li><a href="#comparativo" class="hover:text-solar transition-colors">Método Tático</a></li>
             <li><a href="#roi" class="hover:text-solar transition-colors">Calculadora ROI</a></li>
-            <li><a href="#planos" class="hover:text-solar transition-colors">Planos & Preços</a></li>
+            <li><a href="#faq" class="hover:text-solar transition-colors">FAQ</a></li>
           </ul>
         </div>
 
@@ -1273,7 +1272,7 @@
       document.getElementById('resultRoiX').textContent = roiMultiplier + 'x';
       
       document.getElementById('resultRoiDesc').textContent = 
-        'Com ' + clients + (clients === 1 ? ' cliente fechado' : ' clientes fechados') + ' a R$ ' + ticket.toLocaleString('pt-BR') + '/mês, você recupera ' + roiMultiplier + ' vezes o valor da mensalidade (R$ 129,90) logo no primeiro mês!';
+        'Com ' + clients + (clients === 1 ? ' cliente fechado' : ' clientes fechados') + ' a R$ ' + ticket.toLocaleString('pt-BR') + '/mês, você recupera ' + roiMultiplier + 'x o investimento com altíssima margem de lucro líquido recorrente!';
     }
 
     // Accordion do FAQ
