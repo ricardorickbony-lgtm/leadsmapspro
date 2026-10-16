@@ -6881,6 +6881,11 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
         setTimeout(() => window.initOrRefreshGeoGrid(), 80);
       }
     } else if (viewName === 'admin') {
+      if (!State.activeSession || State.activeSession.role !== 'master') {
+        showToast('⛔ Acesso restrito exclusivamente ao Administrador Geral (Ricardo).');
+        activateMainView('extrator');
+        return;
+      }
       viewAdmin?.classList.remove('hidden');
       tabNavAdmin?.classList.add('active', 'bg-[var(--primary)]', 'text-slate-950');
       tabNavAdmin?.classList.remove('text-slate-300', 'text-amber-300');
@@ -7606,6 +7611,9 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
 
   document.getElementById('btnLogoutSession')?.addEventListener('click', () => {
     try { sessionStorage.clear(); } catch(e) {}
+    State.activeSession = null;
+    tabNavAdmin?.classList.add('hidden');
+    activateMainView('extrator');
     loginAlertBox?.classList.add('hidden');
     document.body.classList.remove('authenticated');
     authOverlay?.classList.remove('authenticated', 'is-hidden');
@@ -7730,6 +7738,9 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     authOverlay?.classList.add('authenticated', 'is-hidden');
     if (authOverlay) authOverlay.style.setProperty('display', 'none', 'important');
   } else {
+    State.activeSession = null;
+    tabNavAdmin?.classList.add('hidden');
+    activateMainView('extrator');
     document.body.classList.remove('authenticated');
     authOverlay?.classList.remove('authenticated', 'is-hidden');
     if (authOverlay) authOverlay.style.setProperty('display', 'flex', 'important');
