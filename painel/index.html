@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>RadarMaps PRO — Varredura & Diagnóstico de Leads Locais</title>
   <meta name="description" content="Encontre negócios locais sem site, sem tour 360° e sem CRM. Diagnóstico completo, raio-x de concorrentes e pitch de WhatsApp gerado por IA.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -40,6 +40,38 @@
       visibility: hidden !important;
       opacity: 0 !important;
       pointer-events: none !important;
+    }
+
+    /* ==========================================================================
+       PADRÃO MOBILE FIRST & ERGONOMIA DO POLEGAR (2026)
+       ========================================================================== */
+    .pb-safe {
+      padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .mobile-nav-btn {
+      color: #94a3b8;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .mobile-nav-btn.active {
+      color: #fbbf24 !important;
+    }
+    .mobile-nav-btn.active span:first-child {
+      transform: scale(1.18);
+    }
+    .lead-mobile-card {
+      transition: all 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .lead-mobile-card:active {
+      transform: scale(0.985);
     }
   </style>
   <script>
@@ -206,27 +238,27 @@
 
   <!-- Header Sticky -->
   <header class="sticky top-0 z-40 border-b border-[var(--border)] bg-[color-mix(in_oklab,var(--background)_85%,transparent)] backdrop-blur-xl">
-    <div class="mx-auto flex max-w-[1400px] flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
+    <div class="mx-auto flex max-w-[1400px] items-center justify-between gap-3 px-3.5 py-2.5 sm:px-6">
       
       <!-- Logo & Branding -->
-      <div class="flex items-center gap-3">
-        <div class="relative flex h-10 w-10 items-center justify-center rounded-xl bg-[color-mix(in_oklab,var(--primary)_18%,transparent)]">
-          <span class="text-xl">🎯</span>
+      <div class="flex items-center gap-2.5 sm:gap-3">
+        <div class="relative flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-[color-mix(in_oklab,var(--primary)_18%,transparent)]">
+          <span class="text-lg sm:text-xl">🎯</span>
           <span class="animate-pulse-ring absolute inset-0 rounded-xl border border-[var(--primary)]"></span>
         </div>
         <div>
-          <div class="flex items-center gap-2">
-            <h1 class="text-lg font-extrabold tracking-tight">
+          <div class="flex items-center gap-1.5 sm:gap-2">
+            <h1 class="text-base sm:text-lg font-extrabold tracking-tight">
               RadarMaps <span class="text-[var(--amber-glow)]">PRO</span>
             </h1>
-            <span class="badge-pill badge-amber">v2.6 Enterprise</span>
+            <span class="badge-pill badge-amber text-[9px] sm:text-[10px]">v2.6 Enterprise</span>
           </div>
-          <p class="text-[11px] text-[var(--muted-foreground)]">Prospecção local inteligente</p>
+          <p class="hidden sm:block text-[11px] text-[var(--muted-foreground)]">Prospecção local inteligente</p>
         </div>
       </div>
 
-      <!-- Navigation Tabs: Extrator Maps vs Análise de Ranking vs Master Admin -->
-      <div class="flex flex-wrap items-center gap-1 rounded-xl bg-slate-900/90 p-1 border border-slate-800">
+      <!-- Navigation Tabs (Desktop): Extrator Maps vs Análise de Ranking vs Master Admin -->
+      <div class="hidden lg:flex items-center gap-1 rounded-xl bg-slate-900/90 p-1 border border-slate-800">
         <button id="tabNavExtrator" class="tab-nav-btn active flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-950 bg-[var(--primary)] cursor-pointer">
           🔍 Extrator Google Maps
         </button>
@@ -238,8 +270,8 @@
         </button>
       </div>
 
-      <!-- Actions & Credits -->
-      <div class="ml-auto flex flex-wrap items-center gap-2">
+      <!-- Actions & Credits (Desktop) -->
+      <div class="hidden lg:flex items-center gap-2">
         <div class="glass-card flex items-center gap-2 px-3 py-1.5">
           <span class="h-2 w-2 rounded-full bg-[var(--emerald-signal)]"></span>
           <span id="headerSessionUserBadge" class="text-xs font-semibold">👑 Ricardo (Master)</span>
@@ -252,11 +284,24 @@
         <button id="btnLogoutSession" class="btn-ghost-dark px-3 py-2 text-xs font-bold text-rose-400 border border-rose-500/30 hover:bg-rose-500/10 cursor-pointer" title="Ver Tela de Login / Trocar de Conta">🔐 Tela Login</button>
       </div>
 
+      <!-- Barra Direita Mobile (Créditos Compactos + Botão Menu Gaveta) -->
+      <div class="flex lg:hidden items-center gap-2">
+        <div class="glass-card flex items-center gap-1.5 px-2.5 py-1 text-xs">
+          <span class="h-2 w-2 rounded-full bg-[var(--emerald-signal)]"></span>
+          <span id="headerCreditsDisplayMobile" class="font-mono text-xs font-bold text-amber-400">∞ cr</span>
+        </div>
+        <button id="btnOpenMobileMenu" type="button" class="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:border-amber-400 cursor-pointer transition-colors" title="Abrir Menu de Ações">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+          </svg>
+        </button>
+      </div>
+
     </div>
   </header>
 
   <!-- Main Content Layout -->
-  <main class="mx-auto max-w-[1400px] space-y-6 px-4 py-6 sm:px-6">
+  <main class="mx-auto max-w-[1400px] space-y-6 px-3.5 py-4 sm:px-6 sm:py-6 pb-28 lg:pb-8">
 
     <!-- VIEW 1: Extrator Google Maps -->
     <div id="viewExtrator" class="space-y-6">
@@ -317,7 +362,7 @@
             </datalist>
           </div>
 
-          <div class="w-36">
+          <div class="w-full sm:w-36">
             <label class="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Qtd. Leads</label>
             <select id="leadCountSelect" style="background-color: #131c2e !important; color: #ffffff !important;" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-2.5 text-sm outline-none focus:border-amber-400 text-white font-semibold cursor-pointer">
               <option value="15">15 leads</option>
@@ -328,22 +373,22 @@
             </select>
           </div>
 
-          <button id="btnStartScraping" class="btn-amber flex items-center gap-2 px-5 py-2.5 text-sm whitespace-nowrap cursor-pointer">
+          <button id="btnStartScraping" class="btn-amber flex items-center justify-center gap-2 px-5 py-2.5 text-sm whitespace-nowrap cursor-pointer w-full sm:w-auto">
             <span id="btnIcon">📡</span> <span id="btnLabel">Iniciar Varredura & Diagnóstico</span>
           </button>
         </div>
 
-        <!-- Atalhos Rápidos de Nichos e Cidades -->
-        <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Sugestões Rápidas:</span>
-          <button type="button" class="quick-preset-niche rounded-md border border-[var(--border)] bg-[var(--secondary)]/40 px-2.5 py-1 text-[11px] text-slate-300 transition-colors hover:border-[var(--primary)] hover:text-white cursor-pointer" data-value="Clínica de Fisioterapia">🩺 Fisioterapia</button>
-          <button type="button" class="quick-preset-niche rounded-md border border-[var(--border)] bg-[var(--secondary)]/40 px-2.5 py-1 text-[11px] text-slate-300 transition-colors hover:border-[var(--primary)] hover:text-white cursor-pointer" data-value="Clínicas Odontológicas">🦷 Odontologia</button>
-          <button type="button" class="quick-preset-niche rounded-md border border-[var(--border)] bg-[var(--secondary)]/40 px-2.5 py-1 text-[11px] text-slate-300 transition-colors hover:border-[var(--primary)] hover:text-white cursor-pointer" data-value="Pizzarias">🍕 Pizzarias</button>
-          <button type="button" class="quick-preset-niche rounded-md border border-[var(--border)] bg-[var(--secondary)]/40 px-2.5 py-1 text-[11px] text-slate-300 transition-colors hover:border-[var(--primary)] hover:text-white cursor-pointer" data-value="Academias">🏋️ Academias</button>
-          <span class="text-slate-600">|</span>
-          <button type="button" class="quick-preset-city rounded-md border border-[var(--border)] bg-[var(--secondary)]/40 px-2.5 py-1 text-[11px] text-slate-300 transition-colors hover:border-[var(--primary)] hover:text-white cursor-pointer" data-value="Santo André - SP">📍 Santo André</button>
-          <button type="button" class="quick-preset-city rounded-md border border-[var(--border)] bg-[var(--secondary)]/40 px-2.5 py-1 text-[11px] text-slate-300 transition-colors hover:border-[var(--primary)] hover:text-white cursor-pointer" data-value="São Paulo - SP">📍 São Paulo</button>
-          <button type="button" class="quick-preset-city rounded-md border border-[var(--border)] bg-[var(--secondary)]/40 px-2.5 py-1 text-[11px] text-slate-300 transition-colors hover:border-[var(--primary)] hover:text-white cursor-pointer" data-value="Campinas - SP">📍 Campinas</button>
+        <!-- Atalhos Rápidos de Nichos e Cidades (Scroll Horizontal no Mobile) -->
+        <div class="mt-3 flex items-center gap-2 text-xs overflow-x-auto no-scrollbar py-1 flex-nowrap">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] shrink-0">Sugestões:</span>
+          <button type="button" class="quick-preset-niche shrink-0 whitespace-nowrap rounded-md border border-[var(--border)] bg-[var(--secondary)]/40 px-2.5 py-1 text-[11px] text-slate-300 transition-colors hover:border-[var(--primary)] hover:text-white cursor-pointer" data-value="Clínica de Fisioterapia">🩺 Fisioterapia</button>
+          <button type="button" class="quick-preset-niche shrink-0 whitespace-nowrap rounded-md border border-[var(--border)] bg-[var(--secondary)]/40 px-2.5 py-1 text-[11px] text-slate-300 transition-colors hover:border-[var(--primary)] hover:text-white cursor-pointer" data-value="Clínicas Odontológicas">🦷 Odontologia</button>
+          <button type="button" class="quick-preset-niche shrink-0 whitespace-nowrap rounded-md border border-[var(--border)] bg-[var(--secondary)]/40 px-2.5 py-1 text-[11px] text-slate-300 transition-colors hover:border-[var(--primary)] hover:text-white cursor-pointer" data-value="Pizzarias">🍕 Pizzarias</button>
+          <button type="button" class="quick-preset-niche shrink-0 whitespace-nowrap rounded-md border border-[var(--border)] bg-[var(--secondary)]/40 px-2.5 py-1 text-[11px] text-slate-300 transition-colors hover:border-[var(--primary)] hover:text-white cursor-pointer" data-value="Academias">🏋️ Academias</button>
+          <span class="text-slate-600 shrink-0">|</span>
+          <button type="button" class="quick-preset-city shrink-0 whitespace-nowrap rounded-md border border-[var(--border)] bg-[var(--secondary)]/40 px-2.5 py-1 text-[11px] text-slate-300 transition-colors hover:border-[var(--primary)] hover:text-white cursor-pointer" data-value="Santo André - SP">📍 Santo André</button>
+          <button type="button" class="quick-preset-city shrink-0 whitespace-nowrap rounded-md border border-[var(--border)] bg-[var(--secondary)]/40 px-2.5 py-1 text-[11px] text-slate-300 transition-colors hover:border-[var(--primary)] hover:text-white cursor-pointer" data-value="São Paulo - SP">📍 São Paulo</button>
+          <button type="button" class="quick-preset-city shrink-0 whitespace-nowrap rounded-md border border-[var(--border)] bg-[var(--secondary)]/40 px-2.5 py-1 text-[11px] text-slate-300 transition-colors hover:border-[var(--primary)] hover:text-white cursor-pointer" data-value="Campinas - SP">📍 Campinas</button>
         </div>
       </div>
 
@@ -403,24 +448,24 @@
         </p>
       </div>
 
-      <!-- Filtros em Pílulas -->
-      <div class="mt-4 flex flex-wrap gap-2">
-        <button data-filter="todos" class="filter-btn rounded-full border px-3 py-1.5 text-xs font-semibold transition-all border-[var(--primary)] bg-[color-mix(in_oklab,var(--primary)_18%,transparent)] text-[var(--amber-glow)]">
+      <!-- Filtros em Pílulas (Scroll Horizontal Fluido no Mobile) -->
+      <div class="mt-4 flex items-center gap-2 overflow-x-auto no-scrollbar py-1 flex-nowrap">
+        <button data-filter="todos" class="filter-btn shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold transition-all border-[var(--primary)] bg-[color-mix(in_oklab,var(--primary)_18%,transparent)] text-[var(--amber-glow)]">
           Todos <span id="countTodos" class="ml-1.5 font-mono">12</span>
         </button>
-        <button data-filter="semSite" class="filter-btn rounded-full border px-3 py-1.5 text-xs font-semibold transition-all border-[var(--border)] bg-[var(--secondary)]/50 text-[var(--muted-foreground)] hover:border-[var(--primary)]/50 hover:text-white">
+        <button data-filter="semSite" class="filter-btn shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold transition-all border-[var(--border)] bg-[var(--secondary)]/50 text-[var(--muted-foreground)] hover:border-[var(--primary)]/50 hover:text-white">
           🚨 Sem Site <span id="countSemSite" class="ml-1.5 font-mono">6</span>
         </button>
-        <button data-filter="sem360" class="filter-btn rounded-full border px-3 py-1.5 text-xs font-semibold transition-all border-[var(--border)] bg-[var(--secondary)]/50 text-[var(--muted-foreground)] hover:border-[var(--primary)]/50 hover:text-white">
+        <button data-filter="sem360" class="filter-btn shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold transition-all border-[var(--border)] bg-[var(--secondary)]/50 text-[var(--muted-foreground)] hover:border-[var(--primary)]/50 hover:text-white">
           📷 Sem Tour 360° <span id="countSem360" class="ml-1.5 font-mono">9</span>
         </button>
-        <button data-filter="semCRM" class="filter-btn rounded-full border px-3 py-1.5 text-xs font-semibold transition-all border-[var(--border)] bg-[var(--secondary)]/50 text-[var(--muted-foreground)] hover:border-[var(--primary)]/50 hover:text-white">
+        <button data-filter="semCRM" class="filter-btn shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold transition-all border-[var(--border)] bg-[var(--secondary)]/50 text-[var(--muted-foreground)] hover:border-[var(--primary)]/50 hover:text-white">
           ⚙️ Sem CRM (Manual) <span id="countSemCRM" class="ml-1.5 font-mono">5</span>
         </button>
-        <button data-filter="trafego" class="filter-btn rounded-full border px-3 py-1.5 text-xs font-semibold transition-all border-[var(--border)] bg-[var(--secondary)]/50 text-[var(--muted-foreground)] hover:border-[var(--primary)]/50 hover:text-white">
+        <button data-filter="trafego" class="filter-btn shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold transition-all border-[var(--border)] bg-[var(--secondary)]/50 text-[var(--muted-foreground)] hover:border-[var(--primary)]/50 hover:text-white">
           🔥 Investe em Anúncios (Pixel Ativo) <span id="countTrafego" class="ml-1.5 font-mono">5</span>
         </button>
-        <button data-filter="critico" class="filter-btn rounded-full border px-3 py-1.5 text-xs font-semibold transition-all border-[var(--border)] bg-[var(--secondary)]/50 text-[var(--muted-foreground)] hover:border-[var(--primary)]/50 hover:text-white">
+        <button data-filter="critico" class="filter-btn shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold transition-all border-[var(--border)] bg-[var(--secondary)]/50 text-[var(--muted-foreground)] hover:border-[var(--primary)]/50 hover:text-white">
           ⚠️ Score Crítico (&lt;50) <span id="countCritico" class="ml-1.5 font-mono">7</span>
         </button>
       </div>
@@ -494,7 +539,8 @@
         </div>
       </div>
 
-      <div class="scrollbar-dark overflow-x-auto">
+      <!-- Visualização Desktop: Tabela Tradicional -->
+      <div class="scrollbar-dark overflow-x-auto hidden md:block">
         <table class="w-full min-w-[1080px] text-left text-sm">
           <thead>
             <tr class="border-b border-[var(--border)] text-[11px] uppercase tracking-wider text-[var(--muted-foreground)]">
@@ -512,6 +558,11 @@
             <!-- Dynamic rows injected by js/app.js -->
           </tbody>
         </table>
+      </div>
+
+      <!-- Visualização Mobile: Cards Executivos de Alta Conversão (Sem Scroll Horizontal) -->
+      <div id="leadsCardsContainer" class="block md:hidden divide-y divide-slate-800/80 p-2 sm:p-3 space-y-3">
+        <!-- Cards dinâmicos verticais injetados via js/app.js -->
       </div>
     </section>
 
@@ -794,11 +845,21 @@
         </div>
       </section>
 
+      <!-- Alternador Mobile: Mapa vs Configurações da Grade -->
+      <div class="flex lg:hidden items-center justify-center p-1 bg-slate-900/90 rounded-xl border border-slate-800">
+        <button id="btnGeoMobileToggleMap" type="button" class="flex-1 py-2 rounded-lg text-xs font-bold transition-all bg-[var(--primary)] text-slate-950 cursor-pointer">
+          🗺️ Ver Mapa Interativo
+        </button>
+        <button id="btnGeoMobileToggleConfig" type="button" class="flex-1 py-2 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-white cursor-pointer">
+          ⚙️ Parâmetros & Grade
+        </button>
+      </div>
+
       <!-- Painel Principal: Controles da Grade (4 cols) + Mapa Interativo GeoGrid (8 cols) -->
       <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
 
         <!-- Coluna Esquerda (4 cols): Configuração da Empresa, Palavra-Chave IA e Grade -->
-        <section class="glass-card p-5 lg:col-span-4 space-y-4 border border-slate-800">
+        <section id="rankControlsSection" class="glass-card p-5 lg:col-span-4 space-y-4 border border-slate-800 hidden lg:block">
           <div class="border-b border-slate-800 pb-3 flex items-center justify-between">
             <div>
               <h3 class="text-sm font-extrabold uppercase tracking-wider text-amber-400">⚙️ Configurar GeoGrade</h3>
@@ -989,7 +1050,7 @@
           </div>
 
           <!-- Container do Mapa Interativo Real (Leaflet) -->
-          <div class="relative w-full overflow-hidden rounded-2xl border border-slate-700 shadow-2xl" style="height: 500px; background: #0b1322;">
+          <div id="rankMapWrapper" class="relative w-full overflow-hidden rounded-2xl border border-slate-700 shadow-2xl h-[380px] sm:h-[500px]" style="background: #0b1322;">
             <div id="geoGridLeafletMap" class="h-full w-full z-10"></div>
 
             <!-- Legenda Flutuante no Canto do Mapa -->
@@ -2151,12 +2212,99 @@
     </div>
   </div>
 
-  <!-- Toast Flutuante -->
-  <div id="toastNotification" class="fixed bottom-5 left-1/2 z-[90] -translate-x-1/2 hidden rounded-xl border border-[color-mix(in_oklab,var(--emerald-signal)_40%,transparent)] bg-[color-mix(in_oklab,var(--surface-1)_95%,transparent)] px-4 py-2.5 text-sm font-semibold shadow-2xl backdrop-blur-xl text-white">
+  <!-- Bottom Sheet Mobile: Inspeção Rápida de Ponto GeoGrid -->
+  <div id="rankMobileBottomSheet" class="fixed inset-x-0 bottom-0 z-50 transform translate-y-full transition-transform duration-300 ease-out bg-slate-950/95 border-t border-amber-500/40 p-4 shadow-2xl backdrop-blur-xl rounded-t-2xl max-h-[85vh] overflow-y-auto block lg:hidden">
+    <div class="flex items-center justify-between pb-2.5 border-b border-slate-800">
+      <div class="flex items-center gap-2">
+        <span class="h-2.5 w-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+        <h4 id="rankMobileSheetTitle" class="text-xs font-extrabold uppercase tracking-wider text-amber-300">Ponto Inspecionado</h4>
+      </div>
+      <button id="btnCloseRankMobileSheet" type="button" class="text-xs text-slate-400 hover:text-white px-2 py-0.5 rounded border border-slate-800">✕ Fechar</button>
+    </div>
+    <div id="rankMobileSheetContent" class="mt-3 space-y-2.5 text-xs">
+      <!-- Injetado dinamicamente com os top concorrentes daquele pino -->
+    </div>
+  </div>
+
+  <!-- Drawer Mobile: Menu Lateral com Ações Secundárias -->
+  <div id="mobileMenuDrawerBackdrop" class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-sm transition-opacity"></div>
+  <div id="mobileMenuDrawer" class="fixed top-0 right-0 z-50 h-full w-[280px] max-w-[85vw] transform translate-x-full transition-transform duration-300 ease-in-out bg-slate-950 border-l border-slate-800 p-5 flex flex-col justify-between shadow-2xl">
+    <div class="space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">🎯</span>
+          <h3 class="text-sm font-extrabold text-white">RadarMaps <span class="text-amber-400">PRO</span></h3>
+        </div>
+        <button id="btnCloseMobileMenu" type="button" class="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-800 text-slate-400 hover:text-white cursor-pointer">✕</button>
+      </div>
+
+      <!-- Status do Usuário -->
+      <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-1">
+        <div class="flex items-center gap-2">
+          <span class="h-2 w-2 rounded-full bg-[var(--emerald-signal)]"></span>
+          <span id="mobileDrawerUserBadge" class="text-xs font-bold text-slate-200">👑 Ricardo (Master)</span>
+        </div>
+        <p id="mobileDrawerCredits" class="font-mono text-xs font-extrabold text-amber-400">∞ Créditos Disponíveis</p>
+      </div>
+
+      <!-- Ações Secundárias do Menu -->
+      <nav class="space-y-2 pt-2 text-xs">
+        <button id="btnMobileDrawerExportCSV" type="button" class="w-full flex items-center gap-2.5 rounded-lg border border-slate-800 bg-slate-900/40 px-3.5 py-2.5 font-semibold text-slate-200 hover:border-amber-400 hover:text-white transition-all text-left cursor-pointer">
+          <span>⬇</span> <span>Exportar CSV / Excel</span>
+        </button>
+        <button id="btnMobileDrawerPdfHub" type="button" class="w-full flex items-center gap-2.5 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3.5 py-2.5 font-bold text-amber-300 hover:bg-amber-500/20 transition-all text-left cursor-pointer">
+          <span>📄</span> <span>Gerar Relatório em PDF</span>
+        </button>
+        <button id="btnMobileDrawerWhatsAppAuto" type="button" class="w-full flex items-center gap-2.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3.5 py-2.5 font-bold text-emerald-300 hover:bg-emerald-500/20 transition-all text-left cursor-pointer">
+          <span>💬</span> <span>Automação WhatsApp</span>
+        </button>
+        <button id="btnMobileDrawerAdmin" type="button" class="hidden w-full flex items-center gap-2.5 rounded-lg border border-amber-500/40 bg-amber-950/30 px-3.5 py-2.5 font-bold text-amber-400 hover:bg-amber-900/40 transition-all text-left cursor-pointer">
+          <span>👑</span> <span>Painel Master Admin</span>
+        </button>
+        <button id="btnMobileDrawerSettings" type="button" class="w-full flex items-center gap-2.5 rounded-lg border border-slate-800 bg-slate-900/40 px-3.5 py-2.5 font-semibold text-slate-300 hover:text-white transition-all text-left cursor-pointer">
+          <span>⚙️</span> <span>Configurações & Chaves</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Rodapé Drawer: Logout -->
+    <div class="border-t border-slate-800 pt-3">
+      <button id="btnMobileDrawerLogout" type="button" class="w-full flex items-center justify-center gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2.5 text-xs font-bold text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer">
+        <span>🔐</span> <span>Trocar de Conta / Sair</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Barra de Navegação Inferior Fixa (Thumb Zone Mobile 2026) -->
+  <nav id="mobileBottomNav" class="fixed bottom-0 inset-x-0 z-40 flex lg:hidden items-center justify-around border-t border-slate-800 bg-slate-950/95 backdrop-blur-xl px-2 py-2 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
+    <button id="btnMobileNavExtrator" type="button" class="mobile-nav-btn active flex flex-col items-center justify-center gap-1 min-w-[56px] py-1 cursor-pointer">
+      <span class="text-lg">🔍</span>
+      <span class="text-[10px] font-bold tracking-tight">Extrator</span>
+    </button>
+    <button id="btnMobileNavRanking" type="button" class="mobile-nav-btn flex flex-col items-center justify-center gap-1 min-w-[56px] py-1 cursor-pointer">
+      <span class="text-lg">🎯</span>
+      <span class="text-[10px] font-bold tracking-tight">GeoGrid</span>
+    </button>
+    <button id="btnMobileNavPdf" type="button" class="mobile-nav-btn flex flex-col items-center justify-center gap-1 min-w-[56px] py-1 text-amber-400 cursor-pointer">
+      <span class="text-lg">📄</span>
+      <span class="text-[10px] font-bold tracking-tight">Dossiê</span>
+    </button>
+    <button id="btnMobileNavWhatsApp" type="button" class="mobile-nav-btn flex flex-col items-center justify-center gap-1 min-w-[56px] py-1 text-emerald-400 cursor-pointer">
+      <span class="text-lg">💬</span>
+      <span class="text-[10px] font-bold tracking-tight">WhatsApp</span>
+    </button>
+    <button id="btnMobileNavMenu" type="button" class="mobile-nav-btn flex flex-col items-center justify-center gap-1 min-w-[56px] py-1 text-slate-400 cursor-pointer">
+      <span class="text-lg">☰</span>
+      <span class="text-[10px] font-bold tracking-tight">Mais</span>
+    </button>
+  </nav>
+
+  <!-- Toast Flutuante (Posicionado acima da barra inferior no mobile) -->
+  <div id="toastNotification" class="fixed bottom-20 lg:bottom-5 left-1/2 z-[90] -translate-x-1/2 hidden rounded-xl border border-[color-mix(in_oklab,var(--emerald-signal)_40%,transparent)] bg-[color-mix(in_oklab,var(--surface-1)_95%,transparent)] px-4 py-2.5 text-sm font-semibold shadow-2xl backdrop-blur-xl text-white">
     <!-- Message injected here -->
   </div>
 
-  <script src="js/app.js?v=20261016_v16_admin_shield"></script>
-  <script src="js/security-shield.js?v=20261016_v16_admin_shield"></script>
+  <script src="js/app.js?v=20261016_v17_mobile_elite"></script>
+  <script src="js/security-shield.js?v=20261016_v17_mobile_elite"></script>
 </body>
 </html>

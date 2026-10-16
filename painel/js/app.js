@@ -2232,6 +2232,8 @@ function renderTable() {
     summaryEl.textContent = `${filtered.length} de ${State.leads.length} leads · ${niche} em ${city}`;
   }
 
+  const mobileContainer = document.getElementById('leadsCardsContainer');
+
   if (filtered.length === 0) {
     tbody.innerHTML = `
       <tr>
@@ -2240,6 +2242,13 @@ function renderTable() {
         </td>
       </tr>
     `;
+    if (mobileContainer) {
+      mobileContainer.innerHTML = `
+        <div class="p-6 text-center text-sm text-[var(--muted-foreground)]">
+          Nenhum lead com os filtros selecionados. Clique em "Iniciar Varredura & Diagnóstico" para carregar novos estabelecimentos.
+        </div>
+      `;
+    }
     return;
   }
 
@@ -2340,6 +2349,106 @@ function renderTable() {
       </tr>
     `;
   }).join('');
+
+  // Renderiza Cards Mobile
+  if (mobileContainer) {
+    mobileContainer.innerHTML = filtered.map(lead => {
+      const isChecked = State.selectedLeadIds.has(lead.id);
+      const techStackList = lead.techStack || [];
+      const isMobile = isMobileWhatsAppNumber(lead.telefone);
+      const displayPhone = lead.telefone && lead.telefone.replace(/\D/g, '').endsWith('44576043')
+        ? '(11) 95438-9151'
+        : lead.telefone;
+      const webAnalysis = lead.websiteAnalysis || analyzeWebsiteUrl(lead.websiteUrl);
+      const isSocialAsSite = !lead.temSite && webAnalysis.isSocial;
+      const postAudit = getLeadPostAudit(lead);
+
+      return `
+        <div class="lead-mobile-card rounded-2xl border border-slate-800 bg-slate-900/90 p-3.5 space-y-3 shadow-lg">
+          <!-- Header do Card: Nome, Checkbox e Score Gauge -->
+          <div class="flex items-start justify-between gap-2.5">
+            <div class="flex items-start gap-2.5 flex-1 min-w-0">
+              <input type="checkbox" data-id="${lead.id}" ${isChecked ? 'checked' : ''} class="lead-checkbox mt-1 h-5 w-5 accent-[var(--primary)] cursor-pointer shrink-0">
+              <div class="min-w-0 flex-1">
+                <h3 class="font-bold text-white text-sm truncate leading-snug">${lead.empresa}</h3>
+                <div class="mt-0.5 flex items-center gap-1.5 font-mono text-xs text-[var(--muted-foreground)]">
+                  <span class="truncate">${displayPhone}</span>
+                  ${isMobile ? `
+                    <span class="inline-flex items-center gap-0.5 rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold text-emerald-400 shrink-0">
+                      ✓ WA
+                    </span>
+                  ` : `
+                    <span class="inline-flex items-center gap-0.5 rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-400 shrink-0">
+                      ☎️ Fixo
+                    </span>
+                  `}
+                  <button type="button" onclick="window.editLeadPhone(${lead.id})" class="text-slate-500 hover:text-emerald-400 transition-colors cursor-pointer px-1 text-xs" title="Editar telefone">✎</button>
+                </div>
+                ${lead.cidade ? `<p class="text-[11px] text-slate-400 truncate mt-0.5">${lead.cidade}</p>` : ''}
+              </div>
+            </div>
+            <div class="shrink-0 flex flex-col items-center">
+              ${renderScoreGauge(lead.score)}
+            </div>
+          </div>
+
+          <!-- Badges e Diagnóstico Rápido -->
+          <div class="flex flex-wrap gap-1.5 text-xs pt-1 border-t border-slate-800/60">
+            <button type="button" onclick="window.toggleLeadWebsite(${lead.id})" class="cursor-pointer transition-transform active:scale-95 text-left inline-block" title="Alternar status do Website">
+              ${lead.temSite 
+                ? `<span class="badge-pill badge-emerald">🌐 Site ativo ✓</span>` 
+                : (isSocialAsSite 
+                    ? `<span class="badge-pill badge-rose">📱 Apenas ${webAnalysis.name} ✎</span>` 
+                    : (webAnalysis.isDeprecatedGoogleSite
+                        ? `<span class="badge-pill badge-rose">🚨 Erro 404 ✎</span>`
+                        : `<span class="badge-pill badge-rose">🚨 Sem Site ✎</span>`))}
+            </button>
+
+            <button type="button" onclick="toggleLeadTour360(${lead.id})" class="cursor-pointer transition-transform active:scale-95 text-left inline-block" title="Alternar status do Tour 360°">
+              ${lead.temTour360 
+                ? `<span class="badge-pill badge-emerald">📷 Tour 360° ✓</span>` 
+                : `<span class="badge-pill badge-rose">📷 Sem Tour ✎</span>`}
+            </button>
+
+            <button type="button" onclick="window.openPostAuditModal(${lead.id})" class="cursor-pointer transition-transform active:scale-95 text-left inline-block" title="Auditoria de Postagens">
+              <span class="badge-pill badge-${postAudit.badgeColor}">${postAudit.badgeLabel} ✎</span>
+            </button>
+
+            <span class="badge-pill ${techStackList.length === 0 ? 'badge-rose' : 'badge-amber'}">
+              ${techStackList.length === 0 ? 'Sem CRM' : techStackList.join(', ')}
+            </span>
+          </div>
+
+          <!-- Motivo do Contato -->
+          ${lead.motivo ? `
+            <div class="rounded-lg bg-slate-950/60 p-2 text-[11px] text-slate-300 border border-slate-800/80">
+              <span class="text-amber-400 font-bold">💡 Oportunidade:</span> ${lead.motivo}
+            </div>
+          ` : ''}
+
+          <!-- Botões de Ação Mobile (Grandes alvos de toque 44px) -->
+          <div class="grid grid-cols-4 gap-1.5 pt-1">
+            <button onclick="window.openLeadInGeoGrid(${lead.id})" type="button" class="flex flex-col items-center justify-center py-2.5 px-1 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-emerald-500/40 text-emerald-400 font-bold text-[11px] active:scale-95 transition-all cursor-pointer">
+              <span class="text-base">🎯</span>
+              <span class="mt-0.5">Ranking</span>
+            </button>
+            <button onclick="window.downloadLeadPdf(${lead.id})" type="button" class="flex flex-col items-center justify-center py-2.5 px-1 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/50 text-amber-300 font-black text-[11px] active:scale-95 transition-all cursor-pointer">
+              <span class="text-base">📄</span>
+              <span class="mt-0.5">PDF</span>
+            </button>
+            <button onclick="openDiagnostic(${lead.id})" type="button" class="flex flex-col items-center justify-center py-2.5 px-1 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-slate-300 font-bold text-[11px] active:scale-95 transition-all cursor-pointer">
+              <span class="text-base">🔍</span>
+              <span class="mt-0.5">Diagnóstico</span>
+            </button>
+            <a href="${buildWhatsAppUrl(lead)}" target="_blank" rel="noopener noreferrer" onclick="return window.handleDirectWhatsAppClick(event, ${lead.id})" class="flex flex-col items-center justify-center py-2.5 px-1 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/50 text-emerald-400 font-black text-[11px] active:scale-95 transition-all cursor-pointer">
+              <span class="text-base">💬</span>
+              <span class="mt-0.5">WhatsApp</span>
+            </a>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
 
   // Atualiza botões em lote
   const btnBulk = document.getElementById('btnBulkWhatsApp');
@@ -6904,6 +7013,12 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
         btnWhiteLabel.innerHTML = '<span>📄</span> <span>Gerar Relatórios em PDF</span>';
         btnWhiteLabel.title = 'Gerar dossiê completo de prospecção em PDF';
       }
+    // Atualiza botões da barra inferior mobile (Thumb Zone)
+    const mExtrator = document.getElementById('btnMobileNavExtrator');
+    const mRanking = document.getElementById('btnMobileNavRanking');
+    if (mExtrator && mRanking) {
+      mExtrator.classList.toggle('active', viewName === 'extrator');
+      mRanking.classList.toggle('active', viewName === 'ranking');
     }
   }
   window.activateMainView = activateMainView;
@@ -6911,6 +7026,99 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
   tabNavExtrator?.addEventListener('click', () => activateMainView('extrator'));
   tabNavRanking?.addEventListener('click', () => activateMainView('ranking'));
   tabNavAdmin?.addEventListener('click', () => activateMainView('admin'));
+
+  // --------------------------------------------------------------------------
+  // CONTROLES MOBILE FIRST 2026 (Drawer, Bottom Nav & GeoGrid Switcher)
+  // --------------------------------------------------------------------------
+  const drawerBackdrop = document.getElementById('mobileMenuDrawerBackdrop');
+  const drawerMenu = document.getElementById('mobileMenuDrawer');
+
+  function openMobileMenu() {
+    if (!drawerMenu) return;
+    drawerBackdrop?.classList.remove('hidden');
+    drawerMenu.classList.remove('translate-x-full');
+  }
+  function closeMobileMenu() {
+    if (!drawerMenu) return;
+    drawerBackdrop?.classList.add('hidden');
+    drawerMenu.classList.add('translate-x-full');
+  }
+  window.openMobileMenu = openMobileMenu;
+  window.closeMobileMenu = closeMobileMenu;
+
+  document.getElementById('btnOpenMobileMenu')?.addEventListener('click', openMobileMenu);
+  document.getElementById('btnCloseMobileMenu')?.addEventListener('click', closeMobileMenu);
+  drawerBackdrop?.addEventListener('click', closeMobileMenu);
+
+  // Botões do Drawer
+  document.getElementById('btnMobileDrawerExportCSV')?.addEventListener('click', () => {
+    closeMobileMenu();
+    document.getElementById('btnExportCSV')?.click();
+  });
+  document.getElementById('btnMobileDrawerPdfHub')?.addEventListener('click', () => {
+    closeMobileMenu();
+    document.getElementById('btnWhiteLabelReport')?.click();
+  });
+  document.getElementById('btnMobileDrawerWhatsAppAuto')?.addEventListener('click', () => {
+    closeMobileMenu();
+    document.getElementById('btnOpenWhatsAppAutomation')?.click();
+  });
+  document.getElementById('btnMobileDrawerAdmin')?.addEventListener('click', () => {
+    closeMobileMenu();
+    activateMainView('admin');
+  });
+  document.getElementById('btnMobileDrawerSettings')?.addEventListener('click', () => {
+    closeMobileMenu();
+    document.getElementById('btnOpenSettings')?.click();
+  });
+  document.getElementById('btnMobileDrawerLogout')?.addEventListener('click', () => {
+    closeMobileMenu();
+    document.getElementById('btnLogoutSession')?.click();
+  });
+
+  // Botões da Barra Inferior Fixa (Thumb Zone)
+  document.getElementById('btnMobileNavExtrator')?.addEventListener('click', () => activateMainView('extrator'));
+  document.getElementById('btnMobileNavRanking')?.addEventListener('click', () => activateMainView('ranking'));
+  document.getElementById('btnMobileNavPdf')?.addEventListener('click', () => {
+    if (State.crmActiveTab === 'ranking') {
+      window.downloadRankingPdf();
+    } else {
+      document.getElementById('btnWhiteLabelReport')?.click();
+    }
+  });
+  document.getElementById('btnMobileNavWhatsApp')?.addEventListener('click', () => {
+    document.getElementById('btnOpenWhatsAppAutomation')?.click();
+  });
+  document.getElementById('btnMobileNavMenu')?.addEventListener('click', openMobileMenu);
+
+  // GeoGrid Mobile Switcher (Alternar entre Ver Mapa e Ver Parâmetros)
+  const btnGeoMap = document.getElementById('btnGeoMobileToggleMap');
+  const btnGeoConfig = document.getElementById('btnGeoMobileToggleConfig');
+  const rankControlsSec = document.getElementById('rankControlsSection');
+
+  btnGeoMap?.addEventListener('click', () => {
+    if (btnGeoMap) btnGeoMap.className = 'flex-1 py-2 rounded-lg text-xs font-bold transition-all bg-[var(--primary)] text-slate-950 cursor-pointer';
+    if (btnGeoConfig) btnGeoConfig.className = 'flex-1 py-2 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-white cursor-pointer';
+    rankControlsSec?.classList.add('hidden', 'lg:block');
+    setTimeout(() => {
+      if (typeof window.geoGridMap?.invalidateSize === 'function') {
+        window.geoGridMap.invalidateSize();
+      }
+    }, 100);
+  });
+
+  btnGeoConfig?.addEventListener('click', () => {
+    if (btnGeoConfig) btnGeoConfig.className = 'flex-1 py-2 rounded-lg text-xs font-bold transition-all bg-[var(--primary)] text-slate-950 cursor-pointer';
+    if (btnGeoMap) btnGeoMap.className = 'flex-1 py-2 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-white cursor-pointer';
+    rankControlsSec?.classList.remove('hidden');
+  });
+
+  // Fechar Bottom Sheet de Ponto GeoGrid
+  window.closeRankMobileSheet = function() {
+    const sheet = document.getElementById('rankMobileBottomSheet');
+    if (sheet) sheet.classList.add('translate-y-full');
+  };
+  document.getElementById('btnCloseRankMobileSheet')?.addEventListener('click', window.closeRankMobileSheet);
 
   // Ações da Toolbar do CRM
   document.getElementById('btnCrmNewLead')?.addEventListener('click', () => window.openCrmModal(null));
@@ -7124,20 +7332,62 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
 
   function updateHeaderCreditsDisplay() {
     const el = document.getElementById('headerCreditsDisplay');
-    if (!el) return;
-    if (!State.activeSession || State.activeSession.role === 'master') {
-      el.textContent = '∞ Créditos (Master)';
-      el.className = 'font-mono text-xs font-bold text-amber-400';
+    const elMobile = document.getElementById('headerCreditsDisplayMobile');
+    const elDrawerCredits = document.getElementById('mobileDrawerCredits');
+    const elDrawerUser = document.getElementById('mobileDrawerUserBadge');
+    const btnDrawerAdmin = document.getElementById('btnMobileDrawerAdmin');
+
+    const isMaster = !State.activeSession || State.activeSession.role === 'master';
+
+    if (btnDrawerAdmin) {
+      if (isMaster) btnDrawerAdmin.classList.remove('hidden');
+      else btnDrawerAdmin.classList.add('hidden');
+    }
+
+    if (elDrawerUser) {
+      elDrawerUser.textContent = isMaster 
+        ? '👑 Ricardo (Master)' 
+        : `👤 ${State.activeSession?.nome || 'Usuário'}`;
+    }
+
+    if (isMaster) {
+      if (el) {
+        el.textContent = '∞ Créditos (Master)';
+        el.className = 'font-mono text-xs font-bold text-amber-400';
+      }
+      if (elMobile) {
+        elMobile.textContent = '∞ cr';
+        elMobile.className = 'font-mono text-xs font-bold text-amber-400';
+      }
+      if (elDrawerCredits) {
+        elDrawerCredits.textContent = '∞ Créditos (Master)';
+        elDrawerCredits.className = 'font-mono text-xs font-extrabold text-amber-400';
+      }
     } else {
       const credits = getActiveUserCredits();
       const sub = (State.subscribers || []).find(s => s.email && State.activeSession?.email && s.email.toLowerCase() === State.activeSession.email.toLowerCase());
       const total = (sub && sub.creditosTotal) ? sub.creditosTotal : 500;
-      el.textContent = `${credits} / ${total} créditos`;
-      el.className = credits > 100 
+      
+      const txt = `${credits} / ${total} créditos`;
+      const txtMob = `${credits} cr`;
+      const colorCls = credits > 100 
         ? 'font-mono text-xs font-bold text-emerald-400' 
         : credits > 30 
           ? 'font-mono text-xs font-bold text-amber-400' 
           : 'font-mono text-xs font-bold text-rose-400 animate-pulse';
+
+      if (el) {
+        el.textContent = txt;
+        el.className = colorCls;
+      }
+      if (elMobile) {
+        elMobile.textContent = txtMob;
+        elMobile.className = colorCls;
+      }
+      if (elDrawerCredits) {
+        elDrawerCredits.textContent = txt;
+        elDrawerCredits.className = colorCls;
+      }
     }
   }
 
@@ -9657,6 +9907,45 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
           </div>
         </div>
       `).join('');
+    }
+
+    // No mobile, se o bottom sheet existir, popula e abre suavemente
+    const sheetEl = document.getElementById('rankMobileBottomSheet');
+    const sheetTitle = document.getElementById('rankMobileSheetTitle');
+    const sheetContent = document.getElementById('rankMobileSheetContent');
+    if (sheetEl && sheetContent) {
+      if (sheetTitle) {
+        sheetTitle.innerHTML = `Ponto #${pt.id} · Posição #${pt.rank}º Lugar`;
+      }
+      if (Array.isArray(pt.topCompetitors)) {
+        sheetContent.innerHTML = pt.topCompetitors.slice(0, 4).map(c => `
+          <div class="rounded-xl border ${c.isTarget ? 'border-emerald-500 bg-emerald-950/40' : 'border-slate-800 bg-slate-900/90'} p-2.5 flex items-center justify-between gap-2">
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-1.5">
+                <span class="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${c.pos <= 3 ? 'bg-emerald-500 text-slate-950' : (c.pos <= 10 ? 'bg-amber-500 text-slate-950' : 'bg-rose-500 text-white')} font-mono text-[10px] font-black">
+                  ${c.pos}º
+                </span>
+                <span class="truncate font-bold text-xs ${c.isTarget ? 'text-emerald-300' : 'text-white'}">
+                  ${c.empresa} ${c.isTarget ? ' (Cliente)' : ''}
+                </span>
+              </div>
+              <p class="mt-0.5 text-[10px] text-slate-400 font-mono">
+                ⭐ ${Number(c.rating).toFixed(1)} (${c.reviews} aval.) · a ${c.distMeters}m
+              </p>
+            </div>
+          </div>
+        `).join('') + `
+          <div class="pt-2">
+            <button onclick="window.downloadRankingPdf()" type="button" class="w-full btn-amber py-2 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer">
+              <span>📄</span> <span>Baixar PDF Deste Ranking</span>
+            </button>
+          </div>
+        `;
+      }
+      // Abre gaveta no mobile
+      if (window.innerWidth < 1024) {
+        sheetEl.classList.remove('translate-y-full');
+      }
     }
   }
 
