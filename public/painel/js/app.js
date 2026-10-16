@@ -7977,7 +7977,8 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     liveCompetitors: [], // Concorrentes reais extraídos ao vivo via Google Places Serper API
     _cachedCompetitorsKey: '',
     duelMode: false,
-    duelCompetitorName: 'Santo André Automóveis | Loja de Carros em Santo André'
+    duelCompetitorName: 'Santo André Automóveis | Loja de Carros em Santo André',
+    isStandby: false
   };
 
   function loadGeoHistory() {
@@ -8912,7 +8913,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
   }
 
   // Constrói a malha de coordenadas GPS (3x3, 5x5, 7x7, 9x9) ao redor do centro
-  function buildGeoGridPoints() {
+  function buildGeoGridPoints(revealedDefault = true) {
     const N = Number(GeoState.gridSize) || 5;
     const R = Number(GeoState.radiusKm) || 3.0;
     const shape = GeoState.areaShape || 'square';
@@ -8955,7 +8956,8 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
           isCenter: isCenter,
           rank: calc.rank,
           competitorRanks: calc.competitorRanks || {},
-          topCompetitors: calc.topCompetitors
+          topCompetitors: calc.topCompetitors,
+          revealed: revealedDefault
         });
       }
     }
@@ -9048,9 +9050,9 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     const R = Number(GeoState.radiusKm) || 3.0;
     const stepMeters = Math.max(250, ((R * 1000) / Math.max(1, Math.floor(N / 2))) * 0.62);
 
-    // 1. Renderiza Camada de Mapa de Calor Interativo (se ativo)
-    if (GeoState.heatmapEnabled) {
-      GeoState.points.filter(p => p.active).forEach(pt => {
+    // 1. Renderiza Camada de Mapa de Calor Interativo (se ativo e não em standby)
+    if (GeoState.heatmapEnabled && !GeoState.isStandby) {
+      GeoState.points.filter(p => p.active && p.revealed !== false).forEach(pt => {
         const color = getRankColorHex(pt.rank);
         L.circle([pt.lat, pt.lng], {
           radius: stepMeters,
@@ -9081,6 +9083,46 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
           pt.active = true;
           renderGeoGridOnMap();
           updateGeoKpisUI();
+        });
+        return;
+      }
+
+      // Se o ponto ainda NÃO foi revelado (Modo Standby ou escaneamento em andamento)
+      if (pt.revealed === false) {
+        const standbyIcon = L.divIcon({
+          className: 'custom-geogrid-pin',
+          html: `
+            <div style="
+              width:${pt.isCenter ? 36 : 28}px;
+              height:${pt.isCenter ? 36 : 28}px;
+              border-radius:9999px;
+              background:rgba(15, 23, 42, 0.85);
+              border:${pt.isCenter ? '2.5px solid #38bdf8' : '2px dashed #0284c7'};
+              box-shadow:0 0 12px rgba(56, 189, 248, 0.4);
+              color:#38bdf8;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              font-family:'JetBrains Mono',monospace;
+              font-size:${pt.isCenter ? '14px' : '10px'};
+              font-weight:900;
+              cursor:pointer;
+              transition:all 0.2s ease;
+            " title="${pt.isCenter ? 'Ponto Central (Sede) - Clique em Executar Análise de Ranking Local!' : `Coordenada GPS #${pt.id} aguardando varredura ao vivo. Clique em Executar Análise!`}">
+              ${pt.isCenter ? '⭐' : '•'}
+            </div>
+          `,
+          iconSize: [pt.isCenter ? 36 : 28, pt.isCenter ? 36 : 28],
+          iconAnchor: [pt.isCenter ? 18 : 14, pt.isCenter ? 18 : 14]
+        });
+
+        const mStandby = L.marker([pt.lat, pt.lng], {
+          icon: standbyIcon,
+          draggable: Boolean(pt.isCenter)
+        }).addTo(GeoState.markersLayer);
+
+        mStandby.on('click', () => {
+          showToast(`📍 Ponto de radar GPS #${pt.id} pronto para varredura. Clique em "Executar Análise de Ranking Local"!`);
         });
         return;
       }
@@ -9484,8 +9526,40 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
 
   // Atualiza os 4 KPIs Superiores da Grade
   function updateGeoKpisUI() {
+    if (GeoState.isStandby) {
+      const elFound = document.getElementById('rankKpiFoundAvg');
+      const elFoundBadge = document.getElementById('rankKpiFoundBadge');
+      const elTotal = document.getElementById('rankKpiTotalAvg');
+      const elTotalPts = document.getElementById('rankKpiTotalPointsLabel');
+      const elSov = document.getElementById('rankKpiSovPct');
+      const elDist = document.getElementById('rankKpiDistribution');
+
+      if (elFound) {
+        elFound.textContent = '--';
+        elFound.className = 'font-mono text-3xl font-black text-slate-400';
+      }
+      if (elFoundBadge) {
+        elFoundBadge.textContent = 'Pronto para Varredura';
+      }
+      if (elTotal) {
+        elTotal.textContent = '--';
+        elTotal.className = 'font-mono text-3xl font-black text-slate-400';
+      }
+      if (elTotalPts) elTotalPts.textContent = `${GeoState.points.length || 25} pontos no radar`;
+      if (elSov) {
+        elSov.textContent = '--%';
+        elSov.className = 'font-mono text-3xl font-black text-slate-400';
+      }
+      if (elDist) {
+        elDist.innerHTML = `
+          <span class="rounded-lg bg-sky-500/20 border border-sky-500/40 px-2.5 py-1 text-sky-300 font-bold">📡 Clique em "Executar Análise" para escanear</span>
+        `;
+      }
+      return null;
+    }
+
     const activePts = GeoState.points.filter(p => p.active);
-    if (activePts.length === 0) return;
+    if (activePts.length === 0) return null;
 
     const foundPts = activePts.filter(p => p.rank < 20);
     const foundAvg = foundPts.length > 0
@@ -9704,63 +9778,115 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
     showToast('Análise removida do histórico.');
   };
 
-  // Executa o Cálculo Completo da GeoGrade (Com Timer Animado quando acionado pelo botão Executar)
-  function runGeoGridCalculation(withAnimatedTimer = false) {
-    buildGeoGridPoints();
+  // Executa o Cálculo Completo da GeoGrade (Com Scanner Visual Ponto a Ponto ao Vivo quando withAnimatedTimer=true)
+  async function runGeoGridCalculation(withAnimatedTimer = false) {
+    const btn = document.getElementById('btnRunGeoGridAnalysis');
+    const oldHtml = btn ? btn.innerHTML : '';
+    const timerBox = document.getElementById('rankTimerProgressBox');
+    const statusTxt = document.getElementById('rankTimerStatusText');
+    const etaTxt = document.getElementById('rankTimerEtaText');
+    const bar = document.getElementById('rankTimerProgressBar');
+
+    if (!withAnimatedTimer) {
+      buildGeoGridPoints(true);
+      GeoState.isStandby = false;
+      populateDuelCompetitorsDropdown();
+      const kpis = updateGeoKpisUI();
+      renderGeoGridOnMap();
+      runAiSearchAudit();
+      const centerPt = GeoState.points.find(p => p.isCenter) || GeoState.points[0];
+      if (centerPt) inspectGridPoint(centerPt);
+      return;
+    }
+
+    if (btn) {
+      btn.disabled = true;
+      btn.classList.remove('animate-pulse', 'border-amber-400', 'border-2');
+      btn.innerHTML = `<span>⏳</span> <span>Escaneando Google Maps ao Vivo...</span>`;
+    }
+
+    if (timerBox) timerBox.classList.remove('hidden');
+    if (bar) bar.style.width = '10%';
+    const city = detectCurrentCity(GeoState.centerLat, GeoState.centerLng, GeoState.selectedLeadAddress);
+
+    // Etapa 1: Conecta à API do Google Maps e mapeia concorrentes reais da cidade
+    if (statusTxt) statusTxt.textContent = `🛰️ Conectando ao Google Maps em ${city}...`;
+    if (etaTxt) etaTxt.textContent = `Iniciando...`;
+    
+    try {
+      await fetchGeoGridLiveCompetitors(true);
+    } catch (e) {
+      console.warn('Erro ao buscar concorrentes ao vivo:', e);
+    }
+
+    if (bar) bar.style.width = '25%';
+    if (statusTxt) statusTxt.textContent = `🔍 Mapeando concorrentes reais no raio de ${GeoState.radiusKm.toFixed(1)} km...`;
+    await new Promise(r => setTimeout(r, 260));
+
+    // Etapa 2: Prepara os pontos do grid (todos inicialmente em revealed = false)
+    buildGeoGridPoints(false);
+    GeoState.isStandby = false;
+    renderGeoGridOnMap();
+
+    const activePts = GeoState.points.filter(p => p.active);
+    const totalPts = activePts.length;
+
+    // Etapa 3: Varredura animada revelando quarteirão por quarteirão
+    for (let i = 0; i < totalPts; i++) {
+      const pt = activePts[i];
+      pt.revealed = true;
+
+      const pct = 25 + Math.round(((i + 1) / totalPts) * 75);
+      if (bar) bar.style.width = `${pct}%`;
+      const remSec = Math.max(0, Math.ceil((totalPts - (i + 1)) * 0.08));
+      if (statusTxt) statusTxt.textContent = `📍 Escaneando quarteirão GPS ${i + 1} de ${totalPts}... (${pt.distFromCenterKm} km do centro)`;
+      if (etaTxt) etaTxt.textContent = `Previsão: 00:0${remSec}s`;
+
+      renderGeoGridOnMap();
+      await new Promise(r => setTimeout(r, 65));
+    }
+
+    // Etapa 4: Finalização e Consolidação dos KPIs
+    if (bar) bar.style.width = '100%';
+    if (statusTxt) statusTxt.textContent = `✅ Varredura GPS de ${totalPts} pontos concluída!`;
+    if (etaTxt) etaTxt.textContent = `100% Concluído`;
+
     populateDuelCompetitorsDropdown();
     const kpis = updateGeoKpisUI();
-    renderGeoGridOnMap();
-    runAiSearchAudit();
-
     const centerPt = GeoState.points.find(p => p.isCenter) || GeoState.points[0];
     if (centerPt) inspectGridPoint(centerPt);
+    runAiSearchAudit();
 
-    if (withAnimatedTimer && kpis) {
-      const timerBox = document.getElementById('rankTimerProgressBox');
-      const statusTxt = document.getElementById('rankTimerStatusText');
-      const etaTxt = document.getElementById('rankTimerEtaText');
-      const bar = document.getElementById('rankTimerProgressBar');
+    // Salva no Histórico com Grade Visual Integrada
+    if (kpis) {
+      const newEntry = {
+        id: Date.now(),
+        empresa: GeoState.selectedLeadName || 'Empresa Local',
+        endereco: GeoState.selectedLeadAddress || 'Brasil',
+        keyword: GeoState.keyword,
+        radiusKm: GeoState.radiusKm,
+        gridSize: GeoState.gridSize,
+        totalPoints: totalPts,
+        dateStr: new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        foundAvg: kpis.foundAvg,
+        totalAvg: kpis.totalAvg,
+        sovPct: kpis.sovPct,
+        ranksMatrix: GeoState.points.map(p => p.rank),
+        topCompetitors: ((GeoState.points.find(p => p.isCenter) || GeoState.points[0])?.topCompetitors || []).map(c => ({ ...c }))
+      };
+      GeoState.history.unshift(newEntry);
+      saveGeoHistory();
+    }
 
-      const totalPts = GeoState.points.filter(p => p.active).length;
-      let step = 1;
-      if (timerBox) timerBox.classList.remove('hidden');
+    showToast(`🎯 Varredura concluída com sucesso para "${GeoState.selectedLeadName}"!`);
 
-      const interval = setInterval(() => {
-        const pct = Math.min(100, Math.round((step / totalPts) * 100));
-        const remSec = Math.max(0, Math.ceil((totalPts - step) * 0.12));
-        if (statusTxt) statusTxt.textContent = `⏳ Escaneando coordenada GPS ${step} de ${totalPts}...`;
-        if (etaTxt) etaTxt.textContent = `Previsão: 00:0${remSec}s`;
-        if (bar) bar.style.width = `${pct}%`;
+    setTimeout(() => {
+      timerBox?.classList.add('hidden');
+    }, 2200);
 
-        step += Math.max(1, Math.floor(totalPts / 8));
-        if (step > totalPts) {
-          clearInterval(interval);
-          if (statusTxt) statusTxt.textContent = `✅ Varredura GPS de ${totalPts} pontos concluída!`;
-          if (etaTxt) etaTxt.textContent = `100% Completo`;
-          if (bar) bar.style.width = '100%';
-          setTimeout(() => timerBox?.classList.add('hidden'), 1800);
-
-          // Salva no Histórico com Grade Visual Integrada
-          const newEntry = {
-            id: Date.now(),
-            empresa: GeoState.selectedLeadName || 'Empresa Local',
-            endereco: GeoState.selectedLeadAddress || 'Brasil',
-            keyword: GeoState.keyword,
-            radiusKm: GeoState.radiusKm,
-            gridSize: GeoState.gridSize,
-            totalPoints: totalPts,
-            dateStr: new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-            foundAvg: kpis.foundAvg,
-            totalAvg: kpis.totalAvg,
-            sovPct: kpis.sovPct,
-            ranksMatrix: GeoState.points.map(p => p.rank),
-            topCompetitors: ((GeoState.points.find(p => p.isCenter) || GeoState.points[0])?.topCompetitors || []).map(c => ({ ...c }))
-          };
-          GeoState.history.unshift(newEntry);
-          saveGeoHistory();
-          showToast(`🎯 Análise de Ranking concluída e salva no Histórico com Grade Visual!`);
-        }
-      }, 140);
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = oldHtml || `<span>🚀</span> <span>Executar Análise de Ranking Local</span>`;
     }
   }
 
@@ -10824,23 +10950,7 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
 
   document.getElementById('btnRunGeoGridAnalysis')?.addEventListener('click', async () => {
     GeoState.keyword = document.getElementById('rankKeywordInput')?.value.trim() || GeoState.keyword;
-    const btn = document.getElementById('btnRunGeoGridAnalysis');
-    const oldHtml = btn ? btn.innerHTML : '';
-    if (btn) {
-      btn.disabled = true;
-      btn.innerHTML = `<span>⏳</span> <span>Consultando Google Maps ao Vivo...</span>`;
-    }
-    try {
-      await fetchGeoGridLiveCompetitors(true);
-    } catch (e) {
-      console.warn(e);
-    } finally {
-      if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = oldHtml;
-      }
-    }
-    runGeoGridCalculation(true);
+    await runGeoGridCalculation(true);
   });
 
   document.getElementById('btnToggleRankHeatmap')?.addEventListener('click', () => {
@@ -11108,13 +11218,19 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
       GeoState.map.setView([GeoState.centerLat, GeoState.centerLng], 13);
     }
 
-    // Busca concorrentes reais ao vivo na nova cidade e calcula a grade
-    try {
-      await fetchGeoGridLiveCompetitors(true);
-    } catch (e) {}
-    runGeoGridCalculation(true);
+    // 5. Entra no Modo Standby / Radar Posicionado
+    GeoState.isStandby = true;
+    buildGeoGridPoints(false);
+    renderGeoGridOnMap();
+    updateGeoKpisUI();
 
-    showToast(`🎉 Radar posicionado em "${resolvedPlace.name}" (${bCity})! Grade recalculada com sucesso.`);
+    // Destaca o botão Executar Análise no sidebar com pulso dourado
+    const btnExec = document.getElementById('btnRunGeoGridAnalysis');
+    if (btnExec) {
+      btnExec.classList.add('animate-pulse', 'border-2', 'border-amber-400');
+    }
+
+    showToast(`📍 "${resolvedPlace.name}" localizada em ${bCity}! Clique no botão "Executar Análise de Ranking Local" para escanear a grade GPS ao vivo.`);
   };
 
   document.getElementById('btnCenterOtherRegion')?.addEventListener('click', () => {
