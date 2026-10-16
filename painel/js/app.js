@@ -714,9 +714,11 @@ window.openPostAuditModal = function(leadId) {
   const modal = document.getElementById('postAuditModal');
   const nameEl = document.getElementById('postAuditModalLeadName');
   const inputEl = document.getElementById('inputCustomPostDays');
+  const mapsBtn = document.getElementById('postAuditModalMapsLink');
   const postAudit = getLeadPostAudit(lead);
   if (nameEl) nameEl.textContent = lead.empresa;
   if (inputEl) inputEl.value = (typeof postAudit.diasSemPostar === 'number') ? postAudit.diasSemPostar : '';
+  if (mapsBtn) mapsBtn.href = getGoogleMapsUrl(lead);
   if (modal) {
     modal.classList.remove('hidden');
     modal.style.setProperty('display', 'flex', 'important');
@@ -852,12 +854,36 @@ window.addEventListener('message', (ev) => {
 
 function getGoogleMapsUrl(lead) {
   if (!lead) return 'https://www.google.com/maps';
-  if (lead.mapsUrl) return lead.mapsUrl;
-  if (lead.placeId) {
-    return `https://www.google.com/maps/place/?q=place_id:${lead.placeId}`;
+
+  const cleanName = (lead.empresa || '').trim();
+  const cleanAddr = (lead.endereco || lead.cidade || '').trim();
+  const rawId = String(lead.cid || lead.placeId || '').trim();
+
+  // 1. Se tem CID numérico direto do Google (15 a 22 dígitos)
+  if (/^\d{15,22}$/.test(rawId)) {
+    return `https://www.google.com/maps?cid=${rawId}`;
   }
-  const cleanQuery = `${lead.empresa || ''} ${lead.endereco || lead.cidade || ''}`.trim();
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cleanQuery)}`;
+
+  // 2. Se já tem mapsUrl válida salva que NÃO contenha o erro 'place_id:'
+  if (lead.mapsUrl && typeof lead.mapsUrl === 'string') {
+    if (!lead.mapsUrl.includes('place_id:') && !lead.mapsUrl.includes('q=place_id') && lead.mapsUrl.includes('google.com')) {
+      return lead.mapsUrl;
+    }
+  }
+
+  // 3. Monta a busca universal oficial por Nome + Endereço/Cidade
+  // Isso NUNCA falha no Google Maps porque pesquisa o nome real que está na tela!
+  let fullQuery = cleanName;
+  if (cleanAddr && !cleanName.toLowerCase().includes(cleanAddr.toLowerCase().split('-')[0].trim())) {
+    fullQuery = `${cleanName} ${cleanAddr}`;
+  }
+
+  // 4. Se for Place ID oficial do Google (ChIJ...)
+  if (rawId.startsWith('ChIJ')) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullQuery)}&query_place_id=${encodeURIComponent(rawId)}`;
+  }
+
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullQuery || 'comércio')}`;
 }
 window.getGoogleMapsUrl = getGoogleMapsUrl;
 
@@ -4875,9 +4901,11 @@ async function fetchSerperLivePlaces(niche, city, targetCount, apiKey) {
     }
 
     const placeId = p.placeId || '';
-    const mapsUrl = placeId 
-      ? `https://www.google.com/maps/place/?q=place_id:${placeId}` 
-      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(placeTitle + ' ' + (p.address || city))}`;
+    const rawCid = String(p.cid || (/^\d{15,22}$/.test(placeId) ? placeId : '')).trim();
+    const queryStr = `${placeTitle} ${(p.address || city)}`.trim();
+    const mapsUrl = rawCid
+      ? `https://www.google.com/maps?cid=${rawCid}`
+      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(queryStr)}`;
 
     return {
       id: Date.now() + idx,
@@ -5229,9 +5257,11 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
   ];
 
   const placeId = mainPlace.placeId || '';
-  const mapsUrl = placeId 
-    ? `https://www.google.com/maps/place/?q=place_id:${placeId}` 
-    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mainTitle + ' ' + (mainPlace.address || city || ''))}`;
+  const rawCid = String(mainPlace.cid || (/^\d{15,22}$/.test(placeId) ? placeId : '')).trim();
+  const queryStr = `${mainTitle} ${(mainPlace.address || city || '')}`.trim();
+  const mapsUrl = rawCid
+    ? `https://www.google.com/maps?cid=${rawCid}`
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(queryStr)}`;
 
   const reviewsSemRespostaPct = Math.max(0, 100 - responseRatePct);
 
