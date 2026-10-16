@@ -7013,6 +7013,8 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
         btnWhiteLabel.innerHTML = '<span>📄</span> <span>Gerar Relatórios em PDF</span>';
         btnWhiteLabel.title = 'Gerar dossiê completo de prospecção em PDF';
       }
+    }
+
     // Atualiza botões da barra inferior mobile (Thumb Zone)
     const mExtrator = document.getElementById('btnMobileNavExtrator');
     const mRanking = document.getElementById('btnMobileNavRanking');
@@ -7890,8 +7892,6 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     document.body.classList.remove('authenticated');
     authOverlay?.classList.remove('authenticated', 'is-hidden');
     if (authOverlay) authOverlay.style.setProperty('display', 'flex', 'important');
-    showToast('🔒 Sessão encerrada. Tela de login aberta.');
-  });
     showToast('🔒 Sessão encerrada. Tela de login aberta.');
   });
 
