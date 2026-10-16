@@ -805,7 +805,12 @@
           <div class="space-y-3.5 text-xs">
             <!-- 1. Escolher Empresa já extraída ou Autocompletar -->
             <div>
-              <label class="mb-1 block font-bold text-slate-300">1. Selecionar Cliente / Empresa da Lista</label>
+              <div class="flex items-center justify-between mb-1">
+                <label class="font-bold text-slate-300">1. Selecionar Cliente / Empresa da Lista</label>
+                <button type="button" onclick="window.openNewRegionModal()" class="text-[11px] font-bold text-sky-400 hover:text-sky-300 flex items-center gap-1 cursor-pointer" title="Pesquisar empresa em qualquer cidade do Brasil">
+                  <span>📍</span> <span>Outra Cidade</span>
+                </button>
+              </div>
               <select id="rankSelectExtractedLead" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white cursor-pointer">
                 <!-- Preenchido via JS com os leads atuais -->
               </select>
@@ -813,16 +818,21 @@
 
             <div class="relative">
               <label class="mb-1 flex items-center justify-between font-bold text-slate-300">
-                <span>🏢 Ou Buscar Qualquer Local (Auto-Completar)</span>
+                <span>🏢 Ou Buscar Empresa / Local (Brasil Inteiro)</span>
                 <span class="text-[10px] text-emerald-400 font-mono">GPS Real</span>
               </label>
               <div class="flex gap-1.5">
-                <input id="rankBusinessSearchInput" type="text" placeholder="Digite nome da empresa, rua ou bairro..." class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white outline-none focus:border-amber-400">
+                <input id="rankBusinessSearchInput" type="text" placeholder="Digite empresa e cidade (ex: Odontoclinic Florianópolis)..." class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white outline-none focus:border-amber-400">
                 <button id="btnRankGeocodeSearch" type="button" class="btn-ghost-dark px-3 py-2 font-bold text-amber-300 border-amber-500/40 hover:bg-amber-500/10 cursor-pointer" title="Localizar endereço e coordenadas no mapa">🔍</button>
               </div>
               <!-- Dropdown de Auto-Completar -->
               <div id="rankAutocompleteDropdown" class="hidden absolute left-0 right-0 top-full mt-1 z-50 max-h-52 overflow-y-auto rounded-xl border border-slate-700 bg-slate-950 shadow-2xl divide-y divide-slate-800">
               </div>
+              
+              <button id="btnQuickOpenNewRegion" type="button" onclick="window.openNewRegionModal()" class="mt-2 w-full rounded-lg border border-sky-500/40 bg-sky-500/10 hover:bg-sky-500/20 px-3 py-1.5 text-xs font-bold text-sky-300 flex items-center justify-center gap-1.5 cursor-pointer transition-all shadow-sm">
+                <span>📍</span> <span>Pesquisar Empresa em Outra Cidade / Estado</span>
+              </button>
+
               <p id="rankCoordsDisplay" class="mt-1 font-mono text-[10px] text-slate-400">
                 📍 Centro GPS: -23.6639, -46.5310 (Arraste o pino central para outra região)
               </p>
@@ -954,7 +964,7 @@
               <button id="btnToggleRankRuler" type="button" class="rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 font-bold text-slate-300 hover:border-amber-400 hover:text-white cursor-pointer flex items-center gap-1.5">
                 <span>📏</span> <span id="labelToggleRankRuler">Medir Distância</span>
               </button>
-              <button id="btnCenterOtherRegion" type="button" class="rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 font-bold text-slate-300 hover:border-sky-400 hover:text-white cursor-pointer flex items-center gap-1.5" title="Clique aqui e depois clique em qualquer bairro do mapa para testar o ranking lá">
+              <button id="btnCenterOtherRegion" type="button" onclick="window.openNewRegionModal()" class="rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 font-bold text-slate-300 hover:border-sky-400 hover:text-white cursor-pointer flex items-center gap-1.5 shadow-sm" title="Pesquisar e analisar qualquer empresa em outra cidade ou região do Brasil">
                 <span>📍</span> <span>Analisar Outra Região</span>
               </button>
               <span id="rankRulerDistanceBadge" class="hidden rounded-full bg-amber-500/20 border border-amber-500/50 px-2.5 py-1 font-mono text-[11px] font-bold text-amber-300">
@@ -2057,6 +2067,76 @@
           Fechar
         </button>
       </div>
+  <!-- Modal: Analisar Empresa em Outra Cidade ou Região -->
+  <div id="modalAnalyzeNewRegion" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+    <div class="glass-card w-full max-w-lg border border-sky-500/40 bg-slate-950 p-6 shadow-2xl space-y-4">
+      
+      <!-- Cabeçalho -->
+      <div class="flex items-start justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-500/20 text-sky-400 text-xl border border-sky-500/30">
+            📍
+          </div>
+          <div>
+            <h3 class="text-base font-extrabold text-white">Analisar Empresa em Outra Região</h3>
+            <p class="text-xs text-slate-400">Pesquise qualquer empresa no Brasil (ex: Florianópolis, Curitiba, etc.)</p>
+          </div>
+        </div>
+        <button type="button" onclick="window.closeNewRegionModal()" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer" aria-label="Fechar">✕</button>
+      </div>
+
+      <!-- Formulário -->
+      <form id="formAnalyzeNewRegion" onsubmit="window.submitAnalyzeNewRegion(event)" class="space-y-3.5 text-xs">
+        <div>
+          <label class="mb-1 block font-bold text-slate-300">
+            🏢 1. Nome da Empresa / Negócio <span class="text-amber-400">*</span>
+          </label>
+          <input id="inputNewRegionBusinessName" type="text" required placeholder="Ex: Odontoclinic, Sorriso Real, Hebron Motors..." class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white outline-none focus:border-sky-400 font-medium">
+        </div>
+
+        <div>
+          <label class="mb-1 block font-bold text-slate-300">
+            📍 2. Cidade, Bairro ou Estado <span class="text-amber-400">*</span>
+          </label>
+          <input id="inputNewRegionCity" type="text" required placeholder="Ex: Florianópolis - SC, Curitiba - PR, Itacorubi..." class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white outline-none focus:border-sky-400 font-medium">
+          <p class="mt-1 text-[10px] text-slate-400">Informe a cidade ou endereço completo para o radar posicionar a grade com precisão GPS.</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="mb-1 block font-bold text-slate-300">
+              🔑 3. Palavra-Chave Principal
+            </label>
+            <input id="inputNewRegionKeyword" type="text" placeholder="Ex: dentista, loja de carros..." class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white outline-none focus:border-sky-400 font-medium">
+          </div>
+          <div>
+            <label class="mb-1 block font-bold text-slate-300">
+              📏 4. Raio de Cobertura
+            </label>
+            <select id="selectNewRegionRadius" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white outline-none focus:border-sky-400 cursor-pointer font-medium">
+              <option value="1.5">1.5 km (Bairro / Hiperlocal)</option>
+              <option value="3.0" selected>3.0 km (Padrão - Cidade)</option>
+              <option value="5.0">5.0 km (Regional Amplo)</option>
+              <option value="10.0">10.0 km (Metropolitano)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Botão Principal -->
+        <div class="pt-2">
+          <button id="btnSubmitNewRegion" type="submit" class="w-full rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 py-3 text-sm font-extrabold text-white shadow-lg shadow-sky-500/25 flex items-center justify-center gap-2 cursor-pointer transition-all">
+            <span>🚀</span> <span>Localizar no Google Maps e Gerar GeoGrade</span>
+          </button>
+        </div>
+
+        <!-- Opção Alternativa de clique no mapa -->
+        <div class="border-t border-slate-800/80 pt-2.5 flex items-center justify-between text-[11px] text-slate-400">
+          <span>Deseja apenas trocar de bairro na mesma cidade?</span>
+          <button type="button" onclick="window.enableMapClickMoveMode()" class="text-sky-400 hover:underline font-semibold cursor-pointer">
+            Clicar com o cursor no mapa →
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 

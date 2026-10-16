@@ -7742,9 +7742,20 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     { match: /s[aã]o caetano/i, lat: -23.6229, lng: -46.5548, label: 'Centro, São Caetano do Sul - SP' },
     { match: /campinas/i, lat: -22.9056, lng: -47.0608, label: 'Cambuí / Centro, Campinas - SP' },
     { match: /s[aã]o paulo/i, lat: -23.5614, lng: -46.6559, label: 'Av. Paulista, São Paulo - SP' },
+    { match: /florian[oó]polis|floripa/i, lat: -27.5954, lng: -48.5480, label: 'Centro, Florianópolis - SC' },
     { match: /curitiba/i, lat: -25.4284, lng: -49.2733, label: 'Batel / Centro, Curitiba - PR' },
+    { match: /porto\s*alegre/i, lat: -30.0346, lng: -51.2177, label: 'Moinhos / Centro, Porto Alegre - RS' },
+    { match: /joinville/i, lat: -26.3045, lng: -48.8487, label: 'Centro, Joinville - SC' },
+    { match: /blumenau/i, lat: -26.9194, lng: -49.0661, label: 'Centro, Blumenau - SC' },
+    { match: /londrina/i, lat: -23.3045, lng: -51.1696, label: 'Centro, Londrina - PR' },
+    { match: /maring[aá]/i, lat: -23.4205, lng: -51.9333, label: 'Zona 01 / Centro, Maringá - PR' },
     { match: /belo horizonte/i, lat: -19.9191, lng: -43.9386, label: 'Savassi, Belo Horizonte - MG' },
     { match: /rio de janeiro/i, lat: -22.9068, lng: -43.1729, label: 'Centro / Zona Sul, Rio de Janeiro - RJ' },
+    { match: /bras[ií]lia/i, lat: -15.7975, lng: -47.8919, label: 'Plano Piloto, Brasília - DF' },
+    { match: /salvador/i, lat: -12.9777, lng: -38.5016, label: 'Pituba / Centro, Salvador - BA' },
+    { match: /recife/i, lat: -8.0578, lng: -34.8829, label: 'Boa Viagem, Recife - PE' },
+    { match: /fortaleza/i, lat: -3.7319, lng: -38.5267, label: 'Aldeota / Meireles, Fortaleza - CE' },
+    { match: /goi[aâ]nia/i, lat: -16.6869, lng: -49.2648, label: 'Setor Bueno, Goiânia - GO' },
     { match: /santos/i, lat: -23.9618, lng: -46.3322, label: 'Gonzaga, Santos - SP' },
     { match: /sorocaba/i, lat: -23.5015, lng: -47.4526, label: 'Campolim, Sorocaba - SP' },
     { match: /ribeir[aã]o preto/i, lat: -21.1775, lng: -47.8103, label: 'Centro, Ribeirão Preto - SP' }
@@ -7778,7 +7789,19 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
   function detectCurrentCity(lat, lng, addressText = '') {
     const addr = String(addressText || '').toLowerCase();
 
+    // 0. Prioridade se o estado já possui uma cidade explícita definida pelo usuário
+    if (GeoState && GeoState.selectedLeadCity && !addressText) {
+      return GeoState.selectedLeadCity;
+    }
+
     // 1. Prioridade por texto no endereço
+    if (/\bflorian[oó]polis\b|\bfloripa\b/i.test(addr)) return 'Florianópolis';
+    if (/\bcuritiba\b/i.test(addr)) return 'Curitiba';
+    if (/\bporto\s*alegre\b|\bpoa\b/i.test(addr)) return 'Porto Alegre';
+    if (/\bjoinville\b/i.test(addr)) return 'Joinville';
+    if (/\bblumenau\b/i.test(addr)) return 'Blumenau';
+    if (/\blondrina\b/i.test(addr)) return 'Londrina';
+    if (/\bmaring[aá]\b/i.test(addr)) return 'Maringá';
     if (/\bmau[aá]\b|vila\s*no[eê]mia|jo[aã]o\s*ramalho|bar[aã]o\s*de\s*mau[aá]|itapark|zaira/i.test(addr)) return 'Mauá';
     if (/\bsanto\s*andr[eé]\b|vila\s*pires|dom\s*pedro|bairro\s*jardim|campestre/i.test(addr)) return 'Santo André';
     if (/\bs[aã]o\s*bernardo\b|\bsbc\b|rudge\s*ramos|baeta\s*neves/i.test(addr)) return 'São Bernardo do Campo';
@@ -7786,21 +7809,42 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     if (/\bdiadema\b/i.test(addr)) return 'Diadema';
     if (/\bribeir[aã]o\s*pires\b/i.test(addr)) return 'Ribeirão Pires';
     if (/\bs[aã]o\s*paulo\b|\bcapital\b/i.test(addr)) return 'São Paulo';
+    if (/\brio\s*de\s*janeiro\b|\brj\b/i.test(addr)) return 'Rio de Janeiro';
+    if (/\bbelo\s*horizonte\b|\bbh\b/i.test(addr)) return 'Belo Horizonte';
+    if (/\bbras[ií]lia\b|\bdf\b/i.test(addr)) return 'Brasília';
+    if (/\bsalvador\b|\bssa\b/i.test(addr)) return 'Salvador';
+    if (/\brecife\b/i.test(addr)) return 'Recife';
+    if (/\bfortaleza\b/i.test(addr)) return 'Fortaleza';
+    if (/\bgoi[aâ]nia\b/i.test(addr)) return 'Goiânia';
     if (/\bguarulhos\b/i.test(addr)) return 'Guarulhos';
     if (/\bosasco\b/i.test(addr)) return 'Osasco';
     if (/\bcampinas\b/i.test(addr)) return 'Campinas';
+    if (/\bsorocaba\b/i.test(addr)) return 'Sorocaba';
+    if (/\bsantos\b/i.test(addr)) return 'Santos';
 
     // 2. Extração genérica no formato ", Cidade - UF" ou "- Cidade - UF"
     const matchUf = addr.match(/[,–\-]\s*([a-zà-ÿ\s]{3,25})\s*[-–]\s*[a-z]{2}\b/i);
     if (matchUf && matchUf[1]) {
       const candidate = matchUf[1].trim();
-      if (!/(?:brasil|sp|bairro|rua|avenida)/i.test(candidate)) {
+      if (!/(?:brasil|sp|sc|pr|rs|rj|mg|df|ba|pe|ce|go|bairro|rua|avenida)/i.test(candidate)) {
         return candidate.charAt(0).toUpperCase() + candidate.slice(1);
       }
     }
 
     // 3. Geofence Geodésico por Coordenadas GPS (Lat / Lng)
     if (typeof lat === 'number' && typeof lng === 'number' && lat !== 0 && lng !== 0) {
+      // Florianópolis: -27.850 a -27.350 lat, -48.750 a -48.300 lng
+      if (lat >= -27.850 && lat <= -27.350 && lng >= -48.750 && lng <= -48.300) {
+        return 'Florianópolis';
+      }
+      // Curitiba: -25.650 a -25.250 lat, -49.450 a -49.100 lng
+      if (lat >= -25.650 && lat <= -25.250 && lng >= -49.450 && lng <= -49.100) {
+        return 'Curitiba';
+      }
+      // Porto Alegre: -30.250 a -29.850 lat, -51.350 a -51.000 lng
+      if (lat >= -30.250 && lat <= -29.850 && lng >= -51.350 && lng <= -51.000) {
+        return 'Porto Alegre';
+      }
       // Mauá: -23.630 a -23.720 lat, -46.495 a -46.410 lng
       if (lat >= -23.720 && lat <= -23.630 && lng >= -46.495 && lng <= -46.410) {
         return 'Mauá';
@@ -7831,7 +7875,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       }
     }
 
-    return 'Santo André';
+    return GeoState?.selectedLeadCity || 'Santo André';
   }
 
   // Determina coordenadas GPS determinísticas e precisas para um estabelecimento
@@ -10353,7 +10397,7 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
       if (apiKey && apiKey.length > 5) {
         try {
           const currentCity = detectCurrentCity(GeoState.centerLat, GeoState.centerLng, GeoState.selectedLeadAddress);
-          const hasCity = /\b(?:mau[aá]|santo\s*andr[eé]|s[aã]o\s*bernardo|sbc|s[aã]o\s*caetano|scs|diadema|s[aã]o\s*paulo|sp|campinas|ribeir[aã]o)\b/i.test(q);
+          const hasCity = /[,–\-]|(?:\b(?:mau[aá]|santo\s*andr[eé]|s[aã]o\s*bernardo|sbc|s[aã]o\s*caetano|scs|diadema|s[aã]o\s*paulo|sp|sc|pr|rj|mg|df|ba|pe|ce|go|campinas|ribeir[aã]o|florian[oó]polis|floripa|curitiba|porto\s*alegre|poa|joinville|blumenau|londrina|maring[aá]|rio\s*de\s*janeiro|belo\s*horizonte|bras[ií]lia|salvador|recife|fortaleza|goi[aâ]nia|santos|sorocaba)\b)/i.test(q);
           const queryStr = hasCity ? q : `${q} ${currentCity}`;
           const resp = await fetch('https://google.serper.dev/places', {
             method: 'POST',
@@ -10370,7 +10414,7 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
               const pNiche = detectNicheCategory('', p.title || p.name, p.category || '');
               matchedPlace = {
                 name: p.title || p.name,
-                address: p.address || `${q}, ${currentCity} - SP`,
+                address: p.address || `${q}, ${hasCity ? '' : currentCity + ' - SP'}`,
                 lat: parseFloat(p.latitude),
                 lng: parseFloat(p.longitude),
                 rating: p.rating || 4.8,
@@ -10388,7 +10432,7 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
     if (!matchedPlace) {
       try {
         const currentCity = detectCurrentCity(GeoState.centerLat, GeoState.centerLng, GeoState.selectedLeadAddress);
-        const hasCity = /\b(?:mau[aá]|santo\s*andr[eé]|s[aã]o\s*bernardo|sbc|s[aã]o\s*caetano|scs|diadema|s[aã]o\s*paulo|sp|campinas|ribeir[aã]o)\b/i.test(q);
+        const hasCity = /[,–\-]|(?:\b(?:mau[aá]|santo\s*andr[eé]|s[aã]o\s*bernardo|sbc|s[aã]o\s*caetano|scs|diadema|s[aã]o\s*paulo|sp|sc|pr|rj|mg|df|ba|pe|ce|go|campinas|ribeir[aã]o|florian[oó]polis|floripa|curitiba|porto\s*alegre|poa|joinville|blumenau|londrina|maring[aá]|rio\s*de\s*janeiro|belo\s*horizonte|bras[ií]lia|salvador|recife|fortaleza|goi[aâ]nia|santos|sorocaba)\b)/i.test(q);
         const queryStr = hasCity ? `${q}, Brasil` : `${q} ${currentCity}, Brasil`;
         const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=br&limit=1&q=${encodeURIComponent(queryStr)}`);
         if (resp.ok) {
@@ -10497,13 +10541,16 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
     const apiKey = State.settings?.apiKey || localStorage.getItem('leadmaps_google_api_key') || 'f93ffd86dc739cb1c843b12f2082e381064c1339';
     if (apiKey && apiKey.length > 5) {
       try {
+        const currentCity = detectCurrentCity(GeoState.centerLat, GeoState.centerLng, GeoState.selectedLeadAddress);
+        const hasSpecificCity = /[,–\-]|(?:\b(?:mau[aá]|santo\s*andr[eé]|s[aã]o\s*bernardo|sbc|s[aã]o\s*caetano|scs|diadema|s[aã]o\s*paulo|sp|sc|pr|rj|mg|df|ba|pe|ce|go|campinas|ribeir[aã]o|florian[oó]polis|floripa|curitiba|porto\s*alegre|poa|joinville|blumenau|londrina|maring[aá]|rio\s*de\s*janeiro|belo\s*horizonte|bras[ií]lia|salvador|recife|fortaleza|goi[aâ]nia|santos|sorocaba)\b)/i.test(q);
+        const autoQuery = hasSpecificCity ? q : `${q} ${currentCity}`;
         const resp = await fetch('https://google.serper.dev/places', {
           method: 'POST',
           headers: {
             'X-API-KEY': apiKey,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ q: `${q} Santo André`, gl: 'br', hl: 'pt-br' })
+          body: JSON.stringify({ q: autoQuery, gl: 'br', hl: 'pt-br' })
         });
         if (resp.ok) {
           const data = await resp.json();
@@ -10512,12 +10559,12 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
             if (!matches.some(m => m.rawName.toLowerCase() === raw.toLowerCase())) {
               matches.push({
                 title: `🏢 ${raw}`,
-                sub: `📍 ${sp.address || 'Santo André - SP'}${sp.rating ? ` · ⭐ ${sp.rating} (${sp.ratingCount || sp.reviews || 0} aval.)` : ''}`,
+                sub: `📍 ${sp.address || (hasSpecificCity ? '' : currentCity + ' - SP')}${sp.rating ? ` · ⭐ ${sp.rating} (${sp.ratingCount || sp.reviews || 0} aval.)` : ''}`,
                 lat: parseFloat(sp.latitude),
                 lng: parseFloat(sp.longitude),
                 leadId: null,
                 rawName: raw,
-                address: sp.address || 'Santo André - SP',
+                address: sp.address || (hasSpecificCity ? '' : currentCity + ' - SP'),
                 niche: detectNicheCategory('', raw, sp.category || ''),
                 defaultKw: null
               });
@@ -10756,9 +10803,258 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
     }
   });
 
-  document.getElementById('btnCenterOtherRegion')?.addEventListener('click', () => {
+  // Central de Análise de Empresa em Outra Cidade / Região
+  window.openNewRegionModal = function() {
+    const modal = document.getElementById('modalAnalyzeNewRegion');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+
+    const kwInp = document.getElementById('inputNewRegionKeyword');
+    if (kwInp) {
+      kwInp.value = GeoState.keyword || 'loja de carros';
+    }
+    const nameInp = document.getElementById('inputNewRegionBusinessName');
+    if (nameInp) {
+      nameInp.value = '';
+      setTimeout(() => nameInp.focus(), 100);
+    }
+    const cityInp = document.getElementById('inputNewRegionCity');
+    if (cityInp) {
+      cityInp.value = '';
+    }
+  };
+
+  window.closeNewRegionModal = function() {
+    const modal = document.getElementById('modalAnalyzeNewRegion');
+    if (modal) modal.classList.add('hidden');
+  };
+
+  window.enableMapClickMoveMode = function() {
+    window.closeNewRegionModal();
     GeoState.moveCenterMode = true;
-    showToast('📍 Clique em qualquer bairro/região do mapa para mover a grade e analisar o ranking lá!');
+    showToast('📍 Modo clique ativado: Clique em qualquer ponto do mapa para reposicionar a grade.');
+  };
+
+  window.submitAnalyzeNewRegion = async function(e) {
+    if (e) e.preventDefault();
+    const nameInput = document.getElementById('inputNewRegionBusinessName');
+    const cityInput = document.getElementById('inputNewRegionCity');
+    const kwInput = document.getElementById('inputNewRegionKeyword');
+    const radInput = document.getElementById('selectNewRegionRadius');
+    const btn = document.getElementById('btnSubmitNewRegion');
+
+    const businessName = (nameInput?.value || '').trim();
+    const cityOrAddress = (cityInput?.value || '').trim();
+    const keyword = (kwInput?.value || '').trim();
+    const radiusKm = Number(radInput?.value) || 3.0;
+
+    if (!businessName) {
+      showToast('⚠️ Por favor, digite o nome da empresa.');
+      nameInput?.focus();
+      return;
+    }
+    if (!cityOrAddress) {
+      showToast('⚠️ Por favor, informe a cidade ou endereço da empresa.');
+      cityInput?.focus();
+      return;
+    }
+
+    const originalBtnHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳</span> <span>Localizando no Google Maps...</span>';
+    }
+
+    try {
+      showToast(`🔍 Localizando "${businessName}" em ${cityOrAddress} no Google Maps...`);
+      await window.analyzeBusinessInRegion(businessName, cityOrAddress, keyword, radiusKm);
+      window.closeNewRegionModal();
+    } catch (err) {
+      console.error('Erro ao analisar empresa na nova região:', err);
+      showToast('⚠️ Erro ao localizar estabelecimento. Verifique a conexão ou a cidade informada.');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = originalBtnHtml;
+      }
+    }
+  };
+
+  window.analyzeBusinessInRegion = async function(businessName, cityOrAddress, customKeyword, radiusKm = 3.0) {
+    const bName = (businessName || '').trim();
+    const bCity = (cityOrAddress || '').trim();
+    const fullQuery = `${bName} ${bCity}`.trim();
+    const apiKey = State.settings?.apiKey || localStorage.getItem('leadmaps_google_api_key') || 'f93ffd86dc739cb1c843b12f2082e381064c1339';
+
+    let resolvedPlace = null;
+
+    // 1. Prioridade 1: Consulta API Serper Google Maps ao vivo
+    if (apiKey && apiKey.length > 5) {
+      try {
+        const resp = await fetch('https://google.serper.dev/places', {
+          method: 'POST',
+          headers: {
+            'X-API-KEY': apiKey,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ q: fullQuery, gl: 'br', hl: 'pt-br' })
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          if (Array.isArray(data.places) && data.places.length > 0) {
+            const p = data.places[0];
+            const lat = parseFloat(p.latitude);
+            const lng = parseFloat(p.longitude);
+            if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
+              const pNiche = detectNicheCategory(customKeyword || '', p.title || p.name, p.category || '');
+              resolvedPlace = {
+                name: p.title || p.name || bName,
+                address: p.address || `${bName}, ${bCity}`,
+                lat: lat,
+                lng: lng,
+                rating: typeof p.rating === 'number' ? p.rating : 4.8,
+                reviews: typeof p.ratingCount === 'number' ? p.ratingCount : (p.reviews || 85),
+                category: p.category || '',
+                niche: pNiche,
+                city: bCity
+              };
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Erro ao consultar Serper Places:', err);
+      }
+    }
+
+    // 2. Fallback Nominatim OpenStreetMap (se Serper falhou ou não achou)
+    if (!resolvedPlace) {
+      try {
+        const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=br&limit=1&q=${encodeURIComponent(fullQuery + ', Brasil')}`);
+        if (resp.ok) {
+          const list = await resp.json();
+          if (Array.isArray(list) && list.length > 0) {
+            resolvedPlace = {
+              name: bName,
+              address: list[0].display_name,
+              lat: +parseFloat(list[0].lat).toFixed(6),
+              lng: +parseFloat(list[0].lon).toFixed(6),
+              rating: 4.8,
+              reviews: 70,
+              category: '',
+              niche: detectNicheCategory(customKeyword || '', bName),
+              city: bCity
+            };
+          }
+        }
+      } catch (err) {
+        console.warn('Erro Nominatim:', err);
+      }
+    }
+
+    // 3. Fallback Banco de Coordenadas de Cidades Brasileiras
+    if (!resolvedPlace) {
+      let baseCoord = { lat: -27.5954, lng: -48.5480, label: bCity };
+      for (const item of CITY_COORDS_DB) {
+        if (item.match.test(bCity) || item.match.test(fullQuery)) {
+          baseCoord = { lat: item.lat, lng: item.lng, label: item.label };
+          break;
+        }
+      }
+      resolvedPlace = {
+        name: bName,
+        address: `${bName}, ${bCity}`,
+        lat: baseCoord.lat,
+        lng: baseCoord.lng,
+        rating: 4.8,
+        reviews: 65,
+        category: '',
+        niche: detectNicheCategory(customKeyword || '', bName),
+        city: bCity
+      };
+    }
+
+    // 4. Aplica no Estado Global do GeoGrid
+    GeoState.selectedLeadName = resolvedPlace.name;
+    GeoState.selectedLeadAddress = resolvedPlace.address;
+    GeoState.selectedLeadCategory = resolvedPlace.category || '';
+    GeoState.selectedLeadCity = bCity;
+    GeoState.centerLat = +resolvedPlace.lat.toFixed(6);
+    GeoState.centerLng = +resolvedPlace.lng.toFixed(6);
+    GeoState.radiusKm = radiusKm;
+    GeoState.liveCompetitors = null; // limpa cache de concorrentes antigos
+
+    const defaultKws = {
+      carros: 'loja de carros',
+      motos: 'loja de motos',
+      odontologia: 'dentista perto de mim',
+      estetica: 'clínica de estética',
+      alimentacao: 'restaurante perto de mim',
+      advocacia: 'escritório de advocacia',
+      imobiliaria: 'imobiliária perto de mim',
+      petshop: 'pet shop perto de mim',
+      academia: 'academia perto de mim',
+      oficina: 'oficina mecânica perto de mim',
+      fisioterapia: 'clínica de fisioterapia',
+      geral: 'empresas perto de mim'
+    };
+
+    const activeNiche = resolvedPlace.niche || detectNicheCategory(customKeyword || '', resolvedPlace.name);
+    GeoState.keyword = (customKeyword || '').trim() || defaultKws[activeNiche] || 'empresas perto de mim';
+
+    // Cria/insere o lead no State.leads para persistência e seleção no dropdown
+    const customLeadId = 'custom_region_' + Date.now();
+    GeoState.selectedLeadId = customLeadId;
+    if (!Array.isArray(State.leads)) State.leads = [];
+    const existingIdx = State.leads.findIndex(l => (l.empresa || '').toLowerCase() === resolvedPlace.name.toLowerCase());
+    const leadObj = {
+      id: customLeadId,
+      empresa: resolvedPlace.name,
+      endereco: resolvedPlace.address,
+      cidade: bCity,
+      categoria: resolvedPlace.category || activeNiche,
+      rating: resolvedPlace.rating,
+      reviews: resolvedPlace.reviews,
+      lat: GeoState.centerLat,
+      lng: GeoState.centerLng,
+      temSite: true
+    };
+    if (existingIdx !== -1) {
+      State.leads[existingIdx] = { ...State.leads[existingIdx], ...leadObj };
+    } else {
+      State.leads.unshift(leadObj);
+    }
+
+    // Atualiza controles da tela
+    const bInp = document.getElementById('rankBusinessSearchInput');
+    if (bInp) bInp.value = resolvedPlace.name;
+    const kwInp = document.getElementById('rankKeywordInput');
+    if (kwInp) kwInp.value = GeoState.keyword;
+    const radSlider = document.getElementById('rankRadiusSlider');
+    if (radSlider) radSlider.value = radiusKm;
+    const radLabel = document.getElementById('rankRadiusValDisplay');
+    if (radLabel) radLabel.textContent = `${radiusKm.toFixed(2)} km`;
+
+    populateGeoLeadSelector();
+    updateCoordsDisplayText();
+    renderAiKeywordSuggestions(GeoState.keyword || resolvedPlace.name);
+
+    // Voa com o mapa Leaflet para a nova cidade
+    if (GeoState.map) {
+      GeoState.map.invalidateSize();
+      GeoState.map.setView([GeoState.centerLat, GeoState.centerLng], 13);
+    }
+
+    // Busca concorrentes reais ao vivo na nova cidade e calcula a grade
+    try {
+      await fetchGeoGridLiveCompetitors(true);
+    } catch (e) {}
+    runGeoGridCalculation(true);
+
+    showToast(`🎉 Radar posicionado em "${resolvedPlace.name}" (${bCity})! Grade recalculada com sucesso.`);
+  };
+
+  document.getElementById('btnCenterOtherRegion')?.addEventListener('click', () => {
+    window.openNewRegionModal();
   });
 
   document.getElementById('rankMapOpacitySlider')?.addEventListener('input', (e) => {
