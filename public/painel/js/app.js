@@ -10917,10 +10917,22 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
 
   // Auditoria de Visibilidade em Inteligência Artificial 2026 (ChatGPT, Google Gemini & AI Overviews)
   function runAiSearchAudit(leadParam = null) {
-    const bName = leadParam?.empresa || GeoState.selectedLeadName || 'Célia Decor';
-    const bCity = leadParam?.cidade || (GeoState.selectedLeadAddress ? GeoState.selectedLeadAddress.split('-')[1]?.trim() : 'Santo André');
-    const bNiche = GeoState.keyword || detectNicheCategory('', bName, leadParam?.categoria || '');
+    const lead = (leadParam && leadParam.empresa) 
+      ? leadParam 
+      : ((GeoState.selectedLeadId ? getAnyLeadById(GeoState.selectedLeadId) : null) || State.currentLead || (State.leads && State.leads[0]) || null);
+
+    const bName = lead?.empresa || GeoState.selectedLeadName || 'Empresa Analisada';
+    const bCity = lead?.cidade || (lead?.endereco ? lead.endereco.split('-')[1]?.trim() : '') || (GeoState.selectedLeadAddress ? GeoState.selectedLeadAddress.split('-')[1]?.trim() : 'Santo André');
     const cleanCity = (bCity || 'Santo André').split('-')[0].trim();
+    const bNiche = GeoState.keyword || (lead?.categoria ? lead.categoria.toLowerCase() : '') || detectNicheCategory('', bName, lead?.categoria || '') || 'empresa local';
+
+    // Atualiza banner superior com a empresa e região exata
+    const bannerName = document.getElementById('aiTargetCompanyName');
+    if (bannerName) bannerName.textContent = bName;
+    const bannerCity = document.getElementById('aiTargetCompanyCity');
+    if (bannerCity) bannerCity.textContent = (bCity || cleanCity);
+    const bannerNiche = document.getElementById('aiTargetCompanyNiche');
+    if (bannerNiche) bannerNiche.textContent = bNiche;
 
     const saivDisplay = document.getElementById('aiSaivScoreDisplay');
     const saivStatus = document.getElementById('aiSaivScoreStatus');
@@ -10928,7 +10940,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     const geminiStatus = document.getElementById('aiGeminiStatus');
     const prescList = document.getElementById('aiPrescriptionList');
 
-    const leadObj = (State.leads || []).find(l => (l.empresa || '').toLowerCase() === bName.toLowerCase()) || leadParam;
+    const leadObj = (State.leads || []).find(l => (l.empresa || '').toLowerCase() === bName.toLowerCase()) || lead;
     const rating = Number(leadObj?.rating || 4.8);
     const reviews = Number(leadObj?.reviews || 95);
     const temTour = Boolean(leadObj?.temTour360);
@@ -10970,7 +10982,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
 
     if (prescList) {
       prescList.innerHTML = `
-        <li class="flex items-start gap-1.5"><span class="text-emerald-400">✔</span> <span><strong>GEO Checklist 1:</strong> Perfil verificado com nota ${rating.toFixed(1)} ⭐. A IA classifica a empresa como referência de autoridade em ${cleanCity}.</span></li>
+        <li class="flex items-start gap-1.5"><span class="text-emerald-400">✔</span> <span><strong>GEO Checklist 1:</strong> Perfil verificado com nota ${rating.toFixed(1)} ⭐. A IA classifica "${bName}" como autoridade relevante em ${cleanCity}.</span></li>
         <li class="flex items-start gap-1.5"><span class="${temTour ? 'text-emerald-400' : 'text-amber-400'}">${temTour ? '✔' : '⚠️'}</span> <span><strong>Fotos 360° / Street View:</strong> ${temTour ? 'Tour Virtual verificado confere alta relevância contextual aos motores multimodais do Gemini.' : 'Sem fotos 360° no Google; adicionar tour panorâmico para aumentar em até 40% a prioridade em respostas da IA.'}</span></li>
         <li class="flex items-start gap-1.5"><span class="text-sky-400">💡</span> <span><strong>Gatilho Semântico:</strong> Responda às avaliações citando a especialidade e a região (ex: "atendemos com carinho clientes de ${cleanCity}") para alimentar o banco de respostas conversacionais da IA.</span></li>
       `;
@@ -10984,6 +10996,7 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
       copyBtn.setAttribute('data-prompt', promptExato);
     }
   }
+  window.runAiSearchAudit = runAiSearchAudit;
 
   // Ferramenta de Medir Distância no Mapa (Régua Geodésica)
   function renderRulerOverlay() {
@@ -11484,13 +11497,18 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
   }
 
   // Abre qualquer empresa diretamente na aba de Análise de Ranking (1-Click da Tabela ou do Modal)
+  // Abre qualquer empresa diretamente na aba de Análise de Ranking (1-Click da Tabela ou do Modal)
   window.openLeadInGeoGrid = function(leadId) {
-    const lead = getAnyLeadById(leadId) || State.selectedLead || (State.leads && State.leads[0]);
+    const lead = (leadId !== undefined && leadId !== null) 
+      ? (getAnyLeadById(leadId) || (State.leads && State.leads.find(l => l.id == leadId)))
+      : (State.currentLead || (State.leads && State.leads[0]));
     if (!lead) return;
 
+    State.currentLead = lead;
     GeoState.selectedLeadId = lead.id;
     GeoState.selectedLeadName = lead.empresa;
     GeoState.selectedLeadAddress = lead.endereco || lead.cidade || 'Santo André - SP';
+    GeoState.selectedLeadCity = lead.cidade || detectCurrentCity(GeoState.centerLat, GeoState.centerLng, lead.endereco);
 
     const keepKw = document.getElementById('rankKeepKeywordCheckbox')?.checked;
     if (!keepKw || !GeoState.keyword) {
@@ -11528,6 +11546,7 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
     populateGeoLeadSelector();
     updateCoordsDisplayText();
     renderAiKeywordSuggestions(lead.categoria || lead.empresa);
+    runAiSearchAudit(lead); // Sincroniza imediatamente o Auditor de Visibilidade em IA com a empresa em prospecção
     runGeoGridCalculation(true);
     fetchGeoGridLiveCompetitors(true).then(() => {
       runGeoGridCalculation(false);
@@ -12005,6 +12024,8 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
     }
     updateCoordsDisplayText();
     renderAiKeywordSuggestions(GeoState.keyword || GeoState.selectedLeadName);
+    const activeLead = (GeoState.selectedLeadId ? getAnyLeadById(GeoState.selectedLeadId) : null) || State.currentLead;
+    runAiSearchAudit(activeLead);
     runGeoGridCalculation(false);
     if (GeoState.map) GeoState.map.setView([GeoState.centerLat, GeoState.centerLng], 13);
   });
@@ -12882,8 +12903,16 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
   });
 
   document.getElementById('btnModalDownloadRankingPdf')?.addEventListener('click', () => {
+    const lead = State.currentLead || (State.leads && State.leads[0]);
     document.getElementById('diagnosticModal')?.classList.add('hidden');
-    window.downloadRankingPdf();
+    if (lead) {
+      window.openLeadInGeoGrid(lead.id);
+      setTimeout(() => {
+        window.downloadRankingPdf();
+      }, 350);
+    } else {
+      window.downloadRankingPdf();
+    }
   });
 
   document.getElementById('btnHeaderOpenPdfHub')?.addEventListener('click', () => {
@@ -12992,8 +13021,12 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
   });
 
   document.getElementById('btnModalOpenGeoGrid')?.addEventListener('click', () => {
-    if (State.selectedLead) {
-      window.openLeadInGeoGrid(State.selectedLead.id);
+    const lead = State.currentLead || (State.leads && State.leads[0]);
+    document.getElementById('diagnosticModal')?.classList.add('hidden');
+    if (lead) {
+      window.openLeadInGeoGrid(lead.id);
+    } else {
+      activateMainView('ranking');
     }
   });
 
@@ -13048,7 +13081,8 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
       btn.innerHTML = '<span>🤖</span> <span>Consultando ChatGPT & Gemini...</span>';
     }
     setTimeout(() => {
-      runAiSearchAudit();
+      const curLead = (GeoState.selectedLeadId ? getAnyLeadById(GeoState.selectedLeadId) : null) || State.currentLead || (State.leads && State.leads[0]);
+      runAiSearchAudit(curLead);
       if (btn) {
         btn.disabled = false;
         btn.innerHTML = oldHtml;
@@ -13058,24 +13092,33 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
 
   document.getElementById('btnCopyAiValidationPrompt')?.addEventListener('click', async () => {
     const btn = document.getElementById('btnCopyAiValidationPrompt');
-    const prompt = btn?.getAttribute('data-prompt') || `Você é um consultor local. Recomende as 3 melhores empresas de ${GeoState.keyword || 'loja de carros'} em Santo André.`;
+    const curLead = (GeoState.selectedLeadId ? getAnyLeadById(GeoState.selectedLeadId) : null) || State.currentLead || (State.leads && State.leads[0]);
+    const bName = curLead?.empresa || GeoState.selectedLeadName || 'a empresa líder';
+    const bCity = curLead?.cidade || (curLead?.endereco ? curLead.endereco.split('-')[1]?.trim() : '') || (GeoState.selectedLeadAddress ? GeoState.selectedLeadAddress.split('-')[1]?.trim() : 'Santo André');
+    const cleanCity = (bCity || 'Santo André').split('-')[0].trim();
+    const bNiche = GeoState.keyword || (curLead?.categoria || 'serviços locais').toLowerCase();
+    const prompt = btn?.getAttribute('data-prompt') || `Você é um consultor local de inteligência de mercado no Brasil. Faça uma análise de recomendação para um morador que busca: "${bNiche} em ${cleanCity}". Quais são as 3 principais empresas que você recomenda? Analise especificamente se a empresa "${bName}" se qualifica entre as líderes de reputação e destaque no Google Meu Negócio da região.`;
     try {
       await navigator.clipboard.writeText(prompt);
-      showToast('📋 Prompt oficial copiado! Abra o ChatGPT ou Gemini e cole para conferir a resposta ao vivo.');
+      showToast(`📋 Prompt oficial de IA copiado para "${bName}"! Abra o ChatGPT ou Gemini e cole para conferir a resposta ao vivo.`);
     } catch (e) {
       showToast('Prompt copiado!');
     }
   });
 
   document.getElementById('btnModalAiVisibility')?.addEventListener('click', () => {
-    const lead = State.selectedLead;
+    const lead = State.currentLead || (State.leads && State.leads[0]);
     document.getElementById('diagnosticModal')?.classList.add('hidden');
     if (lead) {
       window.openLeadInGeoGrid(lead.id);
       setTimeout(() => {
         runAiSearchAudit(lead);
         const card = document.getElementById('rankAiVisibilityCard');
-        card?.scrollIntoView({ behavior: 'smooth' });
+        if (card) {
+          card.scrollIntoView({ behavior: 'smooth' });
+          card.classList.add('ring-2', 'ring-sky-400', 'ring-offset-2', 'ring-offset-slate-950');
+          setTimeout(() => card.classList.remove('ring-2', 'ring-sky-400', 'ring-offset-2', 'ring-offset-slate-950'), 2500);
+        }
       }, 350);
     } else {
       activateMainView('ranking');
