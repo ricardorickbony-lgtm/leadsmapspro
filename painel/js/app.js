@@ -963,12 +963,11 @@ async function runRaioXOficial(leadId) {
 
     const pTour = lead.auditPillars?.find(p => p.id === 'tour360');
     if (pTour) {
-      if (lead.photosCount < 10) {
-        pTour.status = `⚠️ Pouquíssimas Fotos: Apenas ${lead.photosCount} fotos cadastradas (Mínimo recomendado para engajamento: 25+ fotos e Tour 360°).`;
-        pTour.ok = false;
+      pTour.ok = Boolean(lead.temTour360);
+      if (!lead.temTour360) {
+        pTour.status = `🚨 Gargalo Crítico: Sem Tour Virtual 360° interno (Apenas visão externa da rua pelo carro do Google). O perfil tem ${lead.photosCount} fotos comuns, mas nenhum tour 360° do showroom/loja.`;
       } else {
-        pTour.status = `📸 Mídia Ativa: ${lead.photosCount} fotos públicas no perfil. ${lead.temTour360 ? 'Tour 360° verificado.' : 'Tour 360° a homologar.'}`;
-        pTour.ok = lead.photosCount >= 15 || lead.temTour360;
+        pTour.status = `📸 Tour 360° Conforme: Tour virtual imersivo interno verificado e ativo no Google Street View (${lead.photosCount} fotos no perfil).`;
       }
     }
 
@@ -989,6 +988,9 @@ async function runRaioXOficial(leadId) {
     }
     if (lead.diasSemPostar > 30 && !lead.gaps.some(g => g.toLowerCase().includes('post'))) {
       lead.gaps.push('Sem postagens recentes no Google Meu Negócio');
+    }
+    if (!lead.temTour360 && !lead.gaps.some(g => g.toLowerCase().includes('360'))) {
+      lead.gaps.push('Sem Tour Virtual 360° interno (Apenas visão externa da rua pelo carro do Google)');
     }
 
     // Recalcula score de saúde
@@ -3401,8 +3403,10 @@ window.openDiagnostic = function(id) {
       },
       {
         id: "tour360",
-        nome: "Fotos & Tour Virtual 360°",
-        status: lead.temTour360 ? "Tour Virtual 360° no Street View verificado e ativo." : "⚠️ Tour 360° a Homologar: Pendente de verificação (Conferir fotos no Maps ↗ ou re-checar).",
+        nome: "Tour Virtual 360° (Street View Interno)",
+        status: lead.temTour360 
+          ? "✓ Conforme: Tour Virtual 360° interno verificado e ativo no Google Street View." 
+          : "🚨 Gargalo Crítico: Sem Tour Virtual 360° interno (Apenas visão externa da rua pelo carro do Google). Perfil perde até 67% de engajamento visual.",
         ok: Boolean(lead.temTour360),
         icon: "📸"
       },
@@ -3468,6 +3472,16 @@ window.openDiagnostic = function(id) {
         : (syncRespRate === 0
             ? `🚨 Gargalo Crítico: 0% das avaliações possuem resposta do proprietário (${lead.reviews || 0} avaliações sem retorno público).`
             : `Atenção: Apenas ${syncRespRate}% das avaliações estão respondidas no perfil (${lead.reviews || 0} avaliações).`);
+    }
+
+    // Sincroniza status do pilar tour360 se já existir
+    const pTourSync = lead.auditPillars.find(p => p.id === 'tour360');
+    if (pTourSync) {
+      pTourSync.nome = "Tour Virtual 360° (Street View Interno)";
+      pTourSync.ok = Boolean(lead.temTour360);
+      pTourSync.status = lead.temTour360
+        ? "✓ Conforme: Tour Virtual 360° interno verificado e ativo no Google Street View."
+        : `🚨 Gargalo Crítico: Sem Tour Virtual 360° interno (Apenas visão externa da rua pelo carro do Google). O perfil possui ${lead.photosCount || 0} fotos comuns, mas nenhum tour 360° por dentro do showroom/loja.`;
     }
   }
 
@@ -3551,7 +3565,7 @@ window.openDiagnostic = function(id) {
         ? `${postAudit.badgeLabel} ✎` 
         : (p.ok 
             ? '✓ Conforme' 
-            : (isTourPillar ? '⚠️ A Homologar' : (isSocialGargalo ? `✕ Gargalo (${webAnalysis.name})` : (isDeadGoogle ? '🚨 Link 404' : '✕ Gargalo'))));
+            : (isTourPillar ? '✕ Sem Tour 360° ✎' : (isSocialGargalo ? `✕ Gargalo (${webAnalysis.name})` : (isDeadGoogle ? '🚨 Link 404' : '✕ Gargalo'))));
 
       const btnClickAction = isPostPillar 
         ? `window.openPostAuditModal(${lead.id})` 
@@ -3561,11 +3575,11 @@ window.openDiagnostic = function(id) {
 
       const btnBadgeColorClass = isPostPillar
         ? (postAudit.isAtivo ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : (postAudit.isAlerta ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30' : 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30'))
-        : (p.ok ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : (isTourPillar ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30' : 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30'));
+        : (p.ok ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30');
 
       const cardBorderBg = isPostPillar
         ? (postAudit.isAtivo ? 'border-[color-mix(in_oklab,var(--emerald-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--emerald-signal)_6%,transparent)]' : (postAudit.isAlerta ? 'border-amber-500/30 bg-amber-500/10' : 'border-[color-mix(in_oklab,var(--rose-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--rose-signal)_6%,transparent)]'))
-        : (p.ok ? 'border-[color-mix(in_oklab,var(--emerald-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--emerald-signal)_6%,transparent)]' : (isTourPillar ? 'border-amber-500/30 bg-amber-500/10' : 'border-[color-mix(in_oklab,var(--rose-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--rose-signal)_6%,transparent)]'));
+        : (p.ok ? 'border-[color-mix(in_oklab,var(--emerald-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--emerald-signal)_6%,transparent)]' : 'border-[color-mix(in_oklab,var(--rose-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--rose-signal)_6%,transparent)]');
 
       const pStatusText = isPostPillar ? postAudit.statusPilar : p.status;
 
