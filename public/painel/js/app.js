@@ -1046,12 +1046,15 @@ async function runRaioXOficial(leadId, autoOpen = true) {
       }
     }
 
-    // 5. Postagens & Novidades Recentes
+    // 5. Postagens & Novidades Recentes (Audita TODAS as postagens da lista para pegar a mais recente)
     if (Array.isArray(item.posts) && item.posts.length > 0) {
-      const latestPost = item.posts[0];
-      const postTimestamp = latestPost?.timestamp || (latestPost?.date ? new Date(latestPost.date).getTime() : null);
-      if (postTimestamp) {
-        const diffDays = Math.max(0, Math.round((Date.now() - postTimestamp) / (1000 * 60 * 60 * 24)));
+      let newestTimestamp = 0;
+      item.posts.forEach(p => {
+        const t = p?.timestamp || (p?.date ? new Date(p.date).getTime() : 0);
+        if (t > newestTimestamp) newestTimestamp = t;
+      });
+      if (newestTimestamp > 0) {
+        const diffDays = Math.max(0, Math.round((Date.now() - newestTimestamp) / (1000 * 60 * 60 * 24)));
         lead.diasSemPostar = diffDays;
       } else {
         lead.diasSemPostar = 7;
