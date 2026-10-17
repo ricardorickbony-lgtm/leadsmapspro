@@ -345,20 +345,54 @@ function extractIdsFromUrl() {
   }
 }
 
+const CALENDAR_MONTHS_MAP = {
+  'jan': 0, 'janeiro': 0, 'fev': 1, 'fevereiro': 1, 'mar': 2, 'marco': 2, 'março': 2,
+  'abr': 3, 'abril': 3, 'mai': 4, 'maio': 4, 'jun': 5, 'junho': 5,
+  'jul': 6, 'julho': 6, 'ago': 7, 'agosto': 7, 'set': 8, 'setembro': 8,
+  'out': 9, 'outubro': 9, 'nov': 10, 'novembro': 10, 'dez': 11, 'dezembro': 11,
+  'january': 0, 'february': 1, 'march': 2, 'april': 3, 'may': 4, 'june': 5,
+  'july': 6, 'august': 7, 'september': 8, 'october': 9, 'november': 10, 'december': 11
+};
+
 function extractBusinessIdentity() {
   const ids = extractIdsFromUrl();
   const heading = document.querySelector('h1[aria-level="1"]') ||
                   document.querySelector('[role="main"] h1') ||
                   document.querySelector('h1.DUwDvf') ||
                   document.querySelector('div.fontHeadlineLarge') ||
+                  document.querySelector('div.fontTitleLarge') ||
+                  document.querySelector('div.fontHeadlineMedium') ||
                   document.querySelector('h1');
+  
+  let title = heading?.textContent?.trim() || "";
+
+  // Se estiver no visualizador fullscreen de foto/vídeo, o título pode estar no header flutuante ou na URL
+  if (!title || title.length < 2) {
+    const viewerHeader = document.querySelector('button[aria-label*="Voltar"] + div, div.NhfElc, div.q3Kx7c');
+    if (viewerHeader && viewerHeader.textContent) {
+      title = viewerHeader.textContent.split('\n')[0].trim();
+    }
+  }
+
+  if (!title || title.length < 2) {
+    const placeMatch = location.href.match(/\/place\/([^\/@?#]+)/);
+    if (placeMatch && placeMatch[1]) {
+      try {
+        title = decodeURIComponent(placeMatch[1]).replace(/\+/g, ' ').trim();
+      } catch(e) {}
+    }
+  }
+
   return {
     ...ids,
-    title: heading?.textContent?.trim() || ""
+    title
   };
 }
 
 function parseRelativeDate(text) {
+  if (!text || typeof text !== 'string') return null;
+
+  // 1. Padrões textuais relativos diretos (hoje, ontem, há X dias, X weeks ago)
   for (const pattern of RELATIVE_PATTERNS) {
     const match = text.match(pattern.re);
     if (!match) continue;
@@ -370,11 +404,7 @@ function parseRelativeDate(text) {
     let daysDiff = 0;
     switch (pattern.unit) {
       case "minute":
-        date.setMinutes(date.getMinutes() - value);
-        daysDiff = 0;
-        break;
       case "hour":
-        date.setHours(date.getHours() - value);
         daysDiff = 0;
         break;
       case "day":
@@ -399,45 +429,106 @@ function parseRelativeDate(text) {
       daysAgo: daysDiff
     };
   }
+
+  // 2. Visualizador Oficial do Google Maps de Fotos/Vídeos: "Vídeo - 10/2026", "Foto - 09/2026", "10/2026"
+  const slashMatch = text.match(/(?:(?:v[íi]deo|foto|photo|video)\s*[-–—]\s*)?(\d{1,2})\/(\d{4})/i);
+  if (slashMatch) {
+    const targetMonth = parseInt(slashMatch[1], 10) - 1;
+    const targetYear = parseInt(slashMatch[2], 10);
+    if (targetMonth >= 0 && targetMonth <= 11 && targetYear >= 2015 && targetYear <= 2035) {
+      const now = new Date();
+      const curYear = now.getFullYear();
+      const curMonth = now.getMonth();
+      const monthsDiff = (curYear - targetYear) * 12 + (curMonth - targetMonth);
+
+      let daysAgo = 0;
+      if (monthsDiff <= 0) {
+        // Publicado no mês corrente (ex: 10/2026) -> Super recente! (entre 1 e 7 dias)
+        daysAgo = Math.max(1, Math.min(7, Math.floor(now.getDate() / 2)));
+      } else if (monthsDiff === 1) {
+        daysAgo = 30 + Math.floor(now.getDate() / 2);
+      } else {
+        daysAgo = monthsDiff * 30;
+      }
+      const d = new Date(targetYear, targetMonth, 1);
+      return {
+        isoDate: d.toISOString(),
+        daysAgo: daysAgo
+      };
+    }
+  }
+
+  // 3. Formato com nome de mês por extenso: "out. de 2026", "outubro de 2026", "Vídeo - out. de 2026"
+  const monthNameMatch = text.match(/(?:(?:v[íi]deo|foto|photo|video)\s*[-–—]\s*)?([a-zçãé]+)\.?\s+(?:de\s+)?(\d{4})/i);
+  if (monthNameMatch && CALENDAR_MONTHS_MAP[monthNameMatch[1].toLowerCase()] !== undefined) {
+    const targetMonth = CALENDAR_MONTHS_MAP[monthNameMatch[1].toLowerCase()];
+    const targetYear = parseInt(monthNameMatch[2], 10);
+    if (targetYear >= 2015 && targetYear <= 2035) {
+      const now = new Date();
+      const curYear = now.getFullYear();
+      const curMonth = now.getMonth();
+      const monthsDiff = (curYear - targetYear) * 12 + (curMonth - targetMonth);
+
+      let daysAgo = 0;
+      if (monthsDiff <= 0) {
+        daysAgo = Math.max(1, Math.min(7, Math.floor(now.getDate() / 2)));
+      } else if (monthsDiff === 1) {
+        daysAgo = 30 + Math.floor(now.getDate() / 2);
+      } else {
+        daysAgo = monthsDiff * 30;
+      }
+      const d = new Date(targetYear, targetMonth, 1);
+      return {
+        isoDate: d.toISOString(),
+        daysAgo: daysAgo
+      };
+    }
+  }
+
   return null;
 }
 
 function collectActivityCandidates() {
-  const mainPane = document.querySelector('div[role="main"]') || document.body;
+  // Varre o body completo para abranger visualizador flutuante de fotos e vídeos
   const nodes = Array.from(
-    mainPane.querySelectorAll(
+    document.body.querySelectorAll(
       [
         '[aria-label*="post" i]',
         '[aria-label*="foto" i]',
         '[aria-label*="photo" i]',
+        '[aria-label*="v[íi]deo" i]',
+        '[aria-label*="video" i]',
         '[aria-label*="publica" i]',
         '[jslog]',
         '[data-value]',
         'span',
         'div',
-        'p'
+        'p',
+        'header',
+        'button'
       ].join(",")
     )
   );
 
   const results = [];
   for (const node of nodes) {
-    if (node.children && node.children.length > 2) continue;
+    if (node.children && node.children.length > 3) continue;
     const text = node.getAttribute("aria-label") || node.textContent || "";
     const trimmed = text.replace(/\s+/g, " ").trim();
-    if (!trimmed || trimmed.length > 220 || trimmed.length < 3) continue;
+    if (!trimmed || trimmed.length > 200 || trimmed.length < 3) continue;
 
     const parsed = parseRelativeDate(trimmed);
     if (!parsed) continue;
 
     const isPostish = /post|publica|novidade|atualiza/i.test(trimmed);
     const isPhotoish = /foto|photo|imagem|image/i.test(trimmed);
-    const isGenericActivity = trimmed.length < 50;
+    const isVideoish = /v[íi]deo|video/i.test(trimmed);
+    const isGenericActivity = trimmed.length < 60;
 
-    if (!isPostish && !isPhotoish && !isGenericActivity) continue;
+    if (!isPostish && !isPhotoish && !isVideoish && !isGenericActivity) continue;
 
     results.push({
-      kind: isPostish ? "post" : (isPhotoish ? "photo" : "activity"),
+      kind: isVideoish ? "video" : (isPostish ? "post" : (isPhotoish ? "photo" : "activity")),
       rawText: trimmed,
       estimatedAt: parsed.isoDate,
       daysAgo: parsed.daysAgo,

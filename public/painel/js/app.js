@@ -881,9 +881,10 @@ window.addEventListener('message', (ev) => {
             if (bCid && (String(l.cid) === bCid || String(l.placeId) === bCid)) return true;
             if (bPlaceId && String(l.placeId) === bPlaceId) return true;
             if (bTitle && l.empresa) {
-              const lName = l.empresa.toLowerCase().trim();
-              const mName = bTitle.toLowerCase().trim();
-              return lName === mName || lName.includes(mName) || mName.includes(lName);
+              const lName = l.empresa.toLowerCase().replace(/\.+$/, '').trim();
+              const mName = bTitle.toLowerCase().replace(/\.+$/, '').trim();
+              return lName === mName || lName.includes(mName) || mName.includes(lName) ||
+                (lName.split(' ')[0] === mName.split(' ')[0] && lName.split(' ')[1] === mName.split(' ')[1]);
             }
             return false;
           });
