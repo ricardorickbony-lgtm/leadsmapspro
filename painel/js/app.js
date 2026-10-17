@@ -1800,10 +1800,40 @@ function generateCityLeads(niche, city, targetCount = 35) {
       'Oral Design Studio Odonto', 'Implante & Saúde Odontologia', 'OdontoVida Consultório Integrado',
       'CenterDent Reabilitação Oral', 'Clínica Sorriso Nobre', 'Implante Odonto Prime'
     ];
+  } else if (/decor|move|casa|interio|design/i.test(niche)) {
+    nomesBase = [
+      'Decorart Inspire Interiores', 'Casa & Conceito Decorações', 'Espaço Decor Santo André',
+      'Boutique da Casa Decoração', 'Galeria Decorações & Conforto', 'Lilás Decorações e Ambientes',
+      'Puro Charme Casa & Presentes', 'Ateliê Home Decor', 'Prime Ambientes & Decorações',
+      'Harmonia Interiores & Decoração', 'Studio Arte & Conceito', 'Empório Decorações Nobres',
+      'Vanguard Casa & Decoração', 'Bella Casa Móveis & Decoração', 'Ambiente Certo Decorações'
+    ];
+  } else if (/carro|veic|autom|moto/i.test(niche)) {
+    nomesBase = [
+      'Auto Shopping Prime Seminovos', 'Nevada Multimarcas Automóveis', 'Sou Mais Carro Seminovos',
+      'Líder Veículos Selecionados', 'Prime Motors Multimarcas', 'Elite Car Veículos',
+      'Direct Motors Seminovos', 'Conceito Motors ABC', 'Exclusive Car Multimarcas',
+      'Top Car Automóveis', 'Aliança Veículos Seminovos', 'Vip Motors Santo André'
+    ];
+  } else if (/advoc|jurid|direito/i.test(niche)) {
+    nomesBase = [
+      'Almeida & Associados Advocacia', 'Consultoria Jurídica Especializada', 'Ribeiro & Santos Advogados',
+      'Soluções Jurídicas Integradas', 'Aliança Direito & Negócios', 'Prime Consultoria Jurídica'
+    ];
+  } else if (/imob|corret|imove/i.test(niche)) {
+    nomesBase = [
+      'Prime Imóveis & Consultoria', 'Nova Imóveis & Negócios', 'Belo Lar Imóveis',
+      'Aliança Gestão Imobiliária', 'Líder Imóveis ABC', 'Conceito Imóveis Selecionados'
+    ];
   } else {
-    const prefixos = ['Clínica', 'Espaço', 'Centro de', 'Studio', 'Instituto', 'Grupo', 'Aliança', 'Empório', 'Prime'];
+    // Sanitização de contingência: NUNCA adiciona 'Clínica' a nichos de comércio ou serviços gerais
+    const cleanNiche = niche.replace(/^(loja de|empresa de|comércio de|serviços de)\s*/i, '').trim();
+    const capitalizedNiche = cleanNiche ? (cleanNiche.charAt(0).toUpperCase() + cleanNiche.slice(1)) : 'Comércio';
+    const prefixos = /saúde|med|clinic|fisio|terap|psico|nutri/i.test(niche)
+      ? ['Clínica', 'Instituto', 'Centro de Saúde', 'Espaço Integrado', 'Studio']
+      : ['Espaço', 'Centro de', 'Studio', 'Instituto', 'Grupo', 'Aliança', 'Empório', 'Prime'];
     const adjetivos = ['Prime', 'Excelência', 'Integrado', 'VIP', 'Conceito', 'Express', 'Tradicional', 'Master', 'Avançado'];
-    nomesBase = bairros.map((b, i) => `${prefixos[i % prefixos.length]} ${niche} ${adjetivos[i % adjetivos.length]} - ${b}`);
+    nomesBase = bairros.map((b, i) => `${prefixos[i % prefixos.length]} ${capitalizedNiche} ${adjetivos[i % adjetivos.length]} - ${b}`);
   }
 
   const leadsGerados = [];
@@ -4938,6 +4968,7 @@ async function fetchSerperLivePlaces(niche, city, targetCount, apiKey) {
     const has360 = isVerifiedTour;
 
     const rating = typeof p.rating === 'number' ? p.rating : 4.5;
+    const reviews = typeof p.ratingCount === 'number' ? p.ratingCount : (typeof p.reviews === 'number' ? p.reviews : (p.user_ratings_total || 28));
     const isVerifiedPosts = isPostsVerifiedForBusiness(placeTitle, p.address, p.phoneNumber);
     const postDaysCache = getLeadPostDaysCache();
     const cleanTitle = (placeTitle || '').toLowerCase().trim();
@@ -5060,7 +5091,7 @@ async function fetchSerperLivePlaces(niche, city, targetCount, apiKey) {
     return {
       id: Date.now() + idx,
       empresa: placeTitle,
-      categoria: niche,
+      categoria: p.category || niche,
       telefone: tel,
       whatsappVerificado: isMobileWhatsAppNumber(tel),
       cidade: p.address || city,
@@ -5084,10 +5115,19 @@ async function fetchSerperLivePlaces(niche, city, targetCount, apiKey) {
       reviewsSemRespostaPct: isVerifiedTour ? 0 : 100,
       unansweredCount: isVerifiedTour ? 0 : reviews,
       motivo: motivoContato,
-      concorrentes: [
-        { nome: `${niche} Líder ${city.split(' - ')[0]}`, reviews: Math.floor(reviews * 1.5) + 30 },
-        { nome: `${niche} Prime`, reviews: Math.floor(reviews * 1.1) + 15 }
-      ],
+      concorrentes: (() => {
+        const others = accumulatedPlaces.filter((_, i) => i !== idx);
+        if (others.length > 0) {
+          return others.slice(0, 3).map(o => ({
+            nome: o.title || o.name || `${niche} Concorrente`,
+            reviews: typeof o.ratingCount === 'number' ? o.ratingCount : (typeof o.reviews === 'number' ? o.reviews : 40)
+          }));
+        }
+        return [
+          { nome: `${niche} Líder`, reviews: Math.floor(reviews * 1.5) + 30 },
+          { nome: `${niche} Prime`, reviews: Math.floor(reviews * 1.1) + 15 }
+        ];
+      })(),
       gaps: gaps
     };
   });
@@ -5503,8 +5543,9 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       if (apiKey && apiKey.trim().length > 5) {
         if (typeof getActiveUserCredits === 'function' && getActiveUserCredits() <= 0) {
           showToast("⚠️ Seus créditos do mês acabaram (0 créditos). Adquira uma recarga avulsa ou renove seu plano!");
-          btn.disabled = false;
-          btn.innerHTML = originalBtnHtml;
+          btnStart.disabled = false;
+          progContainer?.classList.add('hidden');
+          if (btnLabel) btnLabel.textContent = 'Iniciar Varredura & Diagnóstico';
           return;
         }
 
