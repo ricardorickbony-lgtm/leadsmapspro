@@ -5703,25 +5703,70 @@ async function searchPlacesForVerification(rawInput, cityInput, apiKey) {
   }
 
   // 2. Fallback para /places se /maps não retornar
-  const response = await fetch('https://google.serper.dev/places', {
-    method: 'POST',
-    headers: {
-      'X-API-KEY': keyToUse,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      q: searchQuery,
-      gl: 'br',
-      hl: 'pt-br'
-    })
-  });
+  let places = [];
+  try {
+    const response = await fetch('https://google.serper.dev/places', {
+      method: 'POST',
+      headers: {
+        'X-API-KEY': keyToUse,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        q: searchQuery,
+        gl: 'br',
+        hl: 'pt-br'
+      })
+    });
 
-  if (!response.ok) {
-    throw new Error(`Erro na API do Google Maps (Status ${response.status})`);
+    if (response.ok) {
+      const data = await response.json();
+      places = data.places || [];
+    }
+  } catch (errPlaces) {
+    console.warn('Erro ao consultar /places rápido:', errPlaces);
   }
 
-  const data = await response.json();
-  return { places: data.places || [], cleanQuery, searchQuery };
+  // 3. Fallback inteligente de contingência: Outscraper API Oficial
+  if (!places || places.length === 0) {
+    const outscraperKey = (State.settings?.outscraperApiKey || localStorage.getItem('leadmaps_outscraper_api_key') || 'NzM0YTI0ZmU5NDc2NGQxNjgzNjJlYjhiOTRlNmU4Mzh8YmI5ODZkYTM3Mg').trim();
+    if (outscraperKey) {
+      try {
+        console.log("⚡ Acionando Outscraper Oficial para localizar perfil:", searchQuery);
+        const outUrl = `https://api.app.outscraper.com/maps/search-v2?query=${encodeURIComponent(searchQuery)}&limit=3&async=false&apiKey=${encodeURIComponent(outscraperKey)}`;
+        const outRes = await fetch(outUrl);
+        if (outRes.ok) {
+          const outData = await outRes.json();
+          const items = outData?.data?.[0] || [];
+          if (items.length > 0) {
+            places = items.map(it => ({
+              title: it.name || it.title,
+              name: it.name || it.title,
+              address: it.full_address || it.address || `${cityInput || ''}`,
+              category: it.type || (it.subtypes && it.subtypes[0]) || 'Empresa Local',
+              types: it.subtypes || [it.type],
+              rating: typeof it.rating === 'number' ? it.rating : 5.0,
+              ratingCount: typeof it.reviews === 'number' ? it.reviews : 0,
+              reviews: typeof it.reviews === 'number' ? it.reviews : 0,
+              phoneNumber: it.phone,
+              phone: it.phone,
+              website: it.site || it.website,
+              cid: it.cid || it.place_id,
+              placeId: it.place_id || it.cid,
+              latitude: it.latitude,
+              longitude: it.longitude,
+              photos_count: it.photos_count || 0,
+              verified: Boolean(it.verified),
+              source: 'outscraper'
+            }));
+          }
+        }
+      } catch (outErr) {
+        console.warn('Contingência Outscraper em searchPlacesForVerification:', outErr);
+      }
+    }
+  }
+
+  return { places: places || [], cleanQuery, searchQuery };
 }
 
 async function fetchRealPlaceReviews(cid, apiKey) {
@@ -6077,6 +6122,65 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
         } catch (apiErr) {
           console.warn("Erro ao buscar via Serper API:", apiErr);
           showToast("Aviso: Falha na API. Verifique sua conexão ou tente novamente.");
+        }
+      }
+
+      // 1.1 Se a busca rápida inicial não retornou leads ou falhou, aciona o Outscraper Oficial como contingência
+      if (!leadsObtidos || leadsObtidos.length === 0) {
+        const outscraperKey = (State.settings?.outscraperApiKey || localStorage.getItem('leadmaps_outscraper_api_key') || 'NzM0YTI0ZmU5NDc2NGQxNjgzNjJlYjhiOTRlNmU4Mzh8YmI5ODZkYTM3Mg').trim();
+        if (outscraperKey) {
+          try {
+            if (btnLabel) btnLabel.textContent = 'Acionando Outscraper Oficial...';
+            if (progBar) progBar.style.width = '65%';
+            const outLimit = Math.min(targetCount, 20);
+            const cleanCity = (city || '').replace(/\s*-\s*[A-Z]{2}$/i, '').trim();
+            const outQuery = `${niche} em ${cleanCity}`;
+            const outRes = await fetch(`https://api.app.outscraper.com/maps/search-v2?query=${encodeURIComponent(outQuery)}&limit=${outLimit}&async=false&apiKey=${encodeURIComponent(outscraperKey)}`);
+            if (outRes.ok) {
+              const outData = await outRes.json();
+              const items = outData?.data?.[0] || [];
+              if (items.length > 0) {
+                leadsObtidos = items.map((it, idx) => {
+                  const placeName = it.name || `${niche} Local`;
+                  const webAnalysis = analyzeWebsiteUrl(it.site || it.website);
+                  const isVerifiedReviews = isReviewsVerifiedForBusiness(placeName, it.full_address, it.phone);
+                  const isVerifiedTour = isTourVerifiedForBusiness(placeName, it.full_address, it.phone);
+                  const isVerifiedPosts = isPostsVerifiedForBusiness(placeName, it.full_address, it.phone);
+                  const reviewsTotal = it.reviews || 0;
+                  const respRate = isVerifiedReviews ? 100 : (it.response_rate || 0);
+
+                  return {
+                    id: Date.now() + idx,
+                    empresa: placeName,
+                    categoria: it.type || niche,
+                    telefone: it.phone || '',
+                    cidade: city,
+                    endereco: it.full_address || it.address || city,
+                    websiteUrl: it.site || it.website || '',
+                    websiteAnalysis: webAnalysis,
+                    temSite: webAnalysis.hasRealWebsite,
+                    temTour360: isVerifiedTour || Boolean(it.has_tour),
+                    temPostsAtivos: isVerifiedPosts || false,
+                    diasSemPostar: isVerifiedPosts ? 1 : 45,
+                    score: Math.min(100, Math.floor(40 + (it.rating || 4.5) * 10)),
+                    rating: it.rating || 4.5,
+                    reviews: reviewsTotal,
+                    photosCount: it.photos_count || 0,
+                    isClaimed: Boolean(it.verified),
+                    responseRatePct: respRate,
+                    reviewsSemRespostaPct: Math.max(0, 100 - respRate),
+                    motivo: `Auditado via Outscraper Oficial: ${reviewsTotal} avaliações, nota ${(it.rating || 4.5).toFixed(1)}★`,
+                    concorrentes: [],
+                    gaps: []
+                  };
+                });
+                motorUtilizado = "Google Maps Oficial (Outscraper)";
+                showToast(`✅ Busca concluída via Outscraper Oficial (${leadsObtidos.length} empresas reais).`);
+              }
+            }
+          } catch (outErr) {
+            console.warn("Falha na contingência Outscraper:", outErr);
+          }
         }
       }
 
