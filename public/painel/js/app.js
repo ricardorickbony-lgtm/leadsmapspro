@@ -834,7 +834,10 @@ window.setLeadPostDays = setLeadPostDays;
 
 // Escuta sincronizações automáticas enviadas pela extensão Chrome via leadmaps-bridge
 window.addEventListener('message', (ev) => {
-  if (ev.data && ev.data.type === 'LEADMAPS_POST_CACHE_SYNC' && ev.data.cache) {
+  if (!ev.data) return;
+
+  // 1. Sincronização em lote do cache da extensão
+  if (ev.data.type === 'LEADMAPS_POST_CACHE_SYNC' && ev.data.cache) {
     try {
       const localCache = getLeadPostDaysCache();
       const updated = Object.assign({}, localCache, ev.data.cache);
@@ -850,40 +853,179 @@ window.addEventListener('message', (ev) => {
       console.warn('[RadarMaps PRO] Erro ao sincronizar cache da extensão:', err);
     }
   }
+
+  // 2. Sincronização em tempo real de atividade auditada no Google Maps (Perplexity Engine)
+  if (ev.data.type === 'RADARMAPS_PRO_BUSINESS_ACTIVITY') {
+    try {
+      const data = ev.data;
+      const bTitle = (data.business?.title || '').trim();
+      const bCid = (data.business?.cid || '').trim();
+      const bPlaceId = (data.business?.placeId || '').trim();
+      const latest = data.latest;
+
+      console.log('[RadarMaps PRO] Atividade detectada no Google Maps:', { bTitle, bCid, latest });
+
+      if (latest && typeof latest.daysAgo === 'number') {
+        const numDias = latest.daysAgo;
+
+        // Atualiza cache permanente
+        const localCache = getLeadPostDaysCache();
+        if (bTitle) localCache[bTitle.toLowerCase().trim()] = numDias;
+        if (bCid) localCache[`cid_${bCid}`] = numDias;
+        localStorage.setItem('leadmaps_post_days_cache', JSON.stringify(localCache));
+
+        // Encontra o lead correspondente na lista
+        let matchedLead = null;
+        if (State.leads && State.leads.length > 0) {
+          matchedLead = State.leads.find(l => {
+            if (bCid && (String(l.cid) === bCid || String(l.placeId) === bCid)) return true;
+            if (bPlaceId && String(l.placeId) === bPlaceId) return true;
+            if (bTitle && l.empresa) {
+              const lName = l.empresa.toLowerCase().trim();
+              const mName = bTitle.toLowerCase().trim();
+              return lName === mName || lName.includes(mName) || mName.includes(lName);
+            }
+            return false;
+          });
+        }
+
+        if (matchedLead) {
+          setLeadPostDays(matchedLead.id, numDias);
+          showToast(`⚡ RadarMaps PRO: Ficha "${matchedLead.empresa}" sincronizada com o Maps (${numDias === 0 ? 'Hoje' : numDias + ' dias atrás'})!`);
+        } else if (State.currentLead) {
+          setLeadPostDays(State.currentLead.id, numDias);
+          showToast(`⚡ RadarMaps PRO: Lead atual sincronizado (${numDias === 0 ? 'Hoje' : numDias + ' dias atrás'})!`);
+        }
+      }
+    } catch(err) {
+      console.warn('[RadarMaps PRO] Erro ao processar evento de atividade do Maps:', err);
+    }
+  }
 });
 
-function getGoogleMapsUrl(lead) {
-  if (!lead) return 'https://www.google.com/maps';
+/**
+ * RadarMaps PRO — Gerador de URL direta e infalível para Google Maps (Padrão Oficial 2026)
+ * Resolução com cadeia de fallback:
+ * 1. CID decimal (direto no perfil)
+ * 2. Place ID + query oficial universal
+ * 3. Nome + endereço completo
+ * 4. Coordenadas + Place ID
+ */
+function hexToDecimal(hexCid) {
+  const normalized = String(hexCid || "").trim().replace(/^0x/i, "");
+  if (!/^[0-9a-f]+$/i.test(normalized)) return "";
+  try {
+    return BigInt(`0x${normalized}`).toString(10);
+  } catch {
+    return "";
+  }
+}
+window.hexToDecimal = hexToDecimal;
 
-  const cleanName = (lead.empresa || '').trim();
-  const cleanAddr = (lead.endereco || lead.cidade || '').trim();
-  const rawId = String(lead.cid || lead.placeId || '').trim();
+function extractCidFromFeatureId(featureId) {
+  const match = String(featureId || "").match(/0x[0-9a-f]+:0x([0-9a-f]+)/i);
+  return match ? hexToDecimal(match[1]) : "";
+}
+window.extractCidFromFeatureId = extractCidFromFeatureId;
 
-  // 1. Se tem CID numérico direto do Google (15 a 22 dígitos)
-  if (/^\d{15,22}$/.test(rawId)) {
-    return `https://www.google.com/maps?cid=${rawId}`;
+function buildGoogleMapsProfileUrl(business, options = {}) {
+  const {
+    title = "",
+    address = "",
+    placeId = "",
+    cid = "",
+    hexCid = "",
+    featureId = "",
+    latitude,
+    longitude,
+  } = business || {};
+
+  const clean = (value) => String(value || "").trim();
+  const safePlaceId = clean(placeId || business?.place_id);
+  const safeTitle = clean(title || business?.empresa || business?.name);
+  const safeAddress = clean(address || business?.endereco || business?.cidade);
+
+  // 1) CID decimal direto ou convertido de Hex/Feature ID
+  let decimalCid = clean(cid) || (clean(hexCid) ? hexToDecimal(clean(hexCid)) : "") || extractCidFromFeatureId(clean(featureId));
+  if (!decimalCid && /^\d{15,22}$/.test(safePlaceId)) {
+    // Muitas APIs (inclusive Serper) entregam o CID numérico no campo placeId
+    decimalCid = safePlaceId;
   }
 
-  // 2. Se já tem mapsUrl válida salva que NÃO contenha o erro 'place_id:'
-  if (lead.mapsUrl && typeof lead.mapsUrl === 'string') {
-    if (!lead.mapsUrl.includes('place_id:') && !lead.mapsUrl.includes('q=place_id') && lead.mapsUrl.includes('google.com')) {
-      return lead.mapsUrl;
+  if (decimalCid && /^\d+$/.test(decimalCid)) {
+    return {
+      url: `https://maps.google.com/?cid=${decimalCid}`,
+      strategy: "cid",
+      confidence: "high",
+    };
+  }
+
+  // Se já tiver uma URL salva do Maps que não seja corrompida com 'place_id:'
+  if (business?.mapsUrl && typeof business.mapsUrl === 'string') {
+    if (!business.mapsUrl.includes('place/?q=place_id:') && !business.mapsUrl.includes('q=place_id:') && business.mapsUrl.includes('google.com')) {
+      return {
+        url: business.mapsUrl,
+        strategy: "saved_url",
+        confidence: "high",
+      };
     }
   }
 
-  // 3. Monta a busca universal oficial por Nome + Endereço/Cidade
-  // Isso NUNCA falha no Google Maps porque pesquisa o nome real que está na tela!
-  let fullQuery = cleanName;
-  if (cleanAddr && !cleanName.toLowerCase().includes(cleanAddr.toLowerCase().split('-')[0].trim())) {
-    fullQuery = `${cleanName} ${cleanAddr}`;
+  // 2) Place ID oficial (ChIJ...) + query textual — formato oficial Maps URLs
+  if (safePlaceId && safePlaceId.startsWith("ChIJ")) {
+    const query = safeTitle && safeAddress ? `${safeTitle}, ${safeAddress}` : (safeTitle || safeAddress);
+    if (query) {
+      const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}&query_place_id=${encodeURIComponent(safePlaceId)}`;
+      return {
+        url,
+        strategy: "place_id_with_query",
+        confidence: "high",
+      };
+    }
   }
 
-  // 4. Se for Place ID oficial do Google (ChIJ...)
-  if (rawId.startsWith('ChIJ')) {
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullQuery)}&query_place_id=${encodeURIComponent(rawId)}`;
+  // 3) Nome + endereço completo — fallback oficial
+  if (safeTitle && safeAddress) {
+    const query = `${safeTitle}, ${safeAddress}`;
+    return {
+      url: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`,
+      strategy: "name_address",
+      confidence: "medium",
+    };
   }
 
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullQuery || 'comércio')}`;
+  // 4) Coordenadas + Place ID — fallback oficial para local preciso
+  const lat = Number(latitude || business?.lat);
+  const lng = Number(longitude || business?.lng);
+  if (safePlaceId && Number.isFinite(lat) && Number.isFinite(lng)) {
+    const coords = `${lat},${lng}`;
+    return {
+      url: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(coords)}&query_place_id=${encodeURIComponent(safePlaceId)}`,
+      strategy: "coordinates_place_id",
+      confidence: "high",
+    };
+  }
+
+  // 5) Último recurso: apenas nome da empresa
+  if (safeTitle) {
+    return {
+      url: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(safeTitle)}`,
+      strategy: "name_only",
+      confidence: "low",
+    };
+  }
+
+  return {
+    url: "https://www.google.com/maps",
+    strategy: "fallback_generic",
+    confidence: "none",
+  };
+}
+window.buildGoogleMapsProfileUrl = buildGoogleMapsProfileUrl;
+
+function getGoogleMapsUrl(lead) {
+  if (!lead) return 'https://www.google.com/maps';
+  return buildGoogleMapsProfileUrl(lead).url;
 }
 window.getGoogleMapsUrl = getGoogleMapsUrl;
 
@@ -4901,11 +5043,19 @@ async function fetchSerperLivePlaces(niche, city, targetCount, apiKey) {
     }
 
     const placeId = p.placeId || '';
-    const rawCid = String(p.cid || (/^\d{15,22}$/.test(placeId) ? placeId : '')).trim();
-    const queryStr = `${placeTitle} ${(p.address || city)}`.trim();
-    const mapsUrl = rawCid
-      ? `https://www.google.com/maps?cid=${rawCid}`
-      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(queryStr)}`;
+    const profileUrlObj = buildGoogleMapsProfileUrl({
+      title: placeTitle,
+      address: p.address || city,
+      placeId: p.placeId,
+      cid: p.cid,
+      hexCid: p.hexCid,
+      featureId: p.featureId || p.fid || p.dataId,
+      latitude: p.latitude || p.lat,
+      longitude: p.longitude || p.lng,
+      empresa: placeTitle,
+      endereco: p.address || city
+    });
+    const mapsUrl = profileUrlObj.url;
 
     return {
       id: Date.now() + idx,
@@ -5257,11 +5407,19 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
   ];
 
   const placeId = mainPlace.placeId || '';
-  const rawCid = String(mainPlace.cid || (/^\d{15,22}$/.test(placeId) ? placeId : '')).trim();
-  const queryStr = `${mainTitle} ${(mainPlace.address || city || '')}`.trim();
-  const mapsUrl = rawCid
-    ? `https://www.google.com/maps?cid=${rawCid}`
-    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(queryStr)}`;
+  const profileUrlObj = buildGoogleMapsProfileUrl({
+    title: mainTitle,
+    address: mainPlace.address || city,
+    placeId: mainPlace.placeId,
+    cid: mainPlace.cid,
+    hexCid: mainPlace.hexCid,
+    featureId: mainPlace.featureId || mainPlace.fid || mainPlace.dataId,
+    latitude: mainPlace.latitude || mainPlace.lat,
+    longitude: mainPlace.longitude || mainPlace.lng,
+    empresa: mainTitle,
+    endereco: mainPlace.address || city
+  });
+  const mapsUrl = profileUrlObj.url;
 
   const reviewsSemRespostaPct = Math.max(0, 100 - responseRatePct);
 

@@ -266,60 +266,211 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 // ============================================================================
-// LeadMaps Pro — Auditoria Inteligente de Postagens & Fotos Reais no Google Maps
-// Detecta automaticamente quando o usuário abre uma ficha (ex: Via Certa Multimarcas)
-// e lê menções como "· um dia atrás", "· hoje", "· 3 dias atrás", etc., sincronizando com o Painel
+// RadarMaps PRO — Content Script & Rastreador Resiliente de Atividade no Google Maps
+// Baseado na Arquitetura de Engenharia Oficial Perplexity 2026:
+// 1. Não depende de seletores CSS frágeis
+// 2. Extrai identificadores robustos da URL (CID decimal, Feature ID, Place ID)
+// 3. Parser tolerante multilíngue (PT-BR e EN) com cálculo de data relativa
+// 4. Detecção contínua via MutationObserver (debounce 900ms) + URL Polling
+// 5. Toast de feedback visual na tela do Maps + Sincronização automática com chrome.storage.local e Painel
 // ============================================================================
 
-function parseDateMatchToDays(str) {
-  if (!str) return null;
-  str = str.toLowerCase().trim();
-  
-  if (str.includes('hoje') || str.includes('agora') || str.includes('hora') || str.includes('today') || str.includes('hour')) return 0;
-  if (str.includes('ontem') || str.includes('um dia') || str.includes('1 dia') || str.includes('a day') || str.includes('yesterday') || str.includes('há 1 dia')) return 1;
+const RADAR_EVENT = "RADARMAPS_PRO_BUSINESS_ACTIVITY";
+const PROCESSED_KEY = "radarmaps:lastProcessedSignature";
 
-  let m = str.match(/(\d+)\s*dias?/);
-  if (m) return parseInt(m[1]);
-  m = str.match(/há\s*(\d+)\s*dias?/);
-  if (m) return parseInt(m[1]);
-  m = str.match(/(\d+)\s*days?/);
-  if (m) return parseInt(m[1]);
+const RELATIVE_PATTERNS = [
+  // Português
+  { re: /\bhoje\b/i, unit: "day", value: 0 },
+  { re: /\bontem\b/i, unit: "day", value: 1 },
+  { re: /há\s+(\d+)\s+(minuto|minutos)/i, unit: "minute" },
+  { re: /há\s+(\d+)\s+(hora|horas)/i, unit: "hour" },
+  { re: /há\s+(\d+)\s+(dia|dias)/i, unit: "day" },
+  { re: /(\d+)\s+(dia|dias)\s+atrás/i, unit: "day" },
+  { re: /um\s+dia\s+atrás/i, unit: "day", value: 1 },
+  { re: /1\s+dia\s+atrás/i, unit: "day", value: 1 },
+  { re: /há\s+1\s+dia/i, unit: "day", value: 1 },
+  { re: /há\s+(\d+)\s+(semana|semanas)/i, unit: "week" },
+  { re: /(\d+)\s+(semana|semanas)\s+atrás/i, unit: "week" },
+  { re: /uma\s+semana\s+atrás/i, unit: "week", value: 1 },
+  { re: /1\s+semana\s+atrás/i, unit: "week", value: 1 },
+  { re: /há\s+1\s+semana/i, unit: "week", value: 1 },
+  { re: /há\s+(\d+)\s+(m[eê]s|meses)/i, unit: "month" },
+  { re: /(\d+)\s+(m[eê]s|meses)\s+atrás/i, unit: "month" },
+  { re: /um\s+mês\s+atrás/i, unit: "month", value: 1 },
+  { re: /1\s+mês\s+atrás/i, unit: "month", value: 1 },
+  { re: /há\s+1\s+mês/i, unit: "month", value: 1 },
+  { re: /há\s+(\d+)\s+(ano|anos)/i, unit: "year" },
+  { re: /(\d+)\s+(ano|anos)\s+atrás/i, unit: "year" },
+  { re: /um\s+ano\s+atrás/i, unit: "year", value: 1 },
+  { re: /1\s+ano\s+atrás/i, unit: "year", value: 1 },
 
-  if (str.includes('uma semana') || str.includes('1 semana') || str.includes('a week') || str.includes('há 1 semana')) return 7;
-  m = str.match(/(\d+)\s*semanas?/);
-  if (m) return parseInt(m[1]) * 7;
-  m = str.match(/há\s*(\d+)\s*semanas?/);
-  if (m) return parseInt(m[1]) * 7;
-  m = str.match(/(\d+)\s*weeks?/);
-  if (m) return parseInt(m[1]) * 7;
+  // Inglês
+  { re: /\btoday\b/i, unit: "day", value: 0 },
+  { re: /\byesterday\b/i, unit: "day", value: 1 },
+  { re: /(\d+)\s+(minute|minutes)\s+ago/i, unit: "minute" },
+  { re: /(\d+)\s+(hour|hours)\s+ago/i, unit: "hour" },
+  { re: /(\d+)\s+(day|days)\s+ago/i, unit: "day" },
+  { re: /a\s+day\s+ago/i, unit: "day", value: 1 },
+  { re: /(\d+)\s+(week|weeks)\s+ago/i, unit: "week" },
+  { re: /a\s+week\s+ago/i, unit: "week", value: 1 },
+  { re: /(\d+)\s+(month|months)\s+ago/i, unit: "month" },
+  { re: /a\s+month\s+ago/i, unit: "month", value: 1 },
+  { re: /(\d+)\s+(year|years)\s+ago/i, unit: "year" },
+  { re: /a\s+year\s+ago/i, unit: "year", value: 1 }
+];
 
-  if (str.includes('um mês') || str.includes('1 mês') || str.includes('a month') || str.includes('há 1 mês')) return 30;
-  m = str.match(/(\d+)\s*meses?/);
-  if (m) return parseInt(m[1]) * 30;
-  m = str.match(/há\s*(\d+)\s*meses?/);
-  if (m) return parseInt(m[1]) * 30;
-  m = str.match(/(\d+)\s*months?/);
-  if (m) return parseInt(m[1]) * 30;
+function hexToDecimal(hexCid) {
+  const normalized = String(hexCid || "").trim().replace(/^0x/i, "");
+  if (!/^[0-9a-f]+$/i.test(normalized)) return "";
+  try {
+    return BigInt(`0x${normalized}`).toString(10);
+  } catch {
+    return "";
+  }
+}
 
-  if (str.includes('um ano') || str.includes('1 ano') || str.includes('a year') || str.includes('há 1 ano')) return 365;
-  m = str.match(/(\d+)\s*anos?/);
-  if (m) return parseInt(m[1]) * 365;
-  m = str.match(/há\s*(\d+)\s*anos?/);
-  if (m) return parseInt(m[1]) * 365;
-  m = str.match(/(\d+)\s*years?/);
-  if (m) return parseInt(m[1]) * 365;
+function extractIdsFromUrl() {
+  try {
+    const url = new URL(location.href);
+    let cid = url.searchParams.get("cid") || "";
+    const placeId = url.searchParams.get("query_place_id") || "";
+    const featureMatch = location.href.match(/!1s(0x[0-9a-f]+:0x([0-9a-f]+))/i);
+    const featureId = featureMatch ? featureMatch[1] : "";
+    if (!cid && featureMatch && featureMatch[2]) {
+      cid = hexToDecimal(featureMatch[2]);
+    }
+    return { cid, placeId, featureId, url: location.href };
+  } catch(e) {
+    return { cid: "", placeId: "", featureId: "", url: location.href };
+  }
+}
 
+function extractBusinessIdentity() {
+  const ids = extractIdsFromUrl();
+  const heading = document.querySelector('h1[aria-level="1"]') ||
+                  document.querySelector('[role="main"] h1') ||
+                  document.querySelector('h1.DUwDvf') ||
+                  document.querySelector('div.fontHeadlineLarge') ||
+                  document.querySelector('h1');
+  return {
+    ...ids,
+    title: heading?.textContent?.trim() || ""
+  };
+}
+
+function parseRelativeDate(text) {
+  for (const pattern of RELATIVE_PATTERNS) {
+    const match = text.match(pattern.re);
+    if (!match) continue;
+
+    const value = pattern.value !== undefined ? pattern.value : Number(match[1]);
+    if (!Number.isFinite(value)) continue;
+
+    const date = new Date();
+    let daysDiff = 0;
+    switch (pattern.unit) {
+      case "minute":
+        date.setMinutes(date.getMinutes() - value);
+        daysDiff = 0;
+        break;
+      case "hour":
+        date.setHours(date.getHours() - value);
+        daysDiff = 0;
+        break;
+      case "day":
+        date.setDate(date.getDate() - value);
+        daysDiff = value;
+        break;
+      case "week":
+        date.setDate(date.getDate() - value * 7);
+        daysDiff = value * 7;
+        break;
+      case "month":
+        date.setMonth(date.getMonth() - value);
+        daysDiff = value * 30;
+        break;
+      case "year":
+        date.setFullYear(date.getFullYear() - value);
+        daysDiff = value * 365;
+        break;
+    }
+    return {
+      isoDate: date.toISOString(),
+      daysAgo: daysDiff
+    };
+  }
   return null;
 }
 
-let _lastAuditedPlaceTitle = "";
-let _lastAuditedPlaceDays = null;
+function collectActivityCandidates() {
+  const mainPane = document.querySelector('div[role="main"]') || document.body;
+  const nodes = Array.from(
+    mainPane.querySelectorAll(
+      [
+        '[aria-label*="post" i]',
+        '[aria-label*="foto" i]',
+        '[aria-label*="photo" i]',
+        '[aria-label*="publica" i]',
+        '[jslog]',
+        '[data-value]',
+        'span',
+        'div',
+        'p'
+      ].join(",")
+    )
+  );
 
+  const results = [];
+  for (const node of nodes) {
+    if (node.children && node.children.length > 2) continue;
+    const text = node.getAttribute("aria-label") || node.textContent || "";
+    const trimmed = text.replace(/\s+/g, " ").trim();
+    if (!trimmed || trimmed.length > 220 || trimmed.length < 3) continue;
+
+    const parsed = parseRelativeDate(trimmed);
+    if (!parsed) continue;
+
+    const isPostish = /post|publica|novidade|atualiza/i.test(trimmed);
+    const isPhotoish = /foto|photo|imagem|image/i.test(trimmed);
+    const isGenericActivity = trimmed.length < 50;
+
+    if (!isPostish && !isPhotoish && !isGenericActivity) continue;
+
+    results.push({
+      kind: isPostish ? "post" : (isPhotoish ? "photo" : "activity"),
+      rawText: trimmed,
+      estimatedAt: parsed.isoDate,
+      daysAgo: parsed.daysAgo,
+      detectedAt: new Date().toISOString()
+    });
+  }
+  return results;
+}
+
+function latestActivity(activities) {
+  if (!activities || !activities.length) return null;
+  return activities.reduce((latest, item) => {
+    return !latest || item.estimatedAt > latest.estimatedAt ? item : latest;
+  }, null);
+}
+
+function signature(payload) {
+  return [
+    payload.business?.cid,
+    payload.business?.placeId,
+    payload.business?.featureId,
+    payload.business?.title,
+    payload.latest?.kind,
+    payload.latest?.estimatedAt
+  ].join("|");
+}
+
+let _lastToastSignature = "";
 function showFloatingDateSyncToast(title, days, snippet) {
-  let toast = document.getElementById('leadmaps-datesync-toast');
+  let toast = document.getElementById('radarmaps-datesync-toast');
   if (!toast) {
     toast = document.createElement('div');
-    toast.id = 'leadmaps-datesync-toast';
+    toast.id = 'radarmaps-datesync-toast';
     toast.style.cssText = `
       position: fixed;
       top: 80px;
@@ -338,17 +489,16 @@ function showFloatingDateSyncToast(title, days, snippet) {
       gap: 10px;
       backdrop-filter: blur(8px);
       transition: all 0.3s ease;
-      animation: leadmapsFadeIn 0.3s ease;
     `;
     document.body.appendChild(toast);
   }
 
   const daysLabel = days === 0 ? "🟢 Hoje" : (days === 1 ? "🟢 Ontem (1 dia)" : `🟡 Há ${days} dias`);
   toast.innerHTML = `
-    <div style="font-size: 18px;">⚡</div>
+    <div style="font-size: 20px;">⚡</div>
     <div>
-      <div style="font-weight: 800; color: #10b981;">RadarMaps PRO — Ficha Sincronizada!</div>
-      <div style="color: #cbd5e1; font-size: 11px;"><b>${title}</b>: Publicação/Foto identificada (${daysLabel}).</div>
+      <div style="font-weight: 800; color: #10b981;">RadarMaps PRO — Atividade Sincronizada!</div>
+      <div style="color: #cbd5e1; font-size: 11px;"><b>${title}</b>: Atividade/Foto identificada (${daysLabel}).</div>
       <div style="color: #94a3b8; font-size: 10px; margin-top: 2px;">Trecho no Maps: "<i>${snippet}</i>" ➔ Sincronizado com o Painel!</div>
     </div>
   `;
@@ -359,62 +509,80 @@ function showFloatingDateSyncToast(title, days, snippet) {
   }, 4500);
 }
 
-function detectCurrentPlacePostDate() {
+async function emitActivity() {
   try {
-    // 1. Identifica nome da empresa aberta no painel
-    const titleEl = document.querySelector('h1.DUwDvf, [role="main"] h1, div.fontHeadlineLarge, h2.fontHeadlineMedium');
-    if (!titleEl) return;
-    const placeTitle = titleEl.textContent?.trim();
-    if (!placeTitle || placeTitle.length < 2) return;
+    const business = extractBusinessIdentity();
+    if (!business.cid && !business.placeId && !business.featureId && (!business.title || business.title.length < 2)) {
+      return;
+    }
 
-    // 2. Busca elementos de data de foto ou novidade/post
-    const mainPane = document.querySelector('div[role="main"]') || document.body;
-    const dateRegex = /(hoje|ontem|agora|há\s+poucas\s+horas|há\s+\d+\s+horas?|um\s+dia\s+atrás|1\s+dia\s+atrás|há\s+1\s+dia|há\s+(\d+)\s+dias?|(\d+)\s+dias?\s+atrás|uma\s+semana\s+atrás|1\s+semana\s+atrás|há\s+1\s+semana|há\s+(\d+)\s+semanas?|(\d+)\s+semanas?\s+atrás|um\s+mês\s+atrás|1\s+mês\s+atrás|há\s+1\s+mês|há\s+(\d+)\s+meses?|(\d+)\s+meses?\s+atrás|um\s+ano\s+atrás|(\d+)\s+anos?\s+atrás|today|yesterday|(\d+)\s+days?\s+ago|a\s+day\s+ago|(\d+)\s+weeks?\s+ago|a\s+week\s+ago|(\d+)\s+months?\s+ago|a\s+month\s+ago)/i;
+    const activities = collectActivityCandidates();
+    const latest = latestActivity(activities);
 
-    const candidateElements = mainPane.querySelectorAll('span, div, p');
-    let minDaysFound = null;
-    let matchingSnippet = "";
+    const payload = {
+      type: RADAR_EVENT,
+      source: "google_maps_content_script",
+      capturedAt: new Date().toISOString(),
+      business,
+      latest,
+      activities: activities.slice(0, 20),
+      confidence: latest ? "medium" : "none"
+    };
 
-    for (let el of candidateElements) {
-      if (el.children.length > 2) continue;
-      const txt = (el.textContent || '').trim();
-      if (!txt || txt.length > 60) continue;
+    const currentSignature = signature(payload);
+    const stored = await chrome.storage.local.get([PROCESSED_KEY, 'leadmaps_post_days_cache']);
+    if (stored[PROCESSED_KEY] === currentSignature) return;
 
-      const match = txt.match(dateRegex);
-      if (match) {
-        const parsedDays = parseDateMatchToDays(match[0]);
-        if (parsedDays !== null) {
-          if (minDaysFound === null || parsedDays < minDaysFound) {
-            minDaysFound = parsedDays;
-            matchingSnippet = match[0];
-          }
-        }
+    const cache = stored.leadmaps_post_days_cache || {};
+    if (latest && business.title) {
+      const cleanTitle = business.title.toLowerCase().trim();
+      cache[cleanTitle] = latest.daysAgo;
+      if (business.cid) {
+        cache[`cid_${business.cid}`] = latest.daysAgo;
       }
     }
 
-    if (minDaysFound !== null) {
-      const clean = placeTitle.toLowerCase().trim();
-      if (_lastAuditedPlaceTitle !== clean || _lastAuditedPlaceDays !== minDaysFound) {
-        _lastAuditedPlaceTitle = clean;
-        _lastAuditedPlaceDays = minDaysFound;
+    await chrome.storage.local.set({
+      [PROCESSED_KEY]: currentSignature,
+      "radarmaps:lastActivity": payload,
+      "leadmaps_post_days_cache": cache
+    });
 
-        chrome.storage.local.get(['leadmaps_post_days_cache'], (res) => {
-          const cache = res.leadmaps_post_days_cache || {};
-          cache[clean] = minDaysFound;
-          chrome.storage.local.set({ 'leadmaps_post_days_cache': cache }, () => {
-            console.log(`[LeadMaps Pro] Ficha sincronizada: "${placeTitle}" -> ${minDaysFound} dias atrás ("${matchingSnippet}")`);
-            showFloatingDateSyncToast(placeTitle, minDaysFound, matchingSnippet);
-          });
-        });
-      }
+    if (latest && business.title && _lastToastSignature !== currentSignature) {
+      _lastToastSignature = currentSignature;
+      showFloatingDateSyncToast(business.title, latest.daysAgo, latest.rawText);
     }
+
+    window.postMessage(payload, "*");
+
+    try {
+      chrome.runtime.sendMessage({
+        type: "RADARMAPS_SYNC_ACTIVITY",
+        payload
+      }).catch(() => {});
+    } catch(e) {}
   } catch(err) {
-    console.warn("[LeadMaps Pro] Erro ao auditar datas do Google Maps:", err);
+    console.warn("[RadarMaps PRO] Erro no rastreador de atividade:", err);
   }
 }
 
-// Inicia monitoramento contínuo inteligente no Google Maps
-setInterval(detectCurrentPlacePostDate, 3000);
-document.addEventListener('click', () => {
-  setTimeout(detectCurrentPlacePostDate, 1200);
+let debounceTimer;
+const observer = new MutationObserver(() => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(emitActivity, 900);
 });
+observer.observe(document.body, {
+  childList: true,
+  subtree: true,
+  characterData: true
+});
+
+emitActivity();
+
+let lastUrl = location.href;
+setInterval(() => {
+  if (location.href !== lastUrl) {
+    lastUrl = location.href;
+    emitActivity();
+  }
+}, 1200);

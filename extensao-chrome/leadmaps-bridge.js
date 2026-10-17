@@ -14,22 +14,30 @@
   // Sincronização inicial do cache de postagens da extensão para o painel
   try {
     if (chrome.storage && chrome.storage.local) {
-      chrome.storage.local.get(['leadmaps_post_days_cache'], (res) => {
+      chrome.storage.local.get(['leadmaps_post_days_cache', 'radarmaps:lastActivity'], (res) => {
         if (res && res.leadmaps_post_days_cache) {
           window.postMessage({
             type: "LEADMAPS_POST_CACHE_SYNC",
             cache: res.leadmaps_post_days_cache
           }, "*");
         }
+        if (res && res['radarmaps:lastActivity']) {
+          window.postMessage(res['radarmaps:lastActivity'], "*");
+        }
       });
 
-      // Escuta alterações no storage e notifica o painel reativamente
+      // Escuta alterações no storage e notifica o painel reativamente em tempo real
       chrome.storage.onChanged.addListener((changes, area) => {
-        if (area === 'local' && changes.leadmaps_post_days_cache) {
-          window.postMessage({
-            type: "LEADMAPS_POST_CACHE_SYNC",
-            cache: changes.leadmaps_post_days_cache.newValue || {}
-          }, "*");
+        if (area === 'local') {
+          if (changes.leadmaps_post_days_cache) {
+            window.postMessage({
+              type: "LEADMAPS_POST_CACHE_SYNC",
+              cache: changes.leadmaps_post_days_cache.newValue || {}
+            }, "*");
+          }
+          if (changes['radarmaps:lastActivity'] && changes['radarmaps:lastActivity'].newValue) {
+            window.postMessage(changes['radarmaps:lastActivity'].newValue, "*");
+          }
         }
       });
     }
