@@ -354,8 +354,18 @@ const CALENDAR_MONTHS_MAP = {
   'july': 6, 'august': 7, 'september': 8, 'october': 9, 'november': 10, 'december': 11
 };
 
+let _lastKnownBusiness = {
+  cid: "",
+  placeId: "",
+  featureId: "",
+  title: ""
+};
+
 function extractBusinessIdentity() {
   const ids = extractIdsFromUrl();
+  let title = "";
+
+  // 1. Título do cabeçalho da ficha principal no Google Maps
   const heading = document.querySelector('h1[aria-level="1"]') ||
                   document.querySelector('[role="main"] h1') ||
                   document.querySelector('h1.DUwDvf') ||
@@ -364,16 +374,66 @@ function extractBusinessIdentity() {
                   document.querySelector('div.fontHeadlineMedium') ||
                   document.querySelector('h1');
   
-  let title = heading?.textContent?.trim() || "";
-
-  // Se estiver no visualizador fullscreen de foto/vídeo, o título pode estar no header flutuante ou na URL
-  if (!title || title.length < 2) {
-    const viewerHeader = document.querySelector('button[aria-label*="Voltar"] + div, div.NhfElc, div.q3Kx7c');
-    if (viewerHeader && viewerHeader.textContent) {
-      title = viewerHeader.textContent.split('\n')[0].trim();
+  if (heading && heading.textContent) {
+    const rawH = heading.textContent.trim();
+    if (rawH.length >= 2 && !rawH.toLowerCase().includes('google maps') && !rawH.toLowerCase().includes('resultados')) {
+      title = rawH;
     }
   }
 
+  // 2. Se estiver no visualizador fullscreen de foto/vídeo do Google Maps
+  if (!title || title.length < 2) {
+    // Procura cartões ou cabeçalhos flutuantes do visualizador de mídia
+    const viewerHeaders = document.querySelectorAll('div.NhfElc, div.k7t0Ec, div.q3Kx7c, [class*="header" i] div, div.fontHeadlineSmall, div.fontTitleMedium');
+    for (const vh of viewerHeaders) {
+      if (vh.children.length === 0 || vh.children.length === 1) {
+        const txt = (vh.textContent || '').trim().replace(/[\.…\s]+$/, '');
+        if (txt.length >= 3 && !/(?:v[íi]deo|video|foto|photo|\d{1,2}\/\d{4}|partilhar|share)/i.test(txt)) {
+          title = txt;
+          break;
+        }
+      }
+    }
+  }
+
+  // 3. Busca através do elemento de mídia (se encontrar "Vídeo - 10/2026", pega o irmão que tem o nome da empresa)
+  if (!title || title.length < 2) {
+    const allEls = document.querySelectorAll('div, span, p');
+    for (const el of allEls) {
+      const txt = (el.textContent || '').trim();
+      if (txt.length < 40 && /(?:v[íi]deo|video|foto|photo)\s*[-–—−·•~|/:\s]*\s*\d{1,2}\/\d{4}/i.test(txt)) {
+        if (el.parentElement) {
+          const siblings = el.parentElement.querySelectorAll('div, span, h1, h2, a');
+          for (const sib of siblings) {
+            if (sib !== el && sib.children.length === 0) {
+              const sibTxt = (sib.textContent || '').trim().replace(/[\.…\s]+$/, '');
+              if (sibTxt.length >= 3 && !/(?:v[íi]deo|video|foto|photo|\d{1,2}\/\d{4}|partilhar|share)/i.test(sibTxt)) {
+                title = sibTxt;
+                break;
+              }
+            }
+          }
+        }
+        if (title) break;
+      }
+    }
+  }
+
+  // 4. Parâmetro query da URL oficial (ex: query=Cl%C3%ADnica+Maryan+-+Harmoniza%C3%A7%C3%A3o+Facial...)
+  if (!title || title.length < 2) {
+    try {
+      const url = new URL(location.href);
+      const q = url.searchParams.get("query");
+      if (q) {
+        const decoded = decodeURIComponent(q).split(',')[0].trim();
+        if (decoded.length >= 2) {
+          title = decoded;
+        }
+      }
+    } catch(e) {}
+  }
+
+  // 5. Slug /place/ na URL
   if (!title || title.length < 2) {
     const placeMatch = location.href.match(/\/place\/([^\/@?#]+)/);
     if (placeMatch && placeMatch[1]) {
@@ -383,8 +443,22 @@ function extractBusinessIdentity() {
     }
   }
 
+  // Se encontrou título, sincroniza com a memória
+  if (title && title.length >= 2) {
+    _lastKnownBusiness.title = title;
+    if (ids.cid) _lastKnownBusiness.cid = ids.cid;
+    if (ids.placeId) _lastKnownBusiness.placeId = ids.placeId;
+    if (ids.featureId) _lastKnownBusiness.featureId = ids.featureId;
+  } else if (_lastKnownBusiness.title) {
+    // Recupera da memória da sessão caso esteja no visualizador fullscreen
+    title = _lastKnownBusiness.title;
+  }
+
   return {
-    ...ids,
+    cid: ids.cid || _lastKnownBusiness.cid || "",
+    placeId: ids.placeId || _lastKnownBusiness.placeId || "",
+    featureId: ids.featureId || _lastKnownBusiness.featureId || "",
+    url: location.href,
     title
   };
 }
@@ -430,8 +504,8 @@ function parseRelativeDate(text) {
     };
   }
 
-  // 2. Visualizador Oficial do Google Maps de Fotos/Vídeos: "Vídeo - 10/2026", "Foto - 09/2026", "10/2026"
-  const slashMatch = text.match(/(?:(?:v[íi]deo|foto|photo|video)\s*[-–—]\s*)?(\d{1,2})\/(\d{4})/i);
+  // 2. Visualizador Oficial do Google Maps de Fotos/Vídeos: "Vídeo - 10/2026", "Video - 10/2026", "Foto - 09/2026", "10/2026"
+  const slashMatch = text.match(/(?:(?:v[íi]deo|video|foto|photo|imagem|image)\s*[-–—−·•~|/:\s]*\s*)?(\d{1,2})\s*\/\s*(\d{4})/i);
   if (slashMatch) {
     const targetMonth = parseInt(slashMatch[1], 10) - 1;
     const targetYear = parseInt(slashMatch[2], 10);
@@ -443,7 +517,7 @@ function parseRelativeDate(text) {
 
       let daysAgo = 0;
       if (monthsDiff <= 0) {
-        // Publicado no mês corrente (ex: 10/2026) -> Super recente! (entre 1 e 7 dias)
+        // Publicado no mês corrente (ex: 10/2026) -> Super recente! (entre 1 e 7 dias, média ativa)
         daysAgo = Math.max(1, Math.min(7, Math.floor(now.getDate() / 2)));
       } else if (monthsDiff === 1) {
         daysAgo = 30 + Math.floor(now.getDate() / 2);
@@ -459,7 +533,7 @@ function parseRelativeDate(text) {
   }
 
   // 3. Formato com nome de mês por extenso: "out. de 2026", "outubro de 2026", "Vídeo - out. de 2026"
-  const monthNameMatch = text.match(/(?:(?:v[íi]deo|foto|photo|video)\s*[-–—]\s*)?([a-zçãé]+)\.?\s+(?:de\s+)?(\d{4})/i);
+  const monthNameMatch = text.match(/(?:(?:v[íi]deo|video|foto|photo|imagem|image)\s*[-–—−·•~|/:\s]*\s*)?([a-zçãé]+)\.?\s+(?:de\s+)?(\d{4})/i);
   if (monthNameMatch && CALENDAR_MONTHS_MAP[monthNameMatch[1].toLowerCase()] !== undefined) {
     const targetMonth = CALENDAR_MONTHS_MAP[monthNameMatch[1].toLowerCase()];
     const targetYear = parseInt(monthNameMatch[2], 10);
@@ -489,10 +563,17 @@ function parseRelativeDate(text) {
 }
 
 function collectActivityCandidates() {
-  // Varre o body completo para abranger visualizador flutuante de fotos e vídeos
   const nodes = Array.from(
     document.body.querySelectorAll(
       [
+        'span',
+        'p',
+        'div.fontHeadlineSmall',
+        'div.fontTitleMedium',
+        'div.fontBodyMedium',
+        'div.fontTitleSmall',
+        'div.NhfElc',
+        'div.k7t0Ec',
         '[aria-label*="post" i]',
         '[aria-label*="foto" i]',
         '[aria-label*="photo" i]',
@@ -500,22 +581,17 @@ function collectActivityCandidates() {
         '[aria-label*="video" i]',
         '[aria-label*="publica" i]',
         '[jslog]',
-        '[data-value]',
-        'span',
-        'div',
-        'p',
-        'header',
-        'button'
+        '[data-value]'
       ].join(",")
     )
   );
 
   const results = [];
   for (const node of nodes) {
-    if (node.children && node.children.length > 3) continue;
+    if (node.children && node.children.length > 2) continue;
     const text = node.getAttribute("aria-label") || node.textContent || "";
     const trimmed = text.replace(/\s+/g, " ").trim();
-    if (!trimmed || trimmed.length > 200 || trimmed.length < 3) continue;
+    if (!trimmed || trimmed.length > 120 || trimmed.length < 3) continue;
 
     const parsed = parseRelativeDate(trimmed);
     if (!parsed) continue;
@@ -557,7 +633,7 @@ function signature(payload) {
 }
 
 let _lastToastSignature = "";
-function showFloatingDateSyncToast(title, days, snippet, isNoPostsConfirmed = false) {
+function showFloatingDateSyncToast(title, days, snippet) {
   let toast = document.getElementById('radarmaps-datesync-toast');
   if (!toast) {
     toast = document.createElement('div');
@@ -567,50 +643,38 @@ function showFloatingDateSyncToast(title, days, snippet, isNoPostsConfirmed = fa
       top: 80px;
       right: 24px;
       z-index: 9999999;
-      background: rgba(15, 23, 42, 0.95);
+      background: rgba(15, 23, 42, 0.96);
       border: 1px solid #10b981;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+      box-shadow: 0 10px 35px rgba(0,0,0,0.75), 0 0 20px rgba(16,185,129,0.25);
       border-radius: 12px;
-      padding: 12px 18px;
+      padding: 14px 20px;
       color: #f8fafc;
       font-family: system-ui, -apple-system, sans-serif;
-      font-size: 12px;
+      font-size: 13px;
       display: flex;
       align-items: center;
-      gap: 10px;
-      backdrop-filter: blur(8px);
-      transition: all 0.3s ease;
+      gap: 12px;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     `;
     document.body.appendChild(toast);
   }
 
-  if (isNoPostsConfirmed) {
-    toast.style.borderColor = '#f43f5e';
-    toast.innerHTML = `
-      <div style="font-size: 20px;">🚨</div>
-      <div>
-        <div style="font-weight: 800; color: #f43f5e;">RadarMaps PRO — Ficha Inativa Confirmada!</div>
-        <div style="color: #cbd5e1; font-size: 11px;"><b>${title}</b>: Sem postagens recentes no Google Posts (+90 dias sem postar).</div>
-        <div style="color: #94a3b8; font-size: 10px; margin-top: 2px;">Gargalo factual confirmado e sincronizado com o Painel!</div>
-      </div>
-    `;
-  } else {
-    toast.style.borderColor = '#10b981';
-    const daysLabel = days === 0 ? "🟢 Hoje" : (days === 1 ? "🟢 Ontem (1 dia)" : `🟡 Há ${days} dias`);
-    toast.innerHTML = `
-      <div style="font-size: 20px;">⚡</div>
-      <div>
-        <div style="font-weight: 800; color: #10b981;">RadarMaps PRO — Atividade Sincronizada!</div>
-        <div style="color: #cbd5e1; font-size: 11px;"><b>${title}</b>: Postagem/Foto identificada (${daysLabel}).</div>
-        <div style="color: #94a3b8; font-size: 10px; margin-top: 2px;">Trecho no Maps: "<i>${snippet}</i>" ➔ Sincronizado com o Painel!</div>
-      </div>
-    `;
-  }
+  toast.style.borderColor = '#10b981';
+  const daysLabel = days === 0 ? "🟢 Publicado Hoje" : (days === 1 ? "🟢 Publicado Ontem" : (days <= 7 ? `🟢 Publicado este mês (há ${days} dias)` : `🟡 Há ${days} dias`));
+  toast.innerHTML = `
+    <div style="font-size: 24px; line-height: 1;">⚡</div>
+    <div>
+      <div style="font-weight: 800; color: #10b981; font-size: 13px; letter-spacing: 0.2px;">RadarMaps PRO — Atividade Sincronizada!</div>
+      <div style="color: #cbd5e1; font-size: 12px; margin-top: 2px;"><b>${title}</b>: ${daysLabel}.</div>
+      <div style="color: #94a3b8; font-size: 11px; margin-top: 3px;">Trecho no Maps: "<i>${snippet}</i>" ➔ Sincronizado com o Painel!</div>
+    </div>
+  `;
   toast.style.display = 'flex';
 
   setTimeout(() => {
     if (toast) toast.style.display = 'none';
-  }, 4500);
+  }, 6000);
 }
 
 async function emitActivity() {
@@ -623,24 +687,20 @@ async function emitActivity() {
     const activities = collectActivityCandidates();
     const latest = latestActivity(activities);
 
-    // Se não encontrou postagens recentes na ficha, confirma inatividade com precisão ética (+90 dias)
-    const resolvedLatest = latest || {
-      kind: "sem_posts",
-      rawText: "Nenhuma postagem recente identificada no Google Posts (Ficha inativa)",
-      daysAgo: 90,
-      isNoPostsConfirmed: true,
-      estimatedAt: new Date(Date.now() - 90 * 86400000).toISOString(),
-      detectedAt: new Date().toISOString()
-    };
+    // Regra de Ouro: NUNCA disparar alerta de inatividade vermelho automaticamente na tela do Maps.
+    // Se ainda não encontrou post/foto (ex: página carregando ou usuário ainda não abriu fotos), retorna silencioso.
+    if (!latest) {
+      return;
+    }
 
     const payload = {
       type: RADAR_EVENT,
       source: "google_maps_content_script",
       capturedAt: new Date().toISOString(),
       business,
-      latest: resolvedLatest,
+      latest,
       activities: activities.slice(0, 20),
-      confidence: latest ? "high" : "confirmed_no_posts"
+      confidence: "high"
     };
 
     const currentSignature = signature(payload);
@@ -650,12 +710,14 @@ async function emitActivity() {
     const cache = stored.leadmaps_post_days_cache || {};
     if (business.title) {
       const cleanTitle = business.title.toLowerCase().trim();
-      cache[cleanTitle] = resolvedLatest.daysAgo;
+      const normTitle = cleanTitle.replace(/[\.…\s]+$/, '');
+      cache[cleanTitle] = latest.daysAgo;
+      cache[normTitle] = latest.daysAgo;
       if (business.cid) {
-        cache[`cid_${business.cid}`] = resolvedLatest.daysAgo;
+        cache[`cid_${business.cid}`] = latest.daysAgo;
       }
       if (business.placeId) {
-        cache[`place_${business.placeId}`] = resolvedLatest.daysAgo;
+        cache[`place_${business.placeId}`] = latest.daysAgo;
       }
     }
 
@@ -667,7 +729,7 @@ async function emitActivity() {
 
     if (business.title && _lastToastSignature !== currentSignature) {
       _lastToastSignature = currentSignature;
-      showFloatingDateSyncToast(business.title, resolvedLatest.daysAgo, resolvedLatest.rawText, resolvedLatest.isNoPostsConfirmed);
+      showFloatingDateSyncToast(business.title, latest.daysAgo, latest.rawText);
     }
 
     window.postMessage(payload, "*");
@@ -686,7 +748,7 @@ async function emitActivity() {
 let debounceTimer;
 const observer = new MutationObserver(() => {
   clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(emitActivity, 900);
+  debounceTimer = setTimeout(emitActivity, 600);
 });
 observer.observe(document.body, {
   childList: true,
@@ -694,12 +756,10 @@ observer.observe(document.body, {
   characterData: true
 });
 
-emitActivity();
-
 let lastUrl = location.href;
 setInterval(() => {
   if (location.href !== lastUrl) {
     lastUrl = location.href;
-    emitActivity();
+    setTimeout(emitActivity, 800);
   }
 }, 1200);

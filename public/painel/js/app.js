@@ -611,9 +611,30 @@ function getLeadPostAudit(lead) {
   let dias = null;
   let isHomologar = false;
 
+  // 1. Busca direta no cache (por nome ou ID)
   if (cache[cleanEmpresa] !== undefined) {
-    // Definido manualmente pelo usuário via modal ou sincronizado da extensão
     dias = Number(cache[cleanEmpresa]);
+  } else if (lead.cid && cache['cid_' + lead.cid] !== undefined) {
+    dias = Number(cache['cid_' + lead.cid]);
+  } else if (lead.placeId && cache['place_' + lead.placeId] !== undefined) {
+    dias = Number(cache['place_' + lead.placeId]);
+  } else {
+    // 2. Busca flexível / prefixo no cache (trata títulos truncados pelo Maps com reticências)
+    const normLead = cleanEmpresa.replace(/[\.…\s]+$/, '');
+    for (const key of Object.keys(cache)) {
+      const normKey = key.replace(/[\.…\s]+$/, '');
+      if (normKey && (normLead.startsWith(normKey) || normKey.startsWith(normLead) || normLead.includes(normKey) || normKey.includes(normLead))) {
+        if (normLead.slice(0, 8) === normKey.slice(0, 8)) {
+          dias = Number(cache[key]);
+          cache[cleanEmpresa] = dias;
+          break;
+        }
+      }
+    }
+  }
+
+  if (dias !== null) {
+    // Mantém o valor verificado
   } else if (cleanEmpresa.includes('via certa') || cleanEmpresa.includes('viacerta')) {
     // Ficha confirmada pelo Ricardo com fotos/posts recentes (1 dia atrás)
     dias = 1;
@@ -870,8 +891,13 @@ window.addEventListener('message', (ev) => {
 
         // Atualiza cache permanente
         const localCache = getLeadPostDaysCache();
-        if (bTitle) localCache[bTitle.toLowerCase().trim()] = numDias;
+        if (bTitle) {
+          const cleanKey = bTitle.toLowerCase().trim();
+          localCache[cleanKey] = numDias;
+          localCache[cleanKey.replace(/[\.…\s]+$/, '')] = numDias;
+        }
         if (bCid) localCache[`cid_${bCid}`] = numDias;
+        if (bPlaceId) localCache[`place_${bPlaceId}`] = numDias;
         localStorage.setItem('leadmaps_post_days_cache', JSON.stringify(localCache));
 
         // Encontra o lead correspondente na lista
@@ -881,21 +907,24 @@ window.addEventListener('message', (ev) => {
             if (bCid && (String(l.cid) === bCid || String(l.placeId) === bCid)) return true;
             if (bPlaceId && String(l.placeId) === bPlaceId) return true;
             if (bTitle && l.empresa) {
-              const lName = l.empresa.toLowerCase().replace(/\.+$/, '').trim();
-              const mName = bTitle.toLowerCase().replace(/\.+$/, '').trim();
-              return lName === mName || lName.includes(mName) || mName.includes(lName) ||
-                (lName.split(' ')[0] === mName.split(' ')[0] && lName.split(' ')[1] === mName.split(' ')[1]);
+              const lName = l.empresa.toLowerCase().replace(/[\.…\s]+$/, '').trim();
+              const mName = bTitle.toLowerCase().replace(/[\.…\s]+$/, '').trim();
+              if (lName === mName || lName.startsWith(mName) || mName.startsWith(lName) || lName.includes(mName) || mName.includes(lName)) return true;
+              const lParts = lName.split(' ');
+              const mParts = mName.split(' ');
+              if (lParts[0] === mParts[0] && lParts[1] && mParts[1] && lParts[1] === mParts[1]) return true;
             }
             return false;
           });
         }
 
+        const syncLabel = numDias <= 1 ? (numDias === 0 ? 'Publicado Hoje' : 'Publicado Ontem') : (numDias <= 7 ? `Publicado este mês (há ${numDias} dias)` : `Há ${numDias} dias`);
         if (matchedLead) {
           setLeadPostDays(matchedLead.id, numDias);
-          showToast(`⚡ RadarMaps PRO: Ficha "${matchedLead.empresa}" sincronizada com o Maps (${numDias === 0 ? 'Hoje' : numDias + ' dias atrás'})!`);
+          showToast(`⚡ RadarMaps PRO: Ficha "${matchedLead.empresa}" sincronizada com o Maps (🟢 ${syncLabel})!`);
         } else if (State.currentLead) {
           setLeadPostDays(State.currentLead.id, numDias);
-          showToast(`⚡ RadarMaps PRO: Lead atual sincronizado (${numDias === 0 ? 'Hoje' : numDias + ' dias atrás'})!`);
+          showToast(`⚡ RadarMaps PRO: Lead atual sincronizado (🟢 ${syncLabel})!`);
         }
       }
     } catch(err) {
