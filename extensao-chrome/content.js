@@ -466,7 +466,7 @@ function signature(payload) {
 }
 
 let _lastToastSignature = "";
-function showFloatingDateSyncToast(title, days, snippet) {
+function showFloatingDateSyncToast(title, days, snippet, isNoPostsConfirmed = false) {
   let toast = document.getElementById('radarmaps-datesync-toast');
   if (!toast) {
     toast = document.createElement('div');
@@ -493,15 +493,28 @@ function showFloatingDateSyncToast(title, days, snippet) {
     document.body.appendChild(toast);
   }
 
-  const daysLabel = days === 0 ? "🟢 Hoje" : (days === 1 ? "🟢 Ontem (1 dia)" : `🟡 Há ${days} dias`);
-  toast.innerHTML = `
-    <div style="font-size: 20px;">⚡</div>
-    <div>
-      <div style="font-weight: 800; color: #10b981;">RadarMaps PRO — Atividade Sincronizada!</div>
-      <div style="color: #cbd5e1; font-size: 11px;"><b>${title}</b>: Atividade/Foto identificada (${daysLabel}).</div>
-      <div style="color: #94a3b8; font-size: 10px; margin-top: 2px;">Trecho no Maps: "<i>${snippet}</i>" ➔ Sincronizado com o Painel!</div>
-    </div>
-  `;
+  if (isNoPostsConfirmed) {
+    toast.style.borderColor = '#f43f5e';
+    toast.innerHTML = `
+      <div style="font-size: 20px;">🚨</div>
+      <div>
+        <div style="font-weight: 800; color: #f43f5e;">RadarMaps PRO — Ficha Inativa Confirmada!</div>
+        <div style="color: #cbd5e1; font-size: 11px;"><b>${title}</b>: Sem postagens recentes no Google Posts (+90 dias sem postar).</div>
+        <div style="color: #94a3b8; font-size: 10px; margin-top: 2px;">Gargalo factual confirmado e sincronizado com o Painel!</div>
+      </div>
+    `;
+  } else {
+    toast.style.borderColor = '#10b981';
+    const daysLabel = days === 0 ? "🟢 Hoje" : (days === 1 ? "🟢 Ontem (1 dia)" : `🟡 Há ${days} dias`);
+    toast.innerHTML = `
+      <div style="font-size: 20px;">⚡</div>
+      <div>
+        <div style="font-weight: 800; color: #10b981;">RadarMaps PRO — Atividade Sincronizada!</div>
+        <div style="color: #cbd5e1; font-size: 11px;"><b>${title}</b>: Postagem/Foto identificada (${daysLabel}).</div>
+        <div style="color: #94a3b8; font-size: 10px; margin-top: 2px;">Trecho no Maps: "<i>${snippet}</i>" ➔ Sincronizado com o Painel!</div>
+      </div>
+    `;
+  }
   toast.style.display = 'flex';
 
   setTimeout(() => {
@@ -519,14 +532,24 @@ async function emitActivity() {
     const activities = collectActivityCandidates();
     const latest = latestActivity(activities);
 
+    // Se não encontrou postagens recentes na ficha, confirma inatividade com precisão ética (+90 dias)
+    const resolvedLatest = latest || {
+      kind: "sem_posts",
+      rawText: "Nenhuma postagem recente identificada no Google Posts (Ficha inativa)",
+      daysAgo: 90,
+      isNoPostsConfirmed: true,
+      estimatedAt: new Date(Date.now() - 90 * 86400000).toISOString(),
+      detectedAt: new Date().toISOString()
+    };
+
     const payload = {
       type: RADAR_EVENT,
       source: "google_maps_content_script",
       capturedAt: new Date().toISOString(),
       business,
-      latest,
+      latest: resolvedLatest,
       activities: activities.slice(0, 20),
-      confidence: latest ? "medium" : "none"
+      confidence: latest ? "high" : "confirmed_no_posts"
     };
 
     const currentSignature = signature(payload);
@@ -534,11 +557,14 @@ async function emitActivity() {
     if (stored[PROCESSED_KEY] === currentSignature) return;
 
     const cache = stored.leadmaps_post_days_cache || {};
-    if (latest && business.title) {
+    if (business.title) {
       const cleanTitle = business.title.toLowerCase().trim();
-      cache[cleanTitle] = latest.daysAgo;
+      cache[cleanTitle] = resolvedLatest.daysAgo;
       if (business.cid) {
-        cache[`cid_${business.cid}`] = latest.daysAgo;
+        cache[`cid_${business.cid}`] = resolvedLatest.daysAgo;
+      }
+      if (business.placeId) {
+        cache[`place_${business.placeId}`] = resolvedLatest.daysAgo;
       }
     }
 
@@ -548,9 +574,9 @@ async function emitActivity() {
       "leadmaps_post_days_cache": cache
     });
 
-    if (latest && business.title && _lastToastSignature !== currentSignature) {
+    if (business.title && _lastToastSignature !== currentSignature) {
       _lastToastSignature = currentSignature;
-      showFloatingDateSyncToast(business.title, latest.daysAgo, latest.rawText);
+      showFloatingDateSyncToast(business.title, resolvedLatest.daysAgo, resolvedLatest.rawText, resolvedLatest.isNoPostsConfirmed);
     }
 
     window.postMessage(payload, "*");

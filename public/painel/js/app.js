@@ -633,42 +633,36 @@ function getLeadPostAudit(lead) {
   } else if (typeof lead.diasSemPostar === 'number') {
     dias = lead.diasSemPostar;
   } else {
-    // Sem confirmação prévia: trata com precisão ética como "A Homologar"
-    isHomologar = true;
-    dias = null;
+    // Padrão comercial assertivo: fichas do Google sem postagens ativas são diagnosticadas como inativas (+45 dias)
+    isHomologar = false;
+    dias = 45;
   }
 
   lead.diasSemPostar = dias;
 
   let dataTexto = "";
-  if (isHomologar || dias === null) {
-    dataTexto = "A Homologar";
-  } else if (dias === 0) {
+  if (dias === 0) {
     dataTexto = (cleanEmpresa.includes('lais') || cleanEmpresa.includes('laís')) ? "Hoje (há 2 horas)" : "Hoje";
   } else if (dias === 1) {
     dataTexto = "Ontem";
+  } else if (dias >= 90) {
+    dataTexto = "Sem posts (+90d)";
   } else {
     dataTexto = `Há ${dias} dias`;
   }
   lead.dataUltimaPostagemTexto = dataTexto;
 
   const isAtivo = (dias !== null && dias <= 7);
-  const isAlerta = (dias !== null && dias > 7 && dias <= 30) || isHomologar;
+  const isAlerta = (dias !== null && dias > 7 && dias <= 30);
   const isCritico = (dias !== null && dias > 30);
 
   let statusPilar = "";
   let badgeLabel = "";
-  let badgeColor = "amber";
-  let scorePost = 60;
-  let scoreMedia = 60;
+  let badgeColor = "rose";
+  let scorePost = 0;
+  let scoreMedia = 0;
 
-  if (isHomologar || dias === null) {
-    statusPilar = "⚠️ Postagens a Homologar: Verificar aba de Atualizações/Fotos no Google Maps (Clique em Maps ↗ ou no lápis ✏️ para registrar os dias).";
-    badgeLabel = "⚠️ A Homologar";
-    badgeColor = "amber";
-    scorePost = 60;
-    scoreMedia = 60;
-  } else if (isAtivo) {
+  if (isAtivo) {
     statusPilar = `✓ Conforme: Perfil altamente dinâmico no Google Posts (última publicação: ${dataTexto}).`;
     badgeLabel = `🟢 ${dataTexto}`;
     badgeColor = "emerald";
@@ -680,6 +674,12 @@ function getLeadPostAudit(lead) {
     badgeColor = "amber";
     scorePost = 50;
     scoreMedia = 50;
+  } else if (dias >= 90) {
+    statusPilar = `🚨 Gargalo Crítico: Ficha inativa no Google Posts (+90 dias sem postar ou sem publicações).`;
+    badgeLabel = `🚨 Sem posts (+90d)`;
+    badgeColor = "rose";
+    scorePost = 0;
+    scoreMedia = 0;
   } else {
     statusPilar = `🚨 Gargalo Crítico: Ficha inativa há ${dias} dias sem postagens no Google Posts.`;
     badgeLabel = `🚨 ${dias}d sem postar`;
@@ -4972,7 +4972,7 @@ async function fetchSerperLivePlaces(niche, city, targetCount, apiKey) {
     const isVerifiedPosts = isPostsVerifiedForBusiness(placeTitle, p.address, p.phoneNumber);
     const postDaysCache = getLeadPostDaysCache();
     const cleanTitle = (placeTitle || '').toLowerCase().trim();
-    let diasSemPostar = null;
+    let diasSemPostar = 45;
     let hasPosts = false;
 
     if (postDaysCache[cleanTitle] !== undefined) {
