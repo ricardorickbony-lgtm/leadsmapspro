@@ -853,6 +853,221 @@ function setLeadPostDays(leadId, dias) {
 }
 window.setLeadPostDays = setLeadPostDays;
 
+// --------------------------------------------------------------------------
+// 1.95 Raio-X Oficial via API Google Meu Negócio (Outscraper Oficial)
+// --------------------------------------------------------------------------
+async function runRaioXOficial(leadId) {
+  const lead = getAnyLeadById(leadId);
+  if (!lead) return;
+
+  const apiKey = (State.settings?.outscraperApiKey || localStorage.getItem('leadmaps_outscraper_api_key') || 'NzM0YTI0ZmU5NDc2NGQxNjgzNjJlYjhiOTRlNmU4Mzh8YmI5ODZkYTM3Mg').trim();
+  if (!apiKey) {
+    showToast("⚠️ Configure a Chave de API da Outscraper nas configurações primeiro.");
+    return;
+  }
+
+  const tableBtn = document.getElementById(`btnRaioX_${lead.id}`);
+  const modalBtn = document.getElementById('btnModalRunRaioX');
+  const originalTableHtml = tableBtn ? tableBtn.innerHTML : '';
+  const originalModalHtml = modalBtn ? modalBtn.innerHTML : '';
+
+  if (tableBtn) {
+    tableBtn.disabled = true;
+    tableBtn.innerHTML = `<span class="inline-block animate-spin">⏳</span> Auditando...`;
+  }
+  if (modalBtn) {
+    modalBtn.disabled = true;
+    modalBtn.innerHTML = `<span class="inline-block animate-spin">⏳</span> Consultando dados GBP...`;
+  }
+
+  showToast(`🔍 Conectando à API oficial do Google Meu Negócio para "${lead.empresa}"...`);
+
+  try {
+    const query = `${lead.empresa} ${lead.cidade || lead.endereco || ''}`.trim();
+    const url = `https://api.app.outscraper.com/maps/search-v2?query=${encodeURIComponent(query)}&limit=1&async=false&apiKey=${encodeURIComponent(apiKey)}`;
+
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error(`Erro na API (${res.status} ${res.statusText})`);
+    }
+
+    const json = await res.json();
+    const item = json?.data?.[0]?.[0];
+
+    if (!item) {
+      throw new Error("Nenhum perfil correspondente encontrado no Google Meu Negócio.");
+    }
+
+    // 1. Extração de Fotos Reais
+    if (typeof item.photos_count === 'number') {
+      lead.photosCount = item.photos_count;
+    } else if (item.photo) {
+      lead.photosCount = 1;
+    } else {
+      lead.photosCount = 0;
+    }
+
+    // 2. Verificação de Reivindicação da Ficha
+    lead.isClaimed = Boolean(item.verified);
+    lead.verified = Boolean(item.verified);
+    lead.ownerTitle = item.owner_title || lead.ownerTitle || '';
+    lead.ownerLink = item.owner_link || lead.ownerLink || '';
+    lead.ownerId = item.owner_id || lead.ownerId || '';
+
+    // 3. Avaliações & Nota
+    if (typeof item.rating === 'number') lead.rating = item.rating;
+    if (typeof item.reviews === 'number') lead.reviews = item.reviews;
+    if (item.reviews_per_score) lead.reviewsPerScore = item.reviews_per_score;
+
+    // 4. Mídia & Horários
+    if (item.photo) lead.coverPhoto = item.photo;
+    if (item.working_hours) lead.workingHours = item.working_hours;
+    if (item.location_link) lead.locationLink = item.location_link;
+    if (item.website && !lead.websiteUrl) lead.websiteUrl = item.website;
+
+    // 5. Postagens & Novidades Recentes
+    if (Array.isArray(item.posts) && item.posts.length > 0) {
+      const latestPost = item.posts[0];
+      const postTimestamp = latestPost?.timestamp || (latestPost?.date ? new Date(latestPost.date).getTime() : null);
+      if (postTimestamp) {
+        const diffDays = Math.max(0, Math.round((Date.now() - postTimestamp) / (1000 * 60 * 60 * 24)));
+        lead.diasSemPostar = diffDays;
+      } else {
+        lead.diasSemPostar = 7;
+      }
+    } else {
+      lead.diasSemPostar = 999; // Sem posts cadastrados
+    }
+
+    // 6. Atualiza Pilares de Auditoria
+    if (!lead.auditPillars) {
+      openDiagnostic(lead.id);
+    }
+
+    const pNap = lead.auditPillars?.find(p => p.id === 'nap');
+    if (pNap) {
+      pNap.ok = lead.isClaimed;
+      pNap.status = lead.isClaimed
+        ? `✓ Perfil Verificado e Reivindicado pelo proprietário (${lead.ownerTitle || lead.empresa}).`
+        : `🚨 FICHA NÃO REIVINDICADA: Qualquer pessoa ou concorrente pode reivindicar ou alterar este perfil no Google Maps! Oportunidade urgente de regularização.`;
+    }
+
+    const pTour = lead.auditPillars?.find(p => p.id === 'tour360');
+    if (pTour) {
+      if (lead.photosCount < 10) {
+        pTour.status = `⚠️ Pouquíssimas Fotos: Apenas ${lead.photosCount} fotos cadastradas (Mínimo recomendado para engajamento: 25+ fotos e Tour 360°).`;
+        pTour.ok = false;
+      } else {
+        pTour.status = `📸 Mídia Ativa: ${lead.photosCount} fotos públicas no perfil. ${lead.temTour360 ? 'Tour 360° verificado.' : 'Tour 360° a homologar.'}`;
+        pTour.ok = lead.photosCount >= 15 || lead.temTour360;
+      }
+    }
+
+    const pPost = lead.auditPillars?.find(p => p.id === 'posts');
+    if (pPost) {
+      const postAudit = getLeadPostAudit(lead);
+      pPost.ok = postAudit.isAtivo;
+      pPost.status = postAudit.statusPilar;
+    }
+
+    // Atualiza gaps do lead
+    lead.gaps = Array.isArray(lead.gaps) ? lead.gaps : [];
+    if (!lead.isClaimed && !lead.gaps.some(g => g.toLowerCase().includes('reivindicada'))) {
+      lead.gaps.unshift('Ficha NÃO REIVINDICADA no Google Maps (Risco crítico de perda do perfil)');
+    }
+    if (lead.photosCount < 10 && !lead.gaps.some(g => g.toLowerCase().includes('fotos'))) {
+      lead.gaps.push(`Apenas ${lead.photosCount} fotos no perfil (Google recomenda mais de 25 fotos)`);
+    }
+    if (lead.diasSemPostar > 30 && !lead.gaps.some(g => g.toLowerCase().includes('post'))) {
+      lead.gaps.push('Sem postagens recentes no Google Meu Negócio');
+    }
+
+    // Recalcula score de saúde
+    if (Array.isArray(lead.auditPillars) && lead.auditPillars.length > 0) {
+      const passedCount = lead.auditPillars.filter(p => p.ok).length;
+      lead.score = Math.round((passedCount / lead.auditPillars.length) * 100);
+    }
+
+    // Persiste no cache local de empresas verificadas
+    try {
+      const cacheKey = 'leadmaps_raiox_cache';
+      const cache = JSON.parse(localStorage.getItem(cacheKey) || '{}');
+      cache[lead.empresa.toLowerCase().trim()] = {
+        photosCount: lead.photosCount,
+        isClaimed: lead.isClaimed,
+        diasSemPostar: lead.diasSemPostar,
+        rating: lead.rating,
+        reviews: lead.reviews,
+        score: lead.score,
+        updatedAt: Date.now()
+      };
+      localStorage.setItem(cacheKey, JSON.stringify(cache));
+    } catch(e) {}
+
+    // Notifica e atualiza UI
+    renderTable();
+    if (document.getElementById('diagnosticModal') && !document.getElementById('diagnosticModal').classList.contains('hidden') && State.currentLead?.id === lead.id) {
+      openDiagnostic(lead.id);
+    }
+
+    showToast(`⚡ Raio-X Oficial Concluído! 📸 ${lead.photosCount} fotos · ${lead.isClaimed ? '✓ Reivindicada' : '🚨 Não Reivindicada'} · ${lead.diasSemPostar <= 7 ? 'Post Recente' : 'Sem Posts'}`);
+
+  } catch (err) {
+    console.error("Erro ao rodar Raio-X Oficial:", err);
+    showToast(`❌ Falha no Raio-X Oficial: ${err.message || 'Erro de conexão'}`);
+  } finally {
+    if (tableBtn) {
+      tableBtn.disabled = false;
+      tableBtn.innerHTML = originalTableHtml;
+    }
+    if (modalBtn) {
+      modalBtn.disabled = false;
+      modalBtn.innerHTML = originalModalHtml;
+    }
+  }
+}
+window.runRaioXOficial = runRaioXOficial;
+
+async function runBulkRaioX() {
+  if (!State.selectedLeadIds || State.selectedLeadIds.size === 0) {
+    showToast("⚠️ Selecione ao menos uma empresa na tabela para auditar via Raio-X Oficial.");
+    return;
+  }
+
+  const selectedIds = Array.from(State.selectedLeadIds);
+  const total = selectedIds.length;
+  const btn = document.getElementById('btnBulkRaioX');
+  const originalHtml = btn ? btn.innerHTML : '';
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="inline-block animate-spin">⏳</span> Processando (0/${total})...`;
+  }
+
+  showToast(`⚡ Iniciando Raio-X Oficial via API para ${total} empresas selecionadas...`);
+
+  let count = 0;
+  for (const id of selectedIds) {
+    try {
+      count++;
+      if (btn) {
+        btn.innerHTML = `<span class="inline-block animate-spin">⏳</span> Auditando (${count}/${total})...`;
+      }
+      await runRaioXOficial(id);
+      await new Promise(r => setTimeout(r, 600));
+    } catch (e) {
+      console.warn("Erro ao processar Raio-X do lead", id, e);
+    }
+  }
+
+  if (btn) {
+    btn.disabled = false;
+    btn.innerHTML = originalHtml;
+  }
+  showToast(`🎉 Raio-X Oficial concluído com sucesso para todas as ${total} empresas!`);
+}
+window.runBulkRaioX = runBulkRaioX;
+
 // Escuta sincronizações automáticas enviadas pela extensão Chrome via leadmaps-bridge
 window.addEventListener('message', (ev) => {
   if (!ev.data) return;
@@ -2100,6 +2315,7 @@ const State = {
     delay: 25,
     dailyLimit: 120,
     apiKey: localStorage.getItem('leadmaps_google_api_key') || "f93ffd86dc739cb1c843b12f2082e381064c1339",
+    outscraperApiKey: localStorage.getItem('leadmaps_outscraper_api_key') || "NzM0YTI0ZmU5NDc2NGQxNjgzNjJlYjhiOTRlNmU4Mzh8YmI5ODZkYTM3Mg",
     senderName: localStorage.getItem('leadmaps_sender_name') || "Ricardo — LeadMaps Pro",
     agencyPhone: (function() {
       const saved = localStorage.getItem('leadmaps_agency_phone');
@@ -2584,10 +2800,24 @@ function renderTable() {
                 👁️ Maps ↗
               </a>
             </div>
-            <div>
+            <div class="flex items-center gap-1.5 flex-wrap">
               <button type="button" onclick="window.openPostAuditModal(${lead.id})" class="cursor-pointer transition-transform hover:scale-105 active:scale-95 text-left inline-block" title="Auditoria de Postagens & Mídia Recente: Clique para definir dias sem postar">
                 <span class="badge-pill badge-${postAudit.badgeColor}">${postAudit.badgeLabel} ✎</span>
               </button>
+              ${lead.photosCount !== undefined ? `
+                <span class="badge-pill ${lead.photosCount >= 15 ? 'badge-emerald' : 'badge-amber'}" title="Total real de fotos cadastradas no Google Maps">
+                  📸 ${lead.photosCount} fotos
+                </span>
+              ` : ''}
+              ${lead.isClaimed === false ? `
+                <span class="badge-pill badge-rose animate-pulse" title="Ficha NÃO reivindicada no Google Meu Negócio">
+                  🚨 Não Reivindicada
+                </span>
+              ` : (lead.isClaimed === true ? `
+                <span class="badge-pill badge-emerald" title="Ficha oficial verificada pelo proprietário">
+                  ✓ Verificada
+                </span>
+              ` : '')}
             </div>
           </div>
         </td>
@@ -2606,6 +2836,9 @@ function renderTable() {
         </td>
         <td class="px-4 py-3 text-right">
           <div class="flex justify-end gap-1.5 flex-wrap">
+            <button onclick="window.runRaioXOficial(${lead.id})" id="btnRaioX_${lead.id}" class="btn-amber px-2.5 py-1.5 text-[11px] font-black cursor-pointer flex items-center gap-1 shadow-md hover:scale-105 active:scale-95 transition-all" title="Rodar Raio-X Oficial da Ficha via API (Fotos reais, Ficha Reivindicada e Postagens sem abrir o Maps)">
+              ⚡ Raio-X
+            </button>
             <button onclick="window.openLeadInGeoGrid(${lead.id})" class="btn-ghost-dark px-2.5 py-1.5 text-[11px] font-bold cursor-pointer text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/10" title="Analisar Posição e Ranking Local desta empresa na GeoGrade GPS">
               🎯 Ranking
             </button>
@@ -2704,7 +2937,11 @@ function renderTable() {
           ` : ''}
 
           <!-- Botões de Ação Mobile (Grandes alvos de toque 44px) -->
-          <div class="grid grid-cols-4 gap-1.5 pt-1">
+          <div class="grid grid-cols-5 gap-1.5 pt-1">
+            <button onclick="window.runRaioXOficial(${lead.id})" id="btnRaioX_mob_${lead.id}" type="button" class="flex flex-col items-center justify-center py-2.5 px-1 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 text-amber-300 font-black text-[11px] active:scale-95 transition-all cursor-pointer">
+              <span class="text-base">⚡</span>
+              <span class="mt-0.5">Raio-X</span>
+            </button>
             <button onclick="window.openLeadInGeoGrid(${lead.id})" type="button" class="flex flex-col items-center justify-center py-2.5 px-1 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-emerald-500/40 text-emerald-400 font-bold text-[11px] active:scale-95 transition-all cursor-pointer">
               <span class="text-base">🎯</span>
               <span class="mt-0.5">Ranking</span>
@@ -2730,14 +2967,21 @@ function renderTable() {
   // Atualiza botões em lote
   const btnBulk = document.getElementById('btnBulkWhatsApp');
   const selCount = document.getElementById('selectedCount');
+  const btnBulkRaioX = document.getElementById('btnBulkRaioX');
+  const selCountRaioX = document.getElementById('selectedCountRaioX');
 
   if (State.selectedLeadIds.size > 0) {
     if (btnBulk && selCount) {
       btnBulk.classList.remove('hidden');
       selCount.textContent = State.selectedLeadIds.size;
     }
+    if (btnBulkRaioX && selCountRaioX) {
+      btnBulkRaioX.classList.remove('hidden');
+      selCountRaioX.textContent = State.selectedLeadIds.size;
+    }
   } else {
     if (btnBulk) btnBulk.classList.add('hidden');
+    if (btnBulkRaioX) btnBulkRaioX.classList.add('hidden');
   }
 
   // Event Listeners nos checkboxes individuais
@@ -6871,6 +7115,10 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
 
   const btnSaveSettings = document.getElementById('btnSaveSettings');
   if (btnSaveSettings) {
+    const savedOutscraperKey = localStorage.getItem('leadmaps_outscraper_api_key') || State.settings.outscraperApiKey || 'NzM0YTI0ZmU5NDc2NGQxNjgzNjJlYjhiOTRlNmU4Mzh8YmI5ODZkYTM3Mg';
+    const outscraperKeyEl = document.getElementById('settingOutscraperKey');
+    if (outscraperKeyEl) outscraperKeyEl.value = savedOutscraperKey;
+
     const savedKey = localStorage.getItem('leadmaps_google_api_key') || State.settings.apiKey || 'f93ffd86dc739cb1c843b12f2082e381064c1339';
     const apiKeyEl = document.getElementById('settingApiKey');
     if (apiKeyEl) apiKeyEl.value = savedKey;
@@ -6885,6 +7133,12 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       State.settings.agencyPhone = document.getElementById('settingAgencyPhone')?.value || '(11) 97055-8412';
       State.settings.webhook = document.getElementById('settingWebhook')?.value || '';
       State.settings.agencyName = document.getElementById('settingAgencyName')?.value || 'Agência Impulso Digital';
+
+      const outKeyVal = document.getElementById('settingOutscraperKey')?.value?.trim() || '';
+      State.settings.outscraperApiKey = outKeyVal;
+      if (outKeyVal) {
+        localStorage.setItem('leadmaps_outscraper_api_key', outKeyVal);
+      }
       
       const keyVal = document.getElementById('settingApiKey')?.value?.trim() || '';
       State.settings.apiKey = keyVal;
