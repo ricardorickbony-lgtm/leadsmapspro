@@ -86,11 +86,6 @@ function saveSearchToHistory(niche, city) {
 function isTourVerifiedForBusiness(empresaName, address, phone) {
   try {
     let verifiedList = JSON.parse(localStorage.getItem('leadmaps_verified_tours') || '[]');
-    // Limpa qualquer entrada acidental de empresas que só possuem foto de fachada externa
-    if (verifiedList.some(v => v.includes('plaza'))) {
-      verifiedList = verifiedList.filter(v => !v.includes('plaza'));
-      localStorage.setItem('leadmaps_verified_tours', JSON.stringify(verifiedList));
-    }
     // Lista pré-cadastrada de clientes do Ricardo e marcas de alto padrão com Tour 360° verificado
     const defaultClientsWithTour = [
       "celia decor",
@@ -110,7 +105,12 @@ function isTourVerifiedForBusiness(empresaName, address, phone) {
       "sao caetano veiculos",
       "são caetano veículos",
       "sao caetano multimarcas",
-      "são caetano multimarcas"
+      "são caetano multimarcas",
+      "plaza automoveis",
+      "plaza automóveis",
+      "plaza veiculos",
+      "plaza veículos",
+      "plaza multimarcas"
     ];
     const cleanEmpresa = (empresaName || '').toLowerCase().trim();
     const fullSearchStr = `${empresaName || ''} ${address || ''} ${phone || ''}`.toLowerCase().trim();
@@ -429,6 +429,9 @@ window.confirmTour360Status = function(hasTour) {
       lead.gaps.push("Sem tour 360°");
     }
   }
+
+  // Sincroniza motivo comercial dinâmico
+  lead.motivo = getLeadMotivo(lead);
 
   // Sincroniza 22 itens de saúde
   if (lead.fullHealthItems) {
@@ -807,6 +810,9 @@ function setLeadPostDays(leadId, dias) {
     }
   }
 
+  // Sincroniza motivo comercial dinâmico
+  lead.motivo = getLeadMotivo(lead);
+
   // Dispara sincronização para a extensão se a ponte estiver ativa
   try {
     window.postMessage({
@@ -910,11 +916,24 @@ async function runRaioXOficial(leadId) {
     if (item.location_link) lead.locationLink = item.location_link;
     if (item.website && !lead.websiteUrl) lead.websiteUrl = item.website;
 
-    // 4.1 Verificação Rigorosa de Tour 360° Interno do Showroom
-    // IMPORTANTE: Fotos externas de fachada na calçada ou do carro do Google NÃO são tour 360° interno da loja.
-    // Somente clientes homologados na lista mestre ou confirmados pelo usuário são considerados Conformes.
+    // 4.1 Detecção Factual de Tour 360° via Assinatura Oficial da API Outscraper e Lista Mestre
+    const svUrl = (item.street_view || '').trim();
+    const photoUrl = (item.photo || '').trim();
+    const svBase = svUrl.split('=')[0];
+    const photoBase = photoUrl.split('=')[0];
+    const isGoogleCar = svUrl.includes('streetviewpixels-pa.googleapis.com') || svUrl.includes('cb_client=search.gws-prod.grass');
+    const isPhotosphere360 = Boolean(svUrl) && !isGoogleCar && (svUrl.includes('googleusercontent.com') || svUrl.includes('/p/AF1Qip') || svUrl.includes('grass-cs')) && (svBase !== photoBase);
     const isKnownVerified = isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
-    lead.temTour360 = Boolean(isKnownVerified);
+
+    if (isPhotosphere360 || isKnownVerified) {
+      lead.temTour360 = true;
+      saveVerifiedTourBusiness(lead.empresa, true);
+    } else if (isGoogleCar || (svUrl && svBase === photoBase)) {
+      if (!isKnownVerified) {
+        lead.temTour360 = false;
+        saveVerifiedTourBusiness(lead.empresa, false);
+      }
+    }
 
     // 5. Postagens & Novidades Recentes
     if (Array.isArray(item.posts) && item.posts.length > 0) {
@@ -927,7 +946,15 @@ async function runRaioXOficial(leadId) {
         lead.diasSemPostar = 7;
       }
     } else {
-      lead.diasSemPostar = 999; // Sem posts cadastrados
+      const cleanEmpresa = (lead.empresa || '').toLowerCase().trim();
+      const existingCache = getLeadPostDaysCache();
+      if (existingCache[cleanEmpresa] !== undefined) {
+        lead.diasSemPostar = Number(existingCache[cleanEmpresa]);
+      } else if (typeof lead.diasSemPostar === 'number' && lead.diasSemPostar < 999) {
+        // Preserva o valor já configurado
+      } else {
+        lead.diasSemPostar = 999; // Sem posts cadastrados
+      }
     }
 
     // 6. Atualiza Pilares de Auditoria
@@ -1290,23 +1317,52 @@ function getLeadMotivo(lead) {
   const hasSite = Boolean(lead.temSite);
   const hasTour = Boolean(lead.temTour360);
   const webAnalysis = lead.websiteAnalysis || analyzeWebsiteUrl(lead.websiteUrl);
+  const postAudit = typeof getLeadPostAudit === 'function' ? getLeadPostAudit(lead) : { isAtivo: false, diasSemPostar: lead.diasSemPostar || 45 };
+  const diasSemPostar = (typeof lead.diasSemPostar === 'number') ? lead.diasSemPostar : (postAudit?.diasSemPostar ?? 45);
 
+  // 1. Possui Site E Tour 360°: A GRANDE OPORTUNIDADE É POSTAGENS NO GOOGLE MEU NEGÓCIO!
   if (hasTour && hasSite) {
-    return 'Cliente com Tour Virtual 360° interno verificado e site oficial ativo — Alta conversão';
+    if (!postAudit.isAtivo) {
+      const diasTexto = (diasSemPostar === 999 || diasSemPostar >= 90) ? 'mais de 30' : `${diasSemPostar}`;
+      return `Possui Site e Tour 360° ativos, mas está há ${diasTexto} dias sem postagens no Google Posts (Ficha estagnada no Google)`;
+    }
+    if (!lead.techStack || lead.techStack.length === 0) {
+      return 'Perfil com Site, Tour 360° e postagens ativas, mas atendimento sem CRM integrado no WhatsApp';
+    }
+    return 'Perfil de excelência: Site oficial, Tour Virtual 360° e postagens ativas — Oportunidade em Tráfego Pago & CRM';
   }
+
+  // 2. Ficha com rede social no lugar de site oficial
   if (webAnalysis && webAnalysis.isSocial) {
     return `Possui ${lead.reviews || 0} avaliações mas usa ${webAnalysis.name || 'Rede Social'} no lugar de um site próprio institucional (.com.br)`;
   }
+
+  // 3. Link descontinuado pelo Google
   if (webAnalysis && webAnalysis.isDeprecatedGoogleSite) {
     return 'Link do site quebrado/descontinuado pelo Google (Erro 404 — Perda de clientes)';
   }
+
+  // 4. Possui Tour 360 mas não tem site
   if (hasTour && !hasSite) {
-    return 'Possui Tour Virtual 360° interno no Google Maps mas SEM site oficial para captar clientes';
+    return 'Possui Tour Virtual 360° no Google Maps mas SEM site oficial para captar clientes';
   }
+
+  // 5. Sem site e sem tour
+  if (!hasSite && !hasTour) {
+    return `Empresa com ${lead.reviews || 0} avaliações no Google Maps mas SEM site oficial e SEM Tour Virtual 360°`;
+  }
+
+  // 6. Sem site
   if (!hasSite) {
     return `Empresa com ${lead.reviews || 0} avaliações no Google Maps mas SEM site próprio para captar clientes`;
   }
-  return 'Possui site mas SEM Tour Virtual 360° interno da loja (apenas foto externa de rua do carro do Google)';
+
+  // 7. Possui site mas não tem tour 360
+  if (hasSite && !hasTour) {
+    return 'Possui site mas SEM Tour Virtual 360° interno da loja (apenas foto externa de rua do carro do Google)';
+  }
+
+  return lead.motivo || 'Oportunidade de melhoria digital em presença Google';
 }
 window.getLeadMotivo = getLeadMotivo;
 
@@ -5381,7 +5437,11 @@ async function fetchSerperLivePlaces(niche, city, targetCount, apiKey) {
 
     let motivoContato = '';
     if (has360 && hasSite) {
-      motivoContato = 'Cliente com Tour Virtual 360° interno verificado e site oficial ativo — Alta conversão';
+      if (!hasPosts) {
+        motivoContato = `Possui Site e Tour 360° ativos, mas está há ${diasSemPostar === 999 ? 'mais de 30' : diasSemPostar} dias sem postagens no Google Posts (Ficha estagnada no Google)`;
+      } else {
+        motivoContato = 'Perfil com Site e Tour 360° ativos — Oportunidade em CRM e Automação de Vendas';
+      }
     } else if (webAnalysis.isSocial) {
       motivoContato = `Possui ${reviews} avaliações mas usa ${webAnalysis.name} no lugar de um site próprio institucional (.com.br)`;
     } else if (has360 && !hasSite) {
@@ -5810,13 +5870,17 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
     reviewsSemRespostaPct: reviewsSemRespostaPct,
     unansweredCount: unansweredCount,
     realReviewsSample: sampleReviews,
-    motivo: has360 
-      ? `Auditado individualmente: Perfil de Elite com Saúde Digital ${score}/100, Tour 360° verificado e ${responseRatePct}% de avaliações respondidas com excelência.`
-      : (webAnalysis.isSocial 
-          ? `Auditado individualmente: possui ${reviews} avaliações mas usa ${webAnalysis.name} no lugar de um site próprio oficial (.com.br) para captar clientes.`
-          : (!hasSite 
-              ? `Auditado individualmente: possui ${reviews} reviews mas SEM site próprio para captar clientes.`
-              : `Auditado individualmente: Índice de Saúde ${score}/100 com oportunidades em SEO Local e Tour 360°.`)),
+    motivo: (has360 && hasSite)
+      ? (!postsOk
+          ? `Possui Site e Tour 360° ativos, mas está há ${diasSemPostar === null ? 'mais de 30' : diasSemPostar} dias sem postagens no Google Posts (Ficha estagnada no Google)`
+          : `Auditado individualmente: Perfil com Tour 360° verificado e ${responseRatePct}% de avaliações respondidas com excelência.`)
+      : (has360 && !hasSite
+          ? `Possui Tour Virtual 360° interno no Google Maps mas SEM site oficial para captar clientes`
+          : (webAnalysis.isSocial 
+              ? `Auditado individualmente: possui ${reviews} avaliações mas usa ${webAnalysis.name} no lugar de um site próprio oficial (.com.br) para captar clientes.`
+              : (!hasSite 
+                  ? `Auditado individualmente: possui ${reviews} reviews mas SEM site próprio para captar clientes.`
+                  : `Auditado individualmente: Índice de Saúde ${score}/100 com oportunidades em SEO Local e Tour 360°.`))),
     concorrentes: concorrentes,
     gaps: gaps,
     auditPillars: auditPillars
