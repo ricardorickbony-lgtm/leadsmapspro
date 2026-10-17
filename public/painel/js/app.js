@@ -99,11 +99,20 @@ function isTourVerifiedForBusiness(empresaName, address, phone) {
       "fenice multimarcas",
       "fênice multimarcas",
       "fenice",
-      "fênice"
+      "fênice",
+      "sao caetano automoveis",
+      "são caetano automóveis",
+      "sao caetano automóveis",
+      "são caetano automoveis",
+      "sao caetano veiculos",
+      "são caetano veículos",
+      "sao caetano multimarcas",
+      "são caetano multimarcas"
     ];
+    const cleanEmpresa = (empresaName || '').toLowerCase().trim();
     const fullSearchStr = `${empresaName || ''} ${address || ''} ${phone || ''}`.toLowerCase().trim();
-    if (defaultClientsWithTour.some(c => fullSearchStr.includes(c))) return true;
-    if (verifiedList.some(v => fullSearchStr.includes(v.toLowerCase().trim()) || v.toLowerCase().trim().includes(fullSearchStr))) return true;
+    if (defaultClientsWithTour.some(c => cleanEmpresa.includes(c) || fullSearchStr.includes(c))) return true;
+    if (verifiedList.some(v => fullSearchStr.includes(v.toLowerCase().trim()) || v.toLowerCase().trim().includes(cleanEmpresa))) return true;
   } catch(e) {}
   return false;
 }
@@ -476,14 +485,57 @@ window.handleManualCheck360 = async function(event, leadId) {
     return;
   }
 
-  // 2. Se tem coordenadas, tenta uma checagem ultra rápida com timeout protetor de 1.5s
+  // 2. Consulta Direta via API Oficial Outscraper (Detecção Factual de Tour 360°)
+  const outscraperKey = (State.settings?.outscraperApiKey || localStorage.getItem('leadmaps_outscraper_api_key') || 'NzM0YTI0ZmU5NDc2NGQxNjgzNjJlYjhiOTRlNmU4Mzh8YmI5ODZkYTM3Mg').trim();
+  if (outscraperKey) {
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '⏳ Checando API...';
+      btn.classList.add('opacity-75', 'cursor-wait');
+    }
+    showToast(`🔍 Consultando fotos 360° de "${lead.empresa}" na API oficial...`);
+    try {
+      const q = `${lead.empresa} ${lead.cidade || lead.endereco || ''}`.trim();
+      const url = `https://api.app.outscraper.com/maps/search-v2?query=${encodeURIComponent(q)}&limit=1&async=false&apiKey=${encodeURIComponent(outscraperKey)}`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const json = await res.json();
+        const item = json?.data?.[0]?.[0];
+        if (item) {
+          const svUrl = (item.street_view || '').trim();
+          const photoUrl = (item.photo || '').trim();
+          const svBase = svUrl.split('=')[0];
+          const photoBase = photoUrl.split('=')[0];
+          const isGoogleCar = svUrl.includes('streetviewpixels-pa.googleapis.com') || svUrl.includes('cb_client=search.gws-prod.grass');
+          const isPhotosphere360 = Boolean(svUrl) && !isGoogleCar && (svUrl.includes('googleusercontent.com') || svUrl.includes('/p/AF1Qip') || svUrl.includes('grass-cs')) && (svBase !== photoBase);
+
+          if (isPhotosphere360) {
+            saveVerifiedTourBusiness(lead.empresa, true);
+            lead.temTour360 = true;
+            confirmTour360Status(true);
+            showToast(`📸 Tour 360° oficial confirmado na API para ${lead.empresa}!`);
+            return;
+          }
+        }
+      }
+    } catch(e) {
+      console.warn("Erro ao consultar Outscraper no check 360:", e);
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+        btn.classList.remove('opacity-75', 'cursor-wait');
+      }
+    }
+  }
+
+  // 3. Se tem coordenadas, tenta checagem via Street View Metadata
   if (typeof lead.lat === 'number' && typeof lead.lng === 'number') {
     if (btn) {
       btn.disabled = true;
       btn.innerHTML = '⏳ Checando...';
       btn.classList.add('opacity-75', 'cursor-wait');
     }
-    showToast(`🔍 Verificando Street View & Fotos 360° de "${lead.empresa}"...`);
 
     try {
       const metaPromise = detectTour360ViaStreetViewMetadata(lead.lat, lead.lng);
@@ -498,7 +550,6 @@ window.handleManualCheck360 = async function(event, leadId) {
         return;
       }
 
-      // Se não detectou automaticamente ou retornou falso/negado, abre o modal de homologação
       window.openTourAuditModal(lead.id, metaResult || { hasTour360: false });
     } catch (err) {
       console.warn("Erro ao checar Tour 360:", err);
@@ -513,8 +564,8 @@ window.handleManualCheck360 = async function(event, leadId) {
     return;
   }
 
-  // 3. Sem coordenadas: abre o modal de auditoria na hora
-  window.openTourAuditModal(lead.id, { reason: 'no_coords' });
+  // 4. Fallback final: abre modal de auditoria manual para conferir com 1 clique
+  window.openTourAuditModal(lead.id, { reason: 'manual' });
 };
 
 // --------------------------------------------------------------------------
@@ -934,6 +985,23 @@ async function runRaioXOficial(leadId) {
     if (item.location_link) lead.locationLink = item.location_link;
     if (item.website && !lead.websiteUrl) lead.websiteUrl = item.website;
 
+    // 4.1 Detecção Factual de Tour 360° via Assinatura Oficial da API Outscraper
+    const svUrl = (item.street_view || '').trim();
+    const photoUrl = (item.photo || '').trim();
+    const svBase = svUrl.split('=')[0];
+    const photoBase = photoUrl.split('=')[0];
+    const isGoogleCar = svUrl.includes('streetviewpixels-pa.googleapis.com') || svUrl.includes('cb_client=search.gws-prod.grass');
+    const isPhotosphere360 = Boolean(svUrl) && !isGoogleCar && (svUrl.includes('googleusercontent.com') || svUrl.includes('/p/AF1Qip') || svUrl.includes('grass-cs')) && (svBase !== photoBase);
+    const isKnownVerified = isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
+
+    if (isPhotosphere360 || isKnownVerified) {
+      lead.temTour360 = true;
+      saveVerifiedTourBusiness(lead.empresa, true);
+    } else if (isGoogleCar || (svUrl && svBase === photoBase)) {
+      lead.temTour360 = false;
+      saveVerifiedTourBusiness(lead.empresa, false);
+    }
+
     // 5. Postagens & Novidades Recentes
     if (Array.isArray(item.posts) && item.posts.length > 0) {
       const latestPost = item.posts[0];
@@ -964,10 +1032,10 @@ async function runRaioXOficial(leadId) {
     const pTour = lead.auditPillars?.find(p => p.id === 'tour360');
     if (pTour) {
       pTour.ok = Boolean(lead.temTour360);
-      if (!lead.temTour360) {
-        pTour.status = `🚨 Gargalo Crítico: Sem Tour Virtual 360° interno (Apenas visão externa da rua pelo carro do Google). O perfil tem ${lead.photosCount} fotos comuns, mas nenhum tour 360° do showroom/loja.`;
+      if (lead.temTour360) {
+        pTour.status = `✓ Conforme: Tour Virtual 360° interno verificado e ativo no Google Street View (${lead.photosCount} fotos no perfil).`;
       } else {
-        pTour.status = `📸 Tour 360° Conforme: Tour virtual imersivo interno verificado e ativo no Google Street View (${lead.photosCount} fotos no perfil).`;
+        pTour.status = `🚨 Gargalo Crítico: Sem Tour Virtual 360° interno (Apenas visão externa da rua pelo carro do Google). O perfil tem ${lead.photosCount} fotos comuns, mas nenhum tour 360° do showroom/loja.`;
       }
     }
 
@@ -989,8 +1057,22 @@ async function runRaioXOficial(leadId) {
     if (lead.diasSemPostar > 30 && !lead.gaps.some(g => g.toLowerCase().includes('post'))) {
       lead.gaps.push('Sem postagens recentes no Google Meu Negócio');
     }
-    if (!lead.temTour360 && !lead.gaps.some(g => g.toLowerCase().includes('360'))) {
+    if (lead.temTour360) {
+      lead.gaps = lead.gaps.filter(g => !g.toLowerCase().includes('360'));
+    } else if (!lead.gaps.some(g => g.toLowerCase().includes('360'))) {
       lead.gaps.push('Sem Tour Virtual 360° interno (Apenas visão externa da rua pelo carro do Google)');
+    }
+
+    // Sincroniza CRM
+    if (State.crmLeads && Array.isArray(State.crmLeads)) {
+      const crmLead = State.crmLeads.find(c => c.id == lead.id || (c.empresa && lead.empresa && c.empresa.toLowerCase() === lead.empresa.toLowerCase()));
+      if (crmLead) {
+        crmLead.temTour360 = lead.temTour360;
+        crmLead.servico = !crmLead.temSite ? 'Site de Alta Conversão' : (!crmLead.temTour360 ? 'Tour Virtual 360°' : 'Pacote Completo Presença 360°');
+        crmLead.valor = !crmLead.temSite ? 1800 : (!crmLead.temTour360 ? 950 : 2500);
+        if (typeof saveCrmToStorage === 'function') saveCrmToStorage();
+        if (typeof renderCrmKanban === 'function') renderCrmKanban();
+      }
     }
 
     // Recalcula score de saúde
@@ -3330,8 +3412,11 @@ window.openDiagnostic = function(id) {
   }
 
   // Checagem em tempo real de Tour 360 na memória permanente ou lista mestre oficial
-  if (!lead.temTour360 && isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone)) {
+  if (isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone)) {
     lead.temTour360 = true;
+  }
+  if (lead.temTour360 && Array.isArray(lead.gaps)) {
+    lead.gaps = lead.gaps.filter(g => !g.toLowerCase().includes('360'));
   }
 
   // Inicializa pilares com dados honestos e verificáveis se não existirem
@@ -5260,9 +5345,18 @@ async function fetchSerperLivePlaces(niche, city, targetCount, apiKey) {
     const hasSite = webAnalysis.hasRealWebsite;
     const placeTitle = p.title || p.name || `${niche} Local`;
 
-    // Verifica se esta empresa é um cliente com Tour 360° verificado/produzido pelo Ricardo
+    // Verifica se esta empresa é um cliente com Tour 360° verificado/produzido pelo Ricardo ou detectado na API
     const isVerifiedTour = isTourVerifiedForBusiness(placeTitle, p.address, p.phoneNumber);
-    const has360 = isVerifiedTour;
+    const svUrl = (p.street_view || p.streetView || '').trim();
+    const photoUrl = (p.photo || p.coverPhoto || '').trim();
+    const svBase = svUrl.split('=')[0];
+    const photoBase = photoUrl.split('=')[0];
+    const isGoogleCar = svUrl.includes('streetviewpixels-pa.googleapis.com') || svUrl.includes('cb_client=search.gws-prod.grass');
+    const isPhotosphere360 = Boolean(svUrl) && !isGoogleCar && (svUrl.includes('googleusercontent.com') || svUrl.includes('/p/AF1Qip') || svUrl.includes('grass-cs')) && (svBase !== photoBase);
+    const has360 = Boolean(isVerifiedTour || isPhotosphere360);
+    if (has360) {
+      saveVerifiedTourBusiness(placeTitle, true);
+    }
 
     const rating = typeof p.rating === 'number' ? p.rating : 4.5;
     const reviews = typeof p.ratingCount === 'number' ? p.ratingCount : (typeof p.reviews === 'number' ? p.reviews : (p.user_ratings_total || 28));
@@ -5539,9 +5633,18 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
   const webAnalysis = analyzeWebsiteUrl(mainPlace.website);
   const hasSite = webAnalysis.hasRealWebsite;
   const rating = typeof mainPlace.rating === 'number' ? mainPlace.rating : 5.0;
-  const reviews = typeof mainPlace.ratingCount === 'number' ? mainPlace.ratingCount : (mainPlace.reviews || 0);
   const mainTitle = mainPlace.title || mainPlace.name || cleanQuery;
-  const has360 = isTourVerifiedForBusiness(mainTitle, mainPlace.address, mainPlace.phoneNumber);
+  const isKnownTour = isTourVerifiedForBusiness(mainTitle, mainPlace.address, mainPlace.phoneNumber);
+  const svUrl = (mainPlace.street_view || mainPlace.streetView || '').trim();
+  const photoUrl = (mainPlace.photo || mainPlace.coverPhoto || '').trim();
+  const svBase = svUrl.split('=')[0];
+  const photoBase = photoUrl.split('=')[0];
+  const isGoogleCar = svUrl.includes('streetviewpixels-pa.googleapis.com') || svUrl.includes('cb_client=search.gws-prod.grass');
+  const isPhotosphere360 = Boolean(svUrl) && !isGoogleCar && (svUrl.includes('googleusercontent.com') || svUrl.includes('/p/AF1Qip') || svUrl.includes('grass-cs')) && (svBase !== photoBase);
+  const has360 = Boolean(isKnownTour || isPhotosphere360);
+  if (has360) {
+    saveVerifiedTourBusiness(mainTitle, true);
+  }
 
   // Categorias (Primária e Secundárias reais do Google Maps)
   const categoriesList = Array.isArray(mainPlace.types) && mainPlace.types.length > 0
