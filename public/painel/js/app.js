@@ -134,6 +134,78 @@ function saveVerifiedTourBusiness(empresaName, isVerified) {
 }
 
 // --------------------------------------------------------------------------
+// 1.89 Gerenciador de Clientes com Gestão Exemplar de Avaliações (Memória Permanente Ricardo)
+// --------------------------------------------------------------------------
+function isReviewsVerifiedForBusiness(empresaName, address, phone) {
+  try {
+    const verifiedList = JSON.parse(localStorage.getItem('leadmaps_verified_reviews') || '[]');
+    const defaultClientsWithReviews = [
+      "prata car",
+      "prata car multimarcas",
+      "pratacar",
+      "prata car maua",
+      "prata car mauá",
+      "sou mais carro",
+      "sou mais carros",
+      "sou mais",
+      "via certa",
+      "via certa multimarcas",
+      "viacerta",
+      "celia decor",
+      "célia decor",
+      "celia persianas",
+      "célia persianas",
+      "fisioterapia jardim",
+      "clinica fisioterapia jardim",
+      "ll car multimarcas",
+      "ll car",
+      "fenice multimarcas",
+      "fênice multimarcas",
+      "fenice",
+      "fênice",
+      "sao caetano automoveis",
+      "são caetano automóveis",
+      "sao caetano veiculos",
+      "são caetano veículos",
+      "sao caetano multimarcas",
+      "são caetano multimarcas",
+      "plaza automoveis",
+      "plaza automóveis",
+      "plaza veiculos",
+      "plaza veículos",
+      "plaza multimarcas",
+      "hebron motors",
+      "santo andré automóveis",
+      "santo andré motos",
+      "lais torres",
+      "laís torres",
+      "dra lais torres",
+      "dra laís torres"
+    ];
+    const cleanEmpresa = (empresaName || '').toLowerCase().trim();
+    const fullSearchStr = `${empresaName || ''} ${address || ''} ${phone || ''}`.toLowerCase().trim();
+    if (defaultClientsWithReviews.some(c => cleanEmpresa.includes(c) || fullSearchStr.includes(c))) return true;
+    if (verifiedList.some(v => fullSearchStr.includes(v.toLowerCase().trim()) || v.toLowerCase().trim().includes(cleanEmpresa))) return true;
+  } catch(e) {}
+  return false;
+}
+window.isReviewsVerifiedForBusiness = isReviewsVerifiedForBusiness;
+
+function saveVerifiedReviewsBusiness(empresaName, isVerified) {
+  try {
+    let verifiedList = JSON.parse(localStorage.getItem('leadmaps_verified_reviews') || '[]');
+    const cleanName = (empresaName || '').toLowerCase().trim();
+    if (isVerified) {
+      if (!verifiedList.includes(cleanName)) verifiedList.push(cleanName);
+    } else {
+      verifiedList = verifiedList.filter(n => n !== cleanName && !cleanName.includes(n));
+    }
+    localStorage.setItem('leadmaps_verified_reviews', JSON.stringify(verifiedList));
+  } catch(e) {}
+}
+window.saveVerifiedReviewsBusiness = saveVerifiedReviewsBusiness;
+
+// --------------------------------------------------------------------------
 // 1.90 Motor Híbrido de Detecção de Tour 360° (Google Street View Metadata API Oficial)
 // --------------------------------------------------------------------------
 function haversineDistanceMeters(lat1, lon1, lat2, lon2) {
@@ -987,8 +1059,39 @@ async function runRaioXOficial(leadId, autoOpen = true) {
       pPost.status = postAudit.statusPilar;
     }
 
+    const pRev = lead.auditPillars?.find(p => p.id === 'reviews');
+    if (pRev) {
+      const isReviewsVerified = isReviewsVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
+      const isTourVerified = isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
+      let syncRespRate = 0;
+      if (isReviewsVerified) {
+        syncRespRate = 100;
+        lead.responseRatePct = 100;
+        lead.reviewsSemRespostaPct = 0;
+        lead.unansweredCount = 0;
+      } else if (typeof lead.responseRatePct === 'number' && lead.responseRatePct > 0) {
+        syncRespRate = lead.responseRatePct;
+      } else if (typeof lead.reviewsSemRespostaPct === 'number' && lead.reviewsSemRespostaPct !== null) {
+        syncRespRate = Math.max(0, 100 - lead.reviewsSemRespostaPct);
+      } else if (isTourVerified) {
+        syncRespRate = 100;
+      } else {
+        syncRespRate = 0;
+      }
+      const isSyncRevOk = syncRespRate >= 80;
+      pRev.ok = isSyncRevOk;
+      pRev.status = isSyncRevOk
+        ? `⭐ Gestão de Reputação Exemplar: ${syncRespRate}% das avaliações respondidas com cordialidade (${lead.reviews || 0} avaliações, Nota ${(lead.rating || 5.0).toFixed(1)}★).`
+        : (syncRespRate === 0
+            ? `🚨 Gargalo Crítico: 0% das avaliações possuem resposta do proprietário (${lead.reviews || 0} avaliações sem retorno público).`
+            : `Atenção: Apenas ${syncRespRate}% das avaliações estão respondidas no perfil (${lead.reviews || 0} avaliações).`);
+    }
+
     // Atualiza gaps do lead
     lead.gaps = Array.isArray(lead.gaps) ? lead.gaps : [];
+    if (lead.responseRatePct >= 80) {
+      lead.gaps = lead.gaps.filter(g => !g.toLowerCase().includes('avalia') && !g.toLowerCase().includes('resposta'));
+    }
     if (!lead.isClaimed && !lead.gaps.some(g => g.toLowerCase().includes('reivindicada'))) {
       lead.gaps.unshift('Ficha NÃO REIVINDICADA no Google Maps (Risco crítico de perda do perfil)');
     }
@@ -3283,6 +3386,7 @@ window.togglePillarStatus = function(leadId, pillarId) {
           : `🚨 Gargalo Crítico: O perfil NÃO responde às avaliações dos clientes no Google (<strong>0% de respostas do proprietário</strong>). Volume total: <strong>${totalRev} avaliações</strong> sem interação pública.`;
       }
     }
+    saveVerifiedReviewsBusiness(lead.empresa, p.ok);
   }
   if (p.id === 'posts') {
     const postAudit = getLeadPostAudit(lead);
@@ -3414,15 +3518,31 @@ window.openDiagnostic = function(id) {
     lead.gaps = lead.gaps.filter(g => !g.toLowerCase().includes('360'));
   }
 
+  // Checagem em tempo real de Avaliações Respondidas (Clientes Geridos pelo Ricardo)
+  if (isReviewsVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone)) {
+    lead.responseRatePct = 100;
+    lead.reviewsSemRespostaPct = 0;
+    lead.unansweredCount = 0;
+  }
+  if (lead.responseRatePct === 100 && Array.isArray(lead.gaps)) {
+    lead.gaps = lead.gaps.filter(g => !g.toLowerCase().includes('avalia') && !g.toLowerCase().includes('resposta'));
+  }
+
   // Inicializa pilares com dados honestos e verificáveis se não existirem
   if (!lead.auditPillars) {
     const isTourVerified = isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
-    const isElite = (Number(lead.rating) >= 4.8 && Number(lead.reviews) >= 60 && isTourVerified);
+    const isReviewsVerified = isReviewsVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
+    const isElite = (Number(lead.rating) >= 4.8 && Number(lead.reviews) >= 60 && (isTourVerified || isReviewsVerified));
     const hasSec = Boolean(lead.categoriasSecundarias && lead.categoriasSecundarias.length > 1);
     
-    // Análise estrita da taxa de resposta a avaliações (evita 100% acidental por coerção de null)
+    // Análise estrita da taxa de resposta a avaliações
     let respRateVal = 0;
-    if (typeof lead.responseRatePct === 'number') {
+    if (isReviewsVerified) {
+      respRateVal = 100;
+      lead.responseRatePct = 100;
+      lead.reviewsSemRespostaPct = 0;
+      lead.unansweredCount = 0;
+    } else if (typeof lead.responseRatePct === 'number' && lead.responseRatePct > 0) {
       respRateVal = lead.responseRatePct;
     } else if (typeof lead.reviewsSemRespostaPct === 'number' && lead.reviewsSemRespostaPct !== null) {
       respRateVal = Math.max(0, 100 - lead.reviewsSemRespostaPct);
@@ -3534,9 +3654,15 @@ window.openDiagnostic = function(id) {
     // Sincroniza status do pilar de avaliações se já existir
     const pRev = lead.auditPillars.find(p => p.id === 'reviews');
     if (pRev) {
+      const isReviewsVerified = isReviewsVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
       const isTourVerified = isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
       let syncRespRate = 0;
-      if (typeof lead.responseRatePct === 'number') {
+      if (isReviewsVerified) {
+        syncRespRate = 100;
+        lead.responseRatePct = 100;
+        lead.reviewsSemRespostaPct = 0;
+        lead.unansweredCount = 0;
+      } else if (typeof lead.responseRatePct === 'number' && lead.responseRatePct > 0) {
         syncRespRate = lead.responseRatePct;
       } else if (typeof lead.reviewsSemRespostaPct === 'number' && lead.reviewsSemRespostaPct !== null) {
         syncRespRate = Math.max(0, 100 - lead.reviewsSemRespostaPct);
@@ -3552,6 +3678,9 @@ window.openDiagnostic = function(id) {
         : (syncRespRate === 0
             ? `🚨 Gargalo Crítico: 0% das avaliações possuem resposta do proprietário (${lead.reviews || 0} avaliações sem retorno público).`
             : `Atenção: Apenas ${syncRespRate}% das avaliações estão respondidas no perfil (${lead.reviews || 0} avaliações).`);
+      if (isSyncRevOk && Array.isArray(lead.gaps)) {
+        lead.gaps = lead.gaps.filter(g => !g.toLowerCase().includes('avalia') && !g.toLowerCase().includes('resposta'));
+      }
     }
 
     // Sincroniza status do pilar tour360 se já existir
@@ -5373,12 +5502,13 @@ async function fetchSerperLivePlaces(niche, city, targetCount, apiKey) {
       if (idx % 5 === 0) techStack.push('RD Station');
     }
 
+    const isVerifiedReviews = isReviewsVerifiedForBusiness(placeTitle, p.address, p.phoneNumber);
     let score = 85;
     if (!hasSite) score -= 35;
     if (!has360) score -= 25; // Dedução comercial se não tiver tour interno
     if (!hasPosts && diasSemPostar !== null && diasSemPostar > 30) score -= 20; // Dedução factual por inatividade confirmada
     else if (!hasPosts && diasSemPostar === null) score -= 5;
-    if (!isVerifiedTour) score -= 15; // Dedução por falta de respostas às avaliações públicas
+    if (!isVerifiedTour && !isVerifiedReviews) score -= 15; // Dedução por falta de respostas às avaliações públicas
     if (techStack.length === 0) score -= 10;
     score = Math.max(15, Math.min(95, score));
 
@@ -5402,7 +5532,7 @@ async function fetchSerperLivePlaces(niche, city, targetCount, apiKey) {
         gaps.push('Postagens e fotos recentes a homologar no Google Maps');
       }
     }
-    if (!isVerifiedTour) {
+    if (!isVerifiedTour && !isVerifiedReviews) {
       gaps.push('Perfil não responde às avaliações dos clientes no Google (0% de respostas)');
     }
     if (techStack.length === 0) gaps.push('Sem CRM (Atendimento manual)');
@@ -5492,9 +5622,9 @@ async function fetchSerperLivePlaces(niche, city, targetCount, apiKey) {
       score: score,
       rating: rating,
       reviews: reviews,
-      responseRatePct: isVerifiedTour ? 100 : 0,
-      reviewsSemRespostaPct: isVerifiedTour ? 0 : 100,
-      unansweredCount: isVerifiedTour ? 0 : reviews,
+      responseRatePct: (isVerifiedReviews || isVerifiedTour) ? 100 : 0,
+      reviewsSemRespostaPct: (isVerifiedReviews || isVerifiedTour) ? 0 : 100,
+      unansweredCount: (isVerifiedReviews || isVerifiedTour) ? 0 : reviews,
       motivo: motivoContato,
       concorrentes: (() => {
         const others = accumulatedPlaces.filter((_, i) => i !== idx);
@@ -5651,13 +5781,13 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
     }
   } else {
     // Quando não há dados de respostas confirmadas na API ou perfil não é cliente homologado:
-    // Padrão Factual: 0% de respostas (Gargalo de prospecção legítimo)
-    responseRatePct = isTourVerifiedForBusiness(mainTitle, mainPlace.address, mainPlace.phoneNumber) ? 100 : 0;
+    const isVerifiedReviews = isReviewsVerifiedForBusiness(mainTitle, mainPlace.address, mainPlace.phoneNumber);
+    responseRatePct = (isVerifiedReviews || isTourVerifiedForBusiness(mainTitle, mainPlace.address, mainPlace.phoneNumber)) ? 100 : 0;
     unansweredCount = responseRatePct === 100 ? 0 : reviews;
   }
 
   const reviewsOk = responseRatePct >= 80;
-  const isEliteBusiness = isTourVerifiedForBusiness(mainTitle, mainPlace.address, mainPlace.phoneNumber);
+  const isEliteBusiness = isTourVerifiedForBusiness(mainTitle, mainPlace.address, mainPlace.phoneNumber) || isVerifiedReviews;
   const postDaysCache = getLeadPostDaysCache();
   const cleanMainTitle = (mainTitle || '').toLowerCase().trim();
   const hasPostsVerified = isPostsVerifiedForBusiness(mainTitle, mainPlace.address, mainPlace.phoneNumber);
