@@ -866,6 +866,15 @@ async function runRaioXOficial(leadId) {
     return;
   }
 
+  // Verifica e debita 1 crédito da conta se for assinante (Master é ilimitado)
+  if (typeof window.debitActiveUserCredits === 'function') {
+    const hasCredit = window.debitActiveUserCredits(1);
+    if (!hasCredit) {
+      showToast("⚠️ Seus créditos de Raio-X acabaram! Faça um upgrade de plano ou solicite recarga.");
+      return;
+    }
+  }
+
   const tableBtn = document.getElementById(`btnRaioX_${lead.id}`);
   const modalBtn = document.getElementById('btnModalRunRaioX');
   const originalTableHtml = tableBtn ? tableBtn.innerHTML : '';
@@ -7960,6 +7969,8 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     updateHeaderCreditsDisplay();
     return true;
   }
+  window.debitActiveUserCredits = debitActiveUserCredits;
+  window.getActiveUserCredits = getActiveUserCredits;
 
   function updateHeaderCreditsDisplay() {
     const el = document.getElementById('headerCreditsDisplay');
