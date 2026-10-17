@@ -10181,7 +10181,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     const N = Number(GeoState.gridSize) || 5;
     const R = Number(GeoState.radiusKm) || 3.0;
     const shape = GeoState.areaShape || 'square';
-    const half = Math.floor(N / 2);
+    const half = (N - 1) / 2;
     const stepKm = half > 0 ? R / half : R;
 
     const stepLabel = document.getElementById('rankStepDistLabel');
@@ -10191,6 +10191,9 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
 
     const pts = [];
     let idCounter = 1;
+    const centerRow = Math.floor((N - 1) / 2);
+    const centerCol = Math.floor((N - 1) / 2);
+
     for (let r = 0; r < N; r++) {
       for (let c = 0; c < N; c++) {
         // r=0 é Norte (+R km), r=N-1 é Sul (-R km)
@@ -10199,7 +10202,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
         const radialDistKm = Math.sqrt(northKm * northKm + eastKm * eastKm);
 
         const coords = offsetLatLngByKm(GeoState.centerLat, GeoState.centerLng, northKm, eastKm);
-        const isCenter = r === half && c === half;
+        const isCenter = r === centerRow && c === centerCol;
 
         // No modo Circular, desativa automaticamente os cantos fora do raio R
         let active = true;
@@ -11064,7 +11067,7 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
   // Desenha a Mini-Grade Visual Colorida (3x3, 5x5, 7x7) idêntica à referência internacional!
   function renderVisualMiniGridHtml(ranksMatrix, gridSize) {
     const N = Number(gridSize) || 5;
-    const cellPx = N <= 3 ? 11 : N === 5 ? 8 : 6;
+    const cellPx = N <= 3 ? 11 : N === 4 ? 9 : N === 5 ? 8 : 6;
     const cells = (ranksMatrix || []).map(r => {
       const bg = getRankColorHex(r);
       return `<span style="width:${cellPx}px;height:${cellPx}px;background:${bg};display:inline-block;border-radius:1.5px;" title="Posição #${r}"></span>`;
@@ -11197,6 +11200,41 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
       const centerPt = GeoState.points.find(p => p.isCenter) || GeoState.points[0];
       if (centerPt) inspectGridPoint(centerPt);
       return;
+    }
+
+    // -------------------------------------------------------------
+    // GESTÃO DE CRÉDITOS DO ASSINANTE: 1 CRÉDITO POR PONTO/BOLINHA DA GRADE
+    // Grade 3x3 = 9 cr | 4x4 = 16 cr | 5x5 = 25 cr | 7x7 = 49 cr | 9x9 = 81 cr
+    // Ricardo (Master) possui acesso ilimitado com ∞ créditos
+    // -------------------------------------------------------------
+    const N = Number(GeoState.gridSize) || 5;
+    const neededCredits = N * N;
+    const isMaster = !State.activeSession || State.activeSession.role === 'master';
+
+    if (!isMaster) {
+      const currentCredits = typeof getActiveUserCredits === 'function' ? getActiveUserCredits() : 500;
+      if (currentCredits < neededCredits) {
+        showToast(`⚠️ Saldo insuficiente! A grade ${N}x${N} consome ${neededCredits} créditos (1 crédito por ponto GPS). Seu saldo atual é ${currentCredits} créditos. Escolha uma grade menor (ex: 3x3 com 9 créditos) ou recarregue.`);
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = oldHtml;
+        }
+        return;
+      }
+
+      if (typeof debitActiveUserCredits === 'function') {
+        const debited = debitActiveUserCredits(neededCredits);
+        if (!debited) {
+          showToast(`⚠️ Saldo insuficiente! Você precisa de ${neededCredits} créditos.`);
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = oldHtml;
+          }
+          return;
+        }
+        const remaining = typeof getActiveUserCredits === 'function' ? getActiveUserCredits() : (currentCredits - neededCredits);
+        showToast(`⚡ Grade ${N}x${N} escaneada! -${neededCredits} créditos debitados (1 crédito por ponto). Saldo restante: ${remaining} créditos.`);
+      }
     }
 
     if (btn) {
@@ -12320,7 +12358,10 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
   });
 
   document.getElementById('rankGridSizeSelect')?.addEventListener('change', (e) => {
-    GeoState.gridSize = Number(e.target.value) || 5;
+    const val = Number(e.target.value) || 5;
+    GeoState.gridSize = val;
+    const pts = val * val;
+    showToast(`📐 Tamanho de Grade alterado para ${val}x${val} (${pts} pontos GPS — ${pts} créditos na varredura).`);
     runGeoGridCalculation(false);
   });
 
