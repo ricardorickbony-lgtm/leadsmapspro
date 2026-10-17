@@ -838,7 +838,7 @@ window.setLeadPostDays = setLeadPostDays;
 // --------------------------------------------------------------------------
 // 1.95 Raio-X Oficial via API Google Meu Negócio (Outscraper Oficial)
 // --------------------------------------------------------------------------
-async function runRaioXOficial(leadId) {
+async function runRaioXOficial(leadId, autoOpen = true) {
   const lead = getAnyLeadById(leadId);
   if (!lead) return;
 
@@ -1041,7 +1041,9 @@ async function runRaioXOficial(leadId) {
 
     // Notifica e atualiza UI
     renderTable();
-    if (document.getElementById('diagnosticModal') && !document.getElementById('diagnosticModal').classList.contains('hidden') && State.currentLead?.id === lead.id) {
+    if (autoOpen) {
+      openDiagnostic(lead.id);
+    } else if (document.getElementById('diagnosticModal') && !document.getElementById('diagnosticModal').classList.contains('hidden') && State.currentLead?.id === lead.id) {
       openDiagnostic(lead.id);
     }
 
@@ -1088,7 +1090,7 @@ async function runBulkRaioX() {
       if (btn) {
         btn.innerHTML = `<span class="inline-block animate-spin">⏳</span> Auditando (${count}/${total})...`;
       }
-      await runRaioXOficial(id);
+      await runRaioXOficial(id, false);
       await new Promise(r => setTimeout(r, 600));
     } catch (e) {
       console.warn("Erro ao processar Raio-X do lead", id, e);
