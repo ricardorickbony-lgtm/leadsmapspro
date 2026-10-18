@@ -968,34 +968,23 @@ async function runRaioXOficial(leadId, autoOpen = true) {
     if (typeof item.reviews === 'number') lead.reviews = item.reviews;
     if (item.reviews_per_score) lead.reviewsPerScore = item.reviews_per_score;
 
-    // 3.1 Consulta e Auditoria Factual de Resposta de Avaliações no Google Maps (Zero Falsos Negativos)
+    // 3.1 Consulta e Auditoria Factual de Resposta de Avaliações no Google Maps (Outscraper owner_answer & Serper)
     let auditedRespRate = null;
-    let cidToAudit = item.cid || lead.cid;
-    if (!cidToAudit) {
+    const queryOrCidForReviews = item.cid || item.place_id || `${lead.empresa} ${lead.cidade || lead.endereco || ''}`.trim();
+    
+    // Se o próprio item do Outscraper já trouxe reviews_data:
+    if (Array.isArray(item.reviews_data) && item.reviews_data.length > 0) {
+      const answeredCount = item.reviews_data.filter(r => Boolean(r.owner_answer && typeof r.owner_answer === 'string' && r.owner_answer.trim().length > 0)).length;
+      auditedRespRate = Math.round((answeredCount / item.reviews_data.length) * 100);
+      console.log(`[Raio-X Outscraper Direto] Avaliações apuradas no payload para ${lead.empresa}: ${answeredCount}/${item.reviews_data.length} respondidas (${auditedRespRate}%)`);
+    } else {
       try {
-        const placeSearch = await fetch('https://google.serper.dev/places', {
-          method: 'POST',
-          headers: { 'X-API-KEY': State.settings?.apiKey || localStorage.getItem('leadmaps_google_api_key') || 'f93ffd86dc739cb1c843b12f2082e381064c1339', 'Content-Type': 'application/json' },
-          body: JSON.stringify({ q: `${lead.empresa} ${lead.cidade || ''}`, gl: 'br', hl: 'pt-br' })
-        });
-        if (placeSearch.ok) {
-          const psData = await placeSearch.json();
-          if (psData.places && psData.places[0] && psData.places[0].cid) {
-            cidToAudit = psData.places[0].cid;
-            lead.cid = cidToAudit;
-          }
-        }
-      } catch (e) {}
-    }
-
-    if (cidToAudit) {
-      try {
-        const revData = await fetchRealPlaceReviews(cidToAudit);
+        const revData = await fetchRealPlaceReviews(queryOrCidForReviews);
         if (revData && Array.isArray(revData.reviews) && revData.reviews.length > 0) {
           const sampleRevs = revData.reviews;
-          const answeredCount = sampleRevs.filter(r => r.response && (r.response.snippet || r.response.text || r.response.date || r.response.title || r.response)).length;
+          const answeredCount = sampleRevs.filter(r => r.hasOwnerReply || (r.owner_answer && r.owner_answer.trim().length > 0) || (r.response && (r.response.snippet || r.response.text))).length;
           auditedRespRate = Math.round((answeredCount / sampleRevs.length) * 100);
-          console.log(`[Raio-X Oficial] Avaliações reais auditadas para ${lead.empresa}: ${answeredCount}/${sampleRevs.length} respondidas (${auditedRespRate}%)`);
+          console.log(`[Raio-X Oficial Reviews] Avaliações auditadas para ${lead.empresa}: ${answeredCount}/${sampleRevs.length} respondidas (${auditedRespRate}%)`);
         }
       } catch (errRev) {
         console.warn('Erro ao consultar reviews no Raio-X Oficial:', errRev);
@@ -1235,7 +1224,7 @@ async function runRaioXOficial(leadId, autoOpen = true) {
             const revData = await fetchRealPlaceReviews(p.cid, serperKey);
             if (revData && Array.isArray(revData.reviews) && revData.reviews.length > 0) {
               const sampleRevs = revData.reviews;
-              const answeredCount = sampleRevs.filter(r => r.response && (r.response.snippet || r.response.text || r.response.date || r.response.title || r.response)).length;
+              const answeredCount = sampleRevs.filter(r => r.hasOwnerReply || (r.owner_answer && r.owner_answer.trim().length > 0) || (r.response && (r.response.snippet || r.response.text))).length;
               const rate = Math.round((answeredCount / sampleRevs.length) * 100);
               lead.responseRatePct = rate;
               lead.reviewsSemRespostaPct = Math.max(0, 100 - rate);
@@ -4129,18 +4118,18 @@ function triggerAsyncLiveReviewAudit(lead) {
   const isReviewsVerified = isReviewsVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
   if (isReviewsVerified) return;
 
-  const cidToCheck = lead.cid || lead.placeId;
+  const targetQuery = lead.cid || lead.placeId || `${lead.empresa} ${lead.cidade || ''}`.trim();
 
-  const runLiveAudit = (cid) => {
-    if (!cid || lead._reviewsAuditedLive) return;
-    fetchRealPlaceReviews(cid).then(revData => {
+  const runLiveAudit = (queryParam) => {
+    if (!queryParam || lead._reviewsAuditedLive) return;
+    fetchRealPlaceReviews(queryParam).then(revData => {
       if (revData && Array.isArray(revData.reviews)) {
         lead._reviewsAuditedLive = true;
         const sampleRevs = revData.reviews;
         let answered = 0;
         let realRate = 0;
         if (sampleRevs.length > 0) {
-          answered = sampleRevs.filter(r => r.response && (r.response.snippet || r.response.text || r.response.date || r.response.title || r.response)).length;
+          answered = sampleRevs.filter(r => r.hasOwnerReply || (r.owner_answer && r.owner_answer.trim().length > 0) || (r.response && (r.response.snippet || r.response.text || r.response.date || r.response.title || r.response))).length;
           realRate = Math.round((answered / sampleRevs.length) * 100);
           lead.responseRatePct = realRate;
           lead.reviewsSemRespostaPct = Math.max(0, 100 - realRate);
@@ -4172,20 +4161,8 @@ function triggerAsyncLiveReviewAudit(lead) {
     }).catch(() => {});
   };
 
-  if (cidToCheck) {
-    runLiveAudit(cidToCheck);
-  } else if (lead.empresa) {
-    const keyToUse = State.settings?.apiKey || localStorage.getItem('leadmaps_google_api_key') || 'f93ffd86dc739cb1c843b12f2082e381064c1339';
-    fetch('https://google.serper.dev/places', {
-      method: 'POST',
-      headers: { 'X-API-KEY': keyToUse, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ q: `${lead.empresa} ${lead.cidade || ''}`.trim(), gl: 'br', hl: 'pt-br' })
-    }).then(r => r.json()).then(d => {
-      if (d && d.places && d.places[0] && d.places[0].cid) {
-        lead.cid = d.places[0].cid;
-        runLiveAudit(lead.cid);
-      }
-    }).catch(() => {});
+  if (targetQuery) {
+    runLiveAudit(targetQuery);
   }
 }
 
@@ -6288,27 +6265,83 @@ async function searchPlacesForVerification(rawInput, cityInput, apiKey) {
   return { places: places || [], cleanQuery, searchQuery };
 }
 
-async function fetchRealPlaceReviews(cid, apiKey) {
-  if (!cid) return null;
+async function fetchRealPlaceReviews(queryOrCid, apiKey) {
+  if (!queryOrCid) return null;
+
+  // 1. MOTOR PRIMÁRIO: OUTSCRAPER MAPS REVIEWS-V3 (Leitura nativa de reviews_data e owner_answer)
+  const outscraperKey = (State.settings?.outscraperApiKey || localStorage.getItem('leadmaps_outscraper_api_key') || 'NzM0YTI0ZmU5NDc2NGQxNjgzNjJlYjhiOTRlNmU4Mzh8YmI5ODZkYTM3Mg').trim();
+  if (outscraperKey) {
+    try {
+      const outQuery = String(queryOrCid).trim();
+      const outUrl = `https://api.app.outscraper.com/maps/reviews-v3?query=${encodeURIComponent(outQuery)}&reviewsLimit=15&async=false&apiKey=${encodeURIComponent(outscraperKey)}`;
+      const outRes = await fetch(outUrl);
+      if (outRes.ok) {
+        const outJson = await outRes.json();
+        const rData = outJson?.data?.[0]?.reviews_data;
+        if (Array.isArray(rData) && rData.length > 0) {
+          const unifiedReviews = rData.map(r => {
+            const hasReply = Boolean(r.owner_answer && typeof r.owner_answer === 'string' && r.owner_answer.trim().length > 0);
+            return {
+              author: r.author_title || r.author || 'Cliente Google',
+              rating: typeof r.review_rating === 'number' ? r.review_rating : (typeof r.rating === 'number' ? r.rating : 5),
+              text: r.review_text || r.text || '',
+              owner_answer: r.owner_answer || null,
+              hasOwnerReply: hasReply,
+              response: hasReply ? { snippet: r.owner_answer, text: r.owner_answer, date: r.owner_answer_timestamp_datetime_utc } : null
+            };
+          });
+          return {
+            reviews: unifiedReviews,
+            source: 'outscraper',
+            total: unifiedReviews.length
+          };
+        }
+      }
+    } catch (errOut) {
+      console.warn('[fetchRealPlaceReviews] Falha ao consultar Outscraper reviews-v3, tentando Serper:', errOut);
+    }
+  }
+
+  // 2. MOTOR DE CONTINGÊNCIA: SERPER GOOGLE PLACES REVIEWS
   const keyToUse = apiKey || State.settings?.apiKey || localStorage.getItem('leadmaps_google_api_key') || 'f93ffd86dc739cb1c843b12f2082e381064c1339';
   try {
+    const isNumericCid = /^\d+$/.test(String(queryOrCid).trim());
+    const bodyPayload = isNumericCid 
+      ? { cid: String(queryOrCid).trim(), gl: 'br', hl: 'pt-br' }
+      : { q: String(queryOrCid).trim(), gl: 'br', hl: 'pt-br' };
+
     const res = await fetch('https://google.serper.dev/reviews', {
       method: 'POST',
       headers: {
         'X-API-KEY': keyToUse,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        cid: String(cid),
-        gl: 'br',
-        hl: 'pt-br'
-      })
+      body: JSON.stringify(bodyPayload)
     });
     if (!res.ok) return null;
     const data = await res.json();
+    if (data && Array.isArray(data.reviews)) {
+      const unifiedReviews = data.reviews.map(r => {
+        const hasReply = Boolean((r.owner_answer && r.owner_answer.trim().length > 0) || (r.response && (r.response.snippet || r.response.text || r.response.date || r.response.title || r.response)));
+        const replyText = (r.response && (r.response.snippet || r.response.text)) || r.owner_answer || null;
+        return {
+          author: r.user?.name || r.author || 'Cliente Google',
+          rating: typeof r.rating === 'number' ? r.rating : 5,
+          text: r.snippet || r.text || '',
+          owner_answer: replyText,
+          hasOwnerReply: hasReply,
+          response: hasReply ? (r.response || { snippet: replyText, text: replyText }) : null
+        };
+      });
+      return {
+        reviews: unifiedReviews,
+        source: 'serper',
+        total: unifiedReviews.length
+      };
+    }
     return data;
   } catch (e) {
-    console.warn('Erro ao consultar avaliações detalhadas do Google via CID:', e);
+    console.warn('Erro ao consultar avaliações detalhadas do Google via Serper:', e);
     return null;
   }
 }
@@ -6334,7 +6367,7 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
 
   if (reviewsData && Array.isArray(reviewsData.reviews) && reviewsData.reviews.length > 0) {
     sampleReviews = reviewsData.reviews;
-    const answeredCount = sampleReviews.filter(r => r.response && (r.response.snippet || r.response.text || r.response.date)).length;
+    const answeredCount = sampleReviews.filter(r => r.hasOwnerReply || (r.owner_answer && r.owner_answer.trim().length > 0) || (r.response && (r.response.snippet || r.response.text || r.response.date))).length;
     if (answeredCount === sampleReviews.length && reviews > 150) {
       // Amostragem recente 100% respondida: histórico global com ~3 pendências residuais típicas
       unansweredCount = Math.min(3, Math.max(1, Math.round(reviews * 0.011)));
@@ -6664,7 +6697,15 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
                   const isVerifiedTour = isTourVerifiedForBusiness(placeName, it.full_address, it.phone);
                   const isVerifiedPosts = isPostsVerifiedForBusiness(placeName, it.full_address, it.phone);
                   const reviewsTotal = it.reviews || 0;
-                  const respRate = isVerifiedReviews ? 100 : (it.response_rate || 0);
+                  let respRate = 0;
+                  if (isVerifiedReviews) {
+                    respRate = 100;
+                  } else if (Array.isArray(it.reviews_data) && it.reviews_data.length > 0) {
+                    const answeredCount = it.reviews_data.filter(r => Boolean(r.owner_answer && typeof r.owner_answer === 'string' && r.owner_answer.trim().length > 0)).length;
+                    respRate = Math.round((answeredCount / it.reviews_data.length) * 100);
+                  } else {
+                    respRate = 0;
+                  }
 
                   let postDaysCalc = isVerifiedPosts ? 1 : 45;
                   if (Array.isArray(it.posts) && it.posts.length > 0) {
