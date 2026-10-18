@@ -6860,6 +6860,19 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
   const isKnownTour = isTourVerifiedForBusiness(mainTitle, mainPlace.address, mainPlace.phoneNumber);
   const has360 = Boolean(isKnownTour);
 
+  // Reviews total do perfil auditado
+  const reviews = typeof mainPlace.ratingCount === 'number'
+    ? mainPlace.ratingCount
+    : (typeof mainPlace.reviews === 'number'
+        ? mainPlace.reviews
+        : (typeof mainPlace.reviewsCount === 'number'
+            ? mainPlace.reviewsCount
+            : (typeof mainPlace.user_ratings_total === 'number'
+                ? mainPlace.user_ratings_total
+                : (Number(mainPlace.reviews) || 0))));
+
+  const isVerifiedReviews = isReviewsVerifiedForBusiness(mainTitle, mainPlace.address, mainPlace.phoneNumber);
+
   // Categorias (Primária e Secundárias reais do Google Maps)
   const categoriesList = Array.isArray(mainPlace.types) && mainPlace.types.length > 0
     ? mainPlace.types
@@ -6884,7 +6897,6 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
     }
   } else {
     // Quando não há dados de respostas confirmadas na API ou perfil não é cliente homologado:
-    const isVerifiedReviews = isReviewsVerifiedForBusiness(mainTitle, mainPlace.address, mainPlace.phoneNumber);
     responseRatePct = isVerifiedReviews ? 100 : 0;
     unansweredCount = responseRatePct === 100 ? 0 : reviews;
   }
@@ -7120,6 +7132,7 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
     auditPillars: auditPillars
   };
 }
+window.buildLeadFromPlace = buildLeadFromPlace;
 
 async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
   const { places, cleanQuery, searchQuery } = await searchPlacesForVerification(rawInput, cityInput, apiKey);
