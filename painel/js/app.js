@@ -933,206 +933,6 @@ window.setLeadPostDays = setLeadPostDays;
 // --------------------------------------------------------------------------
 // 1.95 Raio-X Oficial via API Google Meu Negócio (Outscraper Oficial)
 // --------------------------------------------------------------------------
-// --------------------------------------------------------------------------
-// 1.94 Motor CanÃ´nico de Auditoria GBP (Reviews, Fotos & Tour 360 - PadrÃ£o 2026)
-// --------------------------------------------------------------------------
-const REVIEW_EMPTY_STRINGS = new Set(['', 'null', 'undefined', '-', 'â€”', 'n/a', 'na']);
-
-function safeParseDate(value) {
-  if (!value) return null;
-  if (typeof value === 'number') {
-    const ms = value < 10000000000 ? value * 1000 : value;
-    const d = new Date(ms);
-    return Number.isNaN(d.getTime()) ? null : d;
-  }
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? null : d;
-}
-
-function normalizeReview(raw, provider = 'auto') {
-  if (!raw) return null;
-
-  let answerText = '';
-  let createdAt = null;
-  let answeredAt = null;
-  let prov = provider;
-
-  if (raw.owner_answer !== undefined || raw.review_datetime_utc !== undefined || raw.owner_answer_timestamp !== undefined) {
-    prov = 'outscraper';
-    answerText = typeof raw.owner_answer === 'string' ? raw.owner_answer.trim() : '';
-    createdAt = safeParseDate(raw.review_datetime_utc ?? raw.review_timestamp ?? raw.date);
-    answeredAt = safeParseDate(raw.owner_answer_timestamp_datetime_utc ?? raw.owner_answer_timestamp);
-  } else if (raw.response !== undefined) {
-    prov = 'serper';
-    const resp = raw.response;
-    if (typeof resp === 'string') {
-      answerText = resp.trim();
-    } else if (resp && typeof resp === 'object') {
-      answerText = (resp.snippet || resp.text || resp.title || '').trim();
-      answeredAt = safeParseDate(resp.date);
-    }
-    createdAt = safeParseDate(raw.date);
-  } else {
-    answerText = (raw.reply || raw.owner_reply || raw.response_text || '').trim();
-    createdAt = safeParseDate(raw.date || raw.created_at);
-    answeredAt = safeParseDate(raw.reply_date || raw.response_date);
-  }
-
-  const hasAnswer = Boolean(answerText.length > 0 && !REVIEW_EMPTY_STRINGS.has(answerText.toLowerCase()));
-  const latencyHours = (hasAnswer && createdAt && answeredAt && answeredAt >= createdAt)
-    ? Number(((answeredAt.getTime() - createdAt.getTime()) / (1000 * 60 * 60)).toFixed(1))
-    : null;
-
-  return {
-    external_id: String(raw.review_id ?? raw.reviews_id ?? raw.id ?? Math.random().toString(36).substring(2)),
-    author: raw.author_title || raw.user?.name || raw.author_id || 'Cliente',
-    rating: Number(raw.review_rating ?? raw.rating) || null,
-    text: raw.review_text ?? raw.text ?? raw.snippet ?? '',
-    created_at: createdAt ? createdAt.toISOString() : null,
-    owner_response: {
-      exists: hasAnswer,
-      text: hasAnswer ? answerText : null,
-      answered_at: (hasAnswer && answeredAt) ? answeredAt.toISOString() : null,
-      latency_hours: latencyHours,
-      evidence: {
-        provider: prov,
-        raw_field: prov === 'outscraper' ? 'owner_answer' : 'response'
-      }
-    }
-  };
-}
-
-function auditReviewResponses(reviewsList) {
-  if (!Array.isArray(reviewsList) || reviewsList.length === 0) {
-    return {
-      total_reviews_fetched: 0,
-      eligible_reviews: 0,
-      answered_reviews: 0,
-      response_rate_pct: 0,
-      avg_response_time_hours: null,
-      latency_sample_size: 0
-    };
-  }
-
-  const normalized = reviewsList.map(r => normalizeReview(r)).filter(Boolean);
-  const eligible = normalized.filter(r => r.created_at || r.owner_response.exists);
-  const answered = eligible.filter(r => r.owner_response.exists);
-  const latencySamples = answered.filter(r => r.owner_response.latency_hours !== null && r.owner_response.latency_hours !== undefined);
-
-  const responseRate = eligible.length > 0
-    ? Math.round((answered.length / eligible.length) * 100)
-    : 0;
-
-  const avgHours = latencySamples.length > 0
-    ? Number((latencySamples.reduce((sum, r) => sum + r.owner_response.latency_hours, 0) / latencySamples.length).toFixed(1))
-    : null;
-
-  return {
-    total_reviews_fetched: normalized.length,
-    eligible_reviews: eligible.length,
-    answered_reviews: answered.length,
-    response_rate_pct: responseRate,
-    avg_response_time_hours: avgHours,
-    latency_sample_size: latencySamples.length,
-    samples: normalized
-  };
-}
-
-function classifyLeadPhotos(item, lead) {
-  const ownerProfile = {
-    owner_id: item?.owner_id || lead?.ownerId || '',
-    owner_link: item?.owner_link || lead?.ownerLink || '',
-    owner_title: item?.owner_title || lead?.ownerTitle || ''
-  };
-
-  let totalPhotos = Number(item?.photos_count || lead?.photosCount || 0);
-  let ownerConfirmed = 0;
-  let userPhotos = 0;
-
-  if (Array.isArray(item?.photos) && item.photos.length > 0) {
-    item.photos.forEach(photo => {
-      const authorUri = (photo.author_link || photo.authorAttributions?.[0]?.uri || '').toLowerCase();
-      const ownerUri = (ownerProfile.owner_link || '').toLowerCase();
-      const isReviewPhoto = Boolean(photo.review_id || photo.review_img_url || photo.source === 'review_attachment');
-
-      if (isReviewPhoto) {
-        userPhotos++;
-      } else if (ownerUri && authorUri && (authorUri.includes(ownerUri) || ownerUri.includes(authorUri))) {
-        ownerConfirmed++;
-      } else if (photo.owner_photo || photo.type === 'owner') {
-        ownerConfirmed++;
-      } else {
-        userPhotos++;
-      }
-    });
-  } else {
-    if (lead?.isClaimed && totalPhotos > 0) {
-      ownerConfirmed = Math.max(1, Math.round(totalPhotos * 0.45));
-      userPhotos = Math.max(0, totalPhotos - ownerConfirmed);
-    } else {
-      ownerConfirmed = 0;
-      userPhotos = totalPhotos;
-    }
-  }
-
-  return {
-    total: totalPhotos,
-    ownerConfirmed,
-    userPhotos,
-    ownerRatio: totalPhotos > 0 ? Number((ownerConfirmed / totalPhotos).toFixed(2)) : 0
-  };
-}
-
-function auditTour360Status(item, lead) {
-  if (isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone)) {
-    return {
-      status: 'TOUR_CONFIRMED',
-      ok: true,
-      confidence: 1.0,
-      reason: 'Cliente homologado na base mestre com Tour 360Â° verificado'
-    };
-  }
-
-  const svUrl = (item?.street_view || lead?.streetViewUrl || '').trim();
-  const photoUrl = (item?.photo || lead?.coverPhoto || '').trim();
-  const svBase = svUrl.split('=')[0];
-  const photoBase = photoUrl.split('=')[0];
-
-  const isGoogleCar = svUrl.includes('streetviewpixels-pa.googleapis.com') || 
-                      svUrl.includes('cb_client=search.gws-prod.grass') ||
-                      svUrl.includes('source=outdoor');
-
-  const isPhotosphere360 = Boolean(svUrl) && 
-                           !isGoogleCar && 
-                           (svUrl.includes('googleusercontent.com') || svUrl.includes('/p/AF1Qip') || svUrl.includes('grass-cs')) && 
-                           (svBase !== photoBase);
-
-  if (isPhotosphere360) {
-    return {
-      status: 'INDOOR_CANDIDATE',
-      ok: true,
-      confidence: 0.85,
-      reason: 'Panorama esfÃ©rico 360Â° interno identificado no perfil'
-    };
-  }
-
-  if (isGoogleCar || (svUrl && svBase === photoBase)) {
-    return {
-      status: 'STREET_ONLY',
-      ok: false,
-      confidence: 0.90,
-      reason: 'Apenas visÃ£o externa da via pÃºblica (carro do Google Street View)'
-    };
-  }
-
-  return {
-    status: 'NO_PANO',
-    ok: false,
-    confidence: 0.75,
-    reason: 'Nenhum tour virtual ou panorama 360Â° interno vinculado'
-  };
-}
-
 async function runRaioXOficial(leadId, autoOpen = true) {
   const lead = getAnyLeadById(leadId);
   if (!lead) return;
@@ -1194,34 +994,36 @@ async function runRaioXOficial(leadId, autoOpen = true) {
       throw new Error("Nenhum perfil correspondente encontrado no Google Meu Negócio.");
     }
 
-    // 1. ExtraÃ§Ã£o e ClassificaÃ§Ã£o Factual de Fotos (PadrÃ£o PlePer/GMB Everywhere 2026)
-    const photoAudit = classifyLeadPhotos(item, lead);
-    lead.photosCount = photoAudit.total;
-    lead.ownerPhotosCount = photoAudit.ownerConfirmed;
-    lead.userPhotosCount = photoAudit.userPhotos;
-    lead.ownerPhotoRatio = photoAudit.ownerRatio;
+    // 1. Extração de Fotos Reais
+    if (typeof item.photos_count === 'number') {
+      lead.photosCount = item.photos_count;
+    } else if (item.photo) {
+      lead.photosCount = 1;
+    } else {
+      lead.photosCount = 0;
+    }
 
-    // 2. VerificaÃ§Ã£o de ReivindicaÃ§Ã£o da Ficha
+    // 2. Verificação de Reivindicação da Ficha
     lead.isClaimed = Boolean(item.verified);
     lead.verified = Boolean(item.verified);
     lead.ownerTitle = item.owner_title || lead.ownerTitle || '';
     lead.ownerLink = item.owner_link || lead.ownerLink || '';
     lead.ownerId = item.owner_id || lead.ownerId || '';
 
-    // 3. AvaliaÃ§Ãµes & Nota
+    // 3. Avaliações & Nota
     if (typeof item.rating === 'number') lead.rating = item.rating;
     if (typeof item.reviews === 'number') lead.reviews = item.reviews;
     if (item.reviews_per_score) lead.reviewsPerScore = item.reviews_per_score;
 
-    // 3.1 Consulta e Auditoria Factual CanÃ´nica de AvaliaÃ§Ãµes (PadrÃ£o Outscraper/Serper 2026)
-    let auditedRevStats = null;
+    // 3.1 Consulta e Auditoria Factual de Resposta de Avaliações no Google Maps (Zero Falsos Negativos)
+    let auditedRespRate = null;
     let cidToAudit = item.cid || lead.cid;
     if (!cidToAudit) {
       try {
         const placeSearch = await fetch('https://google.serper.dev/places', {
           method: 'POST',
           headers: { 'X-API-KEY': State.settings?.apiKey || localStorage.getItem('leadmaps_google_api_key') || 'f93ffd86dc739cb1c843b12f2082e381064c1339', 'Content-Type': 'application/json' },
-          body: JSON.stringify({ q: (lead.empresa + " " + (lead.cidade || '')).trim(), gl: 'br', hl: 'pt-br' })
+          body: JSON.stringify({ q: `${lead.empresa} ${lead.cidade || ''}`, gl: 'br', hl: 'pt-br' })
         });
         if (placeSearch.ok) {
           const psData = await placeSearch.json();
@@ -1233,42 +1035,45 @@ async function runRaioXOficial(leadId, autoOpen = true) {
       } catch (e) {}
     }
 
-    let rawReviewsPool = Array.isArray(item.reviews_data) ? item.reviews_data : (Array.isArray(item.reviews_list) ? item.reviews_list : null);
-    if (!rawReviewsPool && cidToAudit) {
+    if (cidToAudit) {
       try {
         const revData = await fetchRealPlaceReviews(cidToAudit);
-        if (revData && Array.isArray(revData.reviews)) {
-          rawReviewsPool = revData.reviews;
+        if (revData && Array.isArray(revData.reviews) && revData.reviews.length > 0) {
+          const sampleRevs = revData.reviews;
+          const answeredCount = sampleRevs.filter(r => r.response && (r.response.snippet || r.response.text || r.response.date || r.response.title || r.response)).length;
+          auditedRespRate = Math.round((answeredCount / sampleRevs.length) * 100);
+          console.log(`[Raio-X Oficial] Avaliações reais auditadas para ${lead.empresa}: ${answeredCount}/${sampleRevs.length} respondidas (${auditedRespRate}%)`);
         }
       } catch (errRev) {
         console.warn('Erro ao consultar reviews no Raio-X Oficial:', errRev);
       }
     }
 
-    if (Array.isArray(rawReviewsPool) && rawReviewsPool.length > 0) {
-      auditedRevStats = auditReviewResponses(rawReviewsPool);
-      lead._reviewsAuditedLive = true;
-      lead.responseRatePct = auditedRevStats.response_rate_pct;
-      lead.avgResponseTimeHours = auditedRevStats.avg_response_time_hours;
-      lead.reviewsAuditedCount = auditedRevStats.eligible_reviews;
-      lead.answeredReviewsCount = auditedRevStats.answered_reviews;
-      lead.reviewsSemRespostaPct = Math.max(0, 100 - auditedRevStats.response_rate_pct);
-      lead.unansweredCount = Math.max(0, (lead.reviews || auditedRevStats.eligible_reviews) - auditedRevStats.answered_reviews);
-      if (auditedRevStats.response_rate_pct >= 80) saveVerifiedReviewsBusiness(lead.empresa, true);
-      console.log([Raio-X Oficial] AvaliaÃ§Ãµes reais auditadas para : / respondidas (%) - LatÃªncia mÃ©dia: h);
-    }
-
-    // 4. MÃ­dia & HorÃ¡rios
+    // 4. Mídia & Horários
     if (item.photo) lead.coverPhoto = item.photo;
     if (item.working_hours) lead.workingHours = item.working_hours;
     if (item.location_link) lead.locationLink = item.location_link;
     if (item.website && !lead.websiteUrl) lead.websiteUrl = item.website;
 
-    // 4.1 DetecÃ§Ã£o Factual de Tour 360Â° (Street View Indoors vs Rua PÃºblica)
-    const tourAudit = auditTour360Status(item, lead);
-    lead.tour360Audit = tourAudit;
-    lead.temTour360 = tourAudit.ok;
-    saveVerifiedTourBusiness(lead.empresa, tourAudit.ok);
+    // 4.1 Detecção Factual de Tour 360° via Assinatura Oficial da API Outscraper e Lista Mestre
+    const svUrl = (item.street_view || '').trim();
+    const photoUrl = (item.photo || '').trim();
+    const svBase = svUrl.split('=')[0];
+    const photoBase = photoUrl.split('=')[0];
+    const isGoogleCar = svUrl.includes('streetviewpixels-pa.googleapis.com') || svUrl.includes('cb_client=search.gws-prod.grass');
+    const isPhotosphere360 = Boolean(svUrl) && !isGoogleCar && (svUrl.includes('googleusercontent.com') || svUrl.includes('/p/AF1Qip') || svUrl.includes('grass-cs')) && (svBase !== photoBase);
+    const isKnownVerified = isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
+
+    if (isPhotosphere360 || isKnownVerified) {
+      lead.temTour360 = true;
+      saveVerifiedTourBusiness(lead.empresa, true);
+    } else if (isGoogleCar || (svUrl && svBase === photoBase)) {
+      if (!isKnownVerified) {
+        lead.temTour360 = false;
+        saveVerifiedTourBusiness(lead.empresa, false);
+      }
+    }
+
     // 5. Postagens & Novidades Recentes (Audita 100% de todas as postagens da lista para extrair a mais recente)
     if (Array.isArray(item.posts) && item.posts.length > 0) {
       let newestTimestamp = 0;
@@ -3985,10 +3790,9 @@ function syncAuditPillars(lead) {
     }
     const isSyncRevOk = syncRespRate >= 80;
     pRev.ok = isSyncRevOk;
-    const latencyText = lead.avgResponseTimeHours ?  (Retorno mÃ©dio em h) : '';
-    const revCountText = (lead.reviewsAuditedCount && lead.reviewsAuditedCount > 0) ? ${lead.answeredReviewsCount || 0}/ auditadas : ${lead.reviews || 0} avaliaÃ§Ãµes;
     pRev.status = isSyncRevOk
-      ? â­ GestÃ£o de ReputaÃ§Ã£o Exemplar: % das avaliaÃ§Ãµes respondidas com cordialidade (, Nota â˜…).`n      : (syncRespRate === 0
+      ? "â­ GestÃ£o de ReputaÃ§Ã£o Exemplar: " + syncRespRate + "% das avaliaÃ§Ãµes respondidas com cordialidade (" + (lead.reviews || 0) + " avaliaÃ§Ãµes, Nota " + Number(lead.rating || 5.0).toFixed(1) + "â˜…)."
+      : (syncRespRate === 0
           ? "ðŸš¨ Gargalo CrÃ­tico: 0% das avaliaÃ§Ãµes possuem resposta do proprietÃ¡rio (" + (lead.reviews || 0) + " avaliaÃ§Ãµes sem retorno pÃºblico)."
           : "AtenÃ§Ã£o: Apenas " + syncRespRate + "% das avaliaÃ§Ãµes estÃ£o respondidas no perfil (" + (lead.reviews || 0) + " avaliaÃ§Ãµes).");
     if (isSyncRevOk && Array.isArray(lead.gaps)) {
@@ -4247,14 +4051,13 @@ function triggerAsyncLiveReviewAudit(lead) {
     fetchRealPlaceReviews(cid).then(revData => {
       if (revData && Array.isArray(revData.reviews) && revData.reviews.length > 0) {
         lead._reviewsAuditedLive = true;
-        const revAudit = auditReviewResponses(revData.reviews);
-        lead.responseRatePct = revAudit.response_rate_pct;
-        lead.avgResponseTimeHours = revAudit.avg_response_time_hours;
-        lead.reviewsAuditedCount = revAudit.eligible_reviews;
-        lead.answeredReviewsCount = revAudit.answered_reviews;
-        lead.reviewsSemRespostaPct = Math.max(0, 100 - revAudit.response_rate_pct);
-        lead.unansweredCount = Math.max(0, (lead.reviews || revAudit.eligible_reviews) - revAudit.answered_reviews);
-        if (revAudit.response_rate_pct >= 80) saveVerifiedReviewsBusiness(lead.empresa, true);
+        const sampleRevs = revData.reviews;
+        const answered = sampleRevs.filter(r => r.response && (r.response.snippet || r.response.text || r.response.date || r.response.title || r.response)).length;
+        const realRate = Math.round((answered / sampleRevs.length) * 100);
+        lead.responseRatePct = realRate;
+        lead.reviewsSemRespostaPct = Math.max(0, 100 - realRate);
+        lead.unansweredCount = Math.round((lead.reviews || 0) * (lead.reviewsSemRespostaPct / 100));
+        if (realRate >= 80) saveVerifiedReviewsBusiness(lead.empresa, true);
 
         // Atualiza modal se estiver aberto para este lead
         if (State.currentLead && State.currentLead.id === lead.id) {
@@ -11379,18 +11182,8 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       `;
     }
 
-    const perplexityStatus = document.getElementById('aiPerplexityStatus');
-    if (perplexityStatus) {
-      perplexityStatus.textContent = baseSaiv >= 75
-        ? 'Citada com autoridade no Pro Search 2026 com base em reviews'
-        : 'MenÃ§Ã£o esparsa â€” Requer ampliaÃ§Ã£o de citaÃ§Ãµes locais e backlinks';
-    }
-
-    const promptNaoBrandado = VocÃª Ã© um consultor local de inteligÃªncia de mercado no Brasil. FaÃ§a uma anÃ¡lise de recomendaÃ§Ã£o imparcial para um morador local:
-"Quais sÃ£o as 3 melhores opÃ§Ãµes de ${bNiche} em ${cleanCity} considerando reputaÃ§Ã£o, avaliaÃ§Ãµes reais e atendimento no Google? Quais vocÃª recomenda e por quÃª?"
-
-CritÃ©rio de Auditoria: Verifique se a empresa "" Ã© citada e recomendada espontaneamente entre as lÃ­deres do ranking.;
-    const promptExato = promptNaoBrandado;
+    const promptExato = `Você é um consultor local de inteligência de mercado no Brasil. Faça uma análise de recomendação para um morador que busca: "${bNiche} em ${cleanCity}".
+Quais são as 3 principais empresas que você recomenda? Analise especificamente se a empresa "${bName}" se qualifica entre as líderes de reputação e destaque no Google Meu Negócio da região.`;
 
     const copyBtn = document.getElementById('btnCopyAiValidationPrompt');
     if (copyBtn) {
