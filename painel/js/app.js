@@ -1137,7 +1137,7 @@ async function runRaioXOficial(leadId, autoOpen = true) {
     if (pRev) {
       const isReviewsVerified = isReviewsVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
       const isTourVerified = isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
-      let syncRespRate = 100;
+      let syncRespRate = 0;
 
       if (auditedRespRate !== null) {
         syncRespRate = auditedRespRate;
@@ -1150,26 +1150,30 @@ async function runRaioXOficial(leadId, autoOpen = true) {
         lead.responseRatePct = 100;
         lead.reviewsSemRespostaPct = 0;
         lead.unansweredCount = 0;
-      } else if (typeof lead.responseRatePct === 'number' && lead.responseRatePct > 0) {
+      } else if (lead._reviewsAuditedLive && typeof lead.responseRatePct === 'number') {
         syncRespRate = lead.responseRatePct;
-      } else if (typeof lead.reviewsSemRespostaPct === 'number' && lead.reviewsSemRespostaPct !== null && lead.reviewsSemRespostaPct < 100) {
-        syncRespRate = Math.max(0, 100 - lead.reviewsSemRespostaPct);
-      } else if ((lead.rating || 0) >= 4.7 && (lead.reviews || 0) >= 20) {
-        syncRespRate = 100;
-        lead.responseRatePct = 100;
-        lead.reviewsSemRespostaPct = 0;
-        lead.unansweredCount = 0;
+      } else if (typeof lead.responseRatePct === 'number' && lead.responseRatePct > 0 && lead.responseRatePct !== 95 && lead.responseRatePct !== 85) {
+        syncRespRate = lead.responseRatePct;
       } else {
-        syncRespRate = typeof lead.responseRatePct === 'number' && lead.responseRatePct >= 0 ? lead.responseRatePct : 85;
+        syncRespRate = 0;
+        lead.responseRatePct = 0;
+        lead.reviewsSemRespostaPct = 100;
+        lead.unansweredCount = lead.reviews || 0;
       }
 
       const isSyncRevOk = syncRespRate >= 80;
       pRev.ok = isSyncRevOk;
       pRev.status = isSyncRevOk
         ? `⭐ Gestão de Reputação Exemplar: ${syncRespRate}% das avaliações respondidas com cordialidade (${lead.reviews || 0} avaliações, Nota ${(lead.rating || 5.0).toFixed(1)}★).`
-        : `Atenção: Apenas ${syncRespRate}% das avaliações estão respondidas no perfil (${lead.reviews || 0} avaliações).`;
+        : (syncRespRate === 0
+            ? `🚨 Gargalo Crítico: 0% das avaliações possuem resposta do proprietário (${lead.reviews || 0} avaliações sem retorno público).`
+            : `Atenção: Apenas ${syncRespRate}% das avaliações estão respondidas no perfil (${lead.reviews || 0} avaliações).`);
       if (isSyncRevOk && Array.isArray(lead.gaps)) {
         lead.gaps = lead.gaps.filter(g => !g.toLowerCase().includes('avalia') && !g.toLowerCase().includes('resposta'));
+      } else if (!isSyncRevOk && Array.isArray(lead.gaps)) {
+        if (!lead.gaps.some(g => g.toLowerCase().includes('avalia') || g.toLowerCase().includes('resposta'))) {
+          lead.gaps.push(`Perfil não responde às avaliações dos clientes no Google (${syncRespRate}% de respostas — ${lead.reviews || 0} avaliações sem retorno)`);
+        }
       }
     }
 
@@ -2659,8 +2663,11 @@ function buildWhatsAppMessage(lead) {
   const categoriaBase = lead.categoria ? lead.categoria.toLowerCase() : 'estabelecimento';
   const webAnalysis = lead.websiteAnalysis || analyzeWebsiteUrl(lead.websiteUrl);
 
-  // Se o perfil for de elite (nota >= 4.6 e reviews >= 80) e tiver website próprio oficial
-  if (Number(rating) >= 4.6 && leadReviews >= 80 && lead.temSite) {
+  // Se o perfil for verdadeiramente de elite (nota >= 4.6, reviews >= 80, site próprio, tour 360 e taxa de resposta comprovada)
+  const isRevVerifiedMsg = isReviewsVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
+  const isTourVerMsg = isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
+  const isTrulyElite = Number(rating) >= 4.6 && leadReviews >= 80 && lead.temSite && (lead.temTour360 || isTourVerMsg) && ((lead.responseRatePct >= 80 && lead.responseRatePct !== 95 && lead.responseRatePct !== 85) || isRevVerifiedMsg);
+  if (isTrulyElite) {
     return [
       `Oi, tudo bem? Vi o perfil da ${lead.empresa} no Google — parabéns pela nota ${rating} e pelas ${leadReviews} avaliações impecáveis, vocês são a maior referência em ${categoriaBase} aqui em ${cidadeBase}!`,
       `Estava analisando o mapa de calor (GeoGrid GPS) da região e notei uma grande oportunidade de expansão de raio para captar clientes qualificados em bairros e cidades vizinhas onde a concorrência ainda é fraca.`,
@@ -3605,10 +3612,18 @@ window.openDiagnostic = function(id) {
   }
 
   // Checagem em tempo real de Avaliações Respondidas (Clientes Geridos pelo Ricardo)
-  if (isReviewsVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone)) {
+  const isReviewsVerifiedLead = isReviewsVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
+  const isTourVerifiedLead = isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
+  if (isReviewsVerifiedLead || isTourVerifiedLead) {
     lead.responseRatePct = 100;
     lead.reviewsSemRespostaPct = 0;
     lead.unansweredCount = 0;
+  } else if (!lead._reviewsAuditedLive) {
+    if (lead.responseRatePct === 95 || lead.responseRatePct === 85 || lead.responseRatePct === 100 || typeof lead.responseRatePct !== 'number') {
+      lead.responseRatePct = 0;
+      lead.reviewsSemRespostaPct = 100;
+      lead.unansweredCount = lead.reviews || 0;
+    }
   }
   if (lead.responseRatePct === 100 && Array.isArray(lead.gaps)) {
     lead.gaps = lead.gaps.filter(g => !g.toLowerCase().includes('avalia') && !g.toLowerCase().includes('resposta'));
@@ -3621,24 +3636,22 @@ window.openDiagnostic = function(id) {
     const isElite = (Number(lead.rating) >= 4.8 && Number(lead.reviews) >= 60 && (isTourVerified || isReviewsVerified));
     const hasSec = Boolean(lead.categoriasSecundarias && lead.categoriasSecundarias.length > 1);
     
-    // Análise estrita da taxa de resposta a avaliações (Zero falso negativo)
-    let respRateVal = 100;
+    // Análise estrita da taxa de resposta a avaliações (Zero falso positivo)
+    let respRateVal = 0;
     if (isReviewsVerified || isTourVerified) {
       respRateVal = 100;
       lead.responseRatePct = 100;
       lead.reviewsSemRespostaPct = 0;
       lead.unansweredCount = 0;
-    } else if (typeof lead.responseRatePct === 'number' && lead.responseRatePct > 0) {
+    } else if (lead._reviewsAuditedLive && typeof lead.responseRatePct === 'number') {
       respRateVal = lead.responseRatePct;
-    } else if (typeof lead.reviewsSemRespostaPct === 'number' && lead.reviewsSemRespostaPct !== null && lead.reviewsSemRespostaPct < 100) {
-      respRateVal = Math.max(0, 100 - lead.reviewsSemRespostaPct);
-    } else if ((Number(lead.rating) || 0) >= 4.7 && (Number(lead.reviews) || 0) >= 20) {
-      respRateVal = 100;
-      lead.responseRatePct = 100;
-      lead.reviewsSemRespostaPct = 0;
-      lead.unansweredCount = 0;
+    } else if (typeof lead.responseRatePct === 'number' && lead.responseRatePct > 0 && lead.responseRatePct !== 95 && lead.responseRatePct !== 85) {
+      respRateVal = lead.responseRatePct;
     } else {
-      respRateVal = typeof lead.responseRatePct === 'number' && lead.responseRatePct >= 0 ? lead.responseRatePct : 85;
+      respRateVal = 0;
+      lead.responseRatePct = 0;
+      lead.reviewsSemRespostaPct = 100;
+      lead.unansweredCount = lead.reviews || 0;
     }
     const revOk = respRateVal >= 80;
 
@@ -3740,36 +3753,39 @@ window.openDiagnostic = function(id) {
         lead.gaps = lead.gaps.filter(g => !g.toLowerCase().includes('postagen') && !g.toLowerCase().includes('sem postar'));
       }
     }
-    // Sincroniza status do pilar de avaliações se já existir
     const pRev = lead.auditPillars.find(p => p.id === 'reviews');
     if (pRev) {
       const isReviewsVerified = isReviewsVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
       const isTourVerified = isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
-      let syncRespRate = 100;
+      let syncRespRate = 0;
       if (isReviewsVerified || isTourVerified) {
         syncRespRate = 100;
         lead.responseRatePct = 100;
         lead.reviewsSemRespostaPct = 0;
         lead.unansweredCount = 0;
-      } else if (typeof lead.responseRatePct === 'number' && lead.responseRatePct > 0) {
+      } else if (lead._reviewsAuditedLive && typeof lead.responseRatePct === 'number') {
         syncRespRate = lead.responseRatePct;
-      } else if (typeof lead.reviewsSemRespostaPct === 'number' && lead.reviewsSemRespostaPct !== null && lead.reviewsSemRespostaPct < 100) {
-        syncRespRate = Math.max(0, 100 - lead.reviewsSemRespostaPct);
-      } else if ((Number(lead.rating) || 0) >= 4.7 && (Number(lead.reviews) || 0) >= 20) {
-        syncRespRate = 100;
-        lead.responseRatePct = 100;
-        lead.reviewsSemRespostaPct = 0;
-        lead.unansweredCount = 0;
+      } else if (typeof lead.responseRatePct === 'number' && lead.responseRatePct > 0 && lead.responseRatePct !== 95 && lead.responseRatePct !== 85) {
+        syncRespRate = lead.responseRatePct;
       } else {
-        syncRespRate = typeof lead.responseRatePct === 'number' && lead.responseRatePct >= 0 ? lead.responseRatePct : 85;
+        syncRespRate = 0;
+        lead.responseRatePct = 0;
+        lead.reviewsSemRespostaPct = 100;
+        lead.unansweredCount = lead.reviews || 0;
       }
       const isSyncRevOk = syncRespRate >= 80;
       pRev.ok = isSyncRevOk;
       pRev.status = isSyncRevOk
         ? `⭐ Gestão de Reputação Exemplar: ${syncRespRate}% das avaliações respondidas com cordialidade (${lead.reviews || 0} avaliações, Nota ${(lead.rating || 5.0).toFixed(1)}★).`
-        : `Atenção: Apenas ${syncRespRate}% das avaliações estão respondidas no perfil (${lead.reviews || 0} avaliações).`;
+        : (syncRespRate === 0
+            ? `🚨 Gargalo Crítico: 0% das avaliações possuem resposta do proprietário (${lead.reviews || 0} avaliações sem retorno público).`
+            : `Atenção: Apenas ${syncRespRate}% das avaliações estão respondidas no perfil (${lead.reviews || 0} avaliações).`);
       if (isSyncRevOk && Array.isArray(lead.gaps)) {
         lead.gaps = lead.gaps.filter(g => !g.toLowerCase().includes('avalia') && !g.toLowerCase().includes('resposta'));
+      } else if (!isSyncRevOk && Array.isArray(lead.gaps)) {
+        if (!lead.gaps.some(g => g.toLowerCase().includes('avalia') || g.toLowerCase().includes('resposta'))) {
+          lead.gaps.push(`Perfil não responde às avaliações dos clientes no Google (${syncRespRate}% de respostas — ${lead.reviews || 0} avaliações sem retorno)`);
+        }
       }
     }
 
@@ -3792,8 +3808,9 @@ window.openDiagnostic = function(id) {
 
   // Checagem factual em tempo real de avaliações via API para eliminar qualquer margem de erro
   const cidToCheck = lead.cid || lead.placeId;
-  if (cidToCheck && !lead._reviewsAuditedLive) {
-    fetchRealPlaceReviews(cidToCheck).then(revData => {
+  const runLiveAudit = (cid) => {
+    if (!cid || lead._reviewsAuditedLive) return;
+    fetchRealPlaceReviews(cid).then(revData => {
       if (revData && Array.isArray(revData.reviews) && revData.reviews.length > 0) {
         lead._reviewsAuditedLive = true;
         const sampleRevs = revData.reviews;
@@ -3809,31 +3826,130 @@ window.openDiagnostic = function(id) {
           pRevLive.ok = realRate >= 80;
           pRevLive.status = realRate >= 80
             ? `⭐ Gestão de Reputação Exemplar: ${realRate}% das avaliações respondidas com cordialidade (${lead.reviews || 0} avaliações, Nota ${(lead.rating || 5.0).toFixed(1)}★).`
-            : `Atenção: Apenas ${realRate}% das avaliações estão respondidas no perfil (${lead.reviews || 0} avaliações).`;
+            : (realRate === 0
+                ? `🚨 Gargalo Crítico: 0% das avaliações possuem resposta do proprietário (${lead.reviews || 0} avaliações sem retorno público).`
+                : `Atenção: Apenas ${realRate}% das avaliações estão respondidas no perfil (${lead.reviews || 0} avaliações).`);
         }
 
-        const pContainer = document.getElementById('diagnosticPillarsContainer');
-        if (pContainer && lead.auditPillars && State.currentLead && State.currentLead.id === lead.id) {
-          pContainer.innerHTML = lead.auditPillars.map(p => {
-            const isOk = p.ok;
-            const badgeClass = isOk ? 'badge-emerald' : 'badge-rose';
-            const badgeText = isOk ? '✓ Conforme' : '✕ Gargalo';
-            return `
-              <div class="rounded-xl border ${isOk ? 'border-emerald-500/30 bg-slate-900/60' : 'border-rose-500/30 bg-rose-950/10'} p-4 flex flex-col justify-between space-y-2 cursor-pointer transition-all hover:scale-[1.01]" onclick="window.toggleDiagnosticPillar('${p.id}')">
-                <div class="flex items-start justify-between gap-2">
-                  <div class="flex items-center gap-2">
-                    <span class="text-lg">${p.icon || '📌'}</span>
-                    <h5 class="text-xs font-bold text-white">${p.nome}</h5>
+        if (realRate < 80 && Array.isArray(lead.gaps)) {
+          if (!lead.gaps.some(g => g.toLowerCase().includes('avalia') || g.toLowerCase().includes('resposta'))) {
+            lead.gaps.push(`Perfil não responde às avaliações dos clientes no Google (${realRate}% de respostas — ${lead.reviews || 0} avaliações sem retorno)`);
+          }
+        } else if (realRate >= 80 && Array.isArray(lead.gaps)) {
+          lead.gaps = lead.gaps.filter(g => !g.toLowerCase().includes('avalia') && !g.toLowerCase().includes('resposta'));
+        }
+
+        // Se o modal estiver aberto para este lead, re-renderiza pilares e score imediatamente!
+        if (State.currentLead && State.currentLead.id === lead.id) {
+          const passedCount = lead.auditPillars.filter(p => p.ok).length;
+          const healthScore = Math.round((passedCount / 7) * 100);
+          lead.score = healthScore;
+
+          const scoreBadge = document.getElementById('modalProfileScoreBadge');
+          if (scoreBadge) {
+            scoreBadge.textContent = `Índice de Saúde: ${healthScore}/100`;
+            scoreBadge.className = healthScore > 60 ? 'badge-pill badge-emerald text-[10px]' : healthScore > 35 ? 'badge-pill badge-amber text-[10px]' : 'badge-pill badge-rose text-[10px]';
+          }
+          const circleContainer = document.getElementById('modalScoreCircleContainer');
+          if (circleContainer) {
+            circleContainer.innerHTML = renderScoreGauge(healthScore, 64);
+          }
+          const tone = getScoreTone(healthScore);
+          const healthLabel = tone === 'emerald' ? 'Saudável' : tone === 'amber' ? 'Atenção' : 'Crítico';
+          const modalHealthStatus = document.getElementById('modalHealthStatus');
+          if (modalHealthStatus) {
+            modalHealthStatus.innerHTML = `Digital Health<br>${healthLabel}`;
+          }
+
+          const pillarsGrid = document.getElementById('modalProfilePillarsGrid');
+          if (pillarsGrid && lead.auditPillars) {
+            pillarsGrid.innerHTML = lead.auditPillars.map(p => {
+              const isPostPillar = p.id === 'posts';
+              const postAudit = isPostPillar ? getLeadPostAudit(lead) : null;
+              const isWebPillar = p.id === 'website';
+              const webAnalysis = isWebPillar ? (lead.websiteAnalysis || analyzeWebsiteUrl(lead.websiteUrl)) : null;
+              const isSocialGargalo = isWebPillar && !p.ok && webAnalysis && webAnalysis.isSocial;
+              const isDeadGoogle = isWebPillar && !p.ok && webAnalysis && webAnalysis.isDeprecatedGoogleSite;
+
+              const isTourPillar = p.id === 'tour360';
+              const btnBadgeText = isPostPillar 
+                ? `${postAudit.badgeLabel} ✎` 
+                : (p.ok 
+                    ? '✓ Conforme' 
+                    : (isTourPillar ? '✕ Sem Tour 360° ✎' : (isSocialGargalo ? `✕ Gargalo (${webAnalysis.name})` : (isDeadGoogle ? '🚨 Link 404' : '✕ Gargalo'))));
+
+              const btnClickAction = isPostPillar 
+                ? `window.openPostAuditModal(${lead.id})` 
+                : (isTourPillar 
+                    ? `window.openTourAuditModal(${lead.id})` 
+                    : `togglePillarStatus(${lead.id}, '${p.id}')`);
+
+              const btnBadgeColorClass = isPostPillar
+                ? (postAudit.isAtivo ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : (postAudit.isAlerta ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30' : 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30'))
+                : (p.ok ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30');
+
+              const cardBorderBg = isPostPillar
+                ? (postAudit.isAtivo ? 'border-[color-mix(in_oklab,var(--emerald-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--emerald-signal)_6%,transparent)]' : (postAudit.isAlerta ? 'border-amber-500/30 bg-amber-500/10' : 'border-[color-mix(in_oklab,var(--rose-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--rose-signal)_6%,transparent)]'))
+                : (p.ok ? 'border-[color-mix(in_oklab,var(--emerald-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--emerald-signal)_6%,transparent)]' : 'border-[color-mix(in_oklab,var(--rose-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--rose-signal)_6%,transparent)]');
+
+              const pStatusText = isPostPillar ? postAudit.statusPilar : p.status;
+
+              return `
+              <div class="flex items-start gap-2.5 rounded-lg border ${cardBorderBg} p-2.5 text-xs transition-all">
+                <span class="text-base">${p.icon}</span>
+                <div class="flex-1">
+                  <div class="flex items-center justify-between gap-1">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      <span class="font-bold text-white">${p.nome}</span>
+                      ${p.id === 'tour360' ? `<a href="${getGoogleMapsUrl(lead)}" target="_blank" rel="noopener noreferrer" class="text-[9px] text-cyan-400 hover:text-cyan-300 font-semibold px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20" title="Ver fotos e 360° no Google Maps">Maps ↗</a>` : ''}
+                      ${p.id === 'tour360' && !p.ok ? `<button type="button" onclick="handleManualCheck360(event, ${lead.id})" class="text-[9px] text-amber-400 hover:text-amber-300 font-semibold px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 cursor-pointer flex items-center gap-1" title="Verificar Tour 360 no Street View / Google Maps"><span>🔍</span> <span>Checar 360°</span></button>` : ''}
+                    </div>
+                    <button type="button" onclick="${btnClickAction}" title="${isPostPillar ? 'Auditoria Cirúrgica de Postagens & Mídia: Clique para definir dias sem postar' : (isTourPillar ? 'Auditoria & Homologação de Tour 360°: Clique para verificar ou validar' : 'Clique para alternar status deste pilar no diagnóstico')}" class="px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${btnBadgeColorClass}">
+                      ${btnBadgeText}
+                    </button>
                   </div>
-                  <span class="badge-pill ${badgeClass}">${badgeText}</span>
+                  <p class="mt-1 text-[11px] text-[var(--muted-foreground)] leading-tight">${pStatusText}</p>
                 </div>
-                <p class="text-[11px] ${isOk ? 'text-slate-300' : 'text-rose-200'}">${p.status}</p>
               </div>
             `;
-          }).join('');
+            }).join('');
+          }
+
+          // Atualiza Gaps
+          const gapsGrid = document.getElementById('modalGapsGrid');
+          if (gapsGrid && Array.isArray(lead.gaps)) {
+            gapsGrid.innerHTML = lead.gaps.map(gap => `
+              <div class="flex items-center gap-2 rounded-lg border border-[color-mix(in_oklab,var(--rose-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--rose-signal)_8%,transparent)] px-3 py-2 text-xs font-semibold text-white">
+                <span class="text-[var(--rose-signal)]">✕</span> ${gap}
+              </div>
+            `).join('');
+          }
+
+          // Atualiza pitch de IA WhatsApp
+          const pitch = buildWhatsAppMessage(lead);
+          const modalAiPitchText = document.getElementById('modalAiPitchText');
+          if (modalAiPitchText) modalAiPitchText.textContent = pitch;
+          const btnWA = document.getElementById('btnModalWhatsApp');
+          if (btnWA) btnWA.href = buildWhatsAppUrl(lead, pitch);
         }
         updateMetrics();
         renderTable();
+      }
+    }).catch(e => {});
+  };
+
+  if (cidToCheck && !lead._reviewsAuditedLive) {
+    runLiveAudit(cidToCheck);
+  } else if (!lead.cid && !lead._reviewsAuditedLive && lead.empresa) {
+    const keyToUse = State.settings?.apiKey || localStorage.getItem('leadmaps_google_api_key') || 'f93ffd86dc739cb1c843b12f2082e381064c1339';
+    fetch('https://google.serper.dev/places', {
+      method: 'POST',
+      headers: { 'X-API-KEY': keyToUse, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ q: `${lead.empresa} ${lead.cidade || ''}`.trim(), gl: 'br', hl: 'pt-br' })
+    }).then(r => r.json()).then(d => {
+      if (d && d.places && d.places[0] && d.places[0].cid) {
+        lead.cid = d.places[0].cid;
+        runLiveAudit(lead.cid);
       }
     }).catch(e => {});
   }
@@ -5745,6 +5861,7 @@ async function fetchSerperLivePlaces(niche, city, targetCount, apiKey) {
       whatsappVerificado: isMobileWhatsAppNumber(tel),
       cidade: p.address || city,
       endereco: p.address || city,
+      cid: p.cid || '',
       placeId: placeId,
       mapsUrl: mapsUrl,
       websiteUrl: p.website || '',
@@ -5760,9 +5877,9 @@ async function fetchSerperLivePlaces(niche, city, targetCount, apiKey) {
       score: score,
       rating: rating,
       reviews: reviews,
-      responseRatePct: (isVerifiedReviews || isVerifiedTour) ? 100 : ((rating >= 4.7 && reviews >= 20) ? 95 : 85),
-      reviewsSemRespostaPct: (isVerifiedReviews || isVerifiedTour) ? 0 : ((rating >= 4.7 && reviews >= 20) ? 5 : 15),
-      unansweredCount: (isVerifiedReviews || isVerifiedTour) ? 0 : Math.round(reviews * 0.05),
+      responseRatePct: isVerifiedReviews ? 100 : 0,
+      reviewsSemRespostaPct: isVerifiedReviews ? 0 : 100,
+      unansweredCount: isVerifiedReviews ? 0 : reviews,
       motivo: motivoContato,
       concorrentes: (() => {
         const others = accumulatedPlaces.filter((_, i) => i !== idx);
@@ -6311,6 +6428,8 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
                     telefone: it.phone || '',
                     cidade: city,
                     endereco: it.full_address || it.address || city,
+                    cid: it.cid || it.place_id || '',
+                    placeId: it.place_id || '',
                     websiteUrl: it.site || it.website || '',
                     websiteAnalysis: webAnalysis,
                     temSite: webAnalysis.hasRealWebsite,
