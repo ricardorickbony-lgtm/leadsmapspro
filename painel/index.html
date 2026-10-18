@@ -1308,7 +1308,7 @@
                 Digital Health<br>Atenção
               </p>
             </div>
-            <button id="btnCloseDiagnostic" class="btn-ghost-dark self-start px-2.5 py-1 text-sm">✕</button>
+            <button id="btnCloseDiagnostic" onclick="document.getElementById('diagnosticModal')?.classList.add('hidden')" class="btn-ghost-dark self-start px-2.5 py-1 text-sm cursor-pointer" title="Fechar Diagnóstico">✕</button>
           </div>
         </div>
         <div class="mt-3 flex items-center justify-between flex-wrap gap-2">
@@ -2353,7 +2353,7 @@
     <!-- Message injected here -->
   </div>
 
-  <script src="js/app.js?v=20261018_v33_strict_audit_no_fallbacks"></script>
-  <script src="js/security-shield.js?v=20261018_v33_strict_audit_no_fallbacks"></script>
+  <script src="js/app.js?v=20261018_v34_diagnostic_instant_open_raiox"></script>
+  <script src="js/security-shield.js?v=20261018_v34_diagnostic_instant_open_raiox"></script>
 </body>
 </html>
