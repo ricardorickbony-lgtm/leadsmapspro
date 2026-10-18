@@ -1111,7 +1111,9 @@ async function fetchRealCompetitorsForPlace(category, city, excludeName, apiKey)
   if (!keyToUse || keyToUse.trim().length < 5) return [];
 
   try {
-    const cleanCity = String(city || '').replace(/\s*-\s*[A-Z]{2}$/i, '').trim() || 'Região';
+    const cleanCity = (typeof extractCityName === 'function' ? extractCityName(city) : '') || String(city || '').replace(/\s*-\s*[A-Z]{2}$/i, '').trim();
+    if (!cleanCity || cleanCity.toLowerCase() === 'região') return [];
+
     const cleanCat = String(category || '').trim() || 'Negócio Local';
     const query = `${cleanCat} em ${cleanCity}`;
 
@@ -1148,6 +1150,7 @@ async function fetchRealCompetitorsForPlace(category, city, excludeName, apiKey)
         reviews: typeof p.ratingCount === 'number' ? p.ratingCount : (typeof p.reviews === 'number' ? p.reviews : (Number(p.reviews) || 0)),
         rating: typeof p.rating === 'number' ? p.rating : 4.8,
         endereco: p.address || cleanCity,
+        cidade: cleanCity,
         isCurrentLead: false
       }));
   } catch (err) {
@@ -1705,6 +1708,61 @@ function detectLeadNicheKey(lead) {
 }
 window.detectLeadNicheKey = detectLeadNicheKey;
 
+// --------------------------------------------------------------------------
+// 1.93E Extrator e Normalizador Geográfico de Cidade (Anti-Cross-City Leak)
+// --------------------------------------------------------------------------
+function extractCityName(addressOrCity, fallback = '') {
+  if (!addressOrCity) return fallback;
+  const str = String(addressOrCity).trim();
+  if (!str) return fallback;
+
+  // 1. Caso seja texto simples de cidade ou "Cidade - UF" sem logradouro
+  if (!str.includes(',') && !/\b(rua|r\.|av\.|avenida|rodovia|alameda|estrada|praça)\b/i.test(str)) {
+    return str.replace(/\s*-\s*[A-Z]{2}$/i, '').trim() || fallback;
+  }
+
+  // 2. Extração no formato oficial brasileiro do Google Maps: ", Cidade - UF, CEP, Brasil"
+  const matchUf = str.match(/[,–\-]\s*([A-Za-zÀ-ÿ\s]{3,30})\s*[-–]\s*[A-Za-z]{2}\b/i);
+  if (matchUf && matchUf[1]) {
+    const candidate = matchUf[1].trim();
+    if (!/^(brasil|sp|sc|pr|rs|rj|mg|df|ba|pe|ce|go|bairro|rua|avenida|alameda|rodovia|estrada)$/i.test(candidate)) {
+      return candidate;
+    }
+  }
+
+  // 3. Checagem em catálogo de municípios conhecidos
+  const low = str.toLowerCase();
+  const knownCities = [
+    'praia grande', 'santo andré', 'são bernardo do campo', 'são bernardo', 'são caetano do sul', 'são caetano',
+    'diadema', 'mauá', 'ribeirão pires', 'rio grande da serra', 'suzano', 'mogi das cruzes', 'poá', 'itaquaquecetuba',
+    'santos', 'são vicente', 'guarujá', 'cubatão', 'bertioga', 'mongaguá', 'itanhaém', 'peruíbe',
+    'osasco', 'guarulhos', 'barueri', 'santana de parnaíba', 'cotia', 'taboão da serra', 'embu das artes',
+    'campinas', 'sorocaba', 'jundiaí', 'são josé dos campos', 'taubaté', 'ribeirão preto', 'piracicaba',
+    'são paulo', 'rio de janeiro', 'curitiba', 'florianópolis', 'belo horizonte', 'brasília', 'porto alegre',
+    'salvador', 'recife', 'fortaleza', 'goiânia', 'joinville', 'blumenau', 'londrina', 'maringá'
+  ];
+  for (const c of knownCities) {
+    if (new RegExp('\\b' + c + '\\b', 'i').test(low)) {
+      return c.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    }
+  }
+
+  // 4. Fallback padrão
+  const clean = str.replace(/\s*-\s*[A-Z]{2}$/i, '').trim();
+  return clean || fallback || 'Região';
+}
+window.extractCityName = extractCityName;
+
+function cleanCityForComparison(cityStr) {
+  if (!cityStr) return '';
+  const c = extractCityName(cityStr);
+  return String(c || '')
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
+window.cleanCityForComparison = cleanCityForComparison;
+
 function getLeadTop10Competitors(lead) {
   if (!lead) {
     return {
@@ -1722,8 +1780,8 @@ function getLeadTop10Competitors(lead) {
   }
 
   const nicheKey = detectLeadNicheKey(lead);
-  const rawCity = String(lead.cidade || lead.endereco || '').split(',')[0].split('-')[0].trim();
-  const city = rawCity || 'Região';
+  const city = extractCityName(lead.cidade) || extractCityName(lead.endereco) || 'Região';
+  const cleanLeadCity = cleanCityForComparison(city);
   const cleanLeadName = String(lead.empresa || 'Sua Empresa').toLowerCase().trim();
   const leadReviews = Math.max(0, Number(lead.reviews) || 0);
   const leadRating = Number(lead.rating) || 5.0;
@@ -1747,12 +1805,18 @@ function getLeadTop10Competitors(lead) {
   let pool = [];
   const seenNames = new Set([cleanLeadName]);
 
-  // A. Concorrentes diretos associados ao lead (estritamente reais do Google Maps)
+  // A. Concorrentes diretos associados ao lead (estritamente reais do Google Maps na mesma cidade)
   if (Array.isArray(lead.concorrentes) && lead.concorrentes.length > 0) {
     lead.concorrentes.forEach(c => {
       const cName = String(c.nome || c.empresa || '').trim();
       const cLow = cName.toLowerCase();
       if (cName && !seenNames.has(cLow) && !cLow.includes('concorrente local')) {
+        // Validação geográfica estrita (rejeita se tiver endereço de outra cidade diferente)
+        const cCity = cleanCityForComparison(c.endereco || c.cidade || '');
+        if (cCity && cleanLeadCity && cleanLeadCity !== 'regiao' && cCity !== 'regiao' && cCity !== cleanLeadCity) {
+          return;
+        }
+
         const cNiche = detectLeadNicheKey({ empresa: cName, categoria: c.categoria || lead.categoria });
         if (cNiche === nicheKey || nicheKey === 'geral' || cNiche === 'geral') {
           seenNames.add(cLow);
@@ -1767,13 +1831,23 @@ function getLeadTop10Competitors(lead) {
     });
   }
 
-  // B. Leads reais em memória do mesmo lote em State.leads (mesmo nicho)
-  if (window.State && Array.isArray(State.leads)) {
+  // B. Leads reais em memória do mesmo lote em State.leads (APENAS se da MESMA CIDADE e MESMO NICHO)
+  // Só complementa se o pool direto tiver menos de 9 concorrentes
+  if (pool.length < 9 && window.State && Array.isArray(State.leads)) {
     State.leads.forEach(l => {
       if (!l || l.id === lead.id) return;
       const lName = String(l.empresa || '').trim();
       const lLow = lName.toLowerCase();
       if (!lName || seenNames.has(lLow) || lLow.includes('concorrente local')) return;
+
+      // FILTRO GEOGRÁFICO CIRÚRGICO: Apenas empresas da MESMA CIDADE!
+      const lCity = cleanCityForComparison(l.cidade || l.endereco || '');
+      if (cleanLeadCity && cleanLeadCity !== 'regiao') {
+        if (!lCity || lCity !== cleanLeadCity) {
+          // Rejeita empresas de outras cidades (ex: Suzano vs Praia Grande)
+          return;
+        }
+      }
 
       const lNiche = detectLeadNicheKey(l);
       if (lNiche === nicheKey || nicheKey === 'geral') {
@@ -7200,6 +7274,10 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
     tel = `(${cleanDDD}) 9${Math.floor(10000000 + Math.random() * 90000000)}`;
   }
 
+  const realCity = (typeof extractCityName === 'function' ? extractCityName(mainPlace.address) : '') || 
+                   (typeof extractCityName === 'function' ? extractCityName(city) : '') || 
+                   (city || '').replace(/\s*-\s*[A-Z]{2}$/i, '').trim() || 'Região';
+
   const concorrentes = (Array.isArray(otherPlaces) && otherPlaces.length > 0)
     ? otherPlaces
         .map((op, idx) => ({
@@ -7210,7 +7288,9 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
                 ? op.reviews
                 : (Number(op.reviews) || 0)),
           rating: typeof op.rating === 'number' ? op.rating : 4.8,
-          endereco: op.address || op.endereco || city || ''
+          endereco: op.address || op.endereco || realCity,
+          cidade: (typeof extractCityName === 'function' ? extractCityName(op.address || op.cidade || realCity) : realCity),
+          isCurrentLead: false
         }))
         .filter(c => c.nome && c.nome.trim().length > 0 && !c.nome.toLowerCase().includes('concorrente local'))
     : [];
@@ -7239,7 +7319,7 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
     categoriasSecundarias: categoriesList,
     telefone: tel,
     whatsappVerificado: isMobileWhatsAppNumber(tel),
-    cidade: mainPlace.address || city || 'Brasil',
+    cidade: realCity,
     endereco: mainPlace.address || city || 'Endereço verificado no Google Maps',
     placeId: placeId,
     cid: mainPlace.cid || '',
@@ -7285,7 +7365,11 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     throw new Error(`Nenhum estabelecimento encontrado para "${searchQuery}".`);
   }
   const mainPlace = places[0];
-  const targetCidOrQuery = mainPlace.cid || mainPlace.placeId || `${mainPlace.title || mainPlace.name || cleanQuery} ${cityInput || ''}`.trim();
+  const detectedCity = (typeof extractCityName === 'function' ? extractCityName(mainPlace.address) : '') ||
+                       (typeof extractCityName === 'function' ? extractCityName(cityInput) : '') ||
+                       (cityInput || '').replace(/\s*-\s*[A-Z]{2}$/i, '').trim() || 'Região';
+
+  const targetCidOrQuery = mainPlace.cid || mainPlace.placeId || `${mainPlace.title || mainPlace.name || cleanQuery} ${detectedCity}`.trim();
   let reviewsData = null;
   if (targetCidOrQuery) {
     reviewsData = await fetchRealPlaceReviews(targetCidOrQuery, apiKey);
@@ -7293,10 +7377,10 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
 
   // Busca concorrentes reais da categoria na mesma cidade ao vivo (sem inventar nomes fictícios)
   const placeCat = mainPlace.category || (Array.isArray(mainPlace.types) && mainPlace.types[0]) || 'Empresa Local';
-  const realCompetitors = await fetchRealCompetitorsForPlace(placeCat, cityInput, mainPlace.title || cleanQuery, apiKey);
+  const realCompetitors = await fetchRealCompetitorsForPlace(placeCat, detectedCity, mainPlace.title || cleanQuery, apiKey);
   const finalPlaces = (realCompetitors && realCompetitors.length > 0) ? realCompetitors : places.slice(1, 4);
 
-  return buildLeadFromPlace(mainPlace, finalPlaces, (cityInput || '').trim(), cleanQuery, reviewsData);
+  return buildLeadFromPlace(mainPlace, finalPlaces, detectedCity, cleanQuery, reviewsData);
 }
 
   // Ação de Varredura Completa (Live Serper API + Live n8n Webhook + Fallback Inteligente)
@@ -7556,7 +7640,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
   if (btnVerifySingle) {
     btnVerifySingle.addEventListener('click', async () => {
       const rawQuery = singleInput?.value.trim();
-      const city = singleCity?.value.trim() || 'Santo André - SP';
+      const city = singleCity?.value.trim() || '';
 
       if (!rawQuery) {
         showToast("⚠️ Digite o nome da empresa ou cole o link do Google Maps para pesquisar.");
@@ -7578,12 +7662,19 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
           if (verifyList) {
             verifyList.innerHTML = `
               <div class="col-span-full rounded-xl border border-amber-500/40 bg-amber-950/40 p-4 text-center">
-                <p class="text-sm text-amber-200 font-bold">Nenhum estabelecimento encontrado no Google Maps com a busca "${rawQuery} em ${city}".</p>
+                <p class="text-sm text-amber-200 font-bold">Nenhum estabelecimento encontrado no Google Maps com a busca "${rawQuery}${city ? ' em ' + city : ''}".</p>
                 <p class="text-xs text-slate-400 mt-1">Verifique se o nome está correto ou clique em "Executar Pré-Análise Direta" para gerar o relatório com diagnóstico inteligente.</p>
               </div>
             `;
           }
           return;
+        }
+
+        // Se a cidade não estava preenchida pelo usuário, preenche com a cidade real detectada no endereço
+        const topPlace = places[0];
+        const autoCity = typeof extractCityName === 'function' ? extractCityName(topPlace.address) : '';
+        if (autoCity && singleCity && !singleCity.value.trim()) {
+          singleCity.value = autoCity;
         }
 
         // Renderiza cards para verificação visual
@@ -7666,7 +7757,11 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
                 const selectedPlace = places[idx] || places[0];
                 const otherPlaces = places.filter((_, i) => i !== idx);
 
-                const targetCidOrQuery = selectedPlace.cid || selectedPlace.placeId || `${selectedPlace.title || selectedPlace.name || cleanQuery} ${city || ''}`.trim();
+                const detectedCity = (typeof extractCityName === 'function' ? extractCityName(selectedPlace.address) : '') ||
+                                     (typeof extractCityName === 'function' ? extractCityName(city) : '') ||
+                                     (city || '').replace(/\s*-\s*[A-Z]{2}$/i, '').trim() || 'Região';
+
+                const targetCidOrQuery = selectedPlace.cid || selectedPlace.placeId || `${selectedPlace.title || selectedPlace.name || cleanQuery} ${detectedCity}`.trim();
                 let reviewsData = null;
                 if (targetCidOrQuery) {
                   reviewsData = await fetchRealPlaceReviews(targetCidOrQuery, apiKey);
@@ -7674,10 +7769,10 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
 
                 // Busca concorrentes reais do mesmo segmento na cidade (sem dados fictícios)
                 const placeCat = selectedPlace.category || (Array.isArray(selectedPlace.types) && selectedPlace.types[0]) || 'Empresa Local';
-                const realCompetitors = await fetchRealCompetitorsForPlace(placeCat, city, selectedPlace.title || cleanQuery, apiKey);
+                const realCompetitors = await fetchRealCompetitorsForPlace(placeCat, detectedCity, selectedPlace.title || cleanQuery, apiKey);
                 const finalPlaces = (realCompetitors && realCompetitors.length > 0) ? realCompetitors : otherPlaces;
 
-                const singleLead = buildLeadFromPlace(selectedPlace, finalPlaces, city, cleanQuery, reviewsData);
+                const singleLead = buildLeadFromPlace(selectedPlace, finalPlaces, detectedCity, cleanQuery, reviewsData);
 
                 State.leads.unshift(singleLead);
                 State.selectedLeadIds.clear();
@@ -7712,7 +7807,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
   if (btnStartSingle) {
     btnStartSingle.addEventListener('click', async () => {
       const rawQuery = singleInput?.value.trim();
-      const city = singleCity?.value.trim() || 'Santo André - SP';
+      const city = singleCity?.value.trim() || '';
 
       if (!rawQuery) {
         showToast("Por favor, digite o nome da empresa ou cole o link do Google Maps.");
@@ -7769,8 +7864,8 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
             categoriasSecundarias: isKnownTour ? ["Loja de cortinas", "Loja de persianas", "Automação residencial", "Papel de parede"] : [],
             telefone: isKnownTour ? "(11) 4978-5551" : `(11) 9${Math.floor(10000000 + Math.random() * 90000000)}`,
             whatsappVerificado: true,
-            cidade: city,
-            endereco: `${city} (Endereço verificado no Google Maps)`,
+            cidade: (typeof extractCityName === 'function' ? extractCityName(city) : city) || 'Região',
+            endereco: `${city || 'Região'} (Endereço verificado no Google Maps)`,
             websiteUrl: isKnownTour ? "https://celiadiana.com.br" : "",
             websiteAnalysis: analyzeWebsiteUrl(isKnownTour ? "https://celiadiana.com.br" : ""),
             isSocialAsWebsite: false,
