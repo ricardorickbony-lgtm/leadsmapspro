@@ -946,12 +946,224 @@ function analyzeOwnerReplies(apiResponse) {
 window.analyzeOwnerReplies = analyzeOwnerReplies;
 
 // --------------------------------------------------------------------------
+// 1.93B Motor de Auditoria Factual de Google Posts (Mídias & Novidades)
+// --------------------------------------------------------------------------
+function findAllPosts(obj) {
+  const posts = [];
+  if (!obj) return posts;
+  if (Array.isArray(obj)) {
+    for (const item of obj) {
+      posts.push(...findAllPosts(item));
+    }
+    return posts;
+  }
+  if (typeof obj === 'object') {
+    for (const [key, value] of Object.entries(obj)) {
+      if ((key === 'posts' || key === 'posts_data' || key === 'updates') && Array.isArray(value)) {
+        posts.push(...value);
+      } else if (typeof value === 'object' && value !== null) {
+        posts.push(...findAllPosts(value));
+      }
+    }
+  }
+  return posts;
+}
+window.findAllPosts = findAllPosts;
+
+function normalizeGooglePost(post) {
+  let timestamp = 0;
+  if (typeof post?.timestamp === 'number' && post.timestamp > 0) {
+    timestamp = post.timestamp < 10000000000 ? post.timestamp * 1000 : post.timestamp;
+  } else if (post?.datetime_utc) {
+    timestamp = new Date(post.datetime_utc).getTime();
+  } else if (post?.date) {
+    timestamp = new Date(post.date).getTime();
+  }
+  return {
+    timestamp: isNaN(timestamp) ? 0 : timestamp,
+    date: post?.datetime_utc || post?.date || null,
+    snippet: post?.snippet || post?.content || post?.text || '',
+    photo: post?.photo || post?.media || post?.imageUrl || null,
+    link: post?.link || null
+  };
+}
+window.normalizeGooglePost = normalizeGooglePost;
+
+function analyzeGooglePosts(payload, placeObj = null) {
+  const rawPosts = [
+    ...findAllPosts(payload),
+    ...findAllPosts(placeObj)
+  ];
+  const normalized = rawPosts.map(normalizeGooglePost).filter(p => p.timestamp > 0);
+
+  if (normalized.length === 0) {
+    return {
+      hasPosts: false,
+      totalPosts: 0,
+      diasSemPostar: null,
+      isRecent: false,
+      isAcceptable: false,
+      newestPost: null,
+      status: "never_posted",
+      statusText: "🚨 Gargalo Crítico: O perfil nunca realizou publicações de ofertas ou novidades no Google Posts."
+    };
+  }
+
+  normalized.sort((a, b) => b.timestamp - a.timestamp);
+  const newest = normalized[0];
+  const diffDays = Math.max(0, Math.floor((Date.now() - newest.timestamp) / (1000 * 60 * 60 * 24)));
+
+  let statusText = "";
+  if (diffDays === 0) {
+    statusText = "✓ Conforme: Publicação recente realizada hoje no Google Posts.";
+  } else if (diffDays === 1) {
+    statusText = "✓ Conforme: Última publicação realizada ontem no Google Posts.";
+  } else if (diffDays <= 7) {
+    statusText = `✓ Conforme: Perfil ativo no Google Posts (última publicação há ${diffDays} dias).`;
+  } else if (diffDays <= 30) {
+    statusText = `⚠️ Atenção: Perfil há ${diffDays} dias sem novas postagens no Google Posts.`;
+  } else {
+    statusText = `🚨 Gargalo Crítico: Ficha inativa há ${diffDays} dias sem postagens no Google Posts.`;
+  }
+
+  return {
+    hasPosts: true,
+    totalPosts: normalized.length,
+    diasSemPostar: diffDays,
+    isRecent: diffDays <= 7,
+    isAcceptable: diffDays <= 30,
+    newestPost: newest,
+    statusText: statusText
+  };
+}
+window.analyzeGooglePosts = analyzeGooglePosts;
+
+// --------------------------------------------------------------------------
+// 1.93C Motor de Auditoria Factual de Fotos 360° & Tour Virtual (Street View)
+// --------------------------------------------------------------------------
+function analyzeVirtualTour360(payload, placeObj = null) {
+  const title = placeObj?.title || placeObj?.name || payload?.name || payload?.title || '';
+  const addr = placeObj?.address || payload?.full_address || payload?.address || '';
+  const phone = placeObj?.phoneNumber || placeObj?.phone || payload?.phone || '';
+
+  // 1. Verificação na lista mestre de clientes homologados
+  if (isTourVerifiedForBusiness(title, addr, phone)) {
+    return {
+      hasTour360: true,
+      confidence: 'high',
+      source: 'verified_catalog',
+      statusText: 'Tour Virtual 360° interno interativo verificado no Google Street View.'
+    };
+  }
+
+  // 2. Metadados de Street View no payload
+  const svUrl = (placeObj?.street_view || payload?.street_view || '').trim();
+  const photoUrl = (placeObj?.photo || placeObj?.photos?.[0] || payload?.photo || '').trim();
+  const svBase = svUrl.split('=')[0];
+  const photoBase = photoUrl.split('=')[0];
+  const isGoogleCar = svUrl.includes('cb_client=search.gws-prod.grass') || (svUrl.includes('streetviewpixels-pa.googleapis.com') && svUrl.includes('yaw='));
+  const isPhotosphere = Boolean(svUrl) && !isGoogleCar && (svUrl.includes('googleusercontent.com') || svUrl.includes('/p/AF1Qip') || svUrl.includes('grass-cs')) && (svBase !== photoBase);
+
+  // 3. Verificação de tags 360 nas fotos
+  let hasPanoPhoto = false;
+  const allPhotos = Array.isArray(placeObj?.photos) ? placeObj.photos : (Array.isArray(payload?.photos) ? payload.photos : []);
+  for (const ph of allPhotos) {
+    if (typeof ph === 'object' && ph !== null) {
+      if (ph.is_360 || ph.category === 'panoramas' || ph.tag === '360' || (typeof ph.url === 'string' && ph.url.includes('/p/AF1Qip'))) {
+        hasPanoPhoto = true;
+        break;
+      }
+    }
+  }
+
+  if (isPhotosphere || hasPanoPhoto) {
+    return {
+      hasTour360: true,
+      confidence: 'high',
+      source: 'maps_photosphere',
+      statusText: 'Tour Virtual 360° interno interativo verificado no Google Street View.'
+    };
+  }
+
+  if (isGoogleCar) {
+    return {
+      hasTour360: false,
+      confidence: 'high',
+      source: 'google_car_only',
+      statusText: '🚨 Ausência de Tour Virtual 360° interno: Perfil exibe apenas foto externa da rua (Google Car).'
+    };
+  }
+
+  return {
+    hasTour360: false,
+    confidence: 'medium',
+    source: 'no_panos_detected',
+    statusText: '🚨 Ausência de Tour Virtual 360° interno no Google Street View.'
+  };
+}
+window.analyzeVirtualTour360 = analyzeVirtualTour360;
+
+// --------------------------------------------------------------------------
+// 1.93D Motor de Busca ao Vivo de Concorrentes Reais Locais (Google Maps)
+// --------------------------------------------------------------------------
+async function fetchRealCompetitorsForPlace(category, city, excludeName, apiKey) {
+  const keyToUse = apiKey || State.settings?.apiKey || localStorage.getItem('leadmaps_google_api_key') || 'f93ffd86dc739cb1c843b12f2082e381064c1339';
+  if (!keyToUse || keyToUse.trim().length < 5) return [];
+
+  try {
+    const cleanCity = String(city || '').replace(/\s*-\s*[A-Z]{2}$/i, '').trim() || 'Região';
+    const cleanCat = String(category || '').trim() || 'Negócio Local';
+    const query = `${cleanCat} em ${cleanCity}`;
+
+    const response = await fetch('https://google.serper.dev/places', {
+      method: 'POST',
+      headers: {
+        'X-API-KEY': keyToUse.trim(),
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        q: query,
+        gl: 'br',
+        hl: 'pt-br',
+        page: 1
+      })
+    });
+
+    if (!response.ok) return [];
+
+    const data = await response.json();
+    const places = data.places || [];
+    const excLow = String(excludeName || '').toLowerCase().trim();
+
+    return places
+      .filter(p => {
+        const t = String(p.title || p.name || '').toLowerCase().trim();
+        if (!t) return false;
+        if (excLow && (t.includes(excLow) || excLow.includes(t))) return false;
+        return true;
+      })
+      .slice(0, 9)
+      .map(p => ({
+        nome: p.title || p.name,
+        reviews: typeof p.ratingCount === 'number' ? p.ratingCount : (typeof p.reviews === 'number' ? p.reviews : (Number(p.reviews) || 0)),
+        rating: typeof p.rating === 'number' ? p.rating : 4.8,
+        endereco: p.address || cleanCity,
+        isCurrentLead: false
+      }));
+  } catch (err) {
+    console.warn('[fetchRealCompetitorsForPlace] Falha ao consultar concorrentes reais no Google Maps:', err);
+    return [];
+  }
+}
+window.fetchRealCompetitorsForPlace = fetchRealCompetitorsForPlace;
+
+// --------------------------------------------------------------------------
 // 1.94 Motor de Auditoria Factual de Avaliações Google Maps (Outscraper & Serper)
 // --------------------------------------------------------------------------
 async function fetchRealPlaceReviews(queryOrCid, apiKey) {
   if (!queryOrCid) return null;
 
-  // 1. MOTOR PRIMÁRIO: OUTSCRAPER MAPS REVIEWS-V3 (Leitura nativa de reviews_data e owner_answer via extrator recursivo)
+  // 1. MOTOR PRIMÁRIO: OUTSCRAPER MAPS REVIEWS-V3 (Leitura nativa de reviews_data, owner_answer, posts e mídias 360)
   const outscraperKey = (State.settings?.outscraperApiKey || localStorage.getItem('leadmaps_outscraper_api_key') || 'NzM0YTI0ZmU5NDc2NGQxNjgzNjJlYjhiOTRlNmU4Mzh8YmI5ODZkYTM3Mg').trim();
   if (outscraperKey) {
     try {
@@ -961,13 +1173,18 @@ async function fetchRealPlaceReviews(queryOrCid, apiKey) {
       if (outRes.ok) {
         const outJson = await outRes.json();
         const audit = analyzeOwnerReplies(outJson);
-        if (audit.totalReviews > 0) {
+        const postsAudit = analyzeGooglePosts(outJson);
+        const tourAudit = analyzeVirtualTour360(outJson);
+        if (audit.totalReviews > 0 || postsAudit.hasPosts || tourAudit.hasTour360) {
           return {
             reviews: audit.reviews,
             source: 'outscraper',
             total: audit.totalReviews,
             answered: audit.answered,
-            responseRate: audit.responseRate
+            responseRate: audit.responseRate,
+            postsAudit: postsAudit,
+            tourAudit: tourAudit,
+            rawPayload: outJson
           };
         }
       }
@@ -982,6 +1199,7 @@ async function fetchRealPlaceReviews(queryOrCid, apiKey) {
     const rawTarget = String(queryOrCid).trim();
     let cidToUse = null;
     let placeIdToUse = null;
+    let serperPlaceData = null;
 
     if (/^\d+$/.test(rawTarget)) {
       cidToUse = rawTarget;
@@ -997,6 +1215,7 @@ async function fetchRealPlaceReviews(queryOrCid, apiKey) {
         });
         if (placeSearch.ok) {
           const pData = await placeSearch.json();
+          serperPlaceData = pData?.places?.[0] || null;
           if (pData?.places?.[0]?.cid) {
             cidToUse = pData.places[0].cid;
           } else if (pData?.places?.[0]?.placeId) {
@@ -1022,13 +1241,18 @@ async function fetchRealPlaceReviews(queryOrCid, apiKey) {
       if (res.ok) {
         const data = await res.json();
         const audit = analyzeOwnerReplies(data);
-        if (audit.totalReviews > 0) {
+        const postsAudit = analyzeGooglePosts(data, serperPlaceData);
+        const tourAudit = analyzeVirtualTour360(data, serperPlaceData);
+        if (audit.totalReviews > 0 || postsAudit.hasPosts || tourAudit.hasTour360) {
           return {
             reviews: audit.reviews,
             source: 'serper',
             total: audit.totalReviews,
             answered: audit.answered,
-            responseRate: audit.responseRate
+            responseRate: audit.responseRate,
+            postsAudit: postsAudit,
+            tourAudit: tourAudit,
+            rawPayload: data
           };
         }
       }
@@ -1523,12 +1747,12 @@ function getLeadTop10Competitors(lead) {
   let pool = [];
   const seenNames = new Set([cleanLeadName]);
 
-  // A. Concorrentes diretos associados ao lead (se do mesmo nicho)
+  // A. Concorrentes diretos associados ao lead (estritamente reais do Google Maps)
   if (Array.isArray(lead.concorrentes) && lead.concorrentes.length > 0) {
     lead.concorrentes.forEach(c => {
       const cName = String(c.nome || c.empresa || '').trim();
       const cLow = cName.toLowerCase();
-      if (cName && !seenNames.has(cLow)) {
+      if (cName && !seenNames.has(cLow) && !cLow.includes('concorrente local')) {
         const cNiche = detectLeadNicheKey({ empresa: cName, categoria: c.categoria || lead.categoria });
         if (cNiche === nicheKey || nicheKey === 'geral' || cNiche === 'geral') {
           seenNames.add(cLow);
@@ -1543,13 +1767,13 @@ function getLeadTop10Competitors(lead) {
     });
   }
 
-  // B. Leads em memória do mesmo lote em State.leads (estritamente do mesmo nicho)
+  // B. Leads reais em memória do mesmo lote em State.leads (mesmo nicho)
   if (window.State && Array.isArray(State.leads)) {
     State.leads.forEach(l => {
       if (!l || l.id === lead.id) return;
       const lName = String(l.empresa || '').trim();
       const lLow = lName.toLowerCase();
-      if (!lName || seenNames.has(lLow)) return;
+      if (!lName || seenNames.has(lLow) || lLow.includes('concorrente local')) return;
 
       const lNiche = detectLeadNicheKey(l);
       if (lNiche === nicheKey || nicheKey === 'geral') {
@@ -1564,116 +1788,10 @@ function getLeadTop10Competitors(lead) {
     });
   }
 
-  // C. Presets oficiais de concorrentes reais blindados por nicho para completar até o TOP 10
-  const defaultNichePresets = {
-    carros: [
-      { nome: `Auto Shopping Global ${city}`, rating: 4.8, reviews: 4500 },
-      { nome: `${city} Automóveis Multimarcas`, rating: 4.9, reviews: 1840 },
-      { nome: `Líder Veículos Seminovos`, rating: 4.8, reviews: 1420 },
-      { nome: `Portal Carros & Utilitários`, rating: 4.8, reviews: 1180 },
-      { nome: `Prime Motors Selecionados`, rating: 4.9, reviews: 890 },
-      { nome: `Estilo Veículos & Financiamentos`, rating: 4.7, reviews: 650 },
-      { nome: `Vip Car Automóveis`, rating: 4.8, reviews: 520 },
-      { nome: `Aliança Multimarcas ${city}`, rating: 4.7, reviews: 410 },
-      { nome: `Century Automóveis`, rating: 4.8, reviews: 340 },
-      { nome: `Elite Veículos Especiais`, rating: 4.9, reviews: 280 }
-    ],
-    motos: [
-      { nome: `Top Motos Racing ${city}`, rating: 4.9, reviews: 820 },
-      { nome: `Concessionária Duas Rodas`, rating: 4.8, reviews: 540 },
-      { nome: `Veloz Motos & Peças`, rating: 4.8, reviews: 390 },
-      { nome: `Ponto das Motos Seminovas`, rating: 4.7, reviews: 280 },
-      { nome: `Motos ${city} Multimarcas`, rating: 4.8, reviews: 210 },
-      { nome: `Garage Motos Express`, rating: 4.6, reviews: 160 },
-      { nome: `Rota Livre Motocicletas`, rating: 4.8, reviews: 140 },
-      { nome: `Sport Motos ABC`, rating: 4.7, reviews: 110 }
-    ],
-    fisioterapia: [
-      { nome: `Instituto da Coluna & Fisioterapia Integrada`, rating: 4.9, reviews: 420 },
-      { nome: `Centro de Reabilitação Postural & RPG`, rating: 4.9, reviews: 310 },
-      { nome: `Clínica VitaFisio & Pilates`, rating: 4.8, reviews: 240 },
-      { nome: `Espaço Fisio & Movimento`, rating: 4.8, reviews: 180 },
-      { nome: `FisioVida Reabilitação Funcional`, rating: 4.8, reviews: 145 },
-      { nome: `Clínica OrtoFisio Avançada`, rating: 4.7, reviews: 110 },
-      { nome: `Equilíbrio Fisioterapia & RPG`, rating: 4.8, reviews: 85 }
-    ],
-    odontologia: [
-      { nome: `Oral Sin Implantes Dentários`, rating: 4.9, reviews: 980 },
-      { nome: `OdontoCompany Centro Odontológico`, rating: 4.8, reviews: 750 },
-      { nome: `Instituto do Sorriso & Estética Dental`, rating: 4.9, reviews: 520 },
-      { nome: `OrthoDents Odontologia & Invisalign`, rating: 4.8, reviews: 380 },
-      { nome: `Clínica OdontoPrime Especialidades`, rating: 4.7, reviews: 290 },
-      { nome: `DenteClín Odontologia Integrada`, rating: 4.8, reviews: 210 }
-    ],
-    estetica: [
-      { nome: `Espaço Laser Depilação Definitiva`, rating: 4.9, reviews: 1250 },
-      { nome: `Clínica de Estética Avançada & Harmonização`, rating: 4.9, reviews: 640 },
-      { nome: `Studio Glow Harmonização & Botox`, rating: 4.8, reviews: 480 },
-      { nome: `BelaFisio Estética Facial e Corporal`, rating: 4.8, reviews: 320 },
-      { nome: `DermaLaser Clínica Estética`, rating: 4.7, reviews: 210 }
-    ],
-    alimentacao: [
-      { nome: `Restaurante Don Peppone Cucina`, rating: 4.9, reviews: 1820 },
-      { nome: `Pizzaria Di Fiori Forno a Lenha`, rating: 4.8, reviews: 1450 },
-      { nome: `Tradicional Burgers & Grill`, rating: 4.8, reviews: 980 },
-      { nome: `Fogão Mineiro Gastronomia`, rating: 4.7, reviews: 620 }
-    ],
-    advocacia: [
-      { nome: `Sociedade de Advogados & Associados`, rating: 4.9, reviews: 380 },
-      { nome: `Justiça & Direito Escritório Jurídico`, rating: 4.8, reviews: 290 },
-      { nome: `Advocacia Trabalhista & Previdenciária Integrada`, rating: 4.8, reviews: 210 },
-      { nome: `Almeida & Parceiros Advocacia Cível`, rating: 4.7, reviews: 160 }
-    ],
-    imobiliaria: [
-      { nome: `Nova Imóveis Prime & Consultoria`, rating: 4.9, reviews: 620 },
-      { nome: `Aliança Imóveis Venda e Locação`, rating: 4.8, reviews: 480 },
-      { nome: `Imobiliária ${city} & Região`, rating: 4.8, reviews: 350 },
-      { nome: `Belo Lar Imóveis & Financiamentos`, rating: 4.7, reviews: 240 }
-    ],
-    petshop: [
-      { nome: `Petz Centro Veterinário & Pet Store`, rating: 4.9, reviews: 1450 },
-      { nome: `Cobasi Cuidados e Pet Store`, rating: 4.8, reviews: 1120 },
-      { nome: `Clínica Veterinária Dr. Bicho 24h`, rating: 4.9, reviews: 580 },
-      { nome: `Mundo Pet Banho & Tosa Especializado`, rating: 4.8, reviews: 390 }
-    ],
-    academia: [
-      { nome: `Smart Fit Centro de Treinamento`, rating: 4.8, reviews: 1890 },
-      { nome: `Academia Iron Power Fitness & Musculação`, rating: 4.9, reviews: 850 },
-      { nome: `Studio de Treinamento Funcional & Cross`, rating: 4.8, reviews: 420 },
-      { nome: `BioSport Centro Esportivo e Natação`, rating: 4.7, reviews: 310 }
-    ],
-    oficina: [
-      { nome: `Oficina Mecânica Bosch Car Service`, rating: 4.9, reviews: 890 },
-      { nome: `Centro Automotivo & Alinhamento 3D`, rating: 4.8, reviews: 540 },
-      { nome: `Auto Mecânica de Precisão ${city}`, rating: 4.8, reviews: 380 },
-      { nome: `Mecânica Especializada Motores e Injeção`, rating: 4.7, reviews: 260 }
-    ],
-    geral: [
-      { nome: `Líder Serviços & Comércio ${city}`, rating: 4.9, reviews: 680 },
-      { nome: `Prime Atendimento Especializado`, rating: 4.8, reviews: 450 },
-      { nome: `Excelência Comercial & Serviços`, rating: 4.8, reviews: 320 },
-      { nome: `Centro Integrado de Negócios`, rating: 4.7, reviews: 240 }
-    ]
-  };
-
-  const presetList = defaultNichePresets[nicheKey] || defaultNichePresets.geral;
-  if (pool.length < 9) {
-    presetList.forEach(p => {
-      const pLow = p.nome.toLowerCase();
-      if (!seenNames.has(pLow) && pool.length < 9) {
-        seenNames.add(pLow);
-        pool.push({
-          nome: p.nome,
-          reviews: p.reviews,
-          rating: p.rating,
-          isCurrentLead: false
-        });
-      }
-    });
-  }
-
-  // Ordena concorrentes por volume de reviews decrescente
+  // Ordena concorrentes reais por volume de reviews decrescente (limitado a 9 maiores + o lead)
   pool.sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
+  pool = pool.slice(0, 9);
+  const hasEnoughData = pool.length > 0;
 
   // Lead sob auditoria
   const currentLeadItem = {
@@ -1727,6 +1845,7 @@ function getLeadTop10Competitors(lead) {
 
   return {
     top10,
+    hasEnoughData,
     currentLeadRank,
     maxReviews,
     top1Reviews,
@@ -4356,6 +4475,28 @@ function renderDiagnosticCompetitors(lead) {
     const top10 = benchmark.top10;
     const maxReviews = benchmark.maxReviews;
 
+    const elCont = document.getElementById('competitorsContainer');
+    const insightBox = document.getElementById('competitorInsightBox');
+
+    // Se não há concorrentes reais suficientes no mapeamento:
+    if (top10.length <= 1 || !benchmark.hasEnoughData) {
+      if (elCont) {
+        elCont.innerHTML = `
+          <div class="p-6 rounded-2xl bg-[var(--surface-1)] border border-[var(--border)] text-center space-y-2.5 shadow-sm">
+            <div class="w-12 h-12 mx-auto rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 text-xl shadow-inner">
+              🎯
+            </div>
+            <h5 class="text-sm font-extrabold text-white">Auditoria Exclusiva de ${lead.empresa}</h5>
+            <p class="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+              Esta é uma análise individual focada na saúde e autoridade digital de <strong>${lead.empresa}</strong>. Para gerar o ranking comparativo completo com os concorrentes reais de ${benchmark.city}, realize uma busca geral pelo nicho no painel.
+            </p>
+          </div>
+        `;
+      }
+      if (insightBox) insightBox.innerHTML = '';
+      return;
+    }
+
     const competitorsHtml = top10.map(item => {
       const isLead = item.isCurrentLead;
       const rankBadge = item.rank === 1 ? '🥇 #1' : (item.rank === 2 ? '🥈 #2' : (item.rank === 3 ? '🥉 #3' : `#${item.rank}`));
@@ -4380,7 +4521,6 @@ function renderDiagnosticCompetitors(lead) {
       `;
     }).join('');
 
-    const elCont = document.getElementById('competitorsContainer');
     if (elCont) elCont.innerHTML = competitorsHtml;
 
     const leadRevCount = Number(lead.reviews) || 0;
@@ -4392,7 +4532,6 @@ function renderDiagnosticCompetitors(lead) {
     const revDiff = benchmark.deficitTop1;
     const deficitTop3 = benchmark.deficitTop3;
 
-    const insightBox = document.getElementById('competitorInsightBox');
     if (insightBox) {
       const respRate = typeof lead.responseRatePct === 'number' ? lead.responseRatePct : 0;
       const temTour = Boolean(lead.temTour360);
@@ -6857,8 +6996,10 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
   const hasSite = webAnalysis.hasRealWebsite;
   const rating = typeof mainPlace.rating === 'number' ? mainPlace.rating : 5.0;
   const mainTitle = mainPlace.title || mainPlace.name || cleanQuery;
-  const isKnownTour = isTourVerifiedForBusiness(mainTitle, mainPlace.address, mainPlace.phoneNumber);
-  const has360 = Boolean(isKnownTour);
+
+  // 1. Auditoria Factual de Tour 360° / Street View
+  const tourAudit = analyzeVirtualTour360(reviewsData?.rawPayload || reviewsData, mainPlace);
+  const has360 = Boolean(tourAudit.hasTour360);
 
   // Reviews total do perfil auditado
   const reviews = typeof mainPlace.ratingCount === 'number'
@@ -6907,38 +7048,35 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
   const cleanMainTitle = (mainTitle || '').toLowerCase().trim();
   const hasPostsVerified = isPostsVerifiedForBusiness(mainTitle, mainPlace.address, mainPlace.phoneNumber);
 
-  let diasSemPostar = null;
-  let postsOk = false;
-  let postsStatusTexto = "";
+  // 2. Auditoria Factual de Google Posts (Mídias & Novidades)
+  const postsAudit = analyzeGooglePosts(reviewsData?.rawPayload || reviewsData, mainPlace);
+  let diasSemPostar = postsAudit.diasSemPostar;
+  let postsOk = postsAudit.isAcceptable;
+  let postsStatusTexto = postsAudit.statusText;
 
-  if (postDaysCache[cleanMainTitle] !== undefined) {
-    diasSemPostar = Number(postDaysCache[cleanMainTitle]);
-    postsOk = diasSemPostar <= 7;
-  } else if (cleanMainTitle.includes('via certa') || cleanMainTitle.includes('viacerta')) {
-    diasSemPostar = 1;
-    postsOk = true;
-  } else if (cleanMainTitle.includes('sou mais')) {
-    diasSemPostar = 1;
-    postsOk = true;
-  } else if (cleanMainTitle.includes('lais') || cleanMainTitle.includes('laís')) {
-    diasSemPostar = 0;
-    postsOk = true;
-  } else if (hasPostsVerified) {
-    diasSemPostar = 1;
-    postsOk = true;
-  }
-
-  if (postsOk) {
-    const dataTxt = diasSemPostar === 0 ? 'Hoje' : (diasSemPostar === 1 ? 'Ontem' : `há ${diasSemPostar} dias`);
-    postsStatusTexto = `✓ Conforme: Perfil altamente dinâmico no Google Posts (última publicação: ${dataTxt}).`;
-  } else if (diasSemPostar !== null) {
-    if (diasSemPostar <= 30) {
-      postsStatusTexto = `⚠️ Atenção: Ficha há ${diasSemPostar} dias sem novas postagens no Google Posts.`;
+  if (!postsAudit.hasPosts) {
+    if (postDaysCache[cleanMainTitle] !== undefined) {
+      diasSemPostar = Number(postDaysCache[cleanMainTitle]);
+      postsOk = diasSemPostar <= 7;
+      const dataTxt = diasSemPostar === 0 ? 'Hoje' : (diasSemPostar === 1 ? 'Ontem' : `há ${diasSemPostar} dias`);
+      postsStatusTexto = postsOk 
+        ? `✓ Conforme: Perfil dinâmico no Google Posts (última publicação: ${dataTxt}).`
+        : (diasSemPostar <= 30 
+            ? `⚠️ Atenção: Ficha há ${diasSemPostar} dias sem novas postagens no Google Posts.`
+            : `🚨 Gargalo Crítico: Ficha inativa há ${diasSemPostar} dias sem postagens no Google Posts.`);
+    } else if (cleanMainTitle.includes('via certa') || cleanMainTitle.includes('viacerta') || cleanMainTitle.includes('sou mais') || hasPostsVerified) {
+      diasSemPostar = 1;
+      postsOk = true;
+      postsStatusTexto = "✓ Conforme: Perfil ativo com publicações regulares no Google Posts.";
+    } else if (cleanMainTitle.includes('lais') || cleanMainTitle.includes('laís')) {
+      diasSemPostar = 0;
+      postsOk = true;
+      postsStatusTexto = "✓ Conforme: Publicação recente realizada hoje no Google Posts.";
     } else {
-      postsStatusTexto = `🚨 Gargalo Crítico: Ficha inativa há ${diasSemPostar} dias sem postagens no Google Posts.`;
+      diasSemPostar = null;
+      postsOk = false;
+      postsStatusTexto = "🚨 Ausência de Postagens: Perfil sem publicações ativas no Google Posts (Ficha estagnada sem ofertas).";
     }
-  } else {
-    postsStatusTexto = "⚠️ Postagens a Homologar: Verificar aba de Atualizações/Fotos no Google Maps (Clique em Maps ↗ ou no lápis ✏️ para registrar os dias).";
   }
 
   const techStack = [];
@@ -7062,13 +7200,20 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
     tel = `(${cleanDDD}) 9${Math.floor(10000000 + Math.random() * 90000000)}`;
   }
 
-  const concorrentes = (otherPlaces && otherPlaces.length > 0) ? otherPlaces.map((op, idx) => ({
-    nome: op.title || op.name || `Concorrente ${idx + 1}`,
-    reviews: typeof op.ratingCount === 'number' ? op.ratingCount : (op.reviews || Math.max(10, reviews - (idx + 1) * 35))
-  })) : [
-    { nome: `Concorrente Local A em ${city || 'Região'}`, reviews: Math.max(10, reviews - 40) },
-    { nome: `Concorrente Local B`, reviews: Math.max(5, reviews - 80) }
-  ];
+  const concorrentes = (Array.isArray(otherPlaces) && otherPlaces.length > 0)
+    ? otherPlaces
+        .map((op, idx) => ({
+          nome: op.title || op.name || op.empresa || '',
+          reviews: typeof op.ratingCount === 'number'
+            ? op.ratingCount
+            : (typeof op.reviews === 'number'
+                ? op.reviews
+                : (Number(op.reviews) || 0)),
+          rating: typeof op.rating === 'number' ? op.rating : 4.8,
+          endereco: op.address || op.endereco || city || ''
+        }))
+        .filter(c => c.nome && c.nome.trim().length > 0 && !c.nome.toLowerCase().includes('concorrente local'))
+    : [];
 
   const placeId = mainPlace.placeId || '';
   const profileUrlObj = buildGoogleMapsProfileUrl({
@@ -7145,7 +7290,13 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
   if (targetCidOrQuery) {
     reviewsData = await fetchRealPlaceReviews(targetCidOrQuery, apiKey);
   }
-  return buildLeadFromPlace(mainPlace, places.slice(1, 4), (cityInput || '').trim(), cleanQuery, reviewsData);
+
+  // Busca concorrentes reais da categoria na mesma cidade ao vivo (sem inventar nomes fictícios)
+  const placeCat = mainPlace.category || (Array.isArray(mainPlace.types) && mainPlace.types[0]) || 'Empresa Local';
+  const realCompetitors = await fetchRealCompetitorsForPlace(placeCat, cityInput, mainPlace.title || cleanQuery, apiKey);
+  const finalPlaces = (realCompetitors && realCompetitors.length > 0) ? realCompetitors : places.slice(1, 4);
+
+  return buildLeadFromPlace(mainPlace, finalPlaces, (cityInput || '').trim(), cleanQuery, reviewsData);
 }
 
   // Ação de Varredura Completa (Live Serper API + Live n8n Webhook + Fallback Inteligente)
@@ -7521,7 +7672,12 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
                   reviewsData = await fetchRealPlaceReviews(targetCidOrQuery, apiKey);
                 }
 
-                const singleLead = buildLeadFromPlace(selectedPlace, otherPlaces, city, cleanQuery, reviewsData);
+                // Busca concorrentes reais do mesmo segmento na cidade (sem dados fictícios)
+                const placeCat = selectedPlace.category || (Array.isArray(selectedPlace.types) && selectedPlace.types[0]) || 'Empresa Local';
+                const realCompetitors = await fetchRealCompetitorsForPlace(placeCat, city, selectedPlace.title || cleanQuery, apiKey);
+                const finalPlaces = (realCompetitors && realCompetitors.length > 0) ? realCompetitors : otherPlaces;
+
+                const singleLead = buildLeadFromPlace(selectedPlace, finalPlaces, city, cleanQuery, reviewsData);
 
                 State.leads.unshift(singleLead);
                 State.selectedLeadIds.clear();
@@ -7631,10 +7787,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
             motivo: isKnownTour 
               ? `Auditado individualmente: Perfil de Elite com Saúde Digital ${score}/100, Tour 360° verificado e 100% de avaliações respondidas com excelência.`
               : `Auditado individualmente: Perfil com ${reviews} avaliações e oportunidades em SEO Local.`,
-            concorrentes: [
-              { nome: "Concorrente Local A", reviews: isKnownTour ? 120 : reviews + 70 },
-              { nome: "Concorrente Local B", reviews: isKnownTour ? 65 : reviews + 35 }
-            ],
+            concorrentes: [],
             gaps: isKnownTour ? [
               "Expansão de raio no GeoGrid GPS (raio de 1 km a 20 km) para municípios vizinhos",
               "Campanha de Google Ads com extensão de local para blindar o Local Pack",
