@@ -938,15 +938,6 @@ async function runRaioXOficial(leadId, autoOpen = true) {
   if (!lead) return;
   State.currentLead = lead;
 
-  // 1. Abre o diagnóstico IMEDIATAMENTE na tela para o usuário não ficar esperando às cegas
-  if (autoOpen) {
-    try {
-      openDiagnostic(lead.id);
-    } catch(e) {
-      console.warn("[Raio-X] Erro ao abrir diagnóstico preliminar:", e);
-    }
-  }
-
   const apiKey = (State.settings?.outscraperApiKey || localStorage.getItem('leadmaps_outscraper_api_key') || 'NzM0YTI0ZmU5NDc2NGQxNjgzNjJlYjhiOTRlNmU4Mzh8YmI5ODZkYTM3Mg').trim();
   if (!apiKey) {
     showToast("⚠️ Configure a Chave de API da Outscraper nas configurações primeiro.");
@@ -969,14 +960,15 @@ async function runRaioXOficial(leadId, autoOpen = true) {
 
   if (tableBtn) {
     tableBtn.disabled = true;
-    tableBtn.innerHTML = `<span class="inline-block animate-spin">⏳</span> Auditando...`;
+    tableBtn.innerHTML = `<span class="inline-block animate-spin">⏳</span> Escaneando Ficha...`;
   }
   if (modalBtn) {
     modalBtn.disabled = true;
-    modalBtn.innerHTML = `<span class="inline-block animate-spin">⏳</span> Consultando dados GBP...`;
+    modalBtn.innerHTML = `<span class="inline-block animate-spin">⏳</span> Consultando dados GBP ao vivo...`;
   }
 
-  showToast(`🔍 Conectando à API oficial do Google Meu Negócio para "${lead.empresa}"...`);
+  showToast(`⚡ Conectando à API do Google Meu Negócio em tempo real para "${lead.empresa}"...`);
+  const scanStartTime = Date.now();
 
   try {
     const query = `${lead.empresa} ${lead.cidade || lead.endereco || ''}`.trim();
@@ -1120,7 +1112,7 @@ async function runRaioXOficial(leadId, autoOpen = true) {
 
     // 6. Atualiza Pilares de Auditoria
     if (!lead.auditPillars) {
-      openDiagnostic(lead.id);
+      openDiagnostic(lead.id, false);
     }
 
     const pNap = lead.auditPillars?.find(p => p.id === 'nap');
@@ -1247,9 +1239,17 @@ async function runRaioXOficial(leadId, autoOpen = true) {
       localStorage.setItem(cacheKey, JSON.stringify(cache));
     } catch(e) {}
 
+    // Garante cadência realista de escaneamento de API (mínimo 1500ms)
+    const elapsed = Date.now() - scanStartTime;
+    if (elapsed < 1500) {
+      await new Promise(r => setTimeout(r, 1500 - elapsed));
+    }
+
     // Notifica e atualiza UI
     renderTable();
-    openDiagnostic(lead.id);
+    if (autoOpen) {
+      openDiagnostic(lead.id, true);
+    }
 
     showToast(`⚡ Raio-X Oficial Concluído! 📸 ${lead.photosCount} fotos · ${lead.isClaimed ? '✓ Reivindicada' : '🚨 Não Reivindicada'} · ${lead.diasSemPostar <= 7 ? 'Post Recente' : 'Sem Posts'}`);
 
@@ -1287,8 +1287,16 @@ async function runRaioXOficial(leadId, autoOpen = true) {
     } catch (eFallback) {
       console.warn("[Raio-X Fallback] Erro ao consultar Serper:", eFallback);
     }
+
+    const elapsedFb = Date.now() - scanStartTime;
+    if (elapsedFb < 1500) {
+      await new Promise(r => setTimeout(r, 1500 - elapsedFb));
+    }
+
     renderTable();
-    openDiagnostic(lead.id);
+    if (autoOpen) {
+      openDiagnostic(lead.id, true);
+    }
     showToast(`⚡ Diagnóstico atualizado com dados Google Maps.`);
   } finally {
     if (tableBtn) {
@@ -2648,7 +2656,14 @@ const State = {
     dailyLimit: 120,
     apiKey: localStorage.getItem('leadmaps_google_api_key') || "f93ffd86dc739cb1c843b12f2082e381064c1339",
     outscraperApiKey: localStorage.getItem('leadmaps_outscraper_api_key') || "NzM0YTI0ZmU5NDc2NGQxNjgzNjJlYjhiOTRlNmU4Mzh8YmI5ODZkYTM3Mg",
-    senderName: localStorage.getItem('leadmaps_sender_name') || "Ricardo — LeadMaps Pro",
+    senderName: (function() {
+      const saved = localStorage.getItem('leadmaps_sender_name');
+      if (!saved || saved.toLowerCase().includes('leadmaps')) {
+        localStorage.setItem('leadmaps_sender_name', 'Ricardo — RadarMaps PRO');
+        return 'Ricardo — RadarMaps PRO';
+      }
+      return saved;
+    })(),
     agencyPhone: (function() {
       const saved = localStorage.getItem('leadmaps_agency_phone');
       if (!saved || saved === '(11) 98765-4321' || saved === '11987654321') {
@@ -2658,7 +2673,14 @@ const State = {
       return saved;
     })(),
     webhook: "https://n8n.minhaagencia.com.br/webhook/leadmaps",
-    agencyName: (localStorage.getItem('leadmaps_agency_name') || "RadarMaps PRO").replace(/LeadMaps(\s*Pro(\s*360)?)?/gi, "RadarMaps PRO"),
+    agencyName: (function() {
+      const saved = localStorage.getItem('leadmaps_agency_name');
+      if (!saved || saved.toLowerCase().includes('leadmaps')) {
+        localStorage.setItem('leadmaps_agency_name', 'RadarMaps PRO');
+        return 'RadarMaps PRO';
+      }
+      return saved;
+    })(),
     whatsappTemplate: localStorage.getItem('leadmaps_wa_template') || DEFAULT_WHATSAPP_TEMPLATES.site,
     whatsappDelay: parseInt(localStorage.getItem('leadmaps_wa_delay') || '25'),
     whatsappPlatform: localStorage.getItem('leadmaps_wa_platform') || 'web'
@@ -2771,8 +2793,7 @@ function renderWhatsAppMessage(template, lead) {
     ? (webAnalysis.isSocial ? `Landing Page Oficial (Substituir ${webAnalysis.name} no Maps)` : "Criação de Site de Alta Conversão")
     : (!lead.temTour360 ? "Tour Virtual 360° Interno da Loja" : "Otimização SEO Local Google Maps");
   
-  const rawConsultor = State.settings.senderName || "Ricardo — RadarMaps PRO";
-  const consultor = rawConsultor.replace(/LeadMaps(\s*Pro)?/gi, "RadarMaps PRO");
+  const consultor = State.settings.senderName || "Ricardo — RadarMaps PRO";
   const empresa = lead.empresa || "sua empresa";
   const cidade = (lead.cidade || "sua região").split(' - ')[0];
   const nicho = lead.categoria || "seu nicho";
@@ -3635,484 +3656,18 @@ window.toggleLeadTour360 = function(leadId) {
   renderTable();
 };
 
-// --------------------------------------------------------------------------
-// 6.0 Motor de DiagnÃ³stico & Raio-X Modular Ã  Prova de Falhas (RadarMaps PRO)
-// --------------------------------------------------------------------------
+window.openDiagnostic = function(id, showModal = true) {
+  const modal = document.getElementById('diagnosticModal');
 
-function buildDefaultAuditPillars(lead) {
-  if (!lead) return [];
-  const isTourVerified = isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
-  const isReviewsVerified = isReviewsVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
-  const isElite = (Number(lead.rating) >= 4.8 && Number(lead.reviews) >= 60 && (isTourVerified || isReviewsVerified));
-  const hasSec = Boolean(lead.categoriasSecundarias && lead.categoriasSecundarias.length > 1);
-
-  let respRateVal = 0;
-  if (isReviewsVerified || isTourVerified) {
-    respRateVal = 100;
-  } else if (lead._reviewsAuditedLive && typeof lead.responseRatePct === 'number') {
-    respRateVal = lead.responseRatePct;
-  } else if (typeof lead.responseRatePct === 'number' && lead.responseRatePct > 0 && lead.responseRatePct !== 95 && lead.responseRatePct !== 85) {
-    respRateVal = lead.responseRatePct;
-  } else {
-    respRateVal = 0;
-  }
-  const revOk = respRateVal >= 80;
-
-  const webAnalysis = lead.websiteAnalysis || analyzeWebsiteUrl(lead.websiteUrl);
-  const postAudit = getLeadPostAudit(lead);
-
-  let webStatus = "Sem website prÃ³prio cadastrado no perfil do Google Maps.";
-  if (lead.temSite) {
-    webStatus = "Website prÃ³prio oficial ativo e verificado: " + (lead.websiteUrl || 'Ativo') + ".";
-  } else if (webAnalysis && webAnalysis.isSocial) {
-    webStatus = "âš ï¸ Alerta CrÃ­tico: Perfil utiliza link de rede social (" + (webAnalysis.label || 'Rede Social') + ": " + lead.websiteUrl + ") no lugar de site institucional prÃ³prio. O Google desvaloriza perfis sem domÃ­nio oficial (.com.br) nas buscas orgÃ¢nicas. Oportunidade imediata de criaÃ§Ã£o de Landing Page.";
-  } else if (webAnalysis && webAnalysis.isDeprecatedGoogleSite) {
-    webStatus = "ðŸš¨ Erro CrÃ­tico (404): Perfil aponta para o antigo Google Business Site (" + lead.websiteUrl + "), descontinuado mundialmente pelo Google em marÃ§o/2024. Link inoperante.";
-  }
-
-  return [
-    {
-      id: "nap",
-      nome: "ConsistÃªncia NAP & VerificaÃ§Ã£o",
-      status: "Dados cadastrais oficiais verificados no Google Maps (" + (lead.empresa || 'Empresa') + ").",
-      ok: true,
-      icon: "ðŸ¢"
-    },
-    {
-      id: "categories",
-      nome: "Categorias de AtuaÃ§Ã£o no Maps",
-      status: hasSec
-        ? lead.categoriasSecundarias.length + " Categorias estratÃ©gicas ativas no perfil."
-        : "Categoria pÃºblica principal: " + (lead.categoria || 'Geral') + ". (Oportunidade de cadastrar subcategorias complementares).",
-      ok: hasSec || isElite,
-      icon: "ðŸ·ï¸"
-    },
-    {
-      id: "reviews",
-      nome: "Taxa de Resposta de AvaliaÃ§Ãµes",
-      status: revOk 
-        ? "â­ GestÃ£o de ReputaÃ§Ã£o Exemplar: " + respRateVal + "% das avaliaÃ§Ãµes respondidas com cordialidade (" + (lead.reviews || 0) + " avaliaÃ§Ãµes, Nota " + Number(lead.rating || 5.0).toFixed(1) + "â˜…)."
-        : (respRateVal === 0
-            ? "ðŸš¨ Gargalo CrÃ­tico: 0% das avaliaÃ§Ãµes possuem resposta do proprietÃ¡rio (" + (lead.reviews || 0) + " avaliaÃ§Ãµes sem retorno pÃºblico)."
-            : "AtenÃ§Ã£o: Apenas " + respRateVal + "% das avaliaÃ§Ãµes estÃ£o respondidas no perfil (" + (lead.reviews || 0) + " avaliaÃ§Ãµes)."),
-      ok: revOk,
-      icon: "â­"
-    },
-    {
-      id: "website",
-      nome: "Website Oficial & Agendamento Online",
-      status: webStatus,
-      ok: Boolean(lead.temSite),
-      icon: "ðŸŒ"
-    },
-    {
-      id: "tour360",
-      nome: "Tour Virtual 360Â° (Street View Interno)",
-      status: lead.temTour360 
-        ? "âœ“ Conforme: Tour Virtual 360Â° interno verificado e ativo no Google Street View." 
-        : "ðŸš¨ Gargalo CrÃ­tico: Sem Tour Virtual 360Â° interno (Apenas visÃ£o externa da rua pelo carro do Google). O perfil possui " + (lead.photosCount || 0) + " fotos comuns, mas nenhum tour 360Â° por dentro do showroom/loja.",
-      ok: Boolean(lead.temTour360),
-      icon: "ðŸ“¸"
-    },
-    {
-      id: "posts",
-      nome: "FrequÃªncia de Postagens / Novidades",
-      status: postAudit.statusPilar,
-      ok: postAudit.isAtivo,
-      icon: "ðŸ“°"
-    },
-    {
-      id: "faq",
-      nome: "Perguntas Frequentes do Perfil (Q&A)",
-      status: isElite ? "SeÃ§Ã£o de Perguntas e Respostas estruturada para esclarecer clientes." : "Oportunidade de cadastrar respostas para dÃºvidas frequentes no perfil.",
-      ok: isElite,
-      icon: "â“"
-    }
-  ];
-}
-
-function syncAuditPillars(lead) {
-  if (!lead) return;
-  if (!Array.isArray(lead.auditPillars) || lead.auditPillars.length === 0) {
-    lead.auditPillars = buildDefaultAuditPillars(lead);
-    return;
-  }
-
-  // Sincroniza website
-  const pWeb = lead.auditPillars.find(p => p.id === 'website');
-  if (pWeb) {
-    const webAnalysis = lead.websiteAnalysis || analyzeWebsiteUrl(lead.websiteUrl);
-    if (lead.temSite) {
-      pWeb.ok = true;
-      pWeb.status = "Website prÃ³prio oficial ativo e verificado: " + (lead.websiteUrl || 'Ativo') + ".";
-    } else if (webAnalysis && webAnalysis.isSocial) {
-      pWeb.ok = false;
-      pWeb.status = "âš ï¸ Alerta CrÃ­tico: Perfil utiliza link de rede social (" + (webAnalysis.label || 'Rede Social') + ": " + lead.websiteUrl + ") no lugar de site institucional prÃ³prio. O Google desvaloriza perfis sem domÃ­nio oficial (.com.br) nas buscas orgÃ¢nicas. Oportunidade imediata de criaÃ§Ã£o de Landing Page.";
-    } else if (webAnalysis && webAnalysis.isDeprecatedGoogleSite) {
-      pWeb.ok = false;
-      pWeb.status = "ðŸš¨ Erro CrÃ­tico (404): Perfil aponta para o antigo Google Business Site (" + lead.websiteUrl + "), descontinuado mundialmente pelo Google em marÃ§o/2024. Link inoperante.";
-    } else {
-      pWeb.ok = false;
-      pWeb.status = "Sem website prÃ³prio cadastrado no perfil do Google Maps.";
-    }
-  }
-
-  // Sincroniza posts
-  const pPost = lead.auditPillars.find(p => p.id === 'posts');
-  if (pPost) {
-    const postAudit = getLeadPostAudit(lead);
-    pPost.ok = postAudit.isAtivo;
-    pPost.status = postAudit.statusPilar;
-    if (Array.isArray(lead.gaps) && postAudit.isAtivo) {
-      lead.gaps = lead.gaps.filter(g => typeof g === 'string' && !g.toLowerCase().includes('postagen') && !g.toLowerCase().includes('sem postar'));
-    }
-  }
-
-  // Sincroniza reviews
-  const pRev = lead.auditPillars.find(p => p.id === 'reviews');
-  if (pRev) {
-    const isReviewsVerified = isReviewsVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
-    const isTourVerified = isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
-    let syncRespRate = 0;
-    if (isReviewsVerified || isTourVerified) {
-      syncRespRate = 100;
-      lead.responseRatePct = 100;
-      lead.reviewsSemRespostaPct = 0;
-      lead.unansweredCount = 0;
-    } else if (lead._reviewsAuditedLive && typeof lead.responseRatePct === 'number') {
-      syncRespRate = lead.responseRatePct;
-    } else if (typeof lead.responseRatePct === 'number' && lead.responseRatePct > 0 && lead.responseRatePct !== 95 && lead.responseRatePct !== 85) {
-      syncRespRate = lead.responseRatePct;
-    } else {
-      syncRespRate = 0;
-      lead.responseRatePct = 0;
-      lead.reviewsSemRespostaPct = 100;
-      lead.unansweredCount = lead.reviews || 0;
-    }
-    const isSyncRevOk = syncRespRate >= 80;
-    pRev.ok = isSyncRevOk;
-    pRev.status = isSyncRevOk
-      ? "â­ GestÃ£o de ReputaÃ§Ã£o Exemplar: " + syncRespRate + "% das avaliaÃ§Ãµes respondidas com cordialidade (" + (lead.reviews || 0) + " avaliaÃ§Ãµes, Nota " + Number(lead.rating || 5.0).toFixed(1) + "â˜…)."
-      : (syncRespRate === 0
-          ? "ðŸš¨ Gargalo CrÃ­tico: 0% das avaliaÃ§Ãµes possuem resposta do proprietÃ¡rio (" + (lead.reviews || 0) + " avaliaÃ§Ãµes sem retorno pÃºblico)."
-          : "AtenÃ§Ã£o: Apenas " + syncRespRate + "% das avaliaÃ§Ãµes estÃ£o respondidas no perfil (" + (lead.reviews || 0) + " avaliaÃ§Ãµes).");
-    if (isSyncRevOk && Array.isArray(lead.gaps)) {
-      lead.gaps = lead.gaps.filter(g => typeof g === 'string' && !g.toLowerCase().includes('avalia') && !g.toLowerCase().includes('resposta'));
-    }
-  }
-
-  // Sincroniza tour360
-  const pTourSync = lead.auditPillars.find(p => p.id === 'tour360');
-  if (pTourSync) {
-    pTourSync.nome = "Tour Virtual 360Â° (Street View Interno)";
-    pTourSync.ok = Boolean(lead.temTour360);
-    pTourSync.status = lead.temTour360
-      ? "âœ“ Conforme: Tour Virtual 360Â° interno verificado e ativo no Google Street View."
-      : "ðŸš¨ Gargalo CrÃ­tico: Sem Tour Virtual 360Â° interno (Apenas visÃ£o externa da rua pelo carro do Google). O perfil possui " + (lead.photosCount || 0) + " fotos comuns, mas nenhum tour 360Â° por dentro do showroom/loja.";
-  }
-}
-
-function renderDiagnosticHeader(lead) {
-  try {
-    const elEmpresa = document.getElementById('modalEmpresa');
-    if (elEmpresa) elEmpresa.textContent = lead.empresa || 'Empresa';
-
-    const elCategoria = document.getElementById('modalCategoriaBadge');
-    if (elCategoria) elCategoria.textContent = lead.categoria || 'Geral';
-
-    const elSub = document.getElementById('modalInfoSub');
-    if (elSub) {
-      const ratingStr = Number(lead.rating || 5.0).toFixed(1);
-      const revsStr = lead.reviews || 0;
-      const cityStr = lead.cidade || (lead.endereco ? lead.endereco.split('-')[1]?.trim() : '') || 'Brasil';
-      elSub.textContent = "â­ " + ratingStr + " Â· " + revsStr + " avaliaÃ§Ãµes Â· " + cityStr;
-    }
-
-    const modalMapsLink = document.getElementById('modalMapsLink');
-    if (modalMapsLink) {
-      modalMapsLink.href = getGoogleMapsUrl(lead);
-    }
-
-    const currentScore = typeof lead.score === 'number' ? lead.score : 50;
-    const scoreContainer = document.getElementById('modalScoreCircleContainer');
-    if (scoreContainer) {
-      scoreContainer.innerHTML = renderScoreGauge(currentScore, 64);
-    }
-
-    const tone = getScoreTone(currentScore);
-    const healthLabel = tone === 'emerald' ? 'SaudÃ¡vel' : tone === 'amber' ? 'AtenÃ§Ã£o' : 'CrÃ­tico';
-    const elHealth = document.getElementById('modalHealthStatus');
-    if (elHealth) {
-      elHealth.innerHTML = "Digital Health<br>" + healthLabel;
-    }
-
-    const scoreBadge = document.getElementById('modalProfileScoreBadge');
-    if (scoreBadge) {
-      scoreBadge.textContent = "Ãndice de SaÃºde: " + currentScore + "/100";
-      scoreBadge.className = currentScore > 60 
-        ? 'badge-pill badge-emerald text-[10px]' 
-        : (currentScore > 35 ? 'badge-pill badge-amber text-[10px]' : 'badge-pill badge-rose text-[10px]');
-    }
-  } catch (err) {
-    console.error("[renderDiagnosticHeader] Erro:", err);
-  }
-}
-
-function renderDiagnosticCompetitors(lead) {
-  try {
-    const concs = Array.isArray(lead.concorrentes) && lead.concorrentes.length > 0 ? lead.concorrentes : [
-      { nome: "Concorrente Local A", reviews: (Number(lead.reviews) || 20) + 40 },
-      { nome: "Concorrente Local B", reviews: (Number(lead.reviews) || 20) + 20 }
-    ];
-    const maxReviews = Math.max(...concs.map(c => Number(c.reviews) || 0), Number(lead.reviews) || 1);
-    const competitorsHtml = [
-      renderCompetitorBar((lead.empresa || 'Empresa') + " (este lead)", Number(lead.reviews) || 0, maxReviews, true),
-      ...concs.map(c => renderCompetitorBar(c.nome || 'Concorrente', Number(c.reviews) || 0, maxReviews, false))
-    ].join('');
-
-    const elCont = document.getElementById('competitorsContainer');
-    if (elCont) elCont.innerHTML = competitorsHtml;
-
-    const leadRevCount = Number(lead.reviews) || 0;
-    const isLeader = concs.length > 0 && concs.every(c => leadRevCount >= (Number(c.reviews) || 0));
-    const insightBox = document.getElementById('competitorInsightBox');
-    if (insightBox) {
-      if (isLeader) {
-        insightBox.innerHTML = 'ðŸ† <strong class="text-emerald-400">LÃ­der Absoluto da RegiÃ£o:</strong> O perfil possui <strong class="text-white">' + leadRevCount + ' avaliaÃ§Ãµes reais</strong> (lideranÃ§a consolidada frente aos concorrentes auditados). <span class="text-emerald-300 font-medium">Recomendado focar em expansÃ£o de raio geogrÃ¡fico (GeoGrid GPS de 1 a 20 km) e campanhas locais de Google Ads para blindar o mercado.</span>';
-      } else {
-        const concReviewsList = concs.map(c => Number(c.reviews) || 0);
-        const minConcReviews = Math.min(...concReviewsList);
-        const maxConcReviews = Math.max(...concReviewsList);
-        const concComparisonText = minConcReviews === maxConcReviews
-          ? 'o concorrente comparado tem <strong class="text-white">' + maxConcReviews + ' reviews</strong>.'
-          : 'os concorrentes tÃªm entre <strong class="text-white">' + minConcReviews + ' e ' + maxConcReviews + ' reviews</strong>.';
-
-        insightBox.innerHTML = 'O lead tem <strong class="text-white">' + leadRevCount + ' reviews</strong>; ' + concComparisonText + ' <span class="text-amber-400">Recomendado acelerar coleta de novas avaliaÃ§Ãµes e manter respostas estratÃ©gicas de SEO local.</span>';
-      }
-    }
-  } catch (err) {
-    console.error("[renderDiagnosticCompetitors] Erro:", err);
-  }
-}
-
-function renderDiagnosticPillars(lead) {
-  try {
-    const pillarsGrid = document.getElementById('modalProfilePillarsGrid');
-    if (!pillarsGrid) return;
-    if (!Array.isArray(lead.auditPillars) || lead.auditPillars.length === 0) {
-      lead.auditPillars = buildDefaultAuditPillars(lead);
-    }
-
-    pillarsGrid.innerHTML = lead.auditPillars.map(p => {
-      const isPostPillar = p.id === 'posts';
-      const postAudit = isPostPillar ? getLeadPostAudit(lead) : null;
-      const isWebPillar = p.id === 'website';
-      const webAnalysis = isWebPillar ? (lead.websiteAnalysis || analyzeWebsiteUrl(lead.websiteUrl)) : null;
-      const isSocialGargalo = isWebPillar && !p.ok && webAnalysis && webAnalysis.isSocial;
-      const isDeadGoogle = isWebPillar && !p.ok && webAnalysis && webAnalysis.isDeprecatedGoogleSite;
-
-      const isTourPillar = p.id === 'tour360';
-      const btnBadgeText = isPostPillar 
-        ? (postAudit.badgeLabel + " âœŽ") 
-        : (p.ok 
-            ? 'âœ“ Conforme' 
-            : (isTourPillar ? 'âœ• Sem Tour 360Â° âœŽ' : (isSocialGargalo ? ('âœ• Gargalo (' + (webAnalysis.name || 'Social') + ')') : (isDeadGoogle ? 'ðŸš¨ Link 404' : 'âœ• Gargalo'))));
-
-      const btnClickAction = isPostPillar 
-        ? "window.openPostAuditModal('" + lead.id + "')" 
-        : (isTourPillar 
-            ? "window.openTourAuditModal('" + lead.id + "')" 
-            : "togglePillarStatus('" + lead.id + "', '" + p.id + "')");
-
-      const btnBadgeColorClass = isPostPillar
-        ? (postAudit.isAtivo ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : (postAudit.isAlerta ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30' : 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30'))
-        : (p.ok ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30');
-
-      const cardBorderBg = isPostPillar
-        ? (postAudit.isAtivo ? 'border-[color-mix(in_oklab,var(--emerald-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--emerald-signal)_6%,transparent)]' : (postAudit.isAlerta ? 'border-amber-500/30 bg-amber-500/10' : 'border-[color-mix(in_oklab,var(--rose-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--rose-signal)_6%,transparent)]'))
-        : (p.ok ? 'border-[color-mix(in_oklab,var(--emerald-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--emerald-signal)_6%,transparent)]' : 'border-[color-mix(in_oklab,var(--rose-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--rose-signal)_6%,transparent)]');
-
-      const pStatusText = isPostPillar ? postAudit.statusPilar : p.status;
-
-      return '<div class="flex items-start gap-2.5 rounded-lg border ' + cardBorderBg + ' p-2.5 text-xs transition-all">' +
-        '<span class="text-base">' + (p.icon || 'ðŸ“Œ') + '</span>' +
-        '<div class="flex-1">' +
-          '<div class="flex items-center justify-between gap-1">' +
-            '<div class="flex items-center gap-1.5 flex-wrap">' +
-              '<span class="font-bold text-white">' + p.nome + '</span>' +
-              (p.id === 'tour360' ? '<a href="' + getGoogleMapsUrl(lead) + '" target="_blank" rel="noopener noreferrer" class="text-[9px] text-cyan-400 hover:text-cyan-300 font-semibold px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20" title="Ver fotos e 360Â° no Google Maps">Maps â†—</a>' : '') +
-              (p.id === 'tour360' && !p.ok ? '<button type="button" onclick="handleManualCheck360(event, \'' + lead.id + '\')" class="text-[9px] text-amber-400 hover:text-amber-300 font-semibold px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 cursor-pointer flex items-center gap-1" title="Verificar Tour 360 no Street View / Google Maps"><span>ðŸ”</span> <span>Checar 360Â°</span></button>' : '') +
-            '</div>' +
-            '<button type="button" onclick="' + btnClickAction + '" title="' + (isPostPillar ? 'Auditoria de Postagens & MÃ­dia: Clique para definir dias sem postar' : (isTourPillar ? 'Auditoria de Tour 360Â°: Clique para verificar ou validar' : 'Clique para alternar status deste pilar no diagnÃ³stico')) + '" class="px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ' + btnBadgeColorClass + '">' +
-              btnBadgeText +
-            '</button>' +
-          '</div>' +
-          '<p class="mt-1 text-[11px] text-[var(--muted-foreground)] leading-tight">' + pStatusText + '</p>' +
-        '</div>' +
-      '</div>';
-    }).join('');
-  } catch (err) {
-    console.error("[renderDiagnosticPillars] Erro:", err);
-  }
-}
-
-function renderDiagnosticGaps(lead) {
-  try {
-    const gapsGrid = document.getElementById('modalGapsGrid');
-    if (!gapsGrid) return;
-    const gapsList = Array.isArray(lead.gaps) && lead.gaps.length > 0 ? lead.gaps : [
-      !lead.temSite ? "Sem website institucional prÃ³prio (.com.br)" : null,
-      !lead.temTour360 ? "Sem Tour Virtual 360Â° interno no Google Street View" : null,
-      (typeof lead.responseRatePct === 'number' && lead.responseRatePct < 80) ? "Taxa baixa de resposta a avaliaÃ§Ãµes no Google" : null,
-      "Oportunidade de expansÃ£o de palavras-chave no perfil"
-    ].filter(Boolean);
-
-    gapsGrid.innerHTML = gapsList.map(gap => {
-      const gapText = typeof gap === 'string' ? gap : (gap?.text || gap?.label || gap?.title || gap?.desc || String(gap));
-      return '<div class="flex items-center gap-2 rounded-lg border border-[color-mix(in_oklab,var(--rose-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--rose-signal)_8%,transparent)] px-3 py-2 text-xs font-semibold text-white">' +
-        '<span class="text-[var(--rose-signal)]">âœ•</span> ' + gapText +
-      '</div>';
-    }).join('');
-  } catch (err) {
-    console.error("[renderDiagnosticGaps] Erro:", err);
-  }
-}
-
-function renderDiagnosticSeoPlan(lead) {
-  try {
-    const seoGrid = document.getElementById('modalSeoActionPlanGrid');
-    if (!seoGrid) return;
-    let seoActions = [];
-    try {
-      seoActions = generateSeoActionPlan(lead);
-    } catch (e) {
-      console.warn("[renderDiagnosticSeoPlan] Erro ao gerar plano:", e);
-    }
-    if (!Array.isArray(seoActions) || seoActions.length === 0) {
-      seoActions = [
-        {
-          title: "OtimizaÃ§Ã£o de Categorias SecundÃ¡rias",
-          priority: "Alta",
-          badgeClass: "badge-amber",
-          desc: "Cadastrar atÃ© 5 categorias complementares relevantes no perfil do Google Maps para cobrir buscas relacionadas.",
-          impact: "+25% a +40% nas impressÃµes de busca local"
-        },
-        {
-          title: "HomologaÃ§Ã£o de Tour Virtual 360Â°",
-          priority: "CrÃ­tica",
-          badgeClass: "badge-rose",
-          desc: "Publicar fotos esfÃ©ricas em alta resoluÃ§Ã£o do interior da empresa conectadas ao Google Street View.",
-          impact: "+67% de tempo de retenÃ§Ã£o e cliques para rota"
-        }
-      ];
-    }
-    seoGrid.innerHTML = seoActions.map(action => {
-      return '<div class="rounded-lg border border-slate-700 bg-slate-900/80 p-3 text-xs space-y-1">' +
-        '<div class="flex items-center justify-between">' +
-          '<span class="font-bold text-white">' + (action.title || 'AÃ§Ã£o de SEO Local') + '</span>' +
-          '<span class="badge-pill ' + (action.badgeClass || 'badge-amber') + ' text-[9px] font-bold uppercase">' + (action.priority || 'MÃ©dia') + '</span>' +
-        '</div>' +
-        '<p class="text-[11px] text-[var(--muted-foreground)] leading-relaxed">' + (action.desc || '') + '</p>' +
-        '<div class="pt-1 flex items-center gap-1.5 text-[10px] font-bold text-amber-400">' +
-          '<span>âš¡ Impacto Estimado:</span> <span>' + (action.impact || 'Alto') + '</span>' +
-        '</div>' +
-      '</div>';
-    }).join('');
-  } catch (err) {
-    console.error("[renderDiagnosticSeoPlan] Erro:", err);
-  }
-}
-
-function renderDiagnosticPitch(lead) {
-  try {
-    const pitch = buildWhatsAppMessage(lead);
-    const modalAiPitchText = document.getElementById('modalAiPitchText');
-    if (modalAiPitchText) {
-      modalAiPitchText.textContent = pitch;
-    }
-    const btnWA = document.getElementById('btnModalWhatsApp');
-    if (btnWA) {
-      btnWA.href = buildWhatsAppUrl(lead, pitch);
-    }
-  } catch (err) {
-    console.error("[renderDiagnosticPitch] Erro:", err);
-  }
-}
-
-function triggerAsyncLiveReviewAudit(lead) {
-  if (!lead || lead._reviewsAuditedLive) return;
-  const isReviewsVerified = isReviewsVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
-  const isTourVerified = isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
-  if (isReviewsVerified || isTourVerified) return;
-
-  const cidToCheck = lead.cid || lead.placeId;
-
-  const runLiveAudit = (cid) => {
-    if (!cid || lead._reviewsAuditedLive) return;
-    fetchRealPlaceReviews(cid).then(revData => {
-      if (revData && Array.isArray(revData.reviews) && revData.reviews.length > 0) {
-        lead._reviewsAuditedLive = true;
-        const sampleRevs = revData.reviews;
-        const answered = sampleRevs.filter(r => r.response && (r.response.snippet || r.response.text || r.response.date || r.response.title || r.response)).length;
-        const realRate = Math.round((answered / sampleRevs.length) * 100);
-        lead.responseRatePct = realRate;
-        lead.reviewsSemRespostaPct = Math.max(0, 100 - realRate);
-        lead.unansweredCount = Math.round((lead.reviews || 0) * (lead.reviewsSemRespostaPct / 100));
-        if (realRate >= 80) saveVerifiedReviewsBusiness(lead.empresa, true);
-
-        // Atualiza modal se estiver aberto para este lead
-        if (State.currentLead && State.currentLead.id === lead.id) {
-          syncAuditPillars(lead);
-          if (Array.isArray(lead.auditPillars) && lead.auditPillars.length > 0) {
-            const passed = lead.auditPillars.filter(p => p.ok).length;
-            lead.score = Math.round((passed / lead.auditPillars.length) * 100);
-          }
-          renderDiagnosticHeader(lead);
-          renderDiagnosticPillars(lead);
-          renderDiagnosticGaps(lead);
-          renderDiagnosticSeoPlan(lead);
-          renderDiagnosticPitch(lead);
-        }
-        updateMetrics();
-        renderTable();
-      }
-    }).catch(() => {});
-  };
-
-  if (cidToCheck) {
-    runLiveAudit(cidToCheck);
-  } else if (lead.empresa) {
-    const keyToUse = State.settings?.apiKey || localStorage.getItem('leadmaps_google_api_key') || 'f93ffd86dc739cb1c843b12f2082e381064c1339';
-    fetch('https://google.serper.dev/places', {
-      method: 'POST',
-      headers: { 'X-API-KEY': keyToUse, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ q: (lead.empresa + " " + (lead.cidade || '')).trim(), gl: 'br', hl: 'pt-br' })
-    }).then(r => r.json()).then(d => {
-      if (d && d.places && d.places[0] && d.places[0].cid) {
-        lead.cid = d.places[0].cid;
-        runLiveAudit(lead.cid);
-      }
-    }).catch(() => {});
-  }
-}
-
-window.openDiagnostic = function(id) {
-  let lead = null;
-  if (id && typeof id === 'object' && id.id) {
-    lead = id;
-  } else {
-    lead = getAnyLeadById(id) || State.currentLead || (State.leads && State.leads[0]) || null;
-  }
-
+  const lead = getAnyLeadById(id);
   if (!lead) {
-    console.warn("[openDiagnostic] Nenhum lead encontrado para exibir:", id);
-    showToast("âš ï¸ Selecione um lead para abrir o Raio-X.");
+    console.warn("[openDiagnostic] Lead não encontrado:", id);
     return;
   }
   State.currentLead = lead;
 
   try {
-    // NormalizaÃ§Ã£o inicial de website
+    // Garante análise de website e desqualifica rede social como site próprio
     if (!lead.websiteAnalysis) {
       lead.websiteAnalysis = analyzeWebsiteUrl(lead.websiteUrl);
     }
@@ -4121,15 +3676,15 @@ window.openDiagnostic = function(id) {
       lead.isSocialAsWebsite = lead.websiteAnalysis.isSocial;
     }
 
-    // Checagem em tempo real de Tour 360 na memÃ³ria permanente ou lista mestre oficial
+    // Checagem em tempo real de Tour 360 na memória permanente ou lista mestre oficial
     if (isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone)) {
       lead.temTour360 = true;
     }
     if (lead.temTour360 && Array.isArray(lead.gaps)) {
-      lead.gaps = lead.gaps.filter(g => typeof g === 'string' && !g.toLowerCase().includes('360'));
+      lead.gaps = lead.gaps.filter(g => !g.toLowerCase().includes('360'));
     }
 
-    // Checagem em tempo real de AvaliaÃ§Ãµes Respondidas
+    // Checagem em tempo real de Avaliações Respondidas (Clientes Geridos pelo Ricardo)
     const isReviewsVerifiedLead = isReviewsVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
     const isTourVerifiedLead = isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
     if (isReviewsVerifiedLead || isTourVerifiedLead) {
@@ -4144,39 +3699,510 @@ window.openDiagnostic = function(id) {
       }
     }
     if (lead.responseRatePct === 100 && Array.isArray(lead.gaps)) {
-      lead.gaps = lead.gaps.filter(g => typeof g === 'string' && !g.toLowerCase().includes('avalia') && !g.toLowerCase().includes('resposta'));
+      lead.gaps = lead.gaps.filter(g => !g.toLowerCase().includes('avalia') && !g.toLowerCase().includes('resposta'));
     }
 
-    // Inicializa ou sincroniza os 7 pilares
-    if (!lead.auditPillars || !Array.isArray(lead.auditPillars) || lead.auditPillars.length === 0) {
-      lead.auditPillars = buildDefaultAuditPillars(lead);
+    // Inicializa pilares com dados honestos e verificáveis se não existirem
+    if (!lead.auditPillars) {
+      const isTourVerified = isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
+      const isReviewsVerified = isReviewsVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
+      const isElite = (Number(lead.rating) >= 4.8 && Number(lead.reviews) >= 60 && (isTourVerified || isReviewsVerified));
+      const hasSec = Boolean(lead.categoriasSecundarias && lead.categoriasSecundarias.length > 1);
+      
+      // Análise estrita da taxa de resposta a avaliações (Zero falso positivo)
+      let respRateVal = 0;
+      if (isReviewsVerified || isTourVerified) {
+        respRateVal = 100;
+        lead.responseRatePct = 100;
+        lead.reviewsSemRespostaPct = 0;
+        lead.unansweredCount = 0;
+      } else if (lead._reviewsAuditedLive && typeof lead.responseRatePct === 'number') {
+        respRateVal = lead.responseRatePct;
+      } else if (typeof lead.responseRatePct === 'number' && lead.responseRatePct > 0 && lead.responseRatePct !== 95 && lead.responseRatePct !== 85) {
+        respRateVal = lead.responseRatePct;
+      } else {
+        respRateVal = 0;
+        lead.responseRatePct = 0;
+        lead.reviewsSemRespostaPct = 100;
+        lead.unansweredCount = lead.reviews || 0;
+      }
+      const revOk = respRateVal >= 80;
+
+      const webAnalysis = lead.websiteAnalysis || analyzeWebsiteUrl(lead.websiteUrl);
+      const postAudit = getLeadPostAudit(lead);
+      const hasPosts = postAudit.isAtivo;
+
+      let webStatus = "Sem website próprio cadastrado no perfil do Google Maps.";
+      if (lead.temSite) {
+        webStatus = `Website próprio oficial ativo e verificado: ${lead.websiteUrl || 'Ativo'}.`;
+      } else if (webAnalysis.isSocial) {
+        webStatus = `⚠️ Alerta Crítico: Perfil utiliza link de rede social (${webAnalysis.label}: ${lead.websiteUrl}) no lugar de site institucional próprio. O Google desvaloriza perfis sem domínio oficial (.com.br) nas buscas orgânicas. Oportunidade imediata de criação de Landing Page.`;
+      } else if (webAnalysis.isDeprecatedGoogleSite) {
+        webStatus = `🚨 Erro Crítico (404): Perfil aponta para o antigo Google Business Site (${lead.websiteUrl}), descontinuado mundialmente pelo Google em março/2024. Link inoperante.`;
+      }
+
+      lead.auditPillars = [
+        {
+          id: "nap",
+          nome: "Consistência NAP & Verificação",
+          status: `Dados cadastrais oficiais verificados no Google Maps (${lead.empresa}).`,
+          ok: true,
+          icon: "🏢"
+        },
+        {
+          id: "categories",
+          nome: "Categorias de Atuação no Maps",
+          status: hasSec
+            ? `${lead.categoriasSecundarias.length} Categorias estratégicas ativas no perfil.`
+            : `Categoria pública principal: ${lead.categoria || 'Geral'}. (Oportunidade de cadastrar subcategorias complementares).`,
+          ok: hasSec || isElite,
+          icon: "🏷️"
+        },
+        {
+          id: "reviews",
+          nome: "Taxa de Resposta de Avaliações",
+          status: revOk 
+            ? `⭐ Gestão de Reputação Exemplar: ${respRateVal}% das avaliações respondidas com cordialidade (${lead.reviews || 0} avaliações, Nota ${Number(lead.rating || 5.0).toFixed(1)}★).`
+            : (respRateVal === 0
+                ? `🚨 Gargalo Crítico: 0% das avaliações possuem resposta do proprietário (${lead.reviews || 0} avaliações sem retorno público).`
+                : `Atenção: Apenas ${respRateVal}% das avaliações estão respondidas no perfil (${lead.reviews || 0} avaliações).`),
+          ok: revOk,
+          icon: "⭐"
+        },
+        {
+          id: "website",
+          nome: "Website Oficial & Agendamento Online",
+          status: webStatus,
+          ok: Boolean(lead.temSite),
+          icon: "🌐"
+        },
+        {
+          id: "tour360",
+          nome: "Tour Virtual 360° (Street View Interno)",
+          status: lead.temTour360 
+            ? "✓ Conforme: Tour Virtual 360° interno verificado e ativo no Google Street View." 
+            : "🚨 Gargalo Crítico: Sem Tour Virtual 360° interno (Apenas visão externa da rua pelo carro do Google). Perfil perde até 67% de engajamento visual.",
+          ok: Boolean(lead.temTour360),
+          icon: "📸"
+        },
+        {
+          id: "posts",
+          nome: "Frequência de Postagens / Novidades",
+          status: postAudit.statusPilar,
+          ok: postAudit.isAtivo,
+          icon: "📰"
+        },
+        {
+          id: "faq",
+          nome: "Perguntas Frequentes do Perfil (Q&A)",
+          status: isElite ? "Seção de Perguntas e Respostas estruturada para esclarecer clientes." : "Oportunidade de cadastrar respostas para dúvidas frequentes no perfil.",
+          ok: isElite,
+          icon: "❓"
+        }
+      ];
     } else {
-      syncAuditPillars(lead);
+      // Sincroniza status do pilar website se já existir
+      const pWeb = lead.auditPillars.find(p => p.id === 'website');
+      if (pWeb) {
+        const webAnalysis = lead.websiteAnalysis || analyzeWebsiteUrl(lead.websiteUrl);
+        if (lead.temSite) {
+          pWeb.ok = true;
+          pWeb.status = `Website próprio oficial ativo e verificado: ${lead.websiteUrl || 'Ativo'}.`;
+        } else if (webAnalysis.isSocial) {
+          pWeb.ok = false;
+          pWeb.status = `⚠️ Alerta Crítico: Perfil utiliza link de rede social (${webAnalysis.label}: ${lead.websiteUrl}) no lugar de site institucional próprio. O Google desvaloriza perfis sem domínio oficial (.com.br) nas buscas orgânicas. Oportunidade imediata de criação de Landing Page.`;
+        } else if (webAnalysis.isDeprecatedGoogleSite) {
+          pWeb.ok = false;
+          pWeb.status = `🚨 Erro Crítico (404): Perfil aponta para o antigo Google Business Site (${lead.websiteUrl}), descontinuado mundialmente pelo Google em março/2024. Link inoperante.`;
+        }
+      }
+      // Sincroniza status do pilar de postagens se já existir
+      const pPost = lead.auditPillars.find(p => p.id === 'posts');
+      if (pPost) {
+        const postAudit = getLeadPostAudit(lead);
+        pPost.ok = postAudit.isAtivo;
+        pPost.status = postAudit.statusPilar;
+        if (Array.isArray(lead.gaps) && postAudit.isAtivo) {
+          lead.gaps = lead.gaps.filter(g => !g.toLowerCase().includes('postagen') && !g.toLowerCase().includes('sem postar'));
+        }
+      }
+      const pRev = lead.auditPillars.find(p => p.id === 'reviews');
+      if (pRev) {
+        const isReviewsVerified = isReviewsVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
+        const isTourVerified = isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
+        let syncRespRate = 0;
+        if (isReviewsVerified || isTourVerified) {
+          syncRespRate = 100;
+          lead.responseRatePct = 100;
+          lead.reviewsSemRespostaPct = 0;
+          lead.unansweredCount = 0;
+        } else if (lead._reviewsAuditedLive && typeof lead.responseRatePct === 'number') {
+          syncRespRate = lead.responseRatePct;
+        } else if (typeof lead.responseRatePct === 'number' && lead.responseRatePct > 0 && lead.responseRatePct !== 95 && lead.responseRatePct !== 85) {
+          syncRespRate = lead.responseRatePct;
+        } else {
+          syncRespRate = 0;
+          lead.responseRatePct = 0;
+          lead.reviewsSemRespostaPct = 100;
+          lead.unansweredCount = lead.reviews || 0;
+        }
+        const isSyncRevOk = syncRespRate >= 80;
+        pRev.ok = isSyncRevOk;
+        pRev.status = isSyncRevOk
+          ? `⭐ Gestão de Reputação Exemplar: ${syncRespRate}% das avaliações respondidas com cordialidade (${lead.reviews || 0} avaliações, Nota ${Number(lead.rating || 5.0).toFixed(1)}★).`
+          : (syncRespRate === 0
+              ? `🚨 Gargalo Crítico: 0% das avaliações possuem resposta do proprietário (${lead.reviews || 0} avaliações sem retorno público).`
+              : `Atenção: Apenas ${syncRespRate}% das avaliações estão respondidas no perfil (${lead.reviews || 0} avaliações).`);
+        if (isSyncRevOk && Array.isArray(lead.gaps)) {
+          lead.gaps = lead.gaps.filter(g => !g.toLowerCase().includes('avalia') && !g.toLowerCase().includes('resposta'));
+        } else if (!isSyncRevOk && Array.isArray(lead.gaps)) {
+          if (!lead.gaps.some(g => g.toLowerCase().includes('avalia') || g.toLowerCase().includes('resposta'))) {
+            lead.gaps.push(`Perfil não responde às avaliações dos clientes no Google (${syncRespRate}% de respostas — ${lead.reviews || 0} avaliações sem retorno)`);
+          }
+        }
+      }
+
+      // Sincroniza status do pilar tour360 se já existir
+      const pTourSync = lead.auditPillars.find(p => p.id === 'tour360');
+      if (pTourSync) {
+        pTourSync.nome = "Tour Virtual 360° (Street View Interno)";
+        pTourSync.ok = Boolean(lead.temTour360);
+        pTourSync.status = lead.temTour360
+          ? "✓ Conforme: Tour Virtual 360° interno verificado e ativo no Google Street View."
+          : `🚨 Gargalo Crítico: Sem Tour Virtual 360° interno (Apenas visão externa da rua pelo carro do Google). O perfil possui ${lead.photosCount || 0} fotos comuns, mas nenhum tour 360° por dentro do showroom/loja.`;
+      }
     }
 
-    // Recalcula score de saÃºde
+    // 7 Pilares de Saúde do Perfil Google (Presença 360°) - Sincroniza score de saúde antes dos gauges
+    if (Array.isArray(lead.auditPillars) && lead.auditPillars.length > 0) {
+      const passedCount = lead.auditPillars.filter(p => p.ok).length;
+      lead.score = Math.round((passedCount / lead.auditPillars.length) * 100);
+    }
+
+    // Checagem factual em tempo real de avaliações via API para eliminar qualquer margem de erro
+    const cidToCheck = lead.cid || lead.placeId;
+    const runLiveAudit = (cid) => {
+      if (!cid || lead._reviewsAuditedLive) return;
+      fetchRealPlaceReviews(cid).then(revData => {
+        if (revData && Array.isArray(revData.reviews) && revData.reviews.length > 0) {
+          lead._reviewsAuditedLive = true;
+          const sampleRevs = revData.reviews;
+          const answered = sampleRevs.filter(r => r.response && (r.response.snippet || r.response.text || r.response.date || r.response.title || r.response)).length;
+          const realRate = Math.round((answered / sampleRevs.length) * 100);
+          lead.responseRatePct = realRate;
+          lead.reviewsSemRespostaPct = Math.max(0, 100 - realRate);
+          lead.unansweredCount = Math.round((lead.reviews || 0) * (lead.reviewsSemRespostaPct / 100));
+          if (realRate >= 80) saveVerifiedReviewsBusiness(lead.empresa, true);
+
+          const pRevLive = lead.auditPillars?.find(p => p.id === 'reviews');
+          if (pRevLive) {
+            pRevLive.ok = realRate >= 80;
+            pRevLive.status = realRate >= 80
+              ? `⭐ Gestão de Reputação Exemplar: ${realRate}% das avaliações respondidas com cordialidade (${lead.reviews || 0} avaliações, Nota ${Number(lead.rating || 5.0).toFixed(1)}★).`
+              : (realRate === 0
+                  ? `🚨 Gargalo Crítico: 0% das avaliações possuem resposta do proprietário (${lead.reviews || 0} avaliações sem retorno público).`
+                  : `Atenção: Apenas ${realRate}% das avaliações estão respondidas no perfil (${lead.reviews || 0} avaliações).`);
+          }
+
+          if (realRate < 80 && Array.isArray(lead.gaps)) {
+            if (!lead.gaps.some(g => g.toLowerCase().includes('avalia') || g.toLowerCase().includes('resposta'))) {
+              lead.gaps.push(`Perfil não responde às avaliações dos clientes no Google (${realRate}% de respostas — ${lead.reviews || 0} avaliações sem retorno)`);
+            }
+          } else if (realRate >= 80 && Array.isArray(lead.gaps)) {
+            lead.gaps = lead.gaps.filter(g => !g.toLowerCase().includes('avalia') && !g.toLowerCase().includes('resposta'));
+          }
+
+          // Se o modal estiver aberto para este lead, re-renderiza pilares e score imediatamente!
+          if (State.currentLead && State.currentLead.id === lead.id) {
+            const passedCount = Array.isArray(lead.auditPillars) ? lead.auditPillars.filter(p => p.ok).length : 0;
+            const healthScore = Math.round((passedCount / 7) * 100);
+            lead.score = healthScore;
+
+            const scoreBadge = document.getElementById('modalProfileScoreBadge');
+            if (scoreBadge) {
+              scoreBadge.textContent = `Índice de Saúde: ${healthScore}/100`;
+              scoreBadge.className = healthScore > 60 ? 'badge-pill badge-emerald text-[10px]' : healthScore > 35 ? 'badge-pill badge-amber text-[10px]' : 'badge-pill badge-rose text-[10px]';
+            }
+            const circleContainer = document.getElementById('modalScoreCircleContainer');
+            if (circleContainer) {
+              circleContainer.innerHTML = renderScoreGauge(healthScore, 64);
+            }
+            const tone = getScoreTone(healthScore);
+            const healthLabel = tone === 'emerald' ? 'Saudável' : tone === 'amber' ? 'Atenção' : 'Crítico';
+            const modalHealthStatus = document.getElementById('modalHealthStatus');
+            if (modalHealthStatus) {
+              modalHealthStatus.innerHTML = `Digital Health<br>${healthLabel}`;
+            }
+
+            const pillarsGrid = document.getElementById('modalProfilePillarsGrid');
+            if (pillarsGrid && Array.isArray(lead.auditPillars)) {
+              pillarsGrid.innerHTML = lead.auditPillars.map(p => {
+                const isPostPillar = p.id === 'posts';
+                const postAudit = isPostPillar ? getLeadPostAudit(lead) : null;
+                const isWebPillar = p.id === 'website';
+                const webAnalysis = isWebPillar ? (lead.websiteAnalysis || analyzeWebsiteUrl(lead.websiteUrl)) : null;
+                const isSocialGargalo = isWebPillar && !p.ok && webAnalysis && webAnalysis.isSocial;
+                const isDeadGoogle = isWebPillar && !p.ok && webAnalysis && webAnalysis.isDeprecatedGoogleSite;
+
+                const isTourPillar = p.id === 'tour360';
+                const btnBadgeText = isPostPillar 
+                  ? `${postAudit.badgeLabel} ✎` 
+                  : (p.ok 
+                      ? '✓ Conforme' 
+                      : (isTourPillar ? '✕ Sem Tour 360° ✎' : (isSocialGargalo ? `✕ Gargalo (${webAnalysis.name})` : (isDeadGoogle ? '🚨 Link 404' : '✕ Gargalo'))));
+
+                const btnClickAction = isPostPillar 
+                  ? `window.openPostAuditModal('${lead.id}')` 
+                  : (isTourPillar 
+                      ? `window.openTourAuditModal('${lead.id}')` 
+                      : `togglePillarStatus('${lead.id}', '${p.id}')`);
+
+                const btnBadgeColorClass = isPostPillar
+                  ? (postAudit.isAtivo ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : (postAudit.isAlerta ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30' : 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30'))
+                  : (p.ok ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30');
+
+                const cardBorderBg = isPostPillar
+                  ? (postAudit.isAtivo ? 'border-[color-mix(in_oklab,var(--emerald-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--emerald-signal)_6%,transparent)]' : (postAudit.isAlerta ? 'border-amber-500/30 bg-amber-500/10' : 'border-[color-mix(in_oklab,var(--rose-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--rose-signal)_6%,transparent)]'))
+                  : (p.ok ? 'border-[color-mix(in_oklab,var(--emerald-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--emerald-signal)_6%,transparent)]' : 'border-[color-mix(in_oklab,var(--rose-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--rose-signal)_6%,transparent)]');
+
+                const pStatusText = isPostPillar ? postAudit.statusPilar : p.status;
+
+                return `
+                <div class="flex items-start gap-2.5 rounded-lg border ${cardBorderBg} p-2.5 text-xs transition-all">
+                  <span class="text-base">${p.icon}</span>
+                  <div class="flex-1">
+                    <div class="flex items-center justify-between gap-1">
+                      <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="font-bold text-white">${p.nome}</span>
+                        ${p.id === 'tour360' ? `<a href="${getGoogleMapsUrl(lead)}" target="_blank" rel="noopener noreferrer" class="text-[9px] text-cyan-400 hover:text-cyan-300 font-semibold px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20" title="Ver fotos e 360° no Google Maps">Maps ↗</a>` : ''}
+                        ${p.id === 'tour360' && !p.ok ? `<button type="button" onclick="handleManualCheck360(event, '${lead.id}')" class="text-[9px] text-amber-400 hover:text-amber-300 font-semibold px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 cursor-pointer flex items-center gap-1" title="Verificar Tour 360 no Street View / Google Maps"><span>🔍</span> <span>Checar 360°</span></button>` : ''}
+                      </div>
+                      <button type="button" onclick="${btnClickAction}" title="${isPostPillar ? 'Auditoria Cirúrgica de Postagens & Mídia: Clique para definir dias sem postar' : (isTourPillar ? 'Auditoria & Homologação de Tour 360°: Clique para verificar ou validar' : 'Clique para alternar status deste pilar no diagnóstico')}" class="px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${btnBadgeColorClass}">
+                        ${btnBadgeText}
+                      </button>
+                    </div>
+                    <p class="mt-1 text-[11px] text-[var(--muted-foreground)] leading-tight">${pStatusText}</p>
+                  </div>
+                </div>
+              `;
+              }).join('');
+            }
+
+            // Atualiza Gaps
+            const gapsGrid = document.getElementById('modalGapsGrid');
+            if (gapsGrid && Array.isArray(lead.gaps)) {
+              gapsGrid.innerHTML = lead.gaps.map(gap => `
+                <div class="flex items-center gap-2 rounded-lg border border-[color-mix(in_oklab,var(--rose-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--rose-signal)_8%,transparent)] px-3 py-2 text-xs font-semibold text-white">
+                  <span class="text-[var(--rose-signal)]">✕</span> ${gap}
+                </div>
+              `).join('');
+            }
+
+            // Atualiza pitch de IA WhatsApp
+            const pitch = buildWhatsAppMessage(lead);
+            const modalAiPitchText = document.getElementById('modalAiPitchText');
+            if (modalAiPitchText) modalAiPitchText.textContent = pitch;
+            const btnWA = document.getElementById('btnModalWhatsApp');
+            if (btnWA) btnWA.href = buildWhatsAppUrl(lead, pitch);
+          }
+          updateMetrics();
+          renderTable();
+        }
+      }).catch(e => {});
+    };
+
+    if (cidToCheck && !lead._reviewsAuditedLive) {
+      runLiveAudit(cidToCheck);
+    } else if (!lead.cid && !lead._reviewsAuditedLive && lead.empresa) {
+      const keyToUse = State.settings?.apiKey || localStorage.getItem('leadmaps_google_api_key') || 'f93ffd86dc739cb1c843b12f2082e381064c1339';
+      fetch('https://google.serper.dev/places', {
+        method: 'POST',
+        headers: { 'X-API-KEY': keyToUse, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ q: `${lead.empresa} ${lead.cidade || ''}`.trim(), gl: 'br', hl: 'pt-br' })
+      }).then(r => r.json()).then(d => {
+        if (d && d.places && d.places[0] && d.places[0].cid) {
+          lead.cid = d.places[0].cid;
+          runLiveAudit(lead.cid);
+        }
+      }).catch(e => {});
+    }
+
+    if (document.getElementById('modalEmpresa')) {
+      document.getElementById('modalEmpresa').textContent = lead.empresa || 'Empresa';
+    }
+    if (document.getElementById('modalCategoriaBadge')) {
+      document.getElementById('modalCategoriaBadge').textContent = lead.categoria || 'Geral';
+    }
+    if (document.getElementById('modalInfoSub')) {
+      document.getElementById('modalInfoSub').textContent = `⭐ ${Number(lead.rating || 4.5).toFixed(1)} · ${lead.reviews || 0} avaliações · ${lead.cidade || 'Brasil'}`;
+    }
+
+    const modalMapsLink = document.getElementById('modalMapsLink');
+    if (modalMapsLink) {
+      modalMapsLink.href = getGoogleMapsUrl(lead);
+    }
+
+    // Gauge 64px
+    if (document.getElementById('modalScoreCircleContainer')) {
+      document.getElementById('modalScoreCircleContainer').innerHTML = renderScoreGauge(lead.score || 50, 64);
+    }
+    const tone = getScoreTone(lead.score || 50);
+    const healthLabel = tone === 'emerald' ? 'Saudável' : tone === 'amber' ? 'Atenção' : 'Crítico';
+    if (document.getElementById('modalHealthStatus')) {
+      document.getElementById('modalHealthStatus').innerHTML = `Digital Health<br>${healthLabel}`;
+    }
+
+    // Radar de Concorrentes
+    const concs = Array.isArray(lead.concorrentes) && lead.concorrentes.length > 0 ? lead.concorrentes : [
+      { nome: "Concorrente Local A", reviews: (Number(lead.reviews) || 20) + 40 },
+      { nome: "Concorrente Local B", reviews: (Number(lead.reviews) || 20) + 20 }
+    ];
+    const maxReviews = Math.max(...concs.map(c => Number(c.reviews) || 0), Number(lead.reviews) || 1);
+    const competitorsHtml = [
+      renderCompetitorBar(`${lead.empresa} (este lead)`, Number(lead.reviews) || 0, maxReviews, true),
+      ...concs.map(c => renderCompetitorBar(c.nome, Number(c.reviews) || 0, maxReviews, false))
+    ].join('');
+    if (document.getElementById('competitorsContainer')) {
+      document.getElementById('competitorsContainer').innerHTML = competitorsHtml;
+    }
+
+    const leadRevCount = Number(lead.reviews) || 0;
+    const isLeader = concs.length > 0 && concs.every(c => leadRevCount >= (Number(c.reviews) || 0));
+
+    const competitorInsightBox = document.getElementById('competitorInsightBox');
+    if (competitorInsightBox) {
+      if (isLeader) {
+        competitorInsightBox.innerHTML = `
+          🏆 <strong class="text-emerald-400">Líder Absoluto da Região:</strong> O perfil possui <strong class="text-white">${leadRevCount} avaliações reais</strong> (liderança consolidada frente aos concorrentes auditados). 
+          <span class="text-emerald-300 font-medium">Recomendado focar em expansão de raio geográfico (GeoGrid GPS de 1 a 20 km) e campanhas locais de Google Ads para blindar o mercado.</span>
+        `;
+      } else {
+        const concReviewsList = concs.map(c => Number(c.reviews) || 0);
+        const minConcReviews = Math.min(...concReviewsList);
+        const maxConcReviews = Math.max(...concReviewsList);
+        let concComparisonText = minConcReviews === maxConcReviews
+          ? `o concorrente comparado tem <strong class="text-white">${maxConcReviews} reviews</strong>.`
+          : `os concorrentes têm entre <strong class="text-white">${minConcReviews} e ${maxConcReviews} reviews</strong>.`;
+
+        competitorInsightBox.innerHTML = `
+          O lead tem <strong class="text-white">${leadRevCount} reviews</strong>; ${concComparisonText} 
+          <span class="text-amber-400">Recomendado acelerar coleta de novas avaliações e manter respostas estratégicas de SEO local.</span>
+        `;
+      }
+    }
+
+    // 7 Pilares de Saúde do Perfil Google (Presença 360°)
+    if (!Array.isArray(lead.auditPillars)) {
+      lead.auditPillars = [];
+    }
     const passedCount = lead.auditPillars.filter(p => p.ok).length;
-    lead.score = Math.round((passedCount / (lead.auditPillars.length || 7)) * 100);
+    const healthScore = Math.round((passedCount / (lead.auditPillars.length || 7)) * 100);
+    lead.score = healthScore;
 
-    // Renderiza cada seÃ§Ã£o com seguranÃ§a modular
-    renderDiagnosticHeader(lead);
-    renderDiagnosticCompetitors(lead);
-    renderDiagnosticPillars(lead);
-    renderDiagnosticGaps(lead);
-    renderDiagnosticSeoPlan(lead);
-    renderDiagnosticPitch(lead);
+    const scoreBadge = document.getElementById('modalProfileScoreBadge');
+    if (scoreBadge) {
+      scoreBadge.textContent = `Índice de Saúde: ${healthScore}/100`;
+      scoreBadge.className = healthScore > 60 ? 'badge-pill badge-emerald text-[10px]' : healthScore > 35 ? 'badge-pill badge-amber text-[10px]' : 'badge-pill badge-rose text-[10px]';
+    }
 
-    // Dispara auditoria em background se necessÃ¡rio
-    triggerAsyncLiveReviewAudit(lead);
+    const pillarsGrid = document.getElementById('modalProfilePillarsGrid');
+    if (pillarsGrid && Array.isArray(lead.auditPillars)) {
+      pillarsGrid.innerHTML = lead.auditPillars.map(p => {
+        const isPostPillar = p.id === 'posts';
+        const postAudit = isPostPillar ? getLeadPostAudit(lead) : null;
+        const isWebPillar = p.id === 'website';
+        const webAnalysis = isWebPillar ? (lead.websiteAnalysis || analyzeWebsiteUrl(lead.websiteUrl)) : null;
+        const isSocialGargalo = isWebPillar && !p.ok && webAnalysis && webAnalysis.isSocial;
+        const isDeadGoogle = isWebPillar && !p.ok && webAnalysis && webAnalysis.isDeprecatedGoogleSite;
+
+        const isTourPillar = p.id === 'tour360';
+        const btnBadgeText = isPostPillar 
+          ? `${postAudit.badgeLabel} ✎` 
+          : (p.ok 
+              ? '✓ Conforme' 
+              : (isTourPillar ? '✕ Sem Tour 360° ✎' : (isSocialGargalo ? `✕ Gargalo (${webAnalysis.name})` : (isDeadGoogle ? '🚨 Link 404' : '✕ Gargalo'))));
+
+        const btnClickAction = isPostPillar 
+          ? `window.openPostAuditModal('${lead.id}')` 
+          : (isTourPillar 
+              ? `window.openTourAuditModal('${lead.id}')` 
+              : `togglePillarStatus('${lead.id}', '${p.id}')`);
+
+        const btnBadgeColorClass = isPostPillar
+          ? (postAudit.isAtivo ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : (postAudit.isAlerta ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30' : 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30'))
+          : (p.ok ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30');
+
+        const cardBorderBg = isPostPillar
+          ? (postAudit.isAtivo ? 'border-[color-mix(in_oklab,var(--emerald-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--emerald-signal)_6%,transparent)]' : (postAudit.isAlerta ? 'border-amber-500/30 bg-amber-500/10' : 'border-[color-mix(in_oklab,var(--rose-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--rose-signal)_6%,transparent)]'))
+          : (p.ok ? 'border-[color-mix(in_oklab,var(--emerald-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--emerald-signal)_6%,transparent)]' : 'border-[color-mix(in_oklab,var(--rose-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--rose-signal)_6%,transparent)]');
+
+        const pStatusText = isPostPillar ? postAudit.statusPilar : p.status;
+
+        return `
+        <div class="flex items-start gap-2.5 rounded-lg border ${cardBorderBg} p-2.5 text-xs transition-all">
+          <span class="text-base">${p.icon}</span>
+          <div class="flex-1">
+            <div class="flex items-center justify-between gap-1">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="font-bold text-white">${p.nome}</span>
+                ${p.id === 'tour360' ? `<a href="${getGoogleMapsUrl(lead)}" target="_blank" rel="noopener noreferrer" class="text-[9px] text-cyan-400 hover:text-cyan-300 font-semibold px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20" title="Ver fotos e 360° no Google Maps">Maps ↗</a>` : ''}
+                ${p.id === 'tour360' && !p.ok ? `<button type="button" onclick="handleManualCheck360(event, '${lead.id}')" class="text-[9px] text-amber-400 hover:text-amber-300 font-semibold px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 cursor-pointer flex items-center gap-1" title="Verificar Tour 360 no Street View / Google Maps"><span>🔍</span> <span>Checar 360°</span></button>` : ''}
+              </div>
+              <button type="button" onclick="${btnClickAction}" title="${isPostPillar ? 'Auditoria Cirúrgica de Postagens & Mídia: Clique para definir dias sem postar' : (isTourPillar ? 'Auditoria & Homologação de Tour 360°: Clique para verificar ou validar' : 'Clique para alternar status deste pilar no diagnóstico')}" class="px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${btnBadgeColorClass}">
+                ${btnBadgeText}
+              </button>
+            </div>
+            <p class="mt-1 text-[11px] text-[var(--muted-foreground)] leading-tight">${pStatusText}</p>
+          </div>
+        </div>
+      `;
+      }).join('');
+    }
+
+    // Gaps
+    const gapsList = Array.isArray(lead.gaps) && lead.gaps.length > 0 ? lead.gaps : ["Sem site próprio", "Sem tour 360°", "Sem CRM"];
+    const gapsGrid = document.getElementById('modalGapsGrid');
+    if (gapsGrid) {
+      gapsGrid.innerHTML = gapsList.map(gap => `
+        <div class="flex items-center gap-2 rounded-lg border border-[color-mix(in_oklab,var(--rose-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--rose-signal)_8%,transparent)] px-3 py-2 text-xs font-semibold text-white">
+          <span class="text-[var(--rose-signal)]">✕</span> ${gap}
+        </div>
+      `).join('');
+    }
+
+    // Plano de Ação de SEO Local para o TOP 3 (Auditoria 360°)
+    const seoActions = generateSeoActionPlan(lead);
+    const seoGrid = document.getElementById('modalSeoActionPlanGrid');
+    if (seoGrid && Array.isArray(seoActions)) {
+      seoGrid.innerHTML = seoActions.map(action => `
+        <div class="rounded-lg border border-slate-700 bg-slate-900/80 p-3 text-xs space-y-1">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-white">${action.title}</span>
+            <span class="badge-pill ${action.badgeClass} text-[9px] font-bold uppercase">${action.priority}</span>
+          </div>
+          <p class="text-[11px] text-[var(--muted-foreground)] leading-relaxed">${action.desc}</p>
+          <div class="pt-1 flex items-center gap-1.5 text-[10px] font-bold text-amber-400">
+            <span>⚡ Impacto Estimado:</span> <span>${action.impact}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Pitch de IA
+    const pitch = buildWhatsAppMessage(lead);
+    const modalAiPitchText = document.getElementById('modalAiPitchText');
+    if (modalAiPitchText) {
+      modalAiPitchText.textContent = pitch;
+    }
+
+    // Botão WhatsApp Modal
+    const btnWA = document.getElementById('btnModalWhatsApp');
+    if (btnWA) btnWA.href = buildWhatsAppUrl(lead, pitch);
 
   } catch(err) {
     console.error("[openDiagnostic] Erro renderizando detalhes:", err);
-  }
-
-  // Desoculta o modal APENAS agora que todos os dados foram preenchidos no DOM
-  const modal = document.getElementById('diagnosticModal');
-  if (modal) {
-    modal.classList.remove('hidden');
+  } finally {
+    if (showModal && modal) modal.classList.remove('hidden');
   }
 };
 
