@@ -6,6 +6,46 @@
 // --------------------------------------------------------------------------
 // 1. Constantes Globais & Histórico Padrão
 // --------------------------------------------------------------------------
+function sanitizeMojibake(str) {
+  if (typeof str !== 'string' || !str) return str;
+  if (!str.includes('Ã') && !str.includes('â') && !str.includes('ð') && !str.includes('Â') && !str.includes('')) {
+    return str;
+  }
+  return str
+    .replace(/Ãª/g, 'ê')
+    .replace(/Ã§/g, 'ç')
+    .replace(/Ã£/g, 'ã')
+    .replace(/Ãµ/g, 'õ')
+    .replace(/Ã¡/g, 'á')
+    .replace(/Ã©/g, 'é')
+    .replace(/Ã­/g, 'í')
+    .replace(/Ã³/g, 'ó')
+    .replace(/Ãº/g, 'ú')
+    .replace(/Ã€/g, 'À')
+    .replace(/Ã‰/g, 'É')
+    .replace(/Ã“/g, 'Ó')
+    .replace(/Ãš/g, 'Ú')
+    .replace(/Ã‡/g, 'Ç')
+    .replace(/âœ“/g, '✓')
+    .replace(/âœ•/g, '✕')
+    .replace(/âœŽ/g, '✎')
+    .replace(/â†—/g, '↗')
+    .replace(/Â°/g, '°')
+    .replace(/Ã≡ndice/g, 'Índice')
+    .replace(/SaÃ°de/g, 'Saúde')
+    .replace(/pÃºblica/g, 'pública')
+    .replace(/proprietÃ¡rio/g, 'proprietário')
+    .replace(/CrÃtico/g, 'Crítico')
+    .replace(/visÃ£o/g, 'visão')
+    .replace(/dÃºvidas/g, 'dúvidas')
+    .replace(/ðŸ‘/g, '🔍')
+    .replace(/ðŸ”/g, '🚨')
+    .replace(/ðŸš/g, '🚨')
+    .replace(/â€/g, '—')
+    .replace(//g, '');
+}
+window.sanitizeMojibake = sanitizeMojibake;
+
 const DEFAULT_NICHES = [
   "Clínica de Fisioterapia",
   "Clínicas Odontológicas",
@@ -969,6 +1009,12 @@ async function runRaioXOficial(leadId, autoOpen = true) {
 
   showToast(`⚡ Conectando à API do Google Meu Negócio em tempo real para "${lead.empresa}"...`);
   const scanStartTime = Date.now();
+  const scanTimer1 = setTimeout(() => {
+    showToast(`📸 [Raio-X] Auditando fotos reais, Tour 360° e postagens recentes...`);
+  }, 750);
+  const scanTimer2 = setTimeout(() => {
+    showToast(`⭐ [Raio-X] Verificando taxa de resposta e autoridade no Google Maps...`);
+  }, 1450);
 
   try {
     const query = `${lead.empresa} ${lead.cidade || lead.endereco || ''}`.trim();
@@ -1239,10 +1285,10 @@ async function runRaioXOficial(leadId, autoOpen = true) {
       localStorage.setItem(cacheKey, JSON.stringify(cache));
     } catch(e) {}
 
-    // Garante cadência realista de escaneamento de API (mínimo 1500ms)
+    // Garante cadência realista de escaneamento de API (mínimo 2000ms)
     const elapsed = Date.now() - scanStartTime;
-    if (elapsed < 1500) {
-      await new Promise(r => setTimeout(r, 1500 - elapsed));
+    if (elapsed < 2000) {
+      await new Promise(r => setTimeout(r, 2000 - elapsed));
     }
 
     // Notifica e atualiza UI
@@ -1251,7 +1297,7 @@ async function runRaioXOficial(leadId, autoOpen = true) {
       openDiagnostic(lead.id, true);
     }
 
-    showToast(`⚡ Raio-X Oficial Concluído! 📸 ${lead.photosCount} fotos · ${lead.isClaimed ? '✓ Reivindicada' : '🚨 Não Reivindicada'} · ${lead.diasSemPostar <= 7 ? 'Post Recente' : 'Sem Posts'}`);
+    showToast(`⚡ Raio-X Oficial Concluído! 📸 ${lead.photosCount} fotos · ${lead.isClaimed ? '✓ Reivindicada' : '🚨 Não Reivindicada'} · ${lead.temTour360 ? '✓ Tour 360° Ativo' : '✕ Sem Tour 360°'}`);
 
   } catch (err) {
     console.warn("[Raio-X] Falha no Outscraper, executando auditoria via Serper/Google Places:", err);
@@ -1289,16 +1335,18 @@ async function runRaioXOficial(leadId, autoOpen = true) {
     }
 
     const elapsedFb = Date.now() - scanStartTime;
-    if (elapsedFb < 1500) {
-      await new Promise(r => setTimeout(r, 1500 - elapsedFb));
+    if (elapsedFb < 2000) {
+      await new Promise(r => setTimeout(r, 2000 - elapsedFb));
     }
 
     renderTable();
     if (autoOpen) {
       openDiagnostic(lead.id, true);
     }
-    showToast(`⚡ Diagnóstico atualizado com dados Google Maps.`);
+    showToast(`⚡ Raio-X Oficial Concluído via Google Maps.`);
   } finally {
+    clearTimeout(scanTimer1);
+    clearTimeout(scanTimer2);
     if (tableBtn) {
       tableBtn.disabled = false;
       tableBtn.innerHTML = originalTableHtml || '⚡ Raio-X';
@@ -3758,6 +3806,33 @@ function syncAuditPillars(lead) {
     lead.auditPillars = buildDefaultAuditPillars(lead);
     return;
   }
+
+  // Sanitiza dados de texto do lead para evitar qualquer caractere distorcido de sessões anteriores
+  lead.empresa = sanitizeMojibake(lead.empresa);
+  lead.categoria = sanitizeMojibake(lead.categoria);
+  lead.cidade = sanitizeMojibake(lead.cidade);
+  if (Array.isArray(lead.gaps)) {
+    lead.gaps = lead.gaps.map(g => sanitizeMojibake(typeof g === 'string' ? g : (g.text || ''))).filter(Boolean);
+  }
+
+  // Mapeamento canônico 100% puro UTF-8 dos 7 pilares
+  const canonicalPillarMeta = {
+    nap: { nome: "Consistência NAP & Verificação", icon: "🏢" },
+    categories: { nome: "Categorias de Atuação no Maps", icon: "🏷️" },
+    reviews: { nome: "Taxa de Resposta de Avaliações", icon: "⭐" },
+    website: { nome: "Website Oficial & Agendamento Online", icon: "🌐" },
+    tour360: { nome: "Tour Virtual 360° (Street View Interno)", icon: "📸" },
+    posts: { nome: "Frequência de Postagens / Novidades", icon: "📰" },
+    faq: { nome: "Perguntas Frequentes do Perfil (Q&A)", icon: "❓" }
+  };
+
+  lead.auditPillars.forEach(p => {
+    if (canonicalPillarMeta[p.id]) {
+      p.nome = canonicalPillarMeta[p.id].nome;
+      p.icon = canonicalPillarMeta[p.id].icon;
+    }
+    p.status = sanitizeMojibake(p.status);
+  });
 
   // Sincroniza website
   const pWeb = lead.auditPillars.find(p => p.id === 'website');
