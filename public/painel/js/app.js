@@ -2658,7 +2658,7 @@ const State = {
       return saved;
     })(),
     webhook: "https://n8n.minhaagencia.com.br/webhook/leadmaps",
-    agencyName: localStorage.getItem('leadmaps_agency_name') || "LeadMaps Pro 360",
+    agencyName: (localStorage.getItem('leadmaps_agency_name') || "RadarMaps PRO").replace(/LeadMaps(\s*Pro(\s*360)?)?/gi, "RadarMaps PRO"),
     whatsappTemplate: localStorage.getItem('leadmaps_wa_template') || DEFAULT_WHATSAPP_TEMPLATES.site,
     whatsappDelay: parseInt(localStorage.getItem('leadmaps_wa_delay') || '25'),
     whatsappPlatform: localStorage.getItem('leadmaps_wa_platform') || 'web'
@@ -2771,7 +2771,8 @@ function renderWhatsAppMessage(template, lead) {
     ? (webAnalysis.isSocial ? `Landing Page Oficial (Substituir ${webAnalysis.name} no Maps)` : "Criação de Site de Alta Conversão")
     : (!lead.temTour360 ? "Tour Virtual 360° Interno da Loja" : "Otimização SEO Local Google Maps");
   
-  const consultor = State.settings.senderName || "Ricardo — RadarMaps PRO";
+  const rawConsultor = State.settings.senderName || "Ricardo — RadarMaps PRO";
+  const consultor = rawConsultor.replace(/LeadMaps(\s*Pro)?/gi, "RadarMaps PRO");
   const empresa = lead.empresa || "sua empresa";
   const cidade = (lead.cidade || "sua região").split(' - ')[0];
   const nicho = lead.categoria || "seu nicho";
