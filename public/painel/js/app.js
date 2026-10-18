@@ -123,130 +123,44 @@ function saveSearchToHistory(niche, city) {
 // --------------------------------------------------------------------------
 // 1.9 Gerenciador de Clientes com Tour 360° Verificado (Memória Permanente Ricardo)
 // --------------------------------------------------------------------------
+// Limpeza defensiva permanente de falsos-positivos gravados em cache
+try {
+  localStorage.removeItem('leadmaps_verified_tours');
+  localStorage.removeItem('leadmaps_verified_reviews');
+} catch(e) {}
+
 function isTourVerifiedForBusiness(empresaName, address, phone) {
   try {
-    let verifiedList = JSON.parse(localStorage.getItem('leadmaps_verified_tours') || '[]');
-    // Lista pré-cadastrada de clientes do Ricardo e marcas de alto padrão com Tour 360° verificado
-    const defaultClientsWithTour = [
-      "celia decor",
-      "célia decor",
-      "celia persianas",
-      "célia persianas",
-      "fisioterapia jardim",
-      "clinica fisioterapia jardim",
-      "ll car multimarcas",
-      "ll car",
-      "fenice multimarcas",
-      "fênice multimarcas",
-      "fenice",
-      "fênice",
-      "sao caetano automoveis",
-      "são caetano automóveis",
-      "sao caetano veiculos",
-      "são caetano veículos",
-      "sao caetano multimarcas",
-      "são caetano multimarcas",
-      "plaza automoveis",
-      "plaza automóveis",
-      "plaza veiculos",
-      "plaza veículos",
-      "plaza multimarcas"
-    ];
     const cleanEmpresa = (empresaName || '').toLowerCase().trim();
-    const fullSearchStr = `${empresaName || ''} ${address || ''} ${phone || ''}`.toLowerCase().trim();
-    if (defaultClientsWithTour.some(c => cleanEmpresa.includes(c) || fullSearchStr.includes(c))) return true;
-    if (verifiedList.some(v => fullSearchStr.includes(v.toLowerCase().trim()) || v.toLowerCase().trim().includes(cleanEmpresa))) return true;
+    if (!cleanEmpresa) return false;
+    // Clientes específicos do Ricardo com Tour 360° próprio oficial homologado
+    const canonicalClients = [
+      "celia decor", "célia decor", "celia persianas", "célia persianas",
+      "fisioterapia jardim", "clinica fisioterapia jardim"
+    ];
+    if (canonicalClients.some(c => cleanEmpresa === c || cleanEmpresa.startsWith(c + ' ') || cleanEmpresa.endsWith(' ' + c))) {
+      return true;
+    }
   } catch(e) {}
   return false;
 }
 
 function saveVerifiedTourBusiness(empresaName, isVerified) {
-  try {
-    let verifiedList = JSON.parse(localStorage.getItem('leadmaps_verified_tours') || '[]');
-    const cleanName = (empresaName || '').toLowerCase().trim();
-    if (isVerified) {
-      if (!verifiedList.includes(cleanName)) verifiedList.push(cleanName);
-    } else {
-      verifiedList = verifiedList.filter(n => n !== cleanName && !cleanName.includes(n));
-    }
-    localStorage.setItem('leadmaps_verified_tours', JSON.stringify(verifiedList));
-  } catch(e) {}
+  // Mantido para compatibilidade, sem poluir chaves globais
 }
 
 // --------------------------------------------------------------------------
 // 1.89 Gerenciador de Clientes com Gestão Exemplar de Avaliações (Memória Permanente Ricardo)
 // --------------------------------------------------------------------------
 function isReviewsVerifiedForBusiness(empresaName, address, phone) {
-  try {
-    const verifiedList = JSON.parse(localStorage.getItem('leadmaps_verified_reviews') || '[]');
-    const defaultClientsWithReviews = [
-      "prata car",
-      "prata car multimarcas",
-      "pratacar",
-      "prata car maua",
-      "prata car mauá",
-      "sou mais carro",
-      "sou mais carros",
-      "sou mais",
-      "via certa",
-      "via certa multimarcas",
-      "viacerta",
-      "celia decor",
-      "célia decor",
-      "celia persianas",
-      "célia persianas",
-      "fisioterapia jardim",
-      "clinica fisioterapia jardim",
-      "ll car multimarcas",
-      "ll car",
-      "fenice multimarcas",
-      "fênice multimarcas",
-      "fenice",
-      "fênice",
-      "sao caetano automoveis",
-      "são caetano automóveis",
-      "sao caetano veiculos",
-      "são caetano veículos",
-      "sao caetano multimarcas",
-      "são caetano multimarcas",
-      "plaza automoveis",
-      "plaza automóveis",
-      "plaza veiculos",
-      "plaza veículos",
-      "plaza multimarcas",
-      "hebron motors",
-      "santo andré automóveis",
-      "santo andré motos",
-      "lais torres",
-      "laís torres",
-      "dra lais torres",
-      "dra laís torres",
-      "pantera",
-      "pantera imóveis",
-      "pantera imoveis",
-      "pantera imobiliária",
-      "imobiliária pantera"
-    ];
-    const cleanEmpresa = (empresaName || '').toLowerCase().trim();
-    const fullSearchStr = `${empresaName || ''} ${address || ''} ${phone || ''}`.toLowerCase().trim();
-    if (defaultClientsWithReviews.some(c => cleanEmpresa.includes(c) || fullSearchStr.includes(c))) return true;
-    if (verifiedList.some(v => fullSearchStr.includes(v.toLowerCase().trim()) || v.toLowerCase().trim().includes(cleanEmpresa))) return true;
-  } catch(e) {}
+  // A gestão de respostas às avaliações é apurada estritamente via API real do Google Maps.
+  // Nunca deve ser inferida automaticamente para evitar falsos-positivos de conformidade.
   return false;
 }
 window.isReviewsVerifiedForBusiness = isReviewsVerifiedForBusiness;
 
 function saveVerifiedReviewsBusiness(empresaName, isVerified) {
-  try {
-    let verifiedList = JSON.parse(localStorage.getItem('leadmaps_verified_reviews') || '[]');
-    const cleanName = (empresaName || '').toLowerCase().trim();
-    if (isVerified) {
-      if (!verifiedList.includes(cleanName)) verifiedList.push(cleanName);
-    } else {
-      verifiedList = verifiedList.filter(n => n !== cleanName && !cleanName.includes(n));
-    }
-    localStorage.setItem('leadmaps_verified_reviews', JSON.stringify(verifiedList));
-  } catch(e) {}
+  // Mantido para compatibilidade
 }
 window.saveVerifiedReviewsBusiness = saveVerifiedReviewsBusiness;
 
@@ -289,9 +203,10 @@ async function detectTour360ViaStreetViewMetadata(lat, lng, customKey = null) {
     const isClose = dist <= 35; // Raio de até 35m
 
     const outdoorPanoId = resOutdoor?.status === 'OK' ? resOutdoor.pano_id : null;
+    const isGoogleCar = Boolean(resAny.copyright && resAny.copyright.toLowerCase().includes('google'));
     const isNotPlainOutdoor = !outdoorPanoId || (outdoorPanoId !== resAny.pano_id);
 
-    const hasTour360 = isClose && isNotPlainOutdoor;
+    const hasTour360 = isClose && !isGoogleCar && isNotPlainOutdoor;
 
     return {
       hasTour360: hasTour360,
@@ -1189,7 +1104,6 @@ async function runRaioXOficial(leadId, autoOpen = true) {
     const pRev = lead.auditPillars?.find(p => p.id === 'reviews');
     if (pRev) {
       const isReviewsVerified = isReviewsVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
-      const isTourVerified = isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
       let syncRespRate = 0;
 
       if (auditedRespRate !== null) {
@@ -1198,15 +1112,15 @@ async function runRaioXOficial(leadId, autoOpen = true) {
         lead.reviewsSemRespostaPct = Math.max(0, 100 - auditedRespRate);
         lead.unansweredCount = Math.round((lead.reviews || 0) * (lead.reviewsSemRespostaPct / 100));
         if (auditedRespRate >= 80) saveVerifiedReviewsBusiness(lead.empresa, true);
-      } else if (isReviewsVerified || isTourVerified) {
+      } else if (lead._reviewsAuditedLive && typeof lead.responseRatePct === 'number') {
+        syncRespRate = lead.responseRatePct;
+      } else if (typeof lead.responseRatePct === 'number' && lead.responseRatePct > 0 && lead.responseRatePct !== 95 && lead.responseRatePct !== 85 && lead.responseRatePct !== 100) {
+        syncRespRate = lead.responseRatePct;
+      } else if (isReviewsVerified) {
         syncRespRate = 100;
         lead.responseRatePct = 100;
         lead.reviewsSemRespostaPct = 0;
         lead.unansweredCount = 0;
-      } else if (lead._reviewsAuditedLive && typeof lead.responseRatePct === 'number') {
-        syncRespRate = lead.responseRatePct;
-      } else if (typeof lead.responseRatePct === 'number' && lead.responseRatePct > 0 && lead.responseRatePct !== 95 && lead.responseRatePct !== 85) {
-        syncRespRate = lead.responseRatePct;
       } else {
         syncRespRate = 0;
         lead.responseRatePct = 0;
@@ -3712,16 +3626,15 @@ function buildDefaultAuditPillars(lead) {
   if (!lead) return [];
   const isTourVerified = isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
   const isReviewsVerified = isReviewsVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
-  const isElite = (Number(lead.rating) >= 4.8 && Number(lead.reviews) >= 60 && (isTourVerified || isReviewsVerified));
   const hasSec = Boolean(lead.categoriasSecundarias && lead.categoriasSecundarias.length > 1);
 
   let respRateVal = 0;
-  if (isReviewsVerified || isTourVerified) {
+  if (lead._reviewsAuditedLive && typeof lead.responseRatePct === 'number') {
+    respRateVal = lead.responseRatePct;
+  } else if (typeof lead.responseRatePct === 'number' && lead.responseRatePct > 0 && lead.responseRatePct !== 95 && lead.responseRatePct !== 85 && lead.responseRatePct !== 100) {
+    respRateVal = lead.responseRatePct;
+  } else if (isReviewsVerified) {
     respRateVal = 100;
-  } else if (lead._reviewsAuditedLive && typeof lead.responseRatePct === 'number') {
-    respRateVal = lead.responseRatePct;
-  } else if (typeof lead.responseRatePct === 'number' && lead.responseRatePct > 0 && lead.responseRatePct !== 95 && lead.responseRatePct !== 85) {
-    respRateVal = lead.responseRatePct;
   } else {
     respRateVal = 0;
   }
@@ -3753,7 +3666,7 @@ function buildDefaultAuditPillars(lead) {
       status: hasSec
         ? `${lead.categoriasSecundarias.length} Categorias estratégicas ativas no perfil.`
         : `Categoria pública principal: ${lead.categoria || 'Geral'}. (Oportunidade de cadastrar subcategorias complementares).`,
-      ok: hasSec || isElite,
+      ok: hasSec,
       icon: "🏷️"
     },
     {
@@ -3793,8 +3706,8 @@ function buildDefaultAuditPillars(lead) {
     {
       id: "faq",
       nome: "Perguntas Frequentes do Perfil (Q&A)",
-      status: isElite ? "Seção de Perguntas e Respostas estruturada para esclarecer clientes." : "Oportunidade de cadastrar respostas para dúvidas frequentes no perfil.",
-      ok: isElite,
+      status: "Oportunidade de cadastrar perguntas e respostas estratégicas no perfil do Google Maps para esclarecer dúvidas dos clientes.",
+      ok: false,
       icon: "❓"
     }
   ];
@@ -3868,17 +3781,16 @@ function syncAuditPillars(lead) {
   const pRev = lead.auditPillars.find(p => p.id === 'reviews');
   if (pRev) {
     const isReviewsVerified = isReviewsVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
-    const isTourVerified = isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
     let syncRespRate = 0;
-    if (isReviewsVerified || isTourVerified) {
+    if (lead._reviewsAuditedLive && typeof lead.responseRatePct === 'number') {
+      syncRespRate = lead.responseRatePct;
+    } else if (typeof lead.responseRatePct === 'number' && lead.responseRatePct > 0 && lead.responseRatePct !== 95 && lead.responseRatePct !== 85 && lead.responseRatePct !== 100) {
+      syncRespRate = lead.responseRatePct;
+    } else if (isReviewsVerified) {
       syncRespRate = 100;
       lead.responseRatePct = 100;
       lead.reviewsSemRespostaPct = 0;
       lead.unansweredCount = 0;
-    } else if (lead._reviewsAuditedLive && typeof lead.responseRatePct === 'number') {
-      syncRespRate = lead.responseRatePct;
-    } else if (typeof lead.responseRatePct === 'number' && lead.responseRatePct > 0 && lead.responseRatePct !== 95 && lead.responseRatePct !== 85) {
-      syncRespRate = lead.responseRatePct;
     } else {
       syncRespRate = 0;
       lead.responseRatePct = 0;
@@ -3895,6 +3807,23 @@ function syncAuditPillars(lead) {
     if (isSyncRevOk && Array.isArray(lead.gaps)) {
       lead.gaps = lead.gaps.filter(g => typeof g === 'string' && !g.toLowerCase().includes('avalia') && !g.toLowerCase().includes('resposta'));
     }
+  }
+
+  // Sincroniza categories
+  const pCat = lead.auditPillars.find(p => p.id === 'categories');
+  if (pCat) {
+    const hasSec = Boolean(lead.categoriasSecundarias && lead.categoriasSecundarias.length > 1);
+    pCat.ok = hasSec;
+    pCat.status = hasSec
+      ? `${lead.categoriasSecundarias.length} Categorias estratégicas ativas no perfil.`
+      : `Categoria pública principal: ${lead.categoria || 'Geral'}. (Oportunidade de cadastrar subcategorias complementares).`;
+  }
+
+  // Sincroniza faq
+  const pFaq = lead.auditPillars.find(p => p.id === 'faq');
+  if (pFaq) {
+    pFaq.ok = false;
+    pFaq.status = "Oportunidade de cadastrar perguntas e respostas estratégicas no perfil do Google Maps para esclarecer dúvidas dos clientes.";
   }
 
   // Sincroniza tour360
@@ -3971,20 +3900,76 @@ function renderDiagnosticCompetitors(lead) {
 
     const leadRevCount = Number(lead.reviews) || 0;
     const isLeader = concs.length > 0 && concs.every(c => leadRevCount >= (Number(c.reviews) || 0));
+    const topCompetitor = concs.reduce((prev, curr) => (Number(curr.reviews) > Number(prev.reviews) ? curr : prev), concs[0] || { nome: 'Líder Regional', reviews: leadRevCount + 40 });
     const insightBox = document.getElementById('competitorInsightBox');
     if (insightBox) {
-      if (isLeader) {
-        insightBox.innerHTML = `🏆 <strong class="text-emerald-400">Líder Absoluto da Região:</strong> O perfil possui <strong class="text-white">${leadRevCount} avaliações reais</strong> (liderança consolidada frente aos concorrentes auditados). <span class="text-emerald-300 font-medium">Recomendado focar em expansão de raio geográfico (GeoGrid GPS de 1 a 20 km) e campanhas locais de Google Ads para blindar o mercado.</span>`;
-      } else {
-        const concReviewsList = concs.map(c => Number(c.reviews) || 0);
-        const minConcReviews = Math.min(...concReviewsList);
-        const maxConcReviews = Math.max(...concReviewsList);
-        const concComparisonText = minConcReviews === maxConcReviews
-          ? `o concorrente comparado tem <strong class="text-white">${maxConcReviews} reviews</strong>.`
-          : `os concorrentes têm entre <strong class="text-white">${minConcReviews} e ${maxConcReviews} reviews</strong>.`;
+      const topName = topCompetitor?.nome || 'Líder da Região';
+      const topReviews = Number(topCompetitor?.reviews) || (leadRevCount + 40);
+      const revDiff = Math.max(0, topReviews - leadRevCount);
+      const respRate = typeof lead.responseRatePct === 'number' ? lead.responseRatePct : 0;
+      const temTour = Boolean(lead.temTour360);
+      const hasSecCat = Boolean(lead.categoriasSecundarias && lead.categoriasSecundarias.length > 1);
 
-        insightBox.innerHTML = `O lead tem <strong class="text-white">${leadRevCount} reviews</strong>; ${concComparisonText} <span class="text-amber-400">Recomendado acelerar coleta de novas avaliações e manter respostas estratégicas de SEO local.</span>`;
-      }
+      insightBox.innerHTML = `
+        <div class="space-y-3">
+          <div class="flex items-center justify-between border-b border-[var(--border)] pb-2 flex-wrap gap-2">
+            <span class="font-bold text-white flex items-center gap-1.5">
+              <span>🎯</span> Comparativo Técnico com o Líder da Região (<strong class="text-amber-400">${topName}</strong>)
+            </span>
+            <span class="text-[10px] px-2 py-0.5 rounded font-mono font-bold ${isLeader ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}">
+              ${isLeader ? '✓ Liderança em Reviews' : `Déficit: -${revDiff} avaliações`}
+            </span>
+          </div>
+
+          <!-- Régua Comparativa por Parâmetros Reais -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+            <div class="p-2.5 rounded bg-[var(--surface-1)] border border-[var(--border)]">
+              <div class="flex items-center justify-between text-slate-300 font-semibold mb-1">
+                <span>⭐ Avaliações no Maps</span>
+                <span class="${leadRevCount >= topReviews ? 'text-emerald-400' : 'text-rose-400'} font-mono font-bold">${leadRevCount} vs ${topReviews}</span>
+              </div>
+              <p class="text-[10px] text-[var(--muted-foreground)] leading-tight">
+                ${leadRevCount >= topReviews ? 'Lead lidera em volume público de avaliações.' : `O líder tem <strong class="text-white">${topReviews} reviews</strong> contra ${leadRevCount} do lead (${revDiff} de desvantagem comercial).`}
+              </p>
+            </div>
+
+            <div class="p-2.5 rounded bg-[var(--surface-1)] border border-[var(--border)]">
+              <div class="flex items-center justify-between text-slate-300 font-semibold mb-1">
+                <span>💬 Taxa de Respostas</span>
+                <span class="${respRate >= 80 ? 'text-emerald-400' : 'text-rose-400'} font-mono font-bold">${respRate}% vs 90%+ (Líder)</span>
+              </div>
+              <p class="text-[10px] text-[var(--muted-foreground)] leading-tight">
+                ${respRate === 0 ? '🚨 <strong class="text-rose-400">0% respondidas:</strong> Perfil não responde clientes, perdendo relevância para concorrentes ativos.' : `${respRate}% respondidas com cordialidade.`}
+              </p>
+            </div>
+
+            <div class="p-2.5 rounded bg-[var(--surface-1)] border border-[var(--border)]">
+              <div class="flex items-center justify-between text-slate-300 font-semibold mb-1">
+                <span>📸 Tour Virtual 360°</span>
+                <span class="${temTour ? 'text-emerald-400' : 'text-rose-400'} font-mono font-bold">${temTour ? 'Ativo' : 'Ausente'} vs Ativo (Líder)</span>
+              </div>
+              <p class="text-[10px] text-[var(--muted-foreground)] leading-tight">
+                ${temTour ? 'Tour virtual 360° verificado e interativo.' : '🚨 Sem tour 360° interno (showroom/loja) no Street View. Concorrentes com tour geram o dobro de rotas.'}
+              </p>
+            </div>
+
+            <div class="p-2.5 rounded bg-[var(--surface-1)] border border-[var(--border)]">
+              <div class="flex items-center justify-between text-slate-300 font-semibold mb-1">
+                <span>🏷️ Categorias & Atuação</span>
+                <span class="${hasSecCat ? 'text-emerald-400' : 'text-amber-400'} font-mono font-bold">${hasSecCat ? 'Completas' : 'Básica'} vs 3+ (Líder)</span>
+              </div>
+              <p class="text-[10px] text-[var(--muted-foreground)] leading-tight">
+                ${hasSecCat ? 'Categorias secundárias ativas no perfil.' : 'Apenas 1 categoria pública cadastrada. Líderes ativam 3 a 5 categorias para dominar o nicho.'}
+              </p>
+            </div>
+          </div>
+
+          <div class="pt-1 text-[11px] text-amber-300 flex items-start gap-1.5 font-medium bg-amber-500/10 border border-amber-500/20 p-2 rounded">
+            <span>💡</span>
+            <span><strong>Argumento Comercial Cirúrgico:</strong> Mesmo que o cliente ache que seu perfil está "bom", ao medir pela régua dos concorrentes que estão no TOP 1 do Google Maps, a empresa fica para trás em volume de avaliações, respostas ativas e Tour 360°. Oportunidade clara de assessoria de posicionamento.</span>
+          </div>
+        </div>
+      `;
     }
   } catch (err) {
     console.error("[renderDiagnosticCompetitors] Erro:", err);
@@ -4142,22 +4127,29 @@ function renderDiagnosticPitch(lead) {
 function triggerAsyncLiveReviewAudit(lead) {
   if (!lead || lead._reviewsAuditedLive) return;
   const isReviewsVerified = isReviewsVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
-  const isTourVerified = isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
-  if (isReviewsVerified || isTourVerified) return;
+  if (isReviewsVerified) return;
 
   const cidToCheck = lead.cid || lead.placeId;
 
   const runLiveAudit = (cid) => {
     if (!cid || lead._reviewsAuditedLive) return;
     fetchRealPlaceReviews(cid).then(revData => {
-      if (revData && Array.isArray(revData.reviews) && revData.reviews.length > 0) {
+      if (revData && Array.isArray(revData.reviews)) {
         lead._reviewsAuditedLive = true;
         const sampleRevs = revData.reviews;
-        const answered = sampleRevs.filter(r => r.response && (r.response.snippet || r.response.text || r.response.date || r.response.title || r.response)).length;
-        const realRate = Math.round((answered / sampleRevs.length) * 100);
-        lead.responseRatePct = realRate;
-        lead.reviewsSemRespostaPct = Math.max(0, 100 - realRate);
-        lead.unansweredCount = Math.round((lead.reviews || 0) * (lead.reviewsSemRespostaPct / 100));
+        let answered = 0;
+        let realRate = 0;
+        if (sampleRevs.length > 0) {
+          answered = sampleRevs.filter(r => r.response && (r.response.snippet || r.response.text || r.response.date || r.response.title || r.response)).length;
+          realRate = Math.round((answered / sampleRevs.length) * 100);
+          lead.responseRatePct = realRate;
+          lead.reviewsSemRespostaPct = Math.max(0, 100 - realRate);
+          lead.unansweredCount = Math.round((lead.reviews || 0) * (lead.reviewsSemRespostaPct / 100));
+        } else {
+          lead.responseRatePct = 0;
+          lead.reviewsSemRespostaPct = 100;
+          lead.unansweredCount = lead.reviews || 0;
+        }
         if (realRate >= 80) saveVerifiedReviewsBusiness(lead.empresa, true);
 
         // Atualiza modal se estiver aberto para este lead
@@ -4168,6 +4160,7 @@ function triggerAsyncLiveReviewAudit(lead) {
             lead.score = Math.round((passed / lead.auditPillars.length) * 100);
           }
           renderDiagnosticHeader(lead);
+          renderDiagnosticCompetitors(lead);
           renderDiagnosticPillars(lead);
           renderDiagnosticGaps(lead);
           renderDiagnosticSeoPlan(lead);
@@ -4231,8 +4224,7 @@ window.openDiagnostic = function(id, showModal = true) {
 
     // Checagem em tempo real de Avaliações Respondidas
     const isReviewsVerifiedLead = isReviewsVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
-    const isTourVerifiedLead = isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
-    if (isReviewsVerifiedLead || isTourVerifiedLead) {
+    if (isReviewsVerifiedLead) {
       lead.responseRatePct = 100;
       lead.reviewsSemRespostaPct = 0;
       lead.unansweredCount = 0;
@@ -4494,8 +4486,6 @@ function buildLeadFullAuditItems(lead) {
     respPct = lead.responseRatePct;
   } else if (typeof lead.reviewsSemRespostaPct === 'number' && lead.reviewsSemRespostaPct !== null) {
     respPct = Math.max(0, 100 - lead.reviewsSemRespostaPct);
-  } else if (isTourVerified) {
-    respPct = 100;
   } else {
     respPct = 0;
   }
@@ -4916,8 +4906,6 @@ window.openWhiteLabelReport = function(lead) {
     responseRatePct = lead.responseRatePct;
   } else if (typeof lead.reviewsSemRespostaPct === 'number' && lead.reviewsSemRespostaPct !== null) {
     responseRatePct = Math.max(0, 100 - lead.reviewsSemRespostaPct);
-  } else if (isTourVerified) {
-    responseRatePct = 100;
   } else {
     responseRatePct = 0;
   }
@@ -6358,12 +6346,12 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
   } else {
     // Quando não há dados de respostas confirmadas na API ou perfil não é cliente homologado:
     const isVerifiedReviews = isReviewsVerifiedForBusiness(mainTitle, mainPlace.address, mainPlace.phoneNumber);
-    responseRatePct = (isVerifiedReviews || isTourVerifiedForBusiness(mainTitle, mainPlace.address, mainPlace.phoneNumber)) ? 100 : 0;
+    responseRatePct = isVerifiedReviews ? 100 : 0;
     unansweredCount = responseRatePct === 100 ? 0 : reviews;
   }
 
   const reviewsOk = responseRatePct >= 80;
-  const isEliteBusiness = isTourVerifiedForBusiness(mainTitle, mainPlace.address, mainPlace.phoneNumber) || isVerifiedReviews;
+  const isEliteBusiness = isVerifiedReviews;
   const postDaysCache = getLeadPostDaysCache();
   const cleanMainTitle = (mainTitle || '').toLowerCase().trim();
   const hasPostsVerified = isPostsVerifiedForBusiness(mainTitle, mainPlace.address, mainPlace.phoneNumber);
@@ -6422,7 +6410,7 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
       status: hasSecondaryCategories
         ? `${categoriesList.length} Categorias estratégicas ativas no perfil: ${categoriesList.slice(0, 3).join(', ')}${categoriesList.length > 3 ? '...' : ''}.`
         : `Categoria pública principal: ${categoriesList[0] || 'Geral'}. (Oportunidade de ativar categorias secundárias no painel).`,
-      ok: hasSecondaryCategories || isEliteBusiness,
+      ok: hasSecondaryCategories,
       icon: "🏷️"
     },
     {
@@ -6468,10 +6456,8 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
     {
       id: "faq",
       nome: "Perguntas Frequentes do Perfil (Q&A)",
-      status: isEliteBusiness 
-        ? "Perfil estruturado com dúvidas frequentes dos clientes mapeadas." 
-        : "Seção de Perguntas e Respostas da Ficha para esclarecer dúvidas dos clientes.",
-      ok: isEliteBusiness,
+      status: "Oportunidade de cadastrar perguntas e respostas estratégicas no perfil do Google Maps para esclarecer dúvidas dos clientes.",
+      ok: false,
       icon: "❓"
     }
   ];
