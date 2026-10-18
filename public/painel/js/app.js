@@ -11616,6 +11616,45 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       `;
     }
 
+    let duelBoxHtml = '';
+    if (GeoState.duelMode && GeoState.duelCompetitorName) {
+      const rivalNorm = GeoState.duelCompetitorName.toLowerCase().trim();
+      const rivalClean = rivalNorm.split('|')[0].trim();
+      const rivalRank = pt.competitorRanks?.[rivalNorm] ||
+        pt.competitorRanks?.[rivalClean] ||
+        (pt.topCompetitors?.find(c => {
+          const cNorm = (c.empresa || '').toLowerCase();
+          return cNorm.includes(rivalClean) || rivalClean.includes(cNorm) || cNorm.includes(rivalNorm) || rivalNorm.includes(cNorm);
+        })?.pos) ||
+        20;
+
+      const leadName = GeoState.selectedLeadName || 'Sua Empresa';
+      const rivalName = GeoState.duelCompetitorName || 'Concorrente Rival';
+      const isWin = pt.rank < rivalRank;
+      const isLoss = pt.rank > rivalRank;
+      const statusTitle = isWin ? '🏆 VITÓRIA DA SUA EMPRESA' : (isLoss ? '⚠️ VANTAGEM DO RIVAL' : '⚖️ EMPATE TÉCNICO');
+      const boxBg = isWin ? 'rgba(16,185,129,0.18)' : (isLoss ? 'rgba(244,63,94,0.18)' : 'rgba(245,158,11,0.18)');
+      const boxBorder = isWin ? '#10b981' : (isLoss ? '#f43f5e' : '#f59e0b');
+      const textColor = isWin ? '#34d399' : (isLoss ? '#fb7185' : '#fbbf24');
+      const diff = Math.abs(pt.rank - rivalRank);
+
+      duelBoxHtml = `
+        <div style="margin-bottom:8px;padding:8px 10px;border-radius:8px;background:${boxBg};border:1px solid ${boxBorder};font-size:11px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;font-weight:800;color:${textColor};">
+            <span>${statusTitle}</span>
+            <span style="font-family:monospace;font-size:10px;">#${pt.rank}º vs #${rivalRank}º</span>
+          </div>
+          <div style="margin-top:4px;font-size:10px;color:#e2e8f0;line-height:1.35;">
+            ${isWin 
+              ? `<strong>${leadName}</strong> (#${pt.rank}º) vence <strong>${rivalName}</strong> (#${rivalRank}º) por ${diff} posições neste bairro.` 
+              : (isLoss 
+                  ? `<strong>${rivalName}</strong> (#${rivalRank}º) vence <strong>${leadName}</strong> (#${pt.rank}º) por ${diff} posições neste bairro.` 
+                  : `Ambos empatados na posição #${pt.rank}º neste bairro.`)}
+          </div>
+        </div>
+      `;
+    }
+
     return `
       <div style="min-width:250px;max-width:300px;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#f8fafc;padding:2px;">
         <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(51,65,85,0.7);padding-bottom:6px;margin-bottom:8px;">
@@ -11631,6 +11670,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
             </div>
           </div>
         </div>
+        ${duelBoxHtml}
         <p style="font-size:10px;color:#94a3b8;margin:0 0 6px;line-height:1.3;">
           Top Concorrentes nesta esquina para <strong>"${GeoState.keyword || 'pesquisa'}"</strong>:
         </p>
@@ -11826,17 +11866,17 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
           bgHex = 'linear-gradient(135deg, #10b981, #059669)';
           rankLabel = `🏆 ${pt.rank}`;
           ringBorder = '2.5px solid #34d399';
-          pinTitle = `🏆 VITÓRIA! ${GeoState.selectedLeadName} (#${pt.rank}) VENCE ${GeoState.duelCompetitorName} (#${rivalRank})`;
+          pinTitle = `🏆 VITÓRIA DA SUA EMPRESA: ${GeoState.selectedLeadName} (#${pt.rank}º) VENCE ${GeoState.duelCompetitorName} (#${rivalRank}º) neste bairro`;
         } else if (pt.rank > rivalRank) {
           bgHex = 'linear-gradient(135deg, #f43f5e, #be123c)';
           rankLabel = `⚠️ ${pt.rank}`;
           ringBorder = '2.5px solid #fb7185';
-          pinTitle = `⚠️ DERROTA! ${GeoState.duelCompetitorName} (#${rivalRank}) VENCE ${GeoState.selectedLeadName} (#${pt.rank})`;
+          pinTitle = `⚠️ VANTAGEM DO RIVAL: ${GeoState.duelCompetitorName} (#${rivalRank}º) VENCE ${GeoState.selectedLeadName} (#${pt.rank}º) neste bairro`;
         } else {
           bgHex = 'linear-gradient(135deg, #f59e0b, #d97706)';
           rankLabel = `= ${pt.rank}`;
           ringBorder = '2.5px solid #fbbf24';
-          pinTitle = `⚖️ EMPATE! Ambos na posição #${pt.rank}`;
+          pinTitle = `⚖️ EMPATE TÉCNICO: Ambos na posição #${pt.rank}º neste bairro`;
         }
       }
 
@@ -12323,33 +12363,84 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
     const coordsEl = document.getElementById('rankInspectPointCoords');
     const gridEl = document.getElementById('rankInspectCompetitorsGrid');
 
+    let isDuelActive = Boolean(GeoState.duelMode && GeoState.duelCompetitorName);
+    let rivalNorm = isDuelActive ? GeoState.duelCompetitorName.toLowerCase().trim() : '';
+    let rivalClean = isDuelActive ? rivalNorm.split('|')[0].trim() : '';
+    let rivalRank = 20;
+
+    if (isDuelActive) {
+      rivalRank = pt.competitorRanks?.[rivalNorm] ||
+        pt.competitorRanks?.[rivalClean] ||
+        (pt.topCompetitors?.find(c => {
+          const cNorm = (c.empresa || '').toLowerCase();
+          return cNorm.includes(rivalClean) || rivalClean.includes(cNorm) || cNorm.includes(rivalNorm) || rivalNorm.includes(cNorm);
+        })?.pos) ||
+        20;
+    }
+
     if (titleEl) {
       titleEl.innerHTML = `📍 Raio-X do Ponto GPS #${pt.id} ${pt.isCenter ? '(Centro da Empresa)' : `(${pt.distFromCenterKm} km do centro)`} — Sua Posição aqui: <span class="text-white underline">#${pt.rank}º Lugar</span>`;
     }
     if (subEl) {
-      subEl.textContent = `Top 6 empresas exibidas pelo Google Maps para quem pesquisa "${GeoState.keyword}" exatamente nesta esquina:`;
+      if (isDuelActive) {
+        const leadName = GeoState.selectedLeadName || 'Sua Empresa';
+        const rivalName = GeoState.duelCompetitorName || 'Concorrente Rival';
+        const isWin = pt.rank < rivalRank;
+        const isLoss = pt.rank > rivalRank;
+        const diff = Math.abs(pt.rank - rivalRank);
+        const badgeColor = isWin ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' : (isLoss ? 'bg-rose-500/20 text-rose-400 border-rose-500/40' : 'bg-amber-500/20 text-amber-400 border-amber-500/40');
+        const badgeTitle = isWin ? '🏆 VITÓRIA DA SUA EMPRESA' : (isLoss ? '⚠️ VANTAGEM DO RIVAL' : '⚖️ EMPATE TÉCNICO');
+        const detailMsg = isWin
+          ? `<strong>${leadName}</strong> (#${pt.rank}º) está à frente de <strong>${rivalName}</strong> (#${rivalRank}º) por ${diff} posições.`
+          : (isLoss
+              ? `<strong>${rivalName}</strong> (#${rivalRank}º) está à frente de <strong>${leadName}</strong> (#${pt.rank}º) por ${diff} posições.`
+              : `Ambas empatadas na posição #${pt.rank}º.`);
+
+        subEl.innerHTML = `
+          <div class="mb-2 p-2 rounded-lg border text-xs leading-relaxed ${badgeColor}">
+            <div class="font-bold flex items-center justify-between">
+              <span>${badgeTitle}</span>
+              <span class="font-mono text-[11px]">#${pt.rank}º vs #${rivalRank}º</span>
+            </div>
+            <div class="mt-1">${detailMsg}</div>
+          </div>
+          <div class="text-xs text-slate-400">Top empresas exibidas pelo Google Maps para quem pesquisa "${GeoState.keyword}" nesta coordenada:</div>
+        `;
+      } else {
+        subEl.textContent = `Top 6 empresas exibidas pelo Google Maps para quem pesquisa "${GeoState.keyword}" exatamente nesta esquina:`;
+      }
     }
     if (coordsEl) {
       coordsEl.textContent = `GPS: ${pt.lat.toFixed(5)}, ${pt.lng.toFixed(5)}`;
     }
     if (gridEl && Array.isArray(pt.topCompetitors)) {
-      gridEl.innerHTML = pt.topCompetitors.map(c => `
-        <div class="rounded-xl border ${c.isTarget ? 'border-emerald-500 bg-emerald-950/35' : 'border-slate-800 bg-slate-900/80'} p-3 flex items-center justify-between gap-2">
-          <div class="min-w-0">
-            <div class="flex items-center gap-1.5">
-              <span class="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${c.pos <= 3 ? 'bg-emerald-500 text-slate-950' : (c.pos <= 10 ? 'bg-amber-500 text-slate-950' : 'bg-rose-500 text-white')} font-mono text-[11px] font-black">
-                ${c.pos}º
-              </span>
-              <span class="truncate font-bold ${c.isTarget ? 'text-emerald-300' : 'text-white'}" title="${c.empresa}">
-                ${c.empresa} ${c.isTarget ? ' (Cliente)' : ''}
-              </span>
+      gridEl.innerHTML = pt.topCompetitors.map(c => {
+        const cNorm = (c.empresa || '').toLowerCase();
+        const isRivalComp = isDuelActive && (cNorm.includes(rivalClean) || rivalClean.includes(cNorm) || cNorm.includes(rivalNorm) || rivalNorm.includes(cNorm));
+        const borderBg = c.isTarget 
+          ? 'border-emerald-500 bg-emerald-950/35 ring-1 ring-emerald-500/40' 
+          : (isRivalComp 
+              ? 'border-rose-500 bg-rose-950/35 ring-1 ring-rose-500/40' 
+              : 'border-slate-800 bg-slate-900/80');
+
+        return `
+          <div class="rounded-xl border ${borderBg} p-3 flex items-center justify-between gap-2">
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5">
+                <span class="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${c.pos <= 3 ? 'bg-emerald-500 text-slate-950' : (c.pos <= 10 ? 'bg-amber-500 text-slate-950' : 'bg-rose-500 text-white')} font-mono text-[11px] font-black">
+                  ${c.pos}º
+                </span>
+                <span class="truncate font-bold ${c.isTarget ? 'text-emerald-300' : (isRivalComp ? 'text-rose-300' : 'text-white')}" title="${c.empresa}">
+                  ${c.empresa} ${c.isTarget ? ' (Sua Empresa)' : (isRivalComp ? ' (Rival Selecionado)' : '')}
+                </span>
+              </div>
+              <p class="mt-1 text-[11px] text-slate-400 font-mono">
+                ⭐ ${Number(c.rating).toFixed(1)} (${c.reviews} aval.) · a ${c.distMeters}m deste pino
+              </p>
             </div>
-            <p class="mt-1 text-[11px] text-slate-400 font-mono">
-              ⭐ ${Number(c.rating).toFixed(1)} (${c.reviews} aval.) · a ${c.distMeters}m deste pino
-            </p>
           </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     // Destaque visual e scroll suave no card inferior (desktop)
@@ -12379,23 +12470,33 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
         sheetTitle.innerHTML = `Ponto #${pt.id} · Posição #${pt.rank}º Lugar`;
       }
       if (Array.isArray(pt.topCompetitors)) {
-        sheetContent.innerHTML = pt.topCompetitors.slice(0, 4).map(c => `
-          <div class="rounded-xl border ${c.isTarget ? 'border-emerald-500 bg-emerald-950/40' : 'border-slate-800 bg-slate-900/90'} p-2.5 flex items-center justify-between gap-2">
-            <div class="min-w-0 flex-1">
-              <div class="flex items-center gap-1.5">
-                <span class="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${c.pos <= 3 ? 'bg-emerald-500 text-slate-950' : (c.pos <= 10 ? 'bg-amber-500 text-slate-950' : 'bg-rose-500 text-white')} font-mono text-[10px] font-black">
-                  ${c.pos}º
-                </span>
-                <span class="truncate font-bold text-xs ${c.isTarget ? 'text-emerald-300' : 'text-white'}">
-                  ${c.empresa} ${c.isTarget ? ' (Cliente)' : ''}
-                </span>
+        sheetContent.innerHTML = pt.topCompetitors.slice(0, 4).map(c => {
+          const cNorm = (c.empresa || '').toLowerCase();
+          const isRivalComp = isDuelActive && (cNorm.includes(rivalClean) || rivalClean.includes(cNorm) || cNorm.includes(rivalNorm) || rivalNorm.includes(cNorm));
+          const borderBg = c.isTarget 
+            ? 'border-emerald-500 bg-emerald-950/40' 
+            : (isRivalComp 
+                ? 'border-rose-500 bg-rose-950/40' 
+                : 'border-slate-800 bg-slate-900/90');
+
+          return `
+            <div class="rounded-xl border ${borderBg} p-2.5 flex items-center justify-between gap-2">
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-1.5">
+                  <span class="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${c.pos <= 3 ? 'bg-emerald-500 text-slate-950' : (c.pos <= 10 ? 'bg-amber-500 text-slate-950' : 'bg-rose-500 text-white')} font-mono text-[10px] font-black">
+                    ${c.pos}º
+                  </span>
+                  <span class="truncate font-bold text-xs ${c.isTarget ? 'text-emerald-300' : (isRivalComp ? 'text-rose-300' : 'text-white')}">
+                    ${c.empresa} ${c.isTarget ? ' (Sua Empresa)' : (isRivalComp ? ' (Rival Selecionado)' : '')}
+                  </span>
+                </div>
+                <p class="mt-0.5 text-[10px] text-slate-400 font-mono">
+                  ⭐ ${Number(c.rating).toFixed(1)} (${c.reviews} aval.) · a ${c.distMeters}m
+                </p>
               </div>
-              <p class="mt-0.5 text-[10px] text-slate-400 font-mono">
-                ⭐ ${Number(c.rating).toFixed(1)} (${c.reviews} aval.) · a ${c.distMeters}m
-              </p>
             </div>
-          </div>
-        `).join('') + `
+          `;
+        }).join('') + `
           <div class="pt-2">
             <button onclick="window.downloadRankingPdf()" type="button" class="w-full btn-amber py-2 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer">
               <span>📄</span> <span>Baixar PDF Deste Ranking</span>
