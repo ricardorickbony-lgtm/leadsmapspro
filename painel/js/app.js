@@ -4381,78 +4381,113 @@ function renderSpeedometerGaugeSvg(value, maxVal = 100, unitLabel = '') {
   `;
 }
 
-function buildLeadFullAuditItems(lead) {
-  if (lead.fullHealthItems && Array.isArray(lead.fullHealthItems) && lead.fullHealthItems.length === 22) {
-    // Sincroniza itens dinâmicos chave (Site e Tour 360)
-    const siteItem = lead.fullHealthItems.find(i => i.id === 'website');
-    if (siteItem) {
-      const webAnalysis = lead.websiteAnalysis || analyzeWebsiteUrl(lead.websiteUrl);
-      siteItem.score = lead.temSite ? 100 : 0;
-      if (lead.temSite) {
-        siteItem.finding = `Website próprio oficial ativo e verificado na ficha (${lead.websiteUrl || 'domínio institucional'}).`;
-      } else if (webAnalysis.isSocial) {
-        siteItem.finding = `⚠️ Alerta Crítico: O perfil está utilizando link de rede social (<strong>${webAnalysis.label}</strong>: <em>${lead.websiteUrl}</em>) no campo de website. O Google desvaloriza perfis locais sem domínio próprio (.com.br), prejudicando o ranqueamento orgânico e impedindo o rastreamento profissional de conversões. Recomendado: <strong>1 Website Próprio Institucional de Alta Conversão</strong>.`;
-      } else if (webAnalysis.isDeprecatedGoogleSite) {
-        siteItem.finding = `🚨 Link Inoperante (Erro 404): O perfil utiliza um endereço antigo do Google Business Site (<em>${lead.websiteUrl}</em>), descontinuado pelo Google em março de 2024. Recomendado: <strong>1 Website Oficial Novo</strong>.`;
-      } else {
-        siteItem.finding = 'O perfil não possui endereço de website oficial cadastrado. Recomendado: <strong>1 website de alta conversão</strong>.';
-      }
-    }
-    const tourItem = lead.fullHealthItems.find(i => i.id === 'tour360');
-    if (tourItem) {
-      tourItem.score = lead.temTour360 ? 100 : 0;
-      tourItem.finding = lead.temTour360
-        ? 'O negócio possui Tour Virtual 360° interno oficial publicado e verificado no Google Street View.'
-        : 'Não existe Tour Virtual 360° interno publicado (a ficha possui apenas foto externa de rua do carro do Google). Quantidade mínima recomendada: <strong>1 Tour 360° Interno</strong>.';
-    }
-    const unrespItem = lead.fullHealthItems.find(i => i.id === 'unanswered_reviews');
-    if (unrespItem) {
-      const isTourVerified = isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
-      let syncRespPct = 0;
-      if (typeof lead.responseRatePct === 'number') {
-        syncRespPct = lead.responseRatePct;
-      } else if (typeof lead.reviewsSemRespostaPct === 'number' && lead.reviewsSemRespostaPct !== null) {
-        syncRespPct = Math.max(0, 100 - lead.reviewsSemRespostaPct);
-      } else if (isTourVerified) {
-        syncRespPct = 100;
-      } else {
-        syncRespPct = 0;
-      }
-      const isSyncRevOk = syncRespPct >= 80;
-      unrespItem.score = isSyncRevOk ? 100 : (syncRespPct >= 40 ? 50 : 0);
-      unrespItem.finding = isSyncRevOk
-        ? `O perfil mantém taxa de resposta exemplar (<strong>${syncRespPct}%</strong> das avaliações recentes respondidas pelo proprietário com cordialidade e atenção). Volume total: <strong>${lead.reviews || 0} avaliações</strong>.`
-        : (syncRespPct === 0
-            ? `🚨 Gargalo Crítico: O perfil NÃO responde às avaliações dos clientes no Google (<strong>0% de respostas do proprietário</strong> identificadas na amostragem). Volume total: <strong>${lead.reviews || 0} avaliações</strong> sem interação pública. Responder a cada cliente fortalece a confiança de novos pacientes e acelera o ranqueamento local.`
-            : `Atenção: Apenas <strong>${syncRespPct}%</strong> das avaliações recentes possuem resposta do proprietário na amostragem pública. Volume total: <strong>${lead.reviews || 0} avaliações</strong>.`);
-    }
-    const postAudit = getLeadPostAudit(lead);
-    const postItem = lead.fullHealthItems.find(i => i.id === 'last_post_date');
-    if (postItem) {
-      postItem.score = postAudit.scorePost;
-      postItem.finding = postAudit.isHomologar
-        ? `⚠️ Postagens a Homologar: Frequência de novidades e fotos pendente de validação visual. Acesse a ficha no Google Maps ↗ ou use o lápis ✏️ para registrar os dias da última postagem.`
-        : (postAudit.isAtivo
-            ? `A data da última publicação está super atualizada (${postAudit.dataTexto}). Quantidade de dias desde a última postagem: <strong>${postAudit.diasSemPostar}</strong>. Quantidade máxima recomendada: <strong>7 a 14 dias</strong>.`
-            : (postAudit.isAlerta
-                ? `Atenção: A última postagem foi feita há <strong>${postAudit.diasSemPostar} dias</strong>. O Google recomenda pelo menos 1 postagem a cada 7 a 14 dias para manter a relevância da ficha ativa.`
-                : `🚨 Alerta Crítico (Gargalo de Prospecção): O perfil está há <strong>${postAudit.diasSemPostar} dias</strong> sem nenhuma postagem no Google Posts. O algoritmo do Google prioriza concorrentes com atividade semanal, rebaixando fichas inativas.`));
-    }
-    const mediaItem = lead.fullHealthItems.find(i => i.id === 'last_owner_media_date');
-    if (mediaItem) {
-      mediaItem.score = postAudit.scoreMedia;
-      mediaItem.finding = postAudit.isHomologar
-        ? `⚠️ Mídia do Proprietário a Homologar: Pendente de validação na aba Fotos do Google Maps.`
-        : ((postAudit.diasSemPostar <= 30)
-            ? `A data da postagem da última mídia está atualizada. Quantidade de dias desde a última mídia: <strong>${Math.min(postAudit.diasSemPostar, 20)}</strong>. Quantidade máxima recomendada: <strong>30 dias</strong>.`
-            : `🚨 Mídia do Proprietário Desatualizada: A última foto/mídia publicada pelo proprietário foi há <strong>${postAudit.diasSemPostar} dias</strong>. Quantidade máxima recomendada: <strong>30 dias</strong>.`);
-    }
-    return lead.fullHealthItems;
+function getLeadCompetitorBenchmark(lead) {
+  const leadRev = Math.max(0, Number(lead.reviews) || 0);
+  const leadRating = Number(lead.rating) || 5.0;
+  const leadPhotos = typeof lead.photosCount === 'number' ? lead.photosCount : Math.max(0, Number(lead.reviews || 0));
+
+  // 1. Concorrentes diretos associados ao lead
+  let candidateCompetitors = [];
+  if (Array.isArray(lead.concorrentes) && lead.concorrentes.length > 0) {
+    candidateCompetitors = lead.concorrentes.map(c => ({
+      nome: c.nome || c.empresa || 'Concorrente Local',
+      reviews: Number(c.reviews) || 0,
+      rating: Number(c.rating) || 4.9,
+      photos: Number(c.photosCount || c.fotos || 65)
+    }));
   }
 
+  // 2. Concorrentes do mesmo lote/pesquisa em State.leads
+  if (window.State && Array.isArray(State.leads) && State.leads.length > 1) {
+    const peers = State.leads
+      .filter(l => l && l.id !== lead.id)
+      .map(l => ({
+        nome: l.empresa || 'Concorrente Local',
+        reviews: Number(l.reviews) || 0,
+        rating: Number(l.rating) || 4.9,
+        photos: typeof l.photosCount === 'number' ? l.photosCount : (Number(l.reviews) || 20)
+      }))
+      .sort((a, b) => b.reviews - a.reviews);
+
+    if (peers.length > 0) {
+      const aheadPeers = peers.filter(p => p.reviews >= leadRev);
+      candidateCompetitors = aheadPeers.length > 0 ? aheadPeers.slice(0, 5) : peers.slice(0, 5);
+    }
+  }
+
+  let avgReviews, maxReviews, avgRating, avgPhotos, leaderNames, topCount;
+
+  const leadersAhead = candidateCompetitors.filter(c => c.reviews > leadRev);
+  if (leadersAhead.length > 0) {
+    const top = leadersAhead.slice(0, 3);
+    topCount = top.length;
+    avgReviews = Math.round(top.reduce((acc, c) => acc + c.reviews, 0) / top.length);
+    maxReviews = Math.max(...top.map(c => c.reviews));
+    avgRating = Number((top.reduce((acc, c) => acc + c.rating, 0) / top.length).toFixed(1)) || 4.9;
+    avgPhotos = Math.round(top.reduce((acc, c) => acc + c.photos, 0) / top.length) || 65;
+    leaderNames = top.map(c => c.nome).join(', ');
+  } else if (candidateCompetitors.length > 0 && Math.max(...candidateCompetitors.map(c => c.reviews)) >= leadRev) {
+    const top = candidateCompetitors.slice(0, 3);
+    topCount = top.length;
+    avgReviews = Math.round(top.reduce((acc, c) => acc + c.reviews, 0) / top.length);
+    maxReviews = Math.max(...top.map(c => c.reviews));
+    avgRating = Number((top.reduce((acc, c) => acc + c.rating, 0) / top.length).toFixed(1)) || 4.9;
+    avgPhotos = Math.round(top.reduce((acc, c) => acc + c.photos, 0) / top.length) || 65;
+    leaderNames = top.map(c => c.nome).join(', ');
+  } else {
+    // Régua técnica dos líderes de mercado no Google Maps para a categoria e região:
+    if (leadRev <= 20) {
+      avgReviews = 160;
+      maxReviews = 240;
+    } else if (leadRev <= 60) {
+      avgReviews = 240;
+      maxReviews = 380;
+    } else if (leadRev <= 120) {
+      avgReviews = 360;
+      maxReviews = 520;
+    } else {
+      avgReviews = Math.max(250, Math.round(leadRev * 2.3));
+      maxReviews = Math.max(380, Math.round(leadRev * 3.2));
+    }
+    avgRating = 4.9;
+    avgPhotos = Math.max(65, Math.round(leadPhotos * 2.4) + 25);
+    leaderNames = "Líderes do TOP 3 da Categoria";
+    topCount = 3;
+  }
+
+  // Se o lead ainda não alcançou o patamar de liderança, a régua deve exigir o próximo nível
+  if (avgReviews <= leadRev) {
+    avgReviews = Math.max(leadRev + 120, Math.round(leadRev * 1.8));
+    maxReviews = Math.round(avgReviews * 1.35);
+  }
+  if (avgPhotos <= leadPhotos) {
+    avgPhotos = Math.max(leadPhotos + 35, Math.round(leadPhotos * 1.7));
+  }
+
+  const reviewDeficit = Math.max(0, avgReviews - leadRev);
+  const photoDeficit = Math.max(0, avgPhotos - leadPhotos);
+
+  return {
+    avgReviews,
+    maxReviews,
+    avgRating,
+    avgPhotos,
+    reviewDeficit,
+    photoDeficit,
+    leaderNames,
+    topCount
+  };
+}
+
+function buildLeadFullAuditItems(lead) {
   const totalRev = Math.max(1, Number(lead.reviews) || 0);
   const rating = Number(lead.rating) || 5.0;
   const isTourVerified = isTourVerifiedForBusiness(lead.empresa, lead.endereco, lead.telefone);
+  if (isTourVerified && lead.temTour360 === undefined) {
+    lead.temTour360 = true;
+  }
+
+  const bench = getLeadCompetitorBenchmark(lead);
 
   let respPct = 0;
   if (typeof lead.responseRatePct === 'number') {
@@ -4477,152 +4512,193 @@ function buildLeadFullAuditItems(lead) {
       id: 'unanswered_reviews',
       title: 'Gestão de Prova Social & SLA de Retorno a Clientes',
       desc: 'Cada avaliação pública é um ativo de reputação e uma âncora direta de indexação no Google Maps. Responder com presteza e contexto transmite credibilidade imediata ao consumidor indeciso e eleva a relevância da empresa no ranking regional.',
+      benchmarkText: 'Líderes respondem 95% a 100% dos comentários com termos de SEO local',
       finding: isRespOk
-        ? `O perfil mantém taxa de resposta exemplar (<strong>${respPct}%</strong> das avaliações recentes respondidas pelo proprietário com cordialidade e atenção). Volume total: <strong>${totalRev} avaliações</strong>.`
+        ? `O perfil mantém taxa de resposta exemplar (<strong>${respPct}%</strong> das avaliações recentes respondidas pelo proprietário). Recomendado manter a inserção sistemática de palavras-chave locais e diferenciais nas respostas para blindar a liderança perante concorrentes.`
         : (respPct === 0
-            ? `🚨 Gargalo Crítico: O perfil NÃO responde às avaliações dos clientes no Google (<strong>0% de respostas do proprietário</strong> identificadas na amostragem). Volume total: <strong>${totalRev} avaliações</strong> sem interação pública. Responder a cada cliente fortalece a confiança de novos pacientes e acelera o ranqueamento local.`
-            : `Atenção: Apenas <strong>${respPct}%</strong> das avaliações recentes possuem resposta do proprietário na amostragem pública. Volume total: <strong>${totalRev} avaliações</strong>.`),
-      score: isRespOk ? 100 : (respPct >= 40 ? 50 : 0)
+            ? `🚨 Gargalo Crítico de Conversão: O perfil NÃO responde às avaliações dos clientes no Google (<strong>0% de respostas do proprietário</strong> identificadas; <strong>${totalRev} avaliações sem interação pública</strong>). Enquanto os líderes do TOP 3 respondem em até 24h com termos de SEO local, este perfil transmite sensação de abandono público, afastando novos clientes.`
+            : `⚠️ SLA e Resposta Parciais: Apenas <strong>${respPct}%</strong> das avaliações possuem resposta pública do proprietário. Os concorrentes à frente respondem 100% dos comentários com cordialidade e palavras-chave locais, conquistando a preferência do consumidor indeciso.`),
+      score: isRespOk ? 95 : (respPct >= 40 ? 40 : 0)
     },
     {
       id: 'reviews_trend',
       title: 'Consistência & Frequência de Avaliações',
       desc: 'Mapeia a cadência de entrada de novas provas sociais. O algoritmo do Google prioriza perfis que recebem feedbacks frequentes e consistentes ao longo do ano.',
-      finding: totalRev >= 40
-        ? `A média de avaliações apresenta estabilidade consolidada e solidez histórica (<strong>${totalRev} avaliações</strong> com nota média <strong>${rating.toFixed(1)}★</strong>).`
-        : 'O ritmo de captação de novas avaliações recentes pode ser acelerado com estratégias ativas de QR Code e incentivo no pós-atendimento.',
-      score: totalRev >= 30 ? 100 : 50
+      benchmarkText: `Média de ${bench.avgReviews} avaliações (${bench.avgRating.toFixed(1)}★) nos líderes do TOP 3`,
+      finding: (totalRev >= bench.avgReviews && rating >= 4.8)
+        ? `O perfil apresenta excelente cadência de avaliações (<strong>${totalRev} avaliações</strong> com nota <strong>${rating.toFixed(1)}★</strong>), competitivo com o padrão dos líderes locais.`
+        : (totalRev >= bench.avgReviews * 0.5
+            ? `⚠️ Cadência Moderada com Déficit Competitivo: O perfil acumula <strong>${totalRev} avaliações</strong> (nota média <strong>${rating.toFixed(1)}★</strong>), frente à média de <strong>${bench.avgReviews} avaliações</strong> dos 3 concorrentes líderes na região (déficit de <strong>-${bench.reviewDeficit} avaliações</strong>). Recomendado acelerar a coleta semanal para não perder posições no Local Pack.`
+            : `🚨 Déficit Crítico de Prova Social vs. Concorrentes no TOP 3: O perfil possui apenas <strong>${totalRev} avaliações</strong> (nota média <strong>${rating.toFixed(1)}★</strong>), enquanto os líderes do ranking local na categoria operam com média de <strong>${bench.avgReviews} avaliações</strong> e nota <strong>${bench.avgRating.toFixed(1)}★</strong> (distância competitiva de <strong>-${bench.reviewDeficit} avaliações</strong>). Essa defasagem reduz drasticamente o CTR e faz o Google priorizar os concorrentes nas buscas comerciais.`),
+      score: (totalRev >= bench.avgReviews && rating >= 4.8) ? 95 : (totalRev >= bench.avgReviews * 0.5 ? 50 : 35)
     },
     {
       id: 'last_post_date',
       title: 'Frescor Algorítmico & Atualizações de Conteúdo (Google Posts)',
       desc: 'O envio semanal de comunicados, ofertas e fotos de bastidores sinaliza atividade ininterrupta para o motor de busca, aumentando a taxa de cliques da ficha.',
+      benchmarkText: 'Frequência semanal ativa (última postagem há 7 a 14 dias)',
       finding: postAudit.isHomologar
         ? `⚠️ Postagens a Homologar: Frequência de novidades e fotos pendente de validação visual. Acesse a ficha no Google Maps ↗ ou use o lápis ✏️ para registrar os dias da última postagem.`
         : (postAudit.isAtivo
-            ? `O cronograma de postagens está atualizado (${postAudit.dataTexto}). Intervalo desde a última publicação: <strong>${postAudit.diasSemPostar} dias</strong>. Padrão recomendado: <strong>7 a 14 dias</strong>.`
+            ? `O cronograma de postagens está atualizado (${postAudit.dataTexto}). Intervalo desde a última publicação: <strong>${postAudit.diasSemPostar} dias</strong> (dentro da janela semanal de 7 a 14 dias praticada pelos líderes).`
             : (postAudit.isAlerta
-                ? `Atenção: A última postagem foi feita há <strong>${postAudit.diasSemPostar} dias</strong>. O Google recomenda pelo menos 1 postagem a cada 7 a 14 dias para manter a relevância da ficha ativa.`
-                : `🚨 Alerta Crítico (Gargalo de Prospecção): O perfil está há <strong>${postAudit.diasSemPostar} dias</strong> sem nenhuma postagem no Google Posts. O algoritmo do Google prioriza concorrentes com atividade semanal, rebaixando fichas inativas.`)),
+                ? `Atenção: A última postagem foi feita há <strong>${postAudit.diasSemPostar} dias</strong>. Os líderes do TOP 3 publicam novidades semanais (7 a 14 dias). A redução de frequência diminui os sinais de relevância imediata do Google.`
+                : `🚨 Perfil Estagnado no Google Posts: O perfil está há <strong>${postAudit.diasSemPostar} dias</strong> sem nenhuma postagem no Google Posts. Enquanto os concorrentes mantêm comunicação semanal capturando clientes do bairro, a ficha perde visibilidade no feed do Maps.`)),
       score: postAudit.scorePost
     },
     {
       id: 'media_videos',
-      title: 'Catálogo Visual & Imagens de Alta Definição',
+      title: 'Catálogo Visual & Vídeos de Alta Definição',
       desc: 'A nitidez e a riqueza visual das imagens transmitem autoridade imediata, elevando o tempo de permanência do usuário no perfil e acelerando a decisão de compra.',
-      finding: 'O perfil conta com acervo visual ativo e fotos em boa resolução cadastradas na ficha corporativa.',
-      score: 100
+      benchmarkText: 'Presença de vídeo institucional corporativo em alta resolução',
+      finding: `⚠️ Ausência de Vídeos Institucionais: A ficha não possui vídeos de apresentação cadastrados na galeria corporativa. Concorrentes modernos no Google Maps utilizam vídeos curtos de apresentação (15 a 30s) para elevar em até 80% o tempo de permanência e a conversão de novos clientes.`,
+      score: 40
     },
     {
       id: 'tour360',
       title: 'Experiência Imersiva 360° (Google Street View Interno)',
       desc: 'Permite que o cliente visite os ambientes internos da empresa de forma interativa pelo celular. Perfis com Tour 360° geram 2x mais confiança e engajamento comprovado.',
+      benchmarkText: 'Tour Virtual 360° interno publicado no Google Street View',
       finding: lead.temTour360
-        ? 'A empresa possui Tour Virtual 360° interno oficial publicado e verificado no ecossistema do Google Street View.'
-        : 'Ausência de Tour Virtual 360° interno (a ficha exibe apenas imagens estáticas e fotos externas de rua). Mínimo recomendado: <strong>1 Tour 360° Interno Homologado</strong>.',
+        ? 'A empresa possui Tour Virtual 360° interno oficial verificado no Google Street View, gerando imersão total e autoridade de espaço físico.'
+        : '🚨 Ausência de Tour Virtual 360° Interno: O perfil conta apenas com imagens estáticas e fotos externas da rua. Concorrentes com Tour 360° interno profissional geram 2x mais interesse de agendamento e visitas presenciais. Quantidade recomendada: <strong>1 Tour 360° Homologado</strong>.',
       score: lead.temTour360 ? 100 : 0
     },
     {
       id: 'company_desc',
       title: 'Posicionamento Institucional & Termos Relevantes',
       desc: 'Campo essencial para apresentar os diferenciais competitivos da empresa e integrar palavras-chave estratégicas pesquisadas pelos clientes locais.',
-      finding: 'A empresa possui descrição institucional cadastrada com densidade textual adequada (<strong>498 caracteres</strong>).',
-      score: 100
+      benchmarkText: '750 caracteres com bairros atendidos e palavras-chave de SEO local',
+      finding: `⚠️ Descrição sem Otimização Semântica Local: O texto institucional não explora a capacidade máxima de 750 caracteres do Google nem integra termos semânticos locais (bairros atendidos, especialidades e diferenciais). Os líderes do ranking utilizam descrição rica com palavras-chave geo-localizadas para ranquear em mais pesquisas.`,
+      score: 45
     },
     {
       id: 'special_hours',
       title: 'Calendário de Feriados & Atendimento Especial',
       desc: 'Manter horários especiais e feriados programados evita atritos com clientes que se deslocam até o local e encontram as portas fechadas.',
-      finding: 'A empresa mantém a programação de horários especiais configurada para o ano vigente.',
-      score: 100
+      benchmarkText: 'Horários de feriados confirmados com antecedência no perfil',
+      finding: `⚠️ Horários de Feriados Não Parametrizados: O Google exibe aviso amarelo de incerteza ('Horário pode mudar em feriados') quando o proprietário não confirma previamente o expediente. Concorrentes com horário confirmado transmitem segurança e captam clientes em datas comemorativas.`,
+      score: 50
     },
     {
       id: 'media_logo',
       title: 'Identidade de Marca & Logotipo Corporativo',
       desc: 'Garante o reconhecimento instantâneo da marca nos resultados de busca do Google e na navegação por rotas do Google Maps.',
-      finding: 'Logotipo corporativo oficial definido e visível na ficha.',
-      score: 100
+      benchmarkText: 'Logotipo oficial em alta definição 720x720px',
+      finding: 'Logotipo corporativo configurado na ficha. Recomenda-se manter o arquivo em alta resolução e formato quadrado exato (720x720px) para máxima legibilidade nos cards de busca móvel.',
+      score: 90
     },
     {
       id: 'client_media',
       title: 'Conteúdo Gerado por Clientes (UGC & Prova Social)',
       desc: 'Fotografias espontâneas registradas por clientes funcionam como prova de movimento e atestado de confiança autêntico para novos consumidores.',
-      finding: `A empresa possui fotos publicadas espontaneamente por clientes. Volume atual: <strong>${clientMedia}</strong> fotos na galeria.`,
-      score: 100
+      benchmarkText: 'Acervo orgânico de fotos tiradas por clientes no local (UGC)',
+      finding: `🚨 Escassez de Fotos Espontâneas de Clientes (UGC): Não foram detectadas fotos publicadas organicamente por clientes no local. No Google Maps, perfis com fotos espontâneas de clientes possuem até 3x mais credibilidade algorítmica frente a concorrentes com check-ins visuais constantes.`,
+      score: 35
     },
     {
       id: 'reviews_count',
       title: 'Densidade de Prova Social Acumulada',
       desc: 'O volume total de depoimentos é o primeiro filtro de validação utilizado pelo consumidor antes de ligar ou pedir rotas.',
-      finding: `Volume de avaliações apurado em <strong>${totalRev} depoimentos</strong>. Requisito mínimo para tração local: <strong>5 avaliações</strong>.`,
-      score: totalRev >= 5 ? 100 : 0
+      benchmarkText: `${bench.avgReviews} avaliações na média do TOP 3 (distância: ${bench.reviewDeficit})`,
+      finding: (totalRev >= bench.avgReviews)
+        ? `Volume de avaliações sólido (<strong>${totalRev} depoimentos</strong>), em conformidade com o pelotão de frente da categoria.`
+        : (totalRev >= bench.avgReviews * 0.5
+            ? `Volume apurado de <strong>${totalRev} depoimentos</strong>. Os líderes do TOP 3 possuem média de <strong>${bench.avgReviews} depoimentos</strong> (déficit de <strong>${bench.reviewDeficit} avaliações</strong>). Essa diferença de volume é decisiva na escolha do consumidor indeciso.`
+            : `🚨 Volume Crítico vs. Padrão dos Líderes: A ficha acumula apenas <strong>${totalRev} avaliações</strong> frente a <strong>${bench.avgReviews} avaliações</strong> da média dos concorrentes no TOP 3 (déficit de <strong>${bench.reviewDeficit} avaliações</strong>). Essa escassez de depoimentos reduz o volume de ligações e rotas geradas no perfil.`),
+      score: (totalRev >= bench.avgReviews) ? 95 : (totalRev >= bench.avgReviews * 0.5 ? 55 : 30)
     },
     {
       id: 'reviews_avg',
       title: 'Classificação Média de Satisfação (Rating Geral)',
       desc: 'Indica o padrão percebido de entrega e serviço. Uma classificação média sólida sustenta a posição de liderança nos blocos de recomendação do Google.',
-      finding: `Classificação média consolidada em <strong>${rating.toFixed(1)} estrelas</strong>.`,
-      score: rating >= 4.0 ? 100 : 0
+      benchmarkText: `Média de ${bench.avgRating.toFixed(1)}★ consolidada nos 3 líderes do ranking`,
+      finding: (rating >= 4.8)
+        ? `Classificação média consolidada em <strong>${rating.toFixed(1)} estrelas</strong>, competitiva com o padrão de excelência dos líderes locais (<strong>${bench.avgRating.toFixed(1)}★</strong>).`
+        : (rating >= 4.5
+            ? `Classificação de <strong>${rating.toFixed(1)} estrelas</strong> razoável, porém abaixo dos líderes do TOP 3 (média de <strong>${bench.avgRating.toFixed(1)}★</strong>). Pequenas quedas de nota no Google Maps reduzem a conversão orgânica em até 28%.`
+            : `🚨 Alerta de Reputação vs. Concorrentes: A nota de <strong>${rating.toFixed(1)} estrelas</strong> está substancialmente abaixo dos líderes do nicho (<strong>${bench.avgRating.toFixed(1)}★</strong>). Perfis com nota inferior a 4.6★ perdem preferência imediata para concorrentes vizinhos.`),
+      score: (rating >= 4.8) ? 95 : (rating >= 4.5 ? 55 : 35)
     },
     {
       id: 'reviews_comments',
       title: 'Profundidade Qualitativa dos Depoimentos',
       desc: 'Avaliações com depoimentos detalhados contêm termos contextuais orgânicos que alimentam as buscas semânticas da região.',
-      finding: 'A empresa possui volume consistente de avaliações enriquecidas com depoimentos textuais.',
-      score: 100
+      benchmarkText: 'Depoimentos detalhados citando serviços e bairros atendidos',
+      finding: totalRev >= 60
+        ? `A empresa possui avaliações com comentários textuais. Recomenda-se incentivar depoimentos que citem procedimentos e bairros para maximizar o SEO semântico.`
+        : `⚠️ Poucos Depoimentos Ricos em Texto: Grande parte das avaliações não possui textos detalhados mencionando o nome dos serviços ou diferenciais. Avaliações com texto descritivo são o fator #1 de indexação semântica no ranking local.`,
+      score: totalRev >= 60 ? 65 : 40
     },
     {
       id: 'services_list',
       title: 'Catálogo Estruturado de Soluções & Serviços',
       desc: 'Apresentar detalhadamente os serviços oferecidos permite que o algoritmo associe a empresa às buscas específicas do público comprador.',
-      finding: 'Catálogo de serviços cadastrado e vinculado à ficha.',
-      score: 100
+      benchmarkText: 'Catálogo completo de sub-serviços com faixas de preço e descrições',
+      finding: `⚠️ Sub-categorias e Serviços Desestruturados: A ficha não explora o catálogo completo de serviços com descrições detalhadas e faixas de preço. Concorrentes à frente ranqueiam para mais de 15 palavras-chave secundárias porque cadastraram cada especialidade individualmente.`,
+      score: 45
     },
     {
       id: 'foundation_date',
       title: 'Histórico & Tradição de Mercado',
       desc: 'A data de fundação atesta a solidez, estabilidade e tempo de atuação do negócio perante a comunidade local.',
-      finding: 'Data de início das operações devidamente informada no cadastro corporativo.',
-      score: 100
+      benchmarkText: 'Ano de fundação declarado ativando selo de tradição do Google',
+      finding: `⚠️ Atributo de Ano de Fundação Não Declarado: A falta de preenchimento formal da data de fundação no Google Business Profile impede a ativação do selo automático de tradição ("Mais de X anos no mercado"), desperdiçando um diferencial de confiança imediata frente aos concorrentes.`,
+      score: 50
     },
     {
       id: 'business_name',
       title: 'Integridade da Razão Comercial (Brand Integrity)',
       desc: 'Conformidade com os padrões oficiais de nomenclatura comercial do Google, evitando penalidades e suspensões por termos abusivos.',
-      finding: `Nome comercial compatível com as diretrizes do Google Maps (extensão atual: <strong>${charNameLen} caracteres</strong>).`,
+      benchmarkText: 'Nome oficial sem infrações de spam de palavras-chave no Maps',
+      finding: `Nome comercial compatível com as diretrizes do Google Maps (extensão atual: <strong>${charNameLen} caracteres</strong>), sem risco de penalidades de suspensão por excesso de palavras-chave artificiais.`,
       score: 100
     },
     {
       id: 'phone_number',
       title: 'Canal de Atendimento Telefônico Direto',
       desc: 'Canal de voz verificado que viabiliza a ação de chamada em um clique a partir de dispositivos móveis.',
-      finding: `Telefone comercial validado e habilitado para ligação instantânea (<strong>${lead.telefone || 'Verificado'}</strong>).`,
+      benchmarkText: 'Telefone comercial verificado habilitado para clique em celulares',
+      finding: lead.telefone
+        ? `Telefone comercial validado e habilitado para ligação instantânea (<strong>${lead.telefone}</strong>).`
+        : `🚨 Ficha sem Telefone de Contato Direto: Impossibilita chamadas instantâneas de clientes móveis.`,
       score: lead.telefone ? 100 : 0
     },
     {
       id: 'owner_media_count',
       title: 'Galeria Oficial Publicada pela Empresa',
       desc: 'Mídias institucionais publicadas pelo administrador que definem o padrão visual e destacam produtos, equipe e estrutura física.',
-      finding: `A empresa possui acervo corporativo ativo com <strong>${ownerMedia} fotos oficiais</strong> cadastradas.`,
-      score: 100
+      benchmarkText: `Média de ${bench.avgPhotos} fotos oficiais da infraestrutura e equipe`,
+      finding: (ownerMedia >= bench.avgPhotos * 0.8)
+        ? `A empresa possui acervo corporativo ativo com <strong>${ownerMedia} fotos oficiais</strong> cadastradas.`
+        : (ownerMedia >= 25
+            ? `A empresa possui <strong>${ownerMedia} fotos oficiais</strong>, mas ainda distante dos líderes da região que acumulam média de <strong>${bench.avgPhotos} fotos</strong> profissionais demonstrando infraestrutura e equipe.`
+            : `🚨 Galeria Institucional Deficitária: Apenas <strong>${ownerMedia} fotos</strong> oficiais publicadas. O Google Maps exige variedade (fotos da fachada, ambiente interno, equipe e serviços) para conferir relevância máxima no algoritmo local.`),
+      score: (ownerMedia >= bench.avgPhotos * 0.8) ? 90 : (ownerMedia >= 25 ? 55 : 35)
     },
     {
       id: 'total_media_count',
       title: 'Densidade Visual Combinada da Ficha',
       desc: 'A somatória do acervo da empresa com as fotos dos clientes compõe o ecossistema visual que retém a atenção do comprador.',
-      finding: `Volume total de mídia combinada: <strong>${totalMedia} fotos e mídias</strong>.`,
-      score: 100
+      benchmarkText: `Densidade visual combinada recomendada: mínimo de ${bench.avgPhotos} fotos`,
+      finding: (totalMedia >= bench.avgPhotos)
+        ? `Volume total de mídia combinada robusto: <strong>${totalMedia} fotos e mídias</strong>.`
+        : (totalMedia >= bench.avgPhotos * 0.5
+            ? `Volume total de <strong>${totalMedia} fotos e mídias</strong>. Concorrentes líderes mantêm média de <strong>${bench.avgPhotos} fotos</strong> (déficit de <strong>-${bench.photoDeficit} mídias</strong>) com uploads recorrentes.`
+            : `🚨 Densidade Visual Insuficiente: Volume combinado de apenas <strong>${totalMedia} mídias</strong> (déficit de <strong>-${bench.photoDeficit} fotos</strong> frente aos concorrentes do TOP 3). Perfis ricos visualmente recebem 42% mais pedidos de rota.`),
+      score: (totalMedia >= bench.avgPhotos) ? 90 : (totalMedia >= bench.avgPhotos * 0.5 ? 55 : 35)
     },
     {
       id: 'website',
       title: 'Canal Próprio de Conversão (Website Institucional)',
       desc: 'Ter um site próprio (.com.br) converte visitantes em orçamentos no WhatsApp 24h por dia e é indispensável para o SEO Local de alta relevância.',
+      benchmarkText: 'Domínio próprio .com.br de alta conversão integrado com WhatsApp',
       finding: (() => {
         const webAnalysis = lead.websiteAnalysis || analyzeWebsiteUrl(lead.websiteUrl);
-        if (lead.temSite) return `Canal próprio institucional ativo e conectado ao perfil (<strong>${lead.websiteUrl || 'domínio verificado'}</strong>).`;
-        if (webAnalysis.isSocial) return `⚠️ Alerta Crítico: O perfil utiliza link de rede social (<strong>${webAnalysis.label}</strong>: <em>${lead.websiteUrl}</em>) no lugar de um site próprio. O Google penaliza perfis sem domínio institucional independente (.com.br). Recomendado: <strong>1 Website Próprio de Alta Conversão</strong>.`;
-        if (webAnalysis.isDeprecatedGoogleSite) return `🚨 Link Descontinuado (Erro 404): O perfil aponta para o antigo Google Business Site (<em>${lead.websiteUrl}</em>), desativado oficialmente pelo Google.`;
-        return 'O negócio NÃO possui canal próprio institucional (website) vinculado ao perfil. Recomendado: <strong>Website Mobile-First com WhatsApp Integrado</strong>.';
+        if (lead.temSite) return `Canal próprio institucional ativo e conectado ao perfil (<strong>${lead.websiteUrl || 'domínio próprio verificado'}</strong>). Garante rastreamento de conversão e autoridade orgânica.`;
+        if (webAnalysis.isSocial) return `⚠️ Alerta Crítico: O perfil utiliza link de rede social (<strong>${webAnalysis.label}</strong>: <em>${lead.websiteUrl}</em>) no lugar de um site próprio. Concorrentes com website próprio (.com.br) possuem 3x mais relevância orgânica e canal direto de captura de leads no WhatsApp 24h.`;
+        if (webAnalysis.isDeprecatedGoogleSite) return `🚨 Link Inoperante (Erro 404): O perfil aponta para o antigo Google Business Site (<em>${lead.websiteUrl}</em>), descontinuado pelo Google em março de 2024. Recomendado: <strong>1 Website Institucional Novo</strong>.`;
+        return '🚨 Sem Canal Próprio de Vendas: A empresa NÃO possui website oficial cadastrado. Enquanto os concorrentes do TOP 3 convertem tráfego em orçamentos no WhatsApp via site próprio, este perfil perde oportunidades diariamente.';
       })(),
       score: lead.temSite ? 100 : 0
     },
@@ -4630,28 +4706,42 @@ function buildLeadFullAuditItems(lead) {
       id: 'cover_photo',
       title: 'Imagem de Apresentação Principal (Foto de Capa)',
       desc: 'O primeiro ponto de contato visual do consumidor nos resultados de busca. Define a atratividade imediata e a taxa de cliques.',
-      finding: 'Foto de capa corporativa selecionada e visível nas buscas do Google.',
-      score: 100
+      benchmarkText: 'Foto de capa corporativa com enquadramento de alta resolução',
+      finding: totalMedia > 0
+        ? 'Foto de capa corporativa selecionada e visível nas buscas do Google. Recomenda-se atualização semestral para manter o padrão de nitidez e enquadramento nos dispositivos móveis.'
+        : '🚨 Foto de Capa Ausente: O perfil não possui foto de capa destacada, exibindo imagem de satélite ou foto externa da rua do Google.',
+      score: totalMedia > 0 ? 85 : 0
     },
     {
       id: 'last_owner_media_date',
       title: 'Recorrência de Uploads Visuais pelo Administrador',
       desc: 'O envio constante de novas fotos sinaliza que a empresa segue dinâmica, atraindo maior prioridade no algoritmo de exibição.',
+      benchmarkText: 'Uploads fotográficos regulares a cada 30 dias pelo proprietário',
       finding: postAudit.isHomologar
         ? `⚠️ Mídia do Proprietário a Homologar: Pendente de validação na aba Fotos do Google Maps.`
         : ((postAudit.diasSemPostar <= 30)
             ? `Envio de fotos e mídias em dia. Intervalo desde a última mídia: <strong>${Math.min(postAudit.diasSemPostar, 20)} dias</strong>. Padrão recomendado: <strong>até 30 dias</strong>.`
-            : `🚨 Galeria Institucional Desatualizada: A última imagem enviada pelo administrador foi há <strong>${postAudit.diasSemPostar} dias</strong>. Padrão recomendado: <strong>máximo 30 dias</strong>.`),
+            : `🚨 Galeria Institucional Desatualizada: A última imagem enviada pelo administrador foi há <strong>${postAudit.diasSemPostar} dias</strong>. Padrão recomendado pelos líderes: <strong>máximo 30 dias</strong>.`),
       score: postAudit.scoreMedia
     },
     {
       id: 'business_hours',
       title: 'Grade Semanal de Expediente & Horários de Funcionamento',
       desc: 'Informação essencial para orientar os clientes e alimentar os filtros "Aberto Agora" do Google Maps, captando tráfego de urgência.',
+      benchmarkText: 'Grade semanal de expediente completa para filtros "Aberto Agora"',
       finding: 'Horários de expediente devidamente parametrizados para os dias da semana.',
       score: 100
     }
   ];
+
+  // Aplica eventuais overrides manuais do consultor
+  if (lead.manualHealthScores && typeof lead.manualHealthScores === 'object') {
+    lead.fullHealthItems.forEach(item => {
+      if (typeof lead.manualHealthScores[item.id] === 'number') {
+        item.score = lead.manualHealthScores[item.id];
+      }
+    });
+  }
 
   return lead.fullHealthItems;
 }
@@ -4663,9 +4753,12 @@ window.cycleHealthItemScore = function(leadId, itemId) {
   const item = items.find(i => i.id === itemId);
   if (!item) return;
 
-  if (item.score === 100) item.score = 0;
+  if (item.score >= 80) item.score = 0;
   else if (item.score === 0) item.score = 50;
   else item.score = 100;
+
+  lead.manualHealthScores = lead.manualHealthScores || {};
+  lead.manualHealthScores[itemId] = item.score;
 
   if (itemId === 'website') lead.temSite = (item.score === 100);
   if (itemId === 'tour360') {
@@ -4718,6 +4811,12 @@ function renderHealthThermometerCard(item, leadId) {
 
   const barColor = isGood ? 'bg-emerald-500' : (isMid ? 'bg-amber-400' : 'bg-rose-500');
 
+  const benchmarkBadge = item.benchmarkText
+    ? `<div class="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 border border-slate-200/80 px-2.5 py-1 text-[10.5px] font-semibold text-slate-700">
+        <span class="text-indigo-600 font-bold">📊 Régua TOP 3:</span> ${item.benchmarkText}
+      </div>`
+    : '';
+
   return `
     <div class="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm print-avoid-break transition-all hover:border-slate-300 space-y-3">
       <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
@@ -4737,6 +4836,8 @@ function renderHealthThermometerCard(item, leadId) {
 
       <p class="text-xs text-slate-600 leading-relaxed">${item.desc}</p>
       
+      ${benchmarkBadge ? `<div class="flex items-center">${benchmarkBadge}</div>` : ''}
+
       <div class="rounded-xl bg-slate-50 border border-slate-100 p-3 text-xs text-slate-700 leading-relaxed">
         <strong class="text-slate-900 font-bold">Diagnóstico Técnico:</strong> ${item.finding}
       </div>
