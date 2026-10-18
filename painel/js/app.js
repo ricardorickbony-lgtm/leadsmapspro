@@ -885,6 +885,162 @@ function setLeadPostDays(leadId, dias) {
 }
 window.setLeadPostDays = setLeadPostDays;
 
+// ==========================================================================
+// 1.93 Extrator Recursivo & Normalizador Universal de Avaliações GBP (Anti-Falhas)
+// ==========================================================================
+function findAllReviews(obj) {
+  const reviews = [];
+  if (Array.isArray(obj)) {
+    for (const item of obj) reviews.push(...findAllReviews(item));
+    return reviews;
+  }
+  if (obj && typeof obj === "object") {
+    for (const [key, value] of Object.entries(obj)) {
+      if ((key === "reviews_data" || key === "reviews") && Array.isArray(value)) {
+        reviews.push(...value);
+      } else {
+        reviews.push(...findAllReviews(value));
+      }
+    }
+  }
+  return reviews;
+}
+window.findAllReviews = findAllReviews;
+
+function normalizeReview(review) {
+  const outReply = typeof review?.owner_answer === "string" ? review.owner_answer.trim() : "";
+  const serperSnippet = (review?.response && (review.response.snippet || review.response.text)) ? String(review.response.snippet || review.response.text).trim() : "";
+  const finalReply = outReply || serperSnippet || "";
+  const hasReply = finalReply.length > 0;
+
+  return {
+    reviewId: review?.review_id || review?.id || null,
+    author: review?.author_title || review?.user?.name || review?.author || 'Cliente Google',
+    rating: typeof review?.review_rating === 'number' ? review.review_rating : (typeof review?.rating === 'number' ? review.rating : 5),
+    reviewText: review?.review_text || review?.snippet || review?.text || '',
+    hasOwnerReply: hasReply,
+    owner_answer: hasReply ? finalReply : null,
+    ownerReply: hasReply ? finalReply : null,
+    ownerReplyAt: review?.owner_answer_timestamp_datetime_utc || review?.response?.date || null,
+    ownerReplyTimestamp: review?.owner_answer_timestamp || null,
+    response: hasReply ? (review?.response || { snippet: finalReply, text: finalReply, date: review?.owner_answer_timestamp_datetime_utc }) : null
+  };
+}
+window.normalizeReview = normalizeReview;
+
+function analyzeOwnerReplies(apiResponse) {
+  const rawReviews = findAllReviews(apiResponse);
+  const normalized = rawReviews.map(normalizeReview);
+  const answered = normalized.filter(r => r.hasOwnerReply).length;
+  const total = normalized.length;
+  const responseRate = total > 0 ? Math.round((answered / total) * 100) : 0;
+
+  return {
+    totalReviews: total,
+    answered: answered,
+    responseRate: responseRate,
+    reviews: normalized,
+    debug: total === 0 ? "Nenhuma avaliação encontrada no payload." : null
+  };
+}
+window.analyzeOwnerReplies = analyzeOwnerReplies;
+
+// --------------------------------------------------------------------------
+// 1.94 Motor de Auditoria Factual de Avaliações Google Maps (Outscraper & Serper)
+// --------------------------------------------------------------------------
+async function fetchRealPlaceReviews(queryOrCid, apiKey) {
+  if (!queryOrCid) return null;
+
+  // 1. MOTOR PRIMÁRIO: OUTSCRAPER MAPS REVIEWS-V3 (Leitura nativa de reviews_data e owner_answer via extrator recursivo)
+  const outscraperKey = (State.settings?.outscraperApiKey || localStorage.getItem('leadmaps_outscraper_api_key') || 'NzM0YTI0ZmU5NDc2NGQxNjgzNjJlYjhiOTRlNmU4Mzh8YmI5ODZkYTM3Mg').trim();
+  if (outscraperKey) {
+    try {
+      const outQuery = String(queryOrCid).trim();
+      const outUrl = `https://api.app.outscraper.com/maps/reviews-v3?query=${encodeURIComponent(outQuery)}&reviewsLimit=15&async=false&apiKey=${encodeURIComponent(outscraperKey)}`;
+      const outRes = await fetch(outUrl);
+      if (outRes.ok) {
+        const outJson = await outRes.json();
+        const audit = analyzeOwnerReplies(outJson);
+        if (audit.totalReviews > 0) {
+          return {
+            reviews: audit.reviews,
+            source: 'outscraper',
+            total: audit.totalReviews,
+            answered: audit.answered,
+            responseRate: audit.responseRate
+          };
+        }
+      }
+    } catch (errOut) {
+      console.warn('[fetchRealPlaceReviews] Falha ao consultar Outscraper reviews-v3, tentando Serper:', errOut);
+    }
+  }
+
+  // 2. MOTOR DE CONTINGÊNCIA: SERPER GOOGLE PLACES REVIEWS
+  const keyToUse = apiKey || State.settings?.apiKey || localStorage.getItem('leadmaps_google_api_key') || 'f93ffd86dc739cb1c843b12f2082e381064c1339';
+  try {
+    const rawTarget = String(queryOrCid).trim();
+    let cidToUse = null;
+    let placeIdToUse = null;
+
+    if (/^\d+$/.test(rawTarget)) {
+      cidToUse = rawTarget;
+    } else if (rawTarget.startsWith('ChIJ')) {
+      placeIdToUse = rawTarget;
+    } else {
+      // Resolve nome para CID via Serper Places se necessário
+      try {
+        const placeSearch = await fetch('https://google.serper.dev/places', {
+          method: 'POST',
+          headers: { 'X-API-KEY': keyToUse, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ q: rawTarget, gl: 'br', hl: 'pt-br' })
+        });
+        if (placeSearch.ok) {
+          const pData = await placeSearch.json();
+          if (pData?.places?.[0]?.cid) {
+            cidToUse = pData.places[0].cid;
+          } else if (pData?.places?.[0]?.placeId) {
+            placeIdToUse = pData.places[0].placeId;
+          }
+        }
+      } catch (errResolve) {}
+    }
+
+    if (cidToUse || placeIdToUse) {
+      const bodyPayload = cidToUse 
+        ? { cid: String(cidToUse), gl: 'br', hl: 'pt-br' }
+        : { placeId: String(placeIdToUse), gl: 'br', hl: 'pt-br' };
+
+      const res = await fetch('https://google.serper.dev/reviews', {
+        method: 'POST',
+        headers: {
+          'X-API-KEY': keyToUse,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(bodyPayload)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const audit = analyzeOwnerReplies(data);
+        if (audit.totalReviews > 0) {
+          return {
+            reviews: audit.reviews,
+            source: 'serper',
+            total: audit.totalReviews,
+            answered: audit.answered,
+            responseRate: audit.responseRate
+          };
+        }
+      }
+    }
+    return null;
+  } catch (e) {
+    console.warn('Erro ao consultar avaliações detalhadas do Google via Serper:', e);
+    return null;
+  }
+}
+window.fetchRealPlaceReviews = fetchRealPlaceReviews;
+
 // --------------------------------------------------------------------------
 // 1.95 Raio-X Oficial via API Google Meu Negócio (Outscraper Oficial)
 // --------------------------------------------------------------------------
@@ -972,19 +1128,21 @@ async function runRaioXOficial(leadId, autoOpen = true) {
     let auditedRespRate = null;
     const queryOrCidForReviews = item.cid || item.place_id || `${lead.empresa} ${lead.cidade || lead.endereco || ''}`.trim();
     
-    // Se o próprio item do Outscraper já trouxe reviews_data:
-    if (Array.isArray(item.reviews_data) && item.reviews_data.length > 0) {
-      const answeredCount = item.reviews_data.filter(r => Boolean(r.owner_answer && typeof r.owner_answer === 'string' && r.owner_answer.trim().length > 0)).length;
-      auditedRespRate = Math.round((answeredCount / item.reviews_data.length) * 100);
-      console.log(`[Raio-X Outscraper Direto] Avaliações apuradas no payload para ${lead.empresa}: ${answeredCount}/${item.reviews_data.length} respondidas (${auditedRespRate}%)`);
+    // Tenta primeiro extrair reviews do próprio payload retornado pela busca via extrator recursivo
+    const itemAudit = analyzeOwnerReplies(item);
+    if (itemAudit.totalReviews > 0) {
+      auditedRespRate = itemAudit.responseRate;
+      lead._reviewsAuditedLive = true;
+      lead.realReviewsSample = itemAudit.reviews;
+      console.log(`[Raio-X Outscraper Direto] Avaliações apuradas no payload para ${lead.empresa}: ${itemAudit.answered}/${itemAudit.totalReviews} respondidas (${itemAudit.responseRate}%)`);
     } else {
       try {
         const revData = await fetchRealPlaceReviews(queryOrCidForReviews);
         if (revData && Array.isArray(revData.reviews) && revData.reviews.length > 0) {
-          const sampleRevs = revData.reviews;
-          const answeredCount = sampleRevs.filter(r => r.hasOwnerReply || (r.owner_answer && r.owner_answer.trim().length > 0) || (r.response && (r.response.snippet || r.response.text))).length;
-          auditedRespRate = Math.round((answeredCount / sampleRevs.length) * 100);
-          console.log(`[Raio-X Oficial Reviews] Avaliações auditadas para ${lead.empresa}: ${answeredCount}/${sampleRevs.length} respondidas (${auditedRespRate}%)`);
+          auditedRespRate = typeof revData.responseRate === 'number' ? revData.responseRate : Math.round(((revData.answered || 0) / revData.total) * 100);
+          lead._reviewsAuditedLive = true;
+          lead.realReviewsSample = revData.reviews;
+          console.log(`[Raio-X Oficial Reviews] Avaliações auditadas para ${lead.empresa}: ${revData.answered}/${revData.total} respondidas (${auditedRespRate}%)`);
         }
       } catch (errRev) {
         console.warn('Erro ao consultar reviews no Raio-X Oficial:', errRev);
@@ -1100,6 +1258,7 @@ async function runRaioXOficial(leadId, autoOpen = true) {
         lead.responseRatePct = auditedRespRate;
         lead.reviewsSemRespostaPct = Math.max(0, 100 - auditedRespRate);
         lead.unansweredCount = Math.round((lead.reviews || 0) * (lead.reviewsSemRespostaPct / 100));
+        lead._reviewsAuditedLive = true;
         if (auditedRespRate >= 80) saveVerifiedReviewsBusiness(lead.empresa, true);
       } else if (lead._reviewsAuditedLive && typeof lead.responseRatePct === 'number') {
         syncRespRate = lead.responseRatePct;
@@ -1122,8 +1281,8 @@ async function runRaioXOficial(leadId, autoOpen = true) {
       pRev.status = isSyncRevOk
         ? `⭐ Gestão de Reputação Exemplar: ${syncRespRate}% das avaliações respondidas com cordialidade (${lead.reviews || 0} avaliações, Nota ${Number(lead.rating || 5.0).toFixed(1)}★).`
         : (syncRespRate === 0
-            ? `🚨 Gargalo Crítico: 0% das avaliações possuem resposta do proprietário (${lead.reviews || 0} avaliações sem retorno público).`
-            : `Atenção: Apenas ${syncRespRate}% das avaliações estão respondidas no perfil (${lead.reviews || 0} avaliações).`);
+            ? `🚨 Gargalo Crítico: 0% das avaliações recentes possuem resposta do proprietário (${lead.reviews || 0} avaliações sem retorno público).`
+            : `⚠️ Atenção: Apenas ${syncRespRate}% das avaliações recentes possuem resposta do proprietário (${lead.unansweredCount || Math.round((lead.reviews || 0) * (100 - syncRespRate) / 100)} de ${lead.reviews || 0} avaliações sem retorno público no perfil).`);
       if (isSyncRevOk && Array.isArray(lead.gaps)) {
         lead.gaps = lead.gaps.filter(g => !g.toLowerCase().includes('avalia') && !g.toLowerCase().includes('resposta'));
       } else if (!isSyncRevOk && Array.isArray(lead.gaps)) {
@@ -3664,8 +3823,8 @@ function buildDefaultAuditPillars(lead) {
       status: revOk 
         ? `⭐ Gestão de Reputação Exemplar: ${respRateVal}% das avaliações respondidas com cordialidade (${lead.reviews || 0} avaliações, Nota ${Number(lead.rating || 5.0).toFixed(1)}★).`
         : (respRateVal === 0
-            ? `🚨 Gargalo Crítico: 0% das avaliações possuem resposta do proprietário (${lead.reviews || 0} avaliações sem retorno público).`
-            : `Atenção: Apenas ${respRateVal}% das avaliações estão respondidas no perfil (${lead.reviews || 0} avaliações).`),
+            ? `🚨 Gargalo Crítico: 0% das avaliações recentes possuem resposta do proprietário (${lead.reviews || 0} avaliações sem retorno público).`
+            : `⚠️ Atenção: Apenas ${respRateVal}% das avaliações recentes possuem resposta do proprietário (${lead.unansweredCount || Math.round((lead.reviews || 0) * (100 - respRateVal) / 100)} de ${lead.reviews || 0} avaliações sem retorno público no perfil).`),
       ok: revOk,
       icon: "⭐"
     },
@@ -3791,8 +3950,8 @@ function syncAuditPillars(lead) {
     pRev.status = isSyncRevOk
       ? `⭐ Gestão de Reputação Exemplar: ${syncRespRate}% das avaliações respondidas com cordialidade (${lead.reviews || 0} avaliações, Nota ${Number(lead.rating || 5.0).toFixed(1)}★).`
       : (syncRespRate === 0
-          ? `🚨 Gargalo Crítico: 0% das avaliações possuem resposta do proprietário (${lead.reviews || 0} avaliações sem retorno público).`
-          : `Atenção: Apenas ${syncRespRate}% das avaliações estão respondidas no perfil (${lead.reviews || 0} avaliações).`);
+          ? `🚨 Gargalo Crítico: 0% das avaliações recentes possuem resposta do proprietário (${lead.reviews || 0} avaliações sem retorno público).`
+          : `⚠️ Atenção: Apenas ${syncRespRate}% das avaliações recentes possuem resposta do proprietário (${lead.unansweredCount || Math.round((lead.reviews || 0) * (100 - syncRespRate) / 100)} de ${lead.reviews || 0} avaliações sem retorno público no perfil).`);
     if (isSyncRevOk && Array.isArray(lead.gaps)) {
       lead.gaps = lead.gaps.filter(g => typeof g === 'string' && !g.toLowerCase().includes('avalia') && !g.toLowerCase().includes('resposta'));
     }
@@ -3982,11 +4141,22 @@ function renderDiagnosticPillars(lead) {
       const isDeadGoogle = isWebPillar && !p.ok && webAnalysis && webAnalysis.isDeprecatedGoogleSite;
 
       const isTourPillar = p.id === 'tour360';
+      const isRevPillar = p.id === 'reviews';
+      const hasPartialRev = isRevPillar && !p.ok && typeof lead.responseRatePct === 'number' && lead.responseRatePct > 0;
+
       const btnBadgeText = isPostPillar 
         ? `${postAudit.badgeLabel} ✎` 
         : (p.ok 
             ? '✓ Conforme' 
-            : (isTourPillar ? '✕ Sem Tour 360° ✎' : (isSocialGargalo ? `✕ Gargalo (${webAnalysis.name || 'Social'})` : (isDeadGoogle ? '🚨 Link 404' : '✕ Gargalo'))));
+            : (isTourPillar 
+                ? '✕ Sem Tour 360° ✎' 
+                : (isSocialGargalo 
+                    ? `✕ Gargalo (${webAnalysis.name || 'Social'})` 
+                    : (isDeadGoogle 
+                        ? '🚨 Link 404' 
+                        : (hasPartialRev 
+                            ? `⚠️ ${lead.responseRatePct}% Respostas` 
+                            : '✕ Gargalo')))));
 
       const btnClickAction = isPostPillar 
         ? `window.openPostAuditModal('${lead.id}')` 
@@ -3996,11 +4166,19 @@ function renderDiagnosticPillars(lead) {
 
       const btnBadgeColorClass = isPostPillar
         ? (postAudit.isAtivo ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : (postAudit.isAlerta ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30' : 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30'))
-        : (p.ok ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30');
+        : (p.ok 
+            ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' 
+            : (hasPartialRev 
+                ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30' 
+                : 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30'));
 
       const cardBorderBg = isPostPillar
         ? (postAudit.isAtivo ? 'border-[color-mix(in_oklab,var(--emerald-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--emerald-signal)_6%,transparent)]' : (postAudit.isAlerta ? 'border-amber-500/30 bg-amber-500/10' : 'border-[color-mix(in_oklab,var(--rose-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--rose-signal)_6%,transparent)]'))
-        : (p.ok ? 'border-[color-mix(in_oklab,var(--emerald-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--emerald-signal)_6%,transparent)]' : 'border-[color-mix(in_oklab,var(--rose-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--rose-signal)_6%,transparent)]');
+        : (p.ok 
+            ? 'border-[color-mix(in_oklab,var(--emerald-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--emerald-signal)_6%,transparent)]' 
+            : (hasPartialRev 
+                ? 'border-amber-500/30 bg-amber-500/10' 
+                : 'border-[color-mix(in_oklab,var(--rose-signal)_25%,transparent)] bg-[color-mix(in_oklab,var(--rose-signal)_6%,transparent)]'));
 
       const pStatusText = isPostPillar ? postAudit.statusPilar : p.status;
 
@@ -4123,26 +4301,21 @@ function triggerAsyncLiveReviewAudit(lead) {
   const runLiveAudit = (queryParam) => {
     if (!queryParam || lead._reviewsAuditedLive) return;
     fetchRealPlaceReviews(queryParam).then(revData => {
-      if (revData && Array.isArray(revData.reviews)) {
+      if (revData && Array.isArray(revData.reviews) && revData.reviews.length > 0) {
         lead._reviewsAuditedLive = true;
         const sampleRevs = revData.reviews;
-        let answered = 0;
-        let realRate = 0;
-        if (sampleRevs.length > 0) {
-          answered = sampleRevs.filter(r => r.hasOwnerReply || (r.owner_answer && r.owner_answer.trim().length > 0) || (r.response && (r.response.snippet || r.response.text || r.response.date || r.response.title || r.response))).length;
-          realRate = Math.round((answered / sampleRevs.length) * 100);
-          lead.responseRatePct = realRate;
-          lead.reviewsSemRespostaPct = Math.max(0, 100 - realRate);
-          lead.unansweredCount = Math.round((lead.reviews || 0) * (lead.reviewsSemRespostaPct / 100));
-        } else {
-          lead.responseRatePct = 0;
-          lead.reviewsSemRespostaPct = 100;
-          lead.unansweredCount = lead.reviews || 0;
-        }
+        const answered = typeof revData.answered === 'number' ? revData.answered : sampleRevs.filter(r => r.hasOwnerReply).length;
+        const realRate = typeof revData.responseRate === 'number' ? revData.responseRate : Math.round((answered / sampleRevs.length) * 100);
+        lead.responseRatePct = realRate;
+        lead.reviewsSemRespostaPct = Math.max(0, 100 - realRate);
+        lead.unansweredCount = Math.round((lead.reviews || 0) * (lead.reviewsSemRespostaPct / 100));
+        lead.realReviewsSample = sampleRevs;
+        lead._reviewsAuditedCount = answered;
+        lead._reviewsAuditedTotal = sampleRevs.length;
         if (realRate >= 80) saveVerifiedReviewsBusiness(lead.empresa, true);
 
         // Atualiza modal se estiver aberto para este lead
-        if (State.currentLead && State.currentLead.id === lead.id) {
+        if (State.currentLead && (State.currentLead.id === lead.id || State.currentLead.empresa === lead.empresa)) {
           syncAuditPillars(lead);
           if (Array.isArray(lead.auditPillars) && lead.auditPillars.length > 0) {
             const passed = lead.auditPillars.filter(p => p.ok).length;
@@ -4748,7 +4921,9 @@ window.cycleHealthItemScore = function(leadId, itemId) {
         pRev.ok = (lead.responseRatePct >= 80);
         pRev.status = pRev.ok
           ? `⭐ Gestão de Reputação Exemplar: ${lead.responseRatePct}% das avaliações respondidas com cordialidade (${totalRev} avaliações).`
-          : `🚨 Gargalo Crítico: ${lead.responseRatePct}% das avaliações respondidas pelo proprietário (${totalRev} avaliações).`;
+          : (lead.responseRatePct === 0
+              ? `🚨 Gargalo Crítico: 0% das avaliações possuem resposta do proprietário (${totalRev} avaliações sem retorno público).`
+              : `⚠️ Atenção: Apenas ${lead.responseRatePct}% das avaliações recentes possuem resposta do proprietário (${lead.unansweredCount || Math.round(totalRev * (100 - lead.responseRatePct) / 100)} de ${totalRev} avaliações sem retorno público no perfil).`);
       }
     }
   }
@@ -6265,86 +6440,7 @@ async function searchPlacesForVerification(rawInput, cityInput, apiKey) {
   return { places: places || [], cleanQuery, searchQuery };
 }
 
-async function fetchRealPlaceReviews(queryOrCid, apiKey) {
-  if (!queryOrCid) return null;
-
-  // 1. MOTOR PRIMÁRIO: OUTSCRAPER MAPS REVIEWS-V3 (Leitura nativa de reviews_data e owner_answer)
-  const outscraperKey = (State.settings?.outscraperApiKey || localStorage.getItem('leadmaps_outscraper_api_key') || 'NzM0YTI0ZmU5NDc2NGQxNjgzNjJlYjhiOTRlNmU4Mzh8YmI5ODZkYTM3Mg').trim();
-  if (outscraperKey) {
-    try {
-      const outQuery = String(queryOrCid).trim();
-      const outUrl = `https://api.app.outscraper.com/maps/reviews-v3?query=${encodeURIComponent(outQuery)}&reviewsLimit=15&async=false&apiKey=${encodeURIComponent(outscraperKey)}`;
-      const outRes = await fetch(outUrl);
-      if (outRes.ok) {
-        const outJson = await outRes.json();
-        const rData = outJson?.data?.[0]?.reviews_data;
-        if (Array.isArray(rData) && rData.length > 0) {
-          const unifiedReviews = rData.map(r => {
-            const hasReply = Boolean(r.owner_answer && typeof r.owner_answer === 'string' && r.owner_answer.trim().length > 0);
-            return {
-              author: r.author_title || r.author || 'Cliente Google',
-              rating: typeof r.review_rating === 'number' ? r.review_rating : (typeof r.rating === 'number' ? r.rating : 5),
-              text: r.review_text || r.text || '',
-              owner_answer: r.owner_answer || null,
-              hasOwnerReply: hasReply,
-              response: hasReply ? { snippet: r.owner_answer, text: r.owner_answer, date: r.owner_answer_timestamp_datetime_utc } : null
-            };
-          });
-          return {
-            reviews: unifiedReviews,
-            source: 'outscraper',
-            total: unifiedReviews.length
-          };
-        }
-      }
-    } catch (errOut) {
-      console.warn('[fetchRealPlaceReviews] Falha ao consultar Outscraper reviews-v3, tentando Serper:', errOut);
-    }
-  }
-
-  // 2. MOTOR DE CONTINGÊNCIA: SERPER GOOGLE PLACES REVIEWS
-  const keyToUse = apiKey || State.settings?.apiKey || localStorage.getItem('leadmaps_google_api_key') || 'f93ffd86dc739cb1c843b12f2082e381064c1339';
-  try {
-    const isNumericCid = /^\d+$/.test(String(queryOrCid).trim());
-    const bodyPayload = isNumericCid 
-      ? { cid: String(queryOrCid).trim(), gl: 'br', hl: 'pt-br' }
-      : { q: String(queryOrCid).trim(), gl: 'br', hl: 'pt-br' };
-
-    const res = await fetch('https://google.serper.dev/reviews', {
-      method: 'POST',
-      headers: {
-        'X-API-KEY': keyToUse,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(bodyPayload)
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (data && Array.isArray(data.reviews)) {
-      const unifiedReviews = data.reviews.map(r => {
-        const hasReply = Boolean((r.owner_answer && r.owner_answer.trim().length > 0) || (r.response && (r.response.snippet || r.response.text || r.response.date || r.response.title || r.response)));
-        const replyText = (r.response && (r.response.snippet || r.response.text)) || r.owner_answer || null;
-        return {
-          author: r.user?.name || r.author || 'Cliente Google',
-          rating: typeof r.rating === 'number' ? r.rating : 5,
-          text: r.snippet || r.text || '',
-          owner_answer: replyText,
-          hasOwnerReply: hasReply,
-          response: hasReply ? (r.response || { snippet: replyText, text: replyText }) : null
-        };
-      });
-      return {
-        reviews: unifiedReviews,
-        source: 'serper',
-        total: unifiedReviews.length
-      };
-    }
-    return data;
-  } catch (e) {
-    console.warn('Erro ao consultar avaliações detalhadas do Google via Serper:', e);
-    return null;
-  }
-}
+// Nota: fetchRealPlaceReviews está declarada no escopo global (Seção 1.94)
 
 function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsData) {
   const webAnalysis = analyzeWebsiteUrl(mainPlace.website);
@@ -6596,6 +6692,7 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
     responseRatePct: responseRatePct,
     reviewsSemRespostaPct: reviewsSemRespostaPct,
     unansweredCount: unansweredCount,
+    _reviewsAuditedLive: Boolean(reviewsData && Array.isArray(reviewsData.reviews) && reviewsData.reviews.length > 0),
     realReviewsSample: sampleReviews,
     motivo: (has360 && hasSite)
       ? (!postsOk
@@ -6620,9 +6717,10 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     throw new Error(`Nenhum estabelecimento encontrado para "${searchQuery}".`);
   }
   const mainPlace = places[0];
+  const targetCidOrQuery = mainPlace.cid || mainPlace.placeId || `${mainPlace.title || mainPlace.name || cleanQuery} ${cityInput || ''}`.trim();
   let reviewsData = null;
-  if (mainPlace.cid) {
-    reviewsData = await fetchRealPlaceReviews(mainPlace.cid, apiKey);
+  if (targetCidOrQuery) {
+    reviewsData = await fetchRealPlaceReviews(targetCidOrQuery, apiKey);
   }
   return buildLeadFromPlace(mainPlace, places.slice(1, 4), (cityInput || '').trim(), cleanQuery, reviewsData);
 }
@@ -6994,9 +7092,10 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
                 const selectedPlace = places[idx] || places[0];
                 const otherPlaces = places.filter((_, i) => i !== idx);
 
+                const targetCidOrQuery = selectedPlace.cid || selectedPlace.placeId || `${selectedPlace.title || selectedPlace.name || cleanQuery} ${city || ''}`.trim();
                 let reviewsData = null;
-                if (selectedPlace.cid) {
-                  reviewsData = await fetchRealPlaceReviews(selectedPlace.cid, apiKey);
+                if (targetCidOrQuery) {
+                  reviewsData = await fetchRealPlaceReviews(targetCidOrQuery, apiKey);
                 }
 
                 const singleLead = buildLeadFromPlace(selectedPlace, otherPlaces, city, cleanQuery, reviewsData);
