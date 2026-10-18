@@ -42,7 +42,7 @@ function sanitizeMojibake(str) {
     .replace(/ðŸ”/g, '🚨')
     .replace(/ðŸš/g, '🚨')
     .replace(/â€/g, '—')
-    .replace(//g, '');
+    .replace(/\uFFFD/g, '');
 }
 window.sanitizeMojibake = sanitizeMojibake;
 
