@@ -4292,9 +4292,9 @@ function buildLeadFullAuditItems(lead) {
 
   const isRespOk = respPct >= 80;
   const postAudit = getLeadPostAudit(lead);
-  const ownerMedia = Math.max(15, Math.min(350, Math.round(totalRev * 1.4) + 15));
-  const clientMedia = Math.max(5, Math.round(totalRev * 0.45));
-  const totalMedia = ownerMedia + clientMedia;
+  const totalMedia = typeof lead.photosCount === 'number' ? lead.photosCount : Math.max(0, Number(lead.reviews || 0));
+  const ownerMedia = totalMedia;
+  const clientMedia = 0;
   const charNameLen = (lead.empresa || 'Empresa Local').length;
 
   lead.fullHealthItems = [
@@ -4798,9 +4798,9 @@ window.openWhiteLabelReport = function(lead) {
   // 4. Mídia & Qualidade
   const postAudit = getLeadPostAudit(lead);
   const hasPosts = postAudit.isAtivo;
-  const ownerPhotosCount = Math.max(15, Math.min(220, Math.round(totalReviews * 1.2) + 12));
-  const clientPhotosCount = Math.max(3, Math.round(totalReviews * 0.35));
-  const totalMediaCount = ownerPhotosCount + clientPhotosCount;
+  const totalMediaCount = typeof lead.photosCount === 'number' ? lead.photosCount : Math.max(0, Number(lead.reviews || 0));
+  const ownerPhotosCount = totalMediaCount;
+  const clientPhotosCount = 0;
 
   // 5. Reputação, Sentimento & Palavras
   const repScore = Math.min(96, Math.max(68, Math.round(rating * 19.5)));
