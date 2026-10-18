@@ -1657,10 +1657,10 @@ function getLeadTop10Competitors(lead) {
   };
 
   const presetList = defaultNichePresets[nicheKey] || defaultNichePresets.geral;
-  if (pool.length < 10) {
+  if (pool.length < 9) {
     presetList.forEach(p => {
       const pLow = p.nome.toLowerCase();
-      if (!seenNames.has(pLow) && pool.length < 14) {
+      if (!seenNames.has(pLow) && pool.length < 9) {
         seenNames.add(pLow);
         pool.push({
           nome: p.nome,
@@ -4864,90 +4864,53 @@ function renderSpeedometerGaugeSvg(value, maxVal = 100, unitLabel = '') {
 }
 
 function getLeadCompetitorBenchmark(lead) {
+  const top10Data = getLeadTop10Competitors(lead);
   const leadRev = Math.max(0, Number(lead.reviews) || 0);
-  const leadRating = Number(lead.rating) || 5.0;
   const leadPhotos = typeof lead.photosCount === 'number' ? lead.photosCount : Math.max(0, Number(lead.reviews || 0));
+  const leadRating = Number(lead.rating) || 5.0;
 
-  // 1. Concorrentes diretos associados ao lead
-  let candidateCompetitors = [];
-  if (Array.isArray(lead.concorrentes) && lead.concorrentes.length > 0) {
-    candidateCompetitors = lead.concorrentes.map(c => ({
-      nome: c.nome || c.empresa || 'Concorrente Local',
-      reviews: Number(c.reviews) || 0,
-      rating: Number(c.rating) || 4.9,
-      photos: Number(c.photosCount || c.fotos || 65)
-    }));
-  }
+  const currentRank = top10Data.currentLeadRank;
+  const isLeader = currentRank === 1;
+  const isTop3 = currentRank <= 3;
 
-  // 2. Concorrentes do mesmo lote/pesquisa em State.leads
-  if (window.State && Array.isArray(State.leads) && State.leads.length > 1) {
-    const peers = State.leads
-      .filter(l => l && l.id !== lead.id)
-      .map(l => ({
-        nome: l.empresa || 'Concorrente Local',
-        reviews: Number(l.reviews) || 0,
-        rating: Number(l.rating) || 4.9,
-        photos: typeof l.photosCount === 'number' ? l.photosCount : (Number(l.reviews) || 20)
-      }))
-      .sort((a, b) => b.reviews - a.reviews);
+  // Concorrentes reais do ranking TOP 10 (excluindo a própria empresa do cliente)
+  const otherCompetitors = top10Data.top10.filter(it => !it.isCurrentLead);
+  const top3Competitors = otherCompetitors.slice(0, 3);
 
-    if (peers.length > 0) {
-      const aheadPeers = peers.filter(p => p.reviews >= leadRev);
-      candidateCompetitors = aheadPeers.length > 0 ? aheadPeers.slice(0, 5) : peers.slice(0, 5);
-    }
-  }
+  let avgReviews, maxReviews, avgRating, reviewDeficit;
 
-  let avgReviews, maxReviews, avgRating, avgPhotos, leaderNames, topCount;
-
-  const leadersAhead = candidateCompetitors.filter(c => c.reviews > leadRev);
-  if (leadersAhead.length > 0) {
-    const top = leadersAhead.slice(0, 3);
-    topCount = top.length;
-    avgReviews = Math.round(top.reduce((acc, c) => acc + c.reviews, 0) / top.length);
-    maxReviews = Math.max(...top.map(c => c.reviews));
-    avgRating = Number((top.reduce((acc, c) => acc + c.rating, 0) / top.length).toFixed(1)) || 4.9;
-    avgPhotos = Math.round(top.reduce((acc, c) => acc + c.photos, 0) / top.length) || 65;
-    leaderNames = top.map(c => c.nome).join(', ');
-  } else if (candidateCompetitors.length > 0 && Math.max(...candidateCompetitors.map(c => c.reviews)) >= leadRev) {
-    const top = candidateCompetitors.slice(0, 3);
-    topCount = top.length;
-    avgReviews = Math.round(top.reduce((acc, c) => acc + c.reviews, 0) / top.length);
-    maxReviews = Math.max(...top.map(c => c.reviews));
-    avgRating = Number((top.reduce((acc, c) => acc + c.rating, 0) / top.length).toFixed(1)) || 4.9;
-    avgPhotos = Math.round(top.reduce((acc, c) => acc + c.photos, 0) / top.length) || 65;
-    leaderNames = top.map(c => c.nome).join(', ');
+  if (isLeader) {
+    // Quando o lead é o líder absoluto da praça (#1):
+    // A régua de comparação é a média dos concorrentes imediatos que o perseguem (#2, #3, etc.)
+    avgReviews = top3Competitors.length > 0
+      ? Math.round(top3Competitors.reduce((acc, c) => acc + c.reviews, 0) / top3Competitors.length)
+      : Math.round(leadRev * 0.6);
+    maxReviews = top3Competitors.length > 0 ? top3Competitors[0].reviews : Math.round(leadRev * 0.7);
+    avgRating = top3Competitors.length > 0
+      ? Number((top3Competitors.reduce((acc, c) => acc + c.rating, 0) / top3Competitors.length).toFixed(1))
+      : 4.8;
+    reviewDeficit = 0; // ZERO DEFASAGEM, ELE É O LÍDER ABSOLUTO!
   } else {
-    // Régua técnica dos líderes de mercado no Google Maps para a categoria e região:
-    if (leadRev <= 20) {
-      avgReviews = 160;
-      maxReviews = 240;
-    } else if (leadRev <= 60) {
-      avgReviews = 240;
-      maxReviews = 380;
-    } else if (leadRev <= 120) {
-      avgReviews = 360;
-      maxReviews = 520;
-    } else {
-      avgReviews = Math.max(250, Math.round(leadRev * 2.3));
-      maxReviews = Math.max(380, Math.round(leadRev * 3.2));
-    }
-    avgRating = 4.9;
-    avgPhotos = Math.max(65, Math.round(leadPhotos * 2.4) + 25);
-    leaderNames = "Líderes do TOP 3 da Categoria";
-    topCount = 3;
+    // Quando o lead NÃO é o líder (#2, #3, #5, etc.):
+    // Considera os líderes à frente dele (ou os 3 primeiros da praça)
+    const leadersAhead = otherCompetitors.filter(c => c.reviews > leadRev);
+    const targetLeaders = leadersAhead.length > 0 ? leadersAhead.slice(0, 3) : top3Competitors;
+
+    avgReviews = targetLeaders.length > 0
+      ? Math.round(targetLeaders.reduce((acc, c) => acc + c.reviews, 0) / targetLeaders.length)
+      : Math.max(leadRev + 50, Math.round(leadRev * 1.2));
+    maxReviews = targetLeaders.length > 0
+      ? Math.max(...targetLeaders.map(c => c.reviews))
+      : top10Data.top1Reviews;
+    avgRating = targetLeaders.length > 0
+      ? Number((targetLeaders.reduce((acc, c) => acc + c.rating, 0) / targetLeaders.length).toFixed(1))
+      : 4.9;
+    reviewDeficit = Math.max(0, avgReviews - leadRev);
   }
 
-  // Se o lead ainda não alcançou o patamar de liderança, a régua deve exigir o próximo nível
-  if (avgReviews <= leadRev) {
-    avgReviews = Math.max(leadRev + 120, Math.round(leadRev * 1.8));
-    maxReviews = Math.round(avgReviews * 1.35);
-  }
-  if (avgPhotos <= leadPhotos) {
-    avgPhotos = Math.max(leadPhotos + 35, Math.round(leadPhotos * 1.7));
-  }
-
-  const reviewDeficit = Math.max(0, avgReviews - leadRev);
+  const avgPhotos = Math.max(45, Math.round(leadPhotos * 1.2));
   const photoDeficit = Math.max(0, avgPhotos - leadPhotos);
+  const leaderNames = top3Competitors.map(c => c.nome).join(', ') || 'Concorrentes Locais';
 
   return {
     avgReviews,
@@ -4957,7 +4920,14 @@ function getLeadCompetitorBenchmark(lead) {
     reviewDeficit,
     photoDeficit,
     leaderNames,
-    topCount
+    topCount: top3Competitors.length,
+    currentRank,
+    isLeader,
+    isTop3,
+    nicheName: top10Data.nicheName,
+    deficitTop3: top10Data.deficitTop3,
+    deficitTop1: top10Data.deficitTop1,
+    top10Data
   };
 }
 
@@ -5004,13 +4974,17 @@ function buildLeadFullAuditItems(lead) {
       id: 'reviews_trend',
       title: 'Consistência & Frequência de Avaliações',
       desc: 'Mapeia a cadência de entrada de novas provas sociais. O algoritmo do Google prioriza perfis que recebem feedbacks frequentes e consistentes ao longo do ano.',
-      benchmarkText: `Média de ${bench.avgReviews} avaliações (${bench.avgRating.toFixed(1)}★) nos líderes do TOP 3`,
-      finding: (totalRev >= bench.avgReviews && rating >= 4.8)
-        ? `O perfil apresenta excelente cadência de avaliações (<strong>${totalRev} avaliações</strong> com nota <strong>${rating.toFixed(1)}★</strong>), competitivo com o padrão dos líderes locais.`
-        : (totalRev >= bench.avgReviews * 0.5
-            ? `⚠️ Cadência Moderada com Déficit Competitivo: O perfil acumula <strong>${totalRev} avaliações</strong> (nota média <strong>${rating.toFixed(1)}★</strong>), frente à média de <strong>${bench.avgReviews} avaliações</strong> dos 3 concorrentes líderes na região (déficit de <strong>-${bench.reviewDeficit} avaliações</strong>). Recomendado acelerar a coleta semanal para não perder posições no Local Pack.`
-            : `🚨 Déficit Crítico de Prova Social vs. Concorrentes no TOP 3: O perfil possui apenas <strong>${totalRev} avaliações</strong> (nota média <strong>${rating.toFixed(1)}★</strong>), enquanto os líderes do ranking local na categoria operam com média de <strong>${bench.avgReviews} avaliações</strong> e nota <strong>${bench.avgRating.toFixed(1)}★</strong> (distância competitiva de <strong>-${bench.reviewDeficit} avaliações</strong>). Essa defasagem reduz drasticamente o CTR e faz o Google priorizar os concorrentes nas buscas comerciais.`),
-      score: (totalRev >= bench.avgReviews && rating >= 4.8) ? 95 : (totalRev >= bench.avgReviews * 0.5 ? 50 : 35)
+      benchmarkText: bench.isLeader 
+        ? `Líder Absoluto (#1): ${totalRev} avaliações vs ${bench.avgReviews} na média dos concorrentes`
+        : `Média de ${bench.avgReviews} avaliações (${bench.avgRating.toFixed(1)}★) nos líderes do TOP 3`,
+      finding: bench.isLeader
+        ? `⭐ Liderança Regional Consolidada: O perfil ocupa a 1ª colocação em prova social na região com <strong>${totalRev} avaliações</strong> (nota média <strong>${rating.toFixed(1)}★</strong>), superando amplamente a média dos concorrentes mais próximos (<strong>${bench.avgReviews} avaliações</strong>). Recomendado manter a rotina contínua de respostas e novas postagens para blindar a liderança contra os concorrentes.`
+        : (bench.isTop3
+            ? `⭐ Pódio Regional no TOP 3: O perfil acumula excelente volume de <strong>${totalRev} avaliações</strong> (nota <strong>${rating.toFixed(1)}★</strong>), figurando entre os 3 maiores do segmento na região (média dos líderes: ${bench.avgReviews} avaliações).`
+            : (totalRev >= bench.avgReviews * 0.5
+                ? `⚠️ Cadência Moderada com Déficit Competitivo: O perfil acumula <strong>${totalRev} avaliações</strong> (nota média <strong>${rating.toFixed(1)}★</strong>), frente à média de <strong>${bench.avgReviews} avaliações</strong> dos concorrentes no topo da região (déficit de <strong>-${bench.reviewDeficit} avaliações</strong>). Recomendado acelerar a coleta semanal para subir no ranking regional.`
+                : `🚨 Déficit Crítico de Prova Social vs. Concorrentes no TOP 3: O perfil possui apenas <strong>${totalRev} avaliações</strong> (nota média <strong>${rating.toFixed(1)}★</strong>), enquanto os líderes do ranking local na categoria operam com média de <strong>${bench.avgReviews} avaliações</strong> e nota <strong>${bench.avgRating.toFixed(1)}★</strong> (distância competitiva de <strong>-${bench.reviewDeficit} avaliações</strong>). Essa defasagem reduz drasticamente o CTR e faz o Google priorizar os concorrentes nas buscas comerciais.`)),
+      score: bench.isLeader ? 100 : (bench.isTop3 ? 95 : (totalRev >= bench.avgReviews * 0.5 ? 55 : 35))
     },
     {
       id: 'last_post_date',
@@ -5080,13 +5054,17 @@ function buildLeadFullAuditItems(lead) {
       id: 'reviews_count',
       title: 'Densidade de Prova Social Acumulada',
       desc: 'O volume total de depoimentos é o primeiro filtro de validação utilizado pelo consumidor antes de ligar ou pedir rotas.',
-      benchmarkText: `${bench.avgReviews} avaliações na média do TOP 3 (distância: ${bench.reviewDeficit})`,
-      finding: (totalRev >= bench.avgReviews)
-        ? `Volume de avaliações sólido (<strong>${totalRev} depoimentos</strong>), em conformidade com o pelotão de frente da categoria.`
-        : (totalRev >= bench.avgReviews * 0.5
-            ? `Volume apurado de <strong>${totalRev} depoimentos</strong>. Os líderes do TOP 3 possuem média de <strong>${bench.avgReviews} depoimentos</strong> (déficit de <strong>${bench.reviewDeficit} avaliações</strong>). Essa diferença de volume é decisiva na escolha do consumidor indeciso.`
-            : `🚨 Volume Crítico vs. Padrão dos Líderes: A ficha acumula apenas <strong>${totalRev} avaliações</strong> frente a <strong>${bench.avgReviews} avaliações</strong> da média dos concorrentes no TOP 3 (déficit de <strong>${bench.reviewDeficit} avaliações</strong>). Essa escassez de depoimentos reduz o volume de ligações e rotas geradas no perfil.`),
-      score: (totalRev >= bench.avgReviews) ? 95 : (totalRev >= bench.avgReviews * 0.5 ? 55 : 30)
+      benchmarkText: bench.isLeader 
+        ? `Líder Regional (#1): ${totalRev} avaliações vs ${bench.avgReviews} na média dos concorrentes`
+        : `${bench.avgReviews} avaliações na média do TOP 3 (distância: ${bench.reviewDeficit})`,
+      finding: bench.isLeader
+        ? `Volume de avaliações extraordinário (<strong>${totalRev} depoimentos</strong>). A empresa é a líder isolada em prova social na região, superando a média dos concorrentes imediatos (<strong>${bench.avgReviews} depoimentos</strong>).`
+        : (totalRev >= bench.avgReviews
+            ? `Volume de avaliações sólido (<strong>${totalRev} depoimentos</strong>), em conformidade com o pelotão de frente da categoria.`
+            : (totalRev >= bench.avgReviews * 0.5
+                ? `Volume apurado de <strong>${totalRev} depoimentos</strong>. Os líderes do TOP 3 possuem média de <strong>${bench.avgReviews} depoimentos</strong> (déficit de <strong>${bench.reviewDeficit} avaliações</strong>). Essa diferença de volume é decisiva na escolha do consumidor indeciso.`
+                : `🚨 Volume Crítico vs. Padrão dos Líderes: A ficha acumula <strong>${totalRev} avaliações</strong> frente a <strong>${bench.avgReviews} avaliações</strong> da média dos concorrentes no TOP 3 (déficit de <strong>${bench.reviewDeficit} avaliações</strong>). Essa escassez de depoimentos reduz o volume de ligações e rotas geradas no perfil.`)),
+      score: bench.isLeader ? 100 : ((totalRev >= bench.avgReviews) ? 95 : (totalRev >= bench.avgReviews * 0.5 ? 55 : 30))
     },
     {
       id: 'reviews_avg',
