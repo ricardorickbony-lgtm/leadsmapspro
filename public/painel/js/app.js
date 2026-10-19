@@ -3603,34 +3603,70 @@ function startGlobalWhatsAppCooldown(onFinish = null) {
   if (btnOpen) {
     btnOpen.disabled = true;
     btnOpen.className = "w-full py-4 text-sm font-bold flex items-center justify-center gap-2 bg-slate-800 text-slate-400 border border-slate-700 rounded-xl cursor-not-allowed opacity-80 transition-all";
-    if (btnOpenLabel) btnOpenLabel.textContent = `⏳ Intervalo Anti-Ban: aguarde ${delay}s...`;
+    if (btnOpenLabel) {
+      btnOpenLabel.textContent = `Intervalo Anti-Ban: aguarde ${delay}s...`;
+    } else {
+      btnOpen.innerHTML = `<span>⏳</span> <span id="btnWaOpenCurrentLabel">Intervalo Anti-Ban: aguarde ${delay}s...</span>`;
+    }
   }
 
   if (_waCooldownInterval) clearInterval(_waCooldownInterval);
   _waCooldownInterval = setInterval(() => {
     const rem = getRemainingCooldownSeconds();
-    if (countdownSec) countdownSec.textContent = `${rem}s`;
-    if (btnOpenLabel && btnOpen?.disabled) {
-      btnOpenLabel.textContent = `⏳ Intervalo Anti-Ban: aguarde ${rem}s...`;
+    const liveSec = document.getElementById('waCountdownSeconds');
+    const liveBtn = document.getElementById('btnWaOpenCurrent');
+    const liveLabel = document.getElementById('btnWaOpenCurrentLabel');
+
+    if (liveSec) liveSec.textContent = `${rem}s`;
+    if (liveLabel && liveBtn?.disabled) {
+      liveLabel.textContent = `Intervalo Anti-Ban: aguarde ${rem}s...`;
     }
 
     if (rem <= 0) {
       clearInterval(_waCooldownInterval);
       _waCooldownInterval = null;
       _waCooldownEndTime = 0;
-      if (countdownBox) countdownBox.classList.add('hidden');
-      if (btnOpen) {
-        btnOpen.disabled = false;
-        btnOpen.className = "w-full py-4 text-sm font-black flex items-center justify-center gap-2.5 cursor-pointer shadow-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 rounded-xl transition-all";
-        if (btnOpenLabel) btnOpenLabel.textContent = "Abrir Conversa Desta Empresa no WhatsApp (1 Clique)";
+      const liveBox = document.getElementById('waCountdownBox');
+      if (liveBox) liveBox.classList.add('hidden');
+      if (liveBtn) {
+        liveBtn.disabled = false;
+        liveBtn.className = "w-full py-4 text-sm font-black flex items-center justify-center gap-2.5 cursor-pointer shadow-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 rounded-xl transition-all";
+        liveBtn.innerHTML = `<span class="text-base">💬</span> <span id="btnWaOpenCurrentLabel">Abrir Conversa Desta Empresa no WhatsApp (1 Clique)</span>`;
       }
       if (typeof onFinish === 'function') {
         onFinish();
+      } else if (typeof updateWhatsAppQueueUI === 'function') {
+        updateWhatsAppQueueUI();
       }
     }
   }, 500);
 }
 window.startGlobalWhatsAppCooldown = startGlobalWhatsAppCooldown;
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && _waCooldownEndTime > 0) {
+    const rem = getRemainingCooldownSeconds();
+    const liveSec = document.getElementById('waCountdownSeconds');
+    const liveLabel = document.getElementById('btnWaOpenCurrentLabel');
+    const liveBtn = document.getElementById('btnWaOpenCurrent');
+    if (liveSec) liveSec.textContent = `${rem}s`;
+    if (liveLabel && rem > 0) liveLabel.textContent = `Intervalo Anti-Ban: aguarde ${rem}s...`;
+    if (rem <= 0) {
+      if (_waCooldownInterval) {
+        clearInterval(_waCooldownInterval);
+        _waCooldownInterval = null;
+      }
+      _waCooldownEndTime = 0;
+      document.getElementById('waCountdownBox')?.classList.add('hidden');
+      if (liveBtn) {
+        liveBtn.disabled = false;
+        liveBtn.className = "w-full py-4 text-sm font-black flex items-center justify-center gap-2.5 cursor-pointer shadow-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 rounded-xl transition-all";
+        liveBtn.innerHTML = `<span class="text-base">💬</span> <span id="btnWaOpenCurrentLabel">Abrir Conversa Desta Empresa no WhatsApp (1 Clique)</span>`;
+      }
+      if (typeof updateWhatsAppQueueUI === 'function') updateWhatsAppQueueUI();
+    }
+  }
+});
 
 window.handleDirectWhatsAppClick = function(event, leadId) {
   const rem = getRemainingCooldownSeconds();
@@ -3724,9 +3760,12 @@ function filterMatches(lead, filter) {
 function showToast(msg) {
   const toast = document.getElementById('toastNotification');
   if (!toast) return;
-  toast.innerHTML = `✅ ${msg}`;
+  const trimmed = String(msg || '').trim();
+  const hasEmoji = /^[\p{Emoji}\u2000-\u3300]/u.test(trimmed);
+  toast.innerHTML = hasEmoji ? trimmed : `✅ ${trimmed}`;
   toast.classList.remove('hidden');
-  setTimeout(() => toast.classList.add('hidden'), 4000);
+  if (window._toastTimeout) clearTimeout(window._toastTimeout);
+  window._toastTimeout = setTimeout(() => toast.classList.add('hidden'), 4000);
 }
 
 // --------------------------------------------------------------------------
@@ -8195,7 +8234,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
         if (btnOpen) {
           btnOpen.disabled = true;
           btnOpen.className = "w-full py-4 text-sm font-bold flex items-center justify-center gap-2 bg-slate-800 text-slate-400 border border-slate-700 rounded-xl cursor-not-allowed opacity-80 transition-all";
-          btnOpen.innerHTML = "<span>✅</span> <span>Todos os Envios Concluídos</span>";
+          btnOpen.innerHTML = '<span class="text-base">✅</span> <span id="btnWaOpenCurrentLabel">Todos os Envios Concluídos</span>';
         }
       } else {
         const lead = currentItem.lead;
@@ -8227,7 +8266,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
           if (btnOpen) {
             btnOpen.disabled = false;
             btnOpen.className = "w-full py-4 text-sm font-black flex items-center justify-center gap-2.5 cursor-pointer shadow-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 rounded-xl transition-all";
-            btnOpen.innerHTML = `<span>💬</span> <span id="btnWaOpenCurrentLabel">Abrir Conversa Desta Empresa no WhatsApp (1 Clique)</span>`;
+            btnOpen.innerHTML = `<span class="text-base">💬</span> <span id="btnWaOpenCurrentLabel">Abrir Conversa Desta Empresa no WhatsApp (1 Clique)</span>`;
           }
         }
       }
@@ -8359,6 +8398,12 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     const phoneEl = document.getElementById('waCurrentLeadPhone');
     if (phoneEl && phoneEl.value && phoneEl.value.trim() && phoneEl.value !== '100% Concluído') {
       currentItem.lead.telefone = phoneEl.value.trim();
+      currentItem.lead.whatsappVerificado = isMobileWhatsAppNumber(currentItem.lead.telefone);
+      try {
+        const customPhones = JSON.parse(localStorage.getItem('leadmaps_custom_phones') || '{}');
+        customPhones[currentItem.lead.empresa.toLowerCase().trim()] = currentItem.lead.telefone;
+        localStorage.setItem('leadmaps_custom_phones', JSON.stringify(customPhones));
+      } catch (err) {}
     }
 
     const url = buildWhatsAppUrl(currentItem.lead, renderWhatsAppMessage(State.settings.whatsappTemplate, currentItem.lead));
