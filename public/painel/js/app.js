@@ -2225,7 +2225,15 @@ function buildLeadStrategicBattleKeywords(lead, top10Benchmark) {
   const top10 = (top10Benchmark && Array.isArray(top10Benchmark.top10)) ? top10Benchmark.top10 : [];
   const competitorsOnly = top10.filter(item => !item.isCurrentLead);
   const rival1 = competitorsOnly[0] || { nome: 'Líder Regional no Google', reviews: 180, rating: 4.9 };
-  const rival2 = competitorsOnly[1] || { nome: 'Segundo Colocado no Google', reviews: 110, rating: 4.8 };
+
+  // Garante que o 2º concorrente seja uma EMPRESA DIFERENTE (não uma variação/filial do 1º)
+  const r1Clean = String(rival1.nome || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const r1Core = r1Clean.substring(0, 8);
+  const rival2 = competitorsOnly.slice(1).find(item => {
+    const r2Clean = String(item.nome || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    return !r2Clean.includes(r1Core) && !r1Clean.includes(r2Clean.substring(0, 8));
+  }) || competitorsOnly[1] || { nome: 'Segundo Colocado no Google', reviews: 110, rating: 4.8 };
+
   const currentRank = (top10Benchmark && typeof top10Benchmark.currentLeadRank === 'number') ? top10Benchmark.currentLeadRank : 8;
 
   return [
@@ -6606,12 +6614,12 @@ window.openWhiteLabelReport = function(lead) {
               <div class="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 border border-indigo-300 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest text-indigo-900">
                 ⚔️ Auditoria Competitiva de Buscas Locais
               </div>
-              <h4 class="text-base font-black text-slate-900 mt-1">⚔️ Matriz de Confronto por Palavra-Chave no Google Maps</h4>
-              <p class="text-xs text-slate-500">Comparativo de posicionamento da sua empresa frente aos concorrentes reais nas buscas de maior intenção de compra em ${top10Benchmark.city || 'sua região'}.</p>
+              <h4 class="text-base font-black text-slate-950 mt-1">⚔️ Matriz de Confronto por Palavra-Chave no Google Maps</h4>
+              <p class="text-xs text-slate-700 font-medium">Comparativo de posicionamento da sua empresa frente aos concorrentes reais nas buscas de maior intenção de compra em ${top10Benchmark.city || 'sua região'}.</p>
             </div>
             <div class="text-right">
-              <span class="inline-block text-[11px] font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-                Segmento: <strong>${top10Benchmark.nicheName}</strong>
+              <span class="inline-block text-[11px] font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-800 border border-slate-300">
+                Segmento: <strong class="text-indigo-900">${top10Benchmark.nicheName}</strong>
               </span>
             </div>
           </div>
@@ -6620,7 +6628,7 @@ window.openWhiteLabelReport = function(lead) {
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
               <thead>
-                <tr class="border-b border-indigo-100 text-slate-400 uppercase text-[10px] font-extrabold tracking-wider bg-indigo-50/40">
+                <tr class="border-b border-slate-200 text-slate-800 uppercase text-[10px] font-black tracking-wider bg-slate-100/90">
                   <th class="py-2.5 px-3">Palavra-Chave Estratégica</th>
                   <th class="py-2.5 px-3 text-center w-28">Sua Empresa</th>
                   <th class="py-2.5 px-3 w-44">Líder Regional 🥇</th>
@@ -6641,19 +6649,19 @@ window.openWhiteLabelReport = function(lead) {
                       </span>
                     </td>
                     <td class="py-3 px-3">
-                      <div class="font-bold text-slate-800 text-[11px] flex items-center gap-1">
-                        <span>${item.rival1Pos}</span>
-                        <span class="truncate max-w-[140px]" title="${item.rival1Nome}">${item.rival1Nome}</span>
+                      <div class="font-bold text-slate-900 text-[11px] flex items-center gap-1.5">
+                        <span class="shrink-0">${item.rival1Pos}</span>
+                        <span class="truncate max-w-[160px] md:max-w-[220px]" title="${item.rival1Nome}">${item.rival1Nome}</span>
                       </div>
                     </td>
                     <td class="py-3 px-3 hidden md:table-cell">
-                      <div class="font-semibold text-slate-700 text-[11px] flex items-center gap-1">
-                        <span>${item.rival2Pos}</span>
-                        <span class="truncate max-w-[140px]" title="${item.rival2Nome}">${item.rival2Nome}</span>
+                      <div class="font-bold text-slate-800 text-[11px] flex items-center gap-1.5">
+                        <span class="shrink-0">${item.rival2Pos}</span>
+                        <span class="truncate max-w-[160px] md:max-w-[220px]" title="${item.rival2Nome}">${item.rival2Nome}</span>
                       </div>
                     </td>
                     <td class="py-3 px-3 text-[11px] leading-snug">
-                      <span class="font-medium text-slate-700">${item.impacto}</span>
+                      <span class="font-semibold text-slate-800">${item.impacto}</span>
                     </td>
                   </tr>
                 `).join('')}
