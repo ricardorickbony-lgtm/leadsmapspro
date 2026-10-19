@@ -1465,7 +1465,7 @@
 
   <!-- Modal: Central de Geração de Relatórios Oficiais em PDF para Clientes -->
   <div id="pdfReportHubModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/85 p-3 sm:p-5 backdrop-blur-md overflow-y-auto">
-    <div class="glass-card max-h-[92vh] w-full max-w-4xl overflow-y-auto border border-amber-500/40 bg-slate-950 p-6 sm:p-8 shadow-2xl scrollbar-dark space-y-6">
+    <div class="glass-card max-h-[92vh] w-full max-w-6xl overflow-y-auto border border-amber-500/40 bg-slate-950 p-6 sm:p-8 shadow-2xl scrollbar-dark space-y-6">
       
       <!-- Cabeçalho -->
       <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
@@ -1479,7 +1479,7 @@
               <span class="badge-pill badge-amber">White-Label</span>
             </h3>
             <p class="text-xs text-slate-300 mt-0.5">
-              Gere documentos profissionais prontos para impressão ou envio direto via WhatsApp para fechamento de contrato.
+              Gere documentos profissionais prontos para impressão, envio no WhatsApp ou prestação de contas mensal (Antes vs Depois).
             </p>
           </div>
         </div>
@@ -1502,8 +1502,8 @@
         </div>
       </div>
 
-      <!-- 3 Opções de Relatórios Disponíveis -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- 4 Opções Estratégicas de Relatórios Disponíveis -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         
         <!-- Opção 1: Dossiê Completo de Auditoria (22 Itens) -->
         <div class="rounded-2xl border border-slate-800 bg-slate-900/90 p-5 flex flex-col justify-between space-y-4 hover:border-amber-500/50 transition-all shadow-lg">
@@ -1512,9 +1512,9 @@
               <span class="text-2xl">📑</span>
               <span class="badge-pill badge-amber text-[10px]">Auditoria 360°</span>
             </div>
-            <h4 class="text-sm font-extrabold text-white">Dossiê Executivo de Inteligência Local (22 Pilares)</h4>
+            <h4 class="text-sm font-extrabold text-white">Dossiê Executivo (22 Pilares)</h4>
             <p class="text-[11px] text-slate-400 leading-relaxed">
-              O relatório executivo mais avançado do mercado: 5 seções estratégicas (Matriz de 22 Pilares Algorítmicos, Inteligência de Avaliações & SLA, Funil de Conversão Local, Acervo 360° e Inteligência Competitiva).
+              O diagnóstico comercial mais completo: 5 seções estratégicas, Matriz dos 22 Pilares, SLA de avaliações, funil de conversão e benchmarking concorrencial.
             </p>
           </div>
           <div class="space-y-2 pt-2 border-t border-slate-800">
@@ -1535,7 +1535,7 @@
               <span class="text-2xl">🎯</span>
               <span class="badge-pill badge-emerald text-[10px]">GeoGrid GPS</span>
             </div>
-            <h4 class="text-sm font-extrabold text-white">Relatório de Ranking Local</h4>
+            <h4 class="text-sm font-extrabold text-white">Raio-X de Ranking Local</h4>
             <p class="text-[11px] text-slate-300 leading-relaxed">
               Grade visual colorida do Google Maps quarteirão por quarteirão, médias ARP/ATRP e comparativo direto com os Top Concorrentes que estão roubando clientes.
             </p>
@@ -1550,24 +1550,52 @@
           </div>
         </div>
 
-        <!-- Opção 3: Pré-Análise Executiva Rápida (1 Pág) -->
+        <!-- Opção 3: Relatório de Evolução Mensal (Antes vs Depois - 30 Dias) -->
+        <div class="rounded-2xl border border-purple-500/50 bg-purple-950/25 p-5 flex flex-col justify-between space-y-4 hover:border-purple-400 transition-all shadow-lg relative">
+          <span class="absolute -top-2.5 right-4 rounded-full bg-purple-500 px-2.5 py-0.5 text-[9px] font-black text-white uppercase tracking-wider">Retenção & Mensalidade</span>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-2xl">📈</span>
+              <span class="badge-pill badge-purple text-[10px] bg-purple-500/20 text-purple-300 border border-purple-500/40">30 Dias (Antes vs Depois)</span>
+            </div>
+            <h4 class="text-sm font-extrabold text-white">Relatório de Evolução Mensal</h4>
+            <p class="text-[11px] text-slate-300 leading-relaxed">
+              Comprovação irrefutável de ROI: evolução do Health Score, mapa GeoGrid lado a lado (vermelho ➔ verde), ganho de posições locais e entregas executadas.
+            </p>
+          </div>
+          <div class="space-y-2 pt-2 border-t border-purple-900/50">
+            <button id="btnPdfHubDownloadEvolution" type="button" class="btn-amber w-full py-2.5 text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-md hover:scale-102 transition-all cursor-pointer">
+              🖨️ Baixar Evolução (PDF)
+            </button>
+            <div class="grid grid-cols-2 gap-1.5">
+              <button id="btnPdfHubViewEvolution" type="button" class="btn-ghost-dark w-full py-1.5 text-[11px] font-bold text-purple-300 border-purple-500/30 hover:bg-purple-500/10 cursor-pointer text-center" title="Visualizar na tela">
+                👁️ Ver Tela
+              </button>
+              <button id="btnPdfHubSetBaseline" type="button" class="btn-ghost-dark w-full py-1.5 text-[11px] font-bold text-slate-300 border-slate-700 hover:bg-slate-800 cursor-pointer text-center" title="Definir o estado atual como Marco Zero (Dia 1)">
+                📌 Marco Zero
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Opção 4: Pré-Análise Executiva Rápida (1 Pág) -->
         <div class="rounded-2xl border border-slate-800 bg-slate-900/90 p-5 flex flex-col justify-between space-y-4 hover:border-sky-500/50 transition-all shadow-lg">
           <div class="space-y-2">
             <div class="flex items-center justify-between">
               <span class="text-2xl">⚡</span>
               <span class="badge-pill badge-sky text-[10px]">WhatsApp Rápido</span>
             </div>
-            <h4 class="text-sm font-extrabold text-white">Pré-Análise Executiva (1 Página)</h4>
+            <h4 class="text-sm font-extrabold text-white">Pré-Análise Executiva (1 Pág)</h4>
             <p class="text-[11px] text-slate-400 leading-relaxed">
-              Resumo direto ao ponto contendo os 7 pilares fundamentais, gargalos urgentes e nota geral. Perfeito para primeiro contato no WhatsApp.
+              Resumo direto ao ponto com os 7 pilares fundamentais, gargalos urgentes e nota geral. Perfeito para primeiro contato no WhatsApp.
             </p>
           </div>
           <div class="space-y-2 pt-2 border-t border-slate-800">
             <button id="btnPdfHubDownloadPreAnalysis" type="button" class="btn-amber w-full py-2.5 text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-md hover:scale-102 transition-all cursor-pointer">
-              🖨️ Baixar Pré-Análise em PDF
+              🖨️ Baixar Pré-Análise
             </button>
             <button id="btnPdfHubCopyWhatsAppSummary" type="button" class="btn-ghost-dark w-full py-2 text-xs font-bold text-sky-300 border-sky-500/30 hover:bg-sky-500/10 cursor-pointer">
-              📋 Copiar Resumo WhatsApp
+              📋 Copiar WhatsApp
             </button>
           </div>
         </div>
@@ -2338,7 +2366,7 @@
     <!-- Message injected here -->
   </div>
 
-  <script src="js/app.js?v=20261019_v56_auto_login_trials_magic_link"></script>
+  <script src="js/app.js?v=20261019_v57_relatorio_evolucao_30d"></script>
   <script src="js/security-shield.js?v=20261018_v46_top10_competitors_niche_audit"></script>
 </body>
 </html>
