@@ -3303,8 +3303,10 @@ const State = {
       }
       return saved;
     })(),
-    whatsappTemplate: localStorage.getItem('leadmaps_wa_template') || DEFAULT_WHATSAPP_TEMPLATES.site,
-    whatsappDelay: parseInt(localStorage.getItem('leadmaps_wa_delay') || '25'),
+    whatsappDelay: (function() {
+      const saved = parseInt(localStorage.getItem('leadmaps_wa_delay') || '60');
+      return (isNaN(saved) || saved < 30) ? 60 : saved;
+    })(),
     whatsappPlatform: localStorage.getItem('leadmaps_wa_platform') || 'web'
   }
 };
@@ -3576,7 +3578,68 @@ window.editLeadPhone = function(leadId) {
   }
 };
 
+let _waCooldownEndTime = 0;
+let _waCooldownInterval = null;
+
+function getRemainingCooldownSeconds() {
+  if (!_waCooldownEndTime) return 0;
+  const remMs = _waCooldownEndTime - Date.now();
+  return remMs > 0 ? Math.ceil(remMs / 1000) : 0;
+}
+window.getRemainingCooldownSeconds = getRemainingCooldownSeconds;
+
+function startGlobalWhatsAppCooldown(onFinish = null) {
+  const delay = State.settings.whatsappDelay || 60;
+  _waCooldownEndTime = Date.now() + (delay * 1000);
+
+  const countdownBox = document.getElementById('waCountdownBox');
+  const countdownSec = document.getElementById('waCountdownSeconds');
+  const btnOpen = document.getElementById('btnWaOpenCurrent');
+  const btnOpenLabel = document.getElementById('btnWaOpenCurrentLabel');
+
+  if (countdownBox) countdownBox.classList.remove('hidden');
+  if (countdownSec) countdownSec.textContent = `${delay}s`;
+
+  if (btnOpen) {
+    btnOpen.disabled = true;
+    btnOpen.className = "w-full py-4 text-sm font-bold flex items-center justify-center gap-2 bg-slate-800 text-slate-400 border border-slate-700 rounded-xl cursor-not-allowed opacity-80 transition-all";
+    if (btnOpenLabel) btnOpenLabel.textContent = `⏳ Intervalo Anti-Ban: aguarde ${delay}s...`;
+  }
+
+  if (_waCooldownInterval) clearInterval(_waCooldownInterval);
+  _waCooldownInterval = setInterval(() => {
+    const rem = getRemainingCooldownSeconds();
+    if (countdownSec) countdownSec.textContent = `${rem}s`;
+    if (btnOpenLabel && btnOpen?.disabled) {
+      btnOpenLabel.textContent = `⏳ Intervalo Anti-Ban: aguarde ${rem}s...`;
+    }
+
+    if (rem <= 0) {
+      clearInterval(_waCooldownInterval);
+      _waCooldownInterval = null;
+      _waCooldownEndTime = 0;
+      if (countdownBox) countdownBox.classList.add('hidden');
+      if (btnOpen) {
+        btnOpen.disabled = false;
+        btnOpen.className = "w-full py-4 text-sm font-black flex items-center justify-center gap-2.5 cursor-pointer shadow-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 rounded-xl transition-all";
+        if (btnOpenLabel) btnOpenLabel.textContent = "Abrir Conversa Desta Empresa no WhatsApp (1 Clique)";
+      }
+      if (typeof onFinish === 'function') {
+        onFinish();
+      }
+    }
+  }, 500);
+}
+window.startGlobalWhatsAppCooldown = startGlobalWhatsAppCooldown;
+
 window.handleDirectWhatsAppClick = function(event, leadId) {
+  const rem = getRemainingCooldownSeconds();
+  if (rem > 0) {
+    if (event) event.preventDefault();
+    showToast(`🛡️ Intervalo Anti-Ban Ativo: aguarde mais ${rem}s antes de abrir outra loja para proteger seu número.`);
+    return false;
+  }
+
   const lead = getAnyLeadById(leadId);
   if (!lead) return true;
   const url = buildWhatsAppUrl(lead);
@@ -3591,8 +3654,10 @@ window.handleDirectWhatsAppClick = function(event, leadId) {
     triggerWebhookWhatsAppDispatch(lead);
   } else if (event && event.currentTarget) {
     event.currentTarget.href = url;
-    showToast(`💬 Conversa aberta no WhatsApp para ${lead.empresa}!`);
+    showToast(`💬 Conversa aberta no WhatsApp para ${lead.empresa}! Aperte Enter para enviar.`);
   }
+
+  startGlobalWhatsAppCooldown();
 
   State.sentCount++;
   updateMetrics();
@@ -3606,6 +3671,12 @@ window.handleDirectWhatsAppClick = function(event, leadId) {
 };
 
 function openSingleLeadWhatsAppDirect(leadId) {
+  const rem = getRemainingCooldownSeconds();
+  if (rem > 0) {
+    showToast(`🛡️ Intervalo Anti-Ban Ativo: aguarde mais ${rem}s antes de abrir outra loja para proteger seu número.`);
+    return;
+  }
+
   const lead = getAnyLeadById(leadId);
   if (!lead) return;
   const url = buildWhatsAppUrl(lead);
@@ -3621,9 +3692,11 @@ function openSingleLeadWhatsAppDirect(leadId) {
     if (!openedWin || openedWin.closed || typeof openedWin.closed === 'undefined') {
       showToast(`⚠️ Janela bloqueada pelo navegador. <a href="${url}" target="_blank" rel="noopener noreferrer" class="underline font-black text-amber-300 ml-1">Clique para abrir ${lead.empresa} no WhatsApp</a>`);
     } else {
-      showToast(`💬 Conversa aberta no WhatsApp para ${lead.empresa}!`);
+      showToast(`💬 Conversa aberta no WhatsApp para ${lead.empresa}! Aperte Enter para enviar.`);
     }
   }
+
+  startGlobalWhatsAppCooldown();
 
   State.sentCount++;
   updateMetrics();
@@ -8117,8 +8190,11 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
         }
         if (msgEl) msgEl.textContent = "Excelente trabalho! Você pode carregar novos leads da busca ou exportar os dados para o CRM.";
         if (indexEl) indexEl.textContent = `Total: ${total} Leads`;
+        const countdownBox = document.getElementById('waCountdownBox');
+        if (countdownBox) countdownBox.classList.add('hidden');
         if (btnOpen) {
           btnOpen.disabled = true;
+          btnOpen.className = "w-full py-4 text-sm font-bold flex items-center justify-center gap-2 bg-slate-800 text-slate-400 border border-slate-700 rounded-xl cursor-not-allowed opacity-80 transition-all";
           btnOpen.innerHTML = "<span>✅</span> <span>Todos os Envios Concluídos</span>";
         }
       } else {
@@ -8134,9 +8210,25 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
         }
         if (msgEl) msgEl.textContent = renderWhatsAppMessage(State.settings.whatsappTemplate, lead);
         if (indexEl) indexEl.textContent = `Lead #${currentIdx} de ${total}`;
-        if (btnOpen) {
-          btnOpen.disabled = false;
-          btnOpen.innerHTML = "<span>💬</span> <span>Abrir Este Lead Avulso no WhatsApp</span>";
+
+        const rem = getRemainingCooldownSeconds();
+        const countdownBox = document.getElementById('waCountdownBox');
+        const countdownSec = document.getElementById('waCountdownSeconds');
+        if (rem > 0) {
+          if (countdownBox) countdownBox.classList.remove('hidden');
+          if (countdownSec) countdownSec.textContent = `${rem}s`;
+          if (btnOpen) {
+            btnOpen.disabled = true;
+            btnOpen.className = "w-full py-4 text-sm font-bold flex items-center justify-center gap-2 bg-slate-800 text-slate-400 border border-slate-700 rounded-xl cursor-not-allowed opacity-80 transition-all";
+            btnOpen.innerHTML = `<span>⏳</span> <span id="btnWaOpenCurrentLabel">Intervalo Anti-Ban: aguarde ${rem}s...</span>`;
+          }
+        } else {
+          if (countdownBox) countdownBox.classList.add('hidden');
+          if (btnOpen) {
+            btnOpen.disabled = false;
+            btnOpen.className = "w-full py-4 text-sm font-black flex items-center justify-center gap-2.5 cursor-pointer shadow-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 rounded-xl transition-all";
+            btnOpen.innerHTML = `<span>💬</span> <span id="btnWaOpenCurrentLabel">Abrir Conversa Desta Empresa no WhatsApp (1 Clique)</span>`;
+          }
         }
       }
     }
@@ -8188,6 +8280,13 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
 
   window.handleSpecificWaQueueClick = function(event, idx) {
     if (idx < 0 || idx >= State.whatsappQueue.length) return false;
+    const rem = getRemainingCooldownSeconds();
+    if (rem > 0) {
+      if (event) event.preventDefault();
+      showToast(`🛡️ Intervalo Anti-Ban Ativo: aguarde mais ${rem}s antes de abrir outra loja para proteger seu número.`);
+      return false;
+    }
+
     const item = State.whatsappQueue[idx];
     const url = buildWhatsAppUrl(item.lead, renderWhatsAppMessage(State.settings.whatsappTemplate, item.lead));
     if (url === '#') {
@@ -8201,25 +8300,34 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       triggerWebhookWhatsAppDispatch(item.lead);
     } else if (event && event.currentTarget) {
       event.currentTarget.href = url;
-      showToast(`💬 Conversa aberta no WhatsApp para ${item.lead.empresa}!`);
+      showToast(`💬 Conversa aberta no WhatsApp para ${item.lead.empresa}! Aperte Enter para enviar.`);
     }
 
     item.status = 'enviado';
     State.sentCount++;
     updateMetrics();
 
-    const crmLead = State.crmLeads.find(c => c.id === item.lead.id || c.empresa.toLowerCase() === item.lead.empresa.toLowerCase());
+    const crmLead = State.crmLeads.find(c => c.id === item.lead.id || (c.empresa && item.lead.empresa && c.empresa.toLowerCase() === item.lead.empresa.toLowerCase()));
     if (crmLead && crmLead.stage === 'novo') {
       crmLead.stage = 'contatado';
       if (typeof saveCrmToStorage === 'function') saveCrmToStorage();
       if (typeof renderCrmKanban === 'function') renderCrmKanban();
     }
 
+    startGlobalWhatsAppCooldown(() => {
+      updateWhatsAppQueueUI();
+    });
+
     setTimeout(() => updateWhatsAppQueueUI(), 80);
     return State.settings.whatsappPlatform !== 'webhook';
   };
 
   window.sendSpecificWaQueueLead = function(idx) {
+    const rem = getRemainingCooldownSeconds();
+    if (rem > 0) {
+      showToast(`🛡️ Intervalo Anti-Ban Ativo: aguarde mais ${rem}s antes de disparar.`);
+      return;
+    }
     window.handleSpecificWaQueueClick(null, idx);
     const item = State.whatsappQueue[idx];
     if (item && State.settings.whatsappPlatform !== 'webhook') {
@@ -8228,140 +8336,23 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     }
   };
 
-  function stopAutoDispatch() {
-    isAutoDispatchRunning = false;
-    if (State.whatsappCountdownTimer) {
-      clearInterval(State.whatsappCountdownTimer);
-      State.whatsappCountdownTimer = null;
-      document.getElementById('waCountdownBox')?.classList.add('hidden');
-    }
-    const btnRunner = document.getElementById('btnWaAutoRunner');
-    const icon = document.getElementById('waAutoRunnerIcon');
-    const label = document.getElementById('waAutoRunnerLabel');
-    if (btnRunner) {
-      btnRunner.className = "w-full py-3.5 text-xs font-black flex items-center justify-center gap-2 cursor-pointer shadow-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 rounded-xl transition-all";
-    }
-    if (icon) icon.textContent = "⚡";
-    if (label) label.textContent = "Iniciar Disparo Automático Sequencial (Anti-Ban)";
-    const btnOpen = document.getElementById('btnWaOpenCurrent');
-    if (btnOpen) btnOpen.disabled = false;
-  }
+  // Funções de compatibilidade
+  function stopAutoDispatch() {}
+  function startAutoDispatch() {}
+  function toggleAutoDispatch() {}
+  function updateAutoClickStatusIndicator() {}
+  function isExtensionBridgeActive() { return false; }
 
-  function startAutoDispatch() {
-    const pending = State.whatsappQueue.filter(i => i.status === 'pendente');
-    if (pending.length === 0) {
-      showToast("⚠️ Não há leads pendentes na fila para disparar.");
+  function sendCurrentWhatsAppLead() {
+    const rem = getRemainingCooldownSeconds();
+    if (rem > 0) {
+      showToast(`🛡️ Intervalo Anti-Ban Ativo: aguarde mais ${rem}s antes de abrir a próxima empresa para proteger seu número.`);
       return;
     }
-    isAutoDispatchRunning = true;
-    const btnRunner = document.getElementById('btnWaAutoRunner');
-    const icon = document.getElementById('waAutoRunnerIcon');
-    const label = document.getElementById('waAutoRunnerLabel');
-    if (btnRunner) {
-      btnRunner.className = "w-full py-3.5 text-xs font-black flex items-center justify-center gap-2 cursor-pointer shadow-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 rounded-xl transition-all animate-pulse";
-    }
-    if (icon) icon.textContent = "⏸️";
-    if (label) label.textContent = `Pausar Disparo Automático (${pending.length} restantes)`;
-
-    if (!isExtensionBridgeActive() && State.settings.whatsappPlatform === 'web') {
-      showToast(`⚠️ Extensão auto-click desconectada: cada conversa abrirá com o texto pronto no WhatsApp Web para você apertar Enter.`);
-    } else {
-      showToast(`🚀 Disparo sequencial iniciado! Intervalo anti-ban: ${State.settings.whatsappDelay || 25}s.`);
-    }
-    dispatchNextAutoLead();
-  }
-
-  function toggleAutoDispatch() {
-    if (isAutoDispatchRunning) {
-      stopAutoDispatch();
-      showToast("⏸️ Disparo sequencial pausado.");
-    } else {
-      startAutoDispatch();
-    }
-  }
-
-  function isExtensionBridgeActive() {
-    return document.documentElement && document.documentElement.getAttribute('data-leadmaps-wa-extension') === 'active';
-  }
-
-  function updateAutoClickStatusIndicator() {
-    const badge = document.getElementById('waAutoClickStatusBadge');
-    const txt = document.getElementById('waAutoClickStatusText');
-    if (isExtensionBridgeActive()) {
-      if (badge) {
-        badge.textContent = "🟢 Extensão Auto-Click Ativa";
-        badge.className = "inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-extrabold text-emerald-300 border border-emerald-500/40";
-      }
-      if (txt) {
-        txt.textContent = "Conectado! O robô abre a conversa e clica em 'Enviar' (➤) 100% sozinho no WhatsApp Web.";
-      }
-    } else {
-      if (badge) {
-        badge.textContent = "⚠️ Extensão Desconectada (Modo Manual)";
-        badge.className = "inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-300 border border-amber-500/40";
-      }
-      if (txt) {
-        txt.textContent = "Abre a conversa com o texto pronto. Para o robô apertar 'Enviar' (➤) 100% sozinho, ative a extensão ao lado!";
-      }
-    }
-  }
-
-  function openOrNavigateWhatsAppWindow(lead, url) {
-    const phoneDigits = formatBrazilWhatsAppNumber(lead.telefone);
-    const msg = renderWhatsAppMessage(State.settings.whatsappTemplate, lead);
-    const fullUrl = url.includes('leadmaps_autosend') ? url : `${url}&leadmaps_autosend=1`;
-
-    // 1. Se a ponte da extensão estiver ativa na página, envia via chrome.tabs (troca instantânea + auto-click)
-    if (isExtensionBridgeActive() && State.settings.whatsappPlatform !== 'wame') {
-      window.postMessage({
-        type: 'LEADMAPS_WA_DISPATCH',
-        payload: {
-          phone: phoneDigits,
-          text: msg,
-          empresa: lead.empresa
-        }
-      }, '*');
-      showToast(`🤖 Disparando automaticamente para ${lead.empresa} no WhatsApp Web!`);
-      return true;
-    }
-
-    // 2. Reutiliza a mesma aba nomeada ('LeadMapsWaSender') para evitar bloqueador de pop-up nos próximos leads!
-    try {
-      if (State.waPopupWindow && !State.waPopupWindow.closed) {
-        State.waPopupWindow.location.href = fullUrl;
-        try { State.waPopupWindow.focus(); } catch (e) {}
-        showToast(`💬 Carregando conversa de ${lead.empresa} no WhatsApp Web...`);
-        return true;
-      }
-    } catch (err) {
-      // Cross-origin: location.href continua permitido pelo padrão HTML5
-      try {
-        State.waPopupWindow.location = fullUrl;
-        return true;
-      } catch (e2) {}
-    }
-
-    const openedWin = window.open(fullUrl, 'LeadMapsWaSender');
-    if (openedWin) {
-      State.waPopupWindow = openedWin;
-      showToast(`💬 Conversa de ${lead.empresa} aberta no WhatsApp Web!`);
-      return true;
-    }
-
-    // 3. Caso o navegador tenha bloqueado abertura de nova janela, cria clique em link <a>
-    showToast(`⚠️ Pop-up bloqueado! <a href="${fullUrl}" target="LeadMapsWaSender" class="underline font-black text-amber-300 ml-1">Clique aqui para abrir ${lead.empresa}</a> (ou libere Pop-ups no cadeado do navegador)`);
-    return false;
-  }
-
-  function dispatchNextAutoLead() {
-    if (!isAutoDispatchRunning) return;
-    updateAutoClickStatusIndicator();
 
     const currentItem = State.whatsappQueue.find(i => i.status === 'pendente');
     if (!currentItem) {
-      stopAutoDispatch();
       showToast("🎉 Todos os disparos da fila foram concluídos com sucesso!");
-      updateWhatsAppQueueUI();
       return;
     }
 
@@ -8372,20 +8363,20 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
 
     const url = buildWhatsAppUrl(currentItem.lead, renderWhatsAppMessage(State.settings.whatsappTemplate, currentItem.lead));
     if (url === '#') {
-      showToast(`⚠️ Lead "${currentItem.lead.empresa}" sem telefone válido. Pulando...`);
+      showToast(`⚠️ Lead "${currentItem.lead.empresa}" sem telefone cadastrado. Pulando...`);
       currentItem.status = 'pulado';
       updateWhatsAppQueueUI();
-      setTimeout(dispatchNextAutoLead, 500);
       return;
     }
 
     if (State.settings.whatsappPlatform === 'webhook') {
       triggerWebhookWhatsAppDispatch(currentItem.lead);
     } else {
-      const ok = openOrNavigateWhatsAppWindow(currentItem.lead, url);
-      if (!ok) {
-        stopAutoDispatch();
-        return;
+      const openedWin = window.open(url, '_blank');
+      if (!openedWin || openedWin.closed || typeof openedWin.closed === 'undefined') {
+        showToast(`⚠️ Janela bloqueada pelo navegador. <a href="${url}" target="_blank" rel="noopener noreferrer" class="underline font-black text-amber-300 ml-1">Clique para abrir ${currentItem.lead.empresa} no WhatsApp</a>`);
+      } else {
+        showToast(`💬 Conversa aberta no WhatsApp para ${currentItem.lead.empresa}! Aperte Enter para enviar.`);
       }
     }
 
@@ -8393,138 +8384,35 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     State.sentCount++;
     updateMetrics();
 
-    const crmLead = State.crmLeads.find(c => c.id === currentItem.lead.id || c.empresa.toLowerCase() === currentItem.lead.empresa.toLowerCase());
+    const crmLead = State.crmLeads.find(c => c.id === currentItem.lead.id || (c.empresa && currentItem.lead.empresa && c.empresa.toLowerCase() === currentItem.lead.empresa.toLowerCase()));
     if (crmLead && crmLead.stage === 'novo') {
       crmLead.stage = 'contatado';
       if (typeof saveCrmToStorage === 'function') saveCrmToStorage();
       if (typeof renderCrmKanban === 'function') renderCrmKanban();
     }
 
-    const pending = State.whatsappQueue.filter(i => i.status === 'pendente');
-    const label = document.getElementById('waAutoRunnerLabel');
-    if (label) label.textContent = `Pausar Disparo Automático (${pending.length} restantes)`;
-
-    updateWhatsAppQueueUI();
-
-    if (pending.length === 0) {
-      stopAutoDispatch();
-      showToast("🎉 Fila de disparos 100% concluída!");
-      return;
-    }
-
-    startWaAntiBanCountdown(() => {
-      if (isAutoDispatchRunning) {
-        dispatchNextAutoLead();
-      }
+    startGlobalWhatsAppCooldown(() => {
+      updateWhatsAppQueueUI();
     });
-  }
-
-  function sendCurrentWhatsAppLead() {
-    updateAutoClickStatusIndicator();
-    const currentItem = State.whatsappQueue.find(i => i.status === 'pendente');
-    if (!currentItem) return;
-
-    const phoneEl = document.getElementById('waCurrentLeadPhone');
-    if (phoneEl && phoneEl.value && phoneEl.value.trim() && phoneEl.value !== '100% Concluído') {
-      currentItem.lead.telefone = phoneEl.value.trim();
-    }
-
-    const url = buildWhatsAppUrl(currentItem.lead, renderWhatsAppMessage(State.settings.whatsappTemplate, currentItem.lead));
-    if (url === '#') {
-      showToast("⚠️ Este lead não possui telefone cadastrado. Pulando...");
-      currentItem.status = 'pulado';
-      updateWhatsAppQueueUI();
-      return;
-    }
-
-    if (State.settings.whatsappPlatform === 'webhook') {
-      triggerWebhookWhatsAppDispatch(currentItem.lead);
-    } else {
-      openOrNavigateWhatsAppWindow(currentItem.lead, url);
-    }
-
-    currentItem.status = 'enviado';
-    State.sentCount++;
-    updateMetrics();
-
-    const crmLead = State.crmLeads.find(c => c.id === currentItem.lead.id || c.empresa.toLowerCase() === currentItem.lead.empresa.toLowerCase());
-    if (crmLead && crmLead.stage === 'novo') {
-      crmLead.stage = 'contatado';
-      if (typeof saveCrmToStorage === 'function') saveCrmToStorage();
-      if (typeof renderCrmKanban === 'function') renderCrmKanban();
-    }
 
     updateWhatsAppQueueUI();
-    startWaAntiBanCountdown();
-  }
-
-  function startWaAntiBanCountdown(onFinish = null) {
-    if (State.whatsappCountdownTimer) {
-      clearInterval(State.whatsappCountdownTimer);
-      State.whatsappCountdownTimer = null;
-    }
-
-    const countdownBox = document.getElementById('waCountdownBox');
-    const countdownSec = document.getElementById('waCountdownSeconds');
-    const btnOpen = document.getElementById('btnWaOpenCurrent');
-    const delay = State.settings.whatsappDelay || 25;
-
-    countdownBox?.classList.remove('hidden');
-    if (btnOpen) btnOpen.disabled = true;
-
-    const startTime = Date.now();
-    const durationMs = delay * 1000;
-    if (countdownSec) countdownSec.textContent = `${delay}s`;
-
-    const checkCountdown = () => {
-      const elapsed = Date.now() - startTime;
-      const remainingSec = Math.max(0, Math.ceil((durationMs - elapsed) / 1000));
-      if (countdownSec) countdownSec.textContent = `${remainingSec}s`;
-
-      if (elapsed >= durationMs) {
-        if (State.whatsappCountdownTimer) {
-          clearInterval(State.whatsappCountdownTimer);
-          State.whatsappCountdownTimer = null;
-        }
-        countdownBox?.classList.add('hidden');
-        if (btnOpen) btnOpen.disabled = false;
-        updateWhatsAppQueueUI();
-        if (typeof onFinish === 'function') {
-          onFinish();
-        }
-      }
-    };
-
-    State.whatsappCountdownTimer = setInterval(checkCountdown, 500);
-
-    const onVisible = () => {
-      if (State.whatsappCountdownTimer) {
-        checkCountdown();
-      }
-    };
-    document.addEventListener('visibilitychange', onVisible);
   }
 
   function skipCurrentWhatsAppLead() {
-    if (isAutoDispatchRunning) stopAutoDispatch();
     const currentItem = State.whatsappQueue.find(i => i.status === 'pendente');
     if (currentItem) {
       currentItem.status = 'pulado';
-    }
-    if (State.whatsappCountdownTimer) {
-      clearInterval(State.whatsappCountdownTimer);
-      State.whatsappCountdownTimer = null;
-      document.getElementById('waCountdownBox')?.classList.add('hidden');
+      showToast(`⏭️ Lead "${currentItem.lead.empresa}" pulado.`);
     }
     updateWhatsAppQueueUI();
   }
 
   function nextWhatsAppLead() {
-    if (isAutoDispatchRunning) stopAutoDispatch();
-    if (State.whatsappCountdownTimer) {
-      clearInterval(State.whatsappCountdownTimer);
-      State.whatsappCountdownTimer = null;
-      document.getElementById('waCountdownBox')?.classList.add('hidden');
+    const pendingIdx = State.whatsappQueue.findIndex(i => i.status === 'pendente');
+    if (pendingIdx >= 0) {
+      const [moved] = State.whatsappQueue.splice(pendingIdx, 1);
+      State.whatsappQueue.push(moved);
+      showToast(`▶️ Próxima empresa: "${moved.lead.empresa}" foi movida para o fim da fila.`);
     }
     updateWhatsAppQueueUI();
   }
@@ -8541,7 +8429,6 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
   }
 
   function clearWhatsAppQueue() {
-    stopAutoDispatch();
     State.whatsappQueue = [];
     updateWhatsAppQueueUI();
     showToast("Fila de disparos limpa.");
@@ -8569,51 +8456,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     btnBulk.addEventListener('click', () => openWhatsAppAutomationModal(true));
   }
 
-  // Botões de Ajuda / Auto-Click no WhatsApp Web
-  const btnShowExtensionGuide = document.getElementById('btnShowExtensionGuide');
-  const waExtensionGuideDetails = document.getElementById('waExtensionGuideDetails');
-  if (btnShowExtensionGuide && waExtensionGuideDetails) {
-    btnShowExtensionGuide.addEventListener('click', () => {
-      waExtensionGuideDetails.classList.toggle('hidden');
-    });
-  }
 
-  const btnCopyExtensionPath = document.getElementById('btnCopyExtensionPath');
-  if (btnCopyExtensionPath) {
-    btnCopyExtensionPath.addEventListener('click', async () => {
-      const extPath = "C:\\Users\\ricar\\OneDrive\\Documentos\\Projetos\\leadsmapspro\\extensao-chrome";
-      try {
-        await navigator.clipboard.writeText(extPath);
-        showToast("📁 Caminho copiado: " + extPath + " (Cole em chrome://extensions)");
-      } catch (e) {
-        window.prompt("Copie o caminho da pasta da extensão abaixo:", extPath);
-      }
-    });
-  }
-
-  const btnCopyWaConsoleBot = document.getElementById('btnCopyWaConsoleBot');
-  if (btnCopyWaConsoleBot) {
-    btnCopyWaConsoleBot.addEventListener('click', async () => {
-      const consoleBotScript = `/* ROBÔ AUTO-CLICK RADARMAPS PRO */ setInterval(()=>{const b=document.querySelector('button[data-testid="compose-btn-send"],button[data-testid="send"],span[data-testid="send"],span[data-icon="send"],span[data-icon="wds-ic-send-filled"],span[data-icon="round-send-primary"],footer button[aria-label="Enviar"],footer button[aria-label="Send"],button[aria-label="Enviar"],button[aria-label="Send"],button[data-tab="11"]');if(b){const btn=b.closest('button')||b;btn.click();console.log('[RadarMaps PRO] Mensagem enviada automaticamente!');}},1000);console.log('🤖 Robô Auto-Click RadarMaps PRO ATIVO no WhatsApp Web!');`;
-      try {
-        await navigator.clipboard.writeText(consoleBotScript);
-        showToast("📋 Robô Auto-Click copiado! No WhatsApp Web, aperte F12 > Console, cole e dê Enter!");
-      } catch (e) {
-        window.prompt("Copie o código abaixo e cole no Console (F12) do WhatsApp Web:", consoleBotScript);
-      }
-    });
-  }
-
-  window.addEventListener('message', (event) => {
-    if (event.data && event.data.type === 'LEADMAPS_WA_SEND_COMPLETED') {
-      const res = event.data.payload;
-      if (res && res.ok) {
-        showToast(`✅ Mensagem enviada sozinha no WhatsApp Web para ${res.empresa || 'o lead'}!`);
-      } else if (res && res.reason === 'invalid_number') {
-        showToast(`⚠️ O número de ${res.empresa || 'lead'} não possui conta no WhatsApp. Pulado automaticamente!`);
-      }
-    }
-  });
 
   // Modelos Rápidos (Presets)
   document.querySelectorAll('.btn-wa-preset').forEach(btn => {
