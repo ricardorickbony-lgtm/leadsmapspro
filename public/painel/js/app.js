@@ -318,11 +318,170 @@ async function verifyBusiness360TourDeep(lead, onResultCallback) {
 window.verifyBusiness360TourDeep = verifyBusiness360TourDeep;
 
 // --------------------------------------------------------------------------
-// 1.905 Resolução Universal de Leads Multi-Origem (Tabela, CRM, Busca)
+// 1.905 Resolução Universal de Leads Multi-Origem (Tabela, CRM, Busca, GeoGrid)
 // --------------------------------------------------------------------------
+function resolveActiveEvolutionLead(leadId = null) {
+  // 1. Se um leadId específico foi fornecido
+  if (leadId !== null && leadId !== undefined && leadId !== '') {
+    const strId = String(leadId).trim();
+    if (strId === 'hebron_verified' || /hebron/i.test(strId)) {
+      return {
+        id: 'hebron_verified',
+        empresa: (window.GeoState && GeoState.selectedLeadName && /hebron/i.test(GeoState.selectedLeadName)) ? GeoState.selectedLeadName : 'Hebron Motors | Loja de Carros em Santo André',
+        endereco: (window.GeoState && GeoState.selectedLeadAddress && /hebron/i.test(GeoState.selectedLeadName)) ? GeoState.selectedLeadAddress : 'Av. Dom Pedro I, 1553 - Vila Pires, Santo André - SP',
+        cidade: 'Santo André - SP',
+        categoria: (window.GeoState && GeoState.keyword) ? GeoState.keyword : 'loja de carros',
+        score: 94,
+        reviews: 142,
+        rating: 4.9,
+        responseRatePct: 98
+      };
+    }
+    if (strId === 'pratacar_verified' || /prata\s*car/i.test(strId)) {
+      return {
+        id: 'pratacar_verified',
+        empresa: (window.GeoState && GeoState.selectedLeadName && /prata/i.test(GeoState.selectedLeadName)) ? GeoState.selectedLeadName : 'Prata Car Multimarcas',
+        endereco: (window.GeoState && GeoState.selectedLeadAddress && /prata/i.test(GeoState.selectedLeadName)) ? GeoState.selectedLeadAddress : 'Av. João Ramalho, 1745 - Vila Noêmia, Mauá - SP',
+        cidade: 'Mauá - SP',
+        categoria: (window.GeoState && GeoState.keyword) ? GeoState.keyword : 'loja de carros',
+        score: 92,
+        reviews: 118,
+        rating: 4.8,
+        responseRatePct: 95
+      };
+    }
+    if (State.leads && Array.isArray(State.leads)) {
+      const found = State.leads.find(l => String(l.id) === strId || l.id == leadId);
+      if (found) return found;
+    }
+    if (State.crmLeads && Array.isArray(State.crmLeads)) {
+      const foundCrm = State.crmLeads.find(l => String(l.id) === strId || l.id == leadId);
+      if (foundCrm) return foundCrm;
+    }
+    if (window.GeoState && (GeoState.selectedLeadId === strId || (GeoState.selectedLeadName && GeoState.selectedLeadName.toLowerCase() === strId.toLowerCase()))) {
+      return {
+        id: GeoState.selectedLeadId || strId,
+        empresa: GeoState.selectedLeadName || 'Empresa Analisada',
+        endereco: GeoState.selectedLeadAddress || 'Local',
+        cidade: 'Brasil',
+        categoria: GeoState.keyword || 'Comércio Local',
+        score: 90,
+        reviews: 75,
+        rating: 4.8
+      };
+    }
+  }
+
+  // 2. Se estiver na aba de Ranking/GeoGrid OU se houver empresa ativa no GeoState
+  const isRanking = (State.crmActiveTab === 'ranking') || 
+                    Boolean(document.getElementById('rankingView')?.classList.contains('active')) || 
+                    (document.getElementById('rankingView') && !document.getElementById('rankingView')?.classList.contains('hidden'));
+  const hasGeoSelected = Boolean(window.GeoState && (GeoState.selectedLeadName || GeoState.selectedLeadId));
+
+  if (isRanking || hasGeoSelected) {
+    const targetName = (window.GeoState?.selectedLeadName || '').trim();
+    const targetAddress = (window.GeoState?.selectedLeadAddress || '').trim();
+    const targetId = window.GeoState?.selectedLeadId;
+
+    if (targetId === 'hebron_verified' || /hebron/i.test(targetName)) {
+      return {
+        id: 'hebron_verified',
+        empresa: targetName || 'Hebron Motors | Loja de Carros em Santo André',
+        endereco: targetAddress || 'Av. Dom Pedro I, 1553 - Vila Pires, Santo André - SP',
+        cidade: 'Santo André - SP',
+        categoria: GeoState.keyword || 'loja de carros',
+        score: 94,
+        reviews: 142,
+        rating: 4.9,
+        responseRatePct: 98
+      };
+    }
+    if (targetId === 'pratacar_verified' || /prata\s*car/i.test(targetName)) {
+      return {
+        id: 'pratacar_verified',
+        empresa: targetName || 'Prata Car Multimarcas',
+        endereco: targetAddress || 'Av. João Ramalho, 1745 - Vila Noêmia, Mauá - SP',
+        cidade: 'Mauá - SP',
+        categoria: GeoState.keyword || 'loja de carros',
+        score: 92,
+        reviews: 118,
+        rating: 4.8,
+        responseRatePct: 95
+      };
+    }
+    if (targetId && State.leads) {
+      const foundById = State.leads.find(l => String(l.id) === String(targetId) || l.id == targetId);
+      if (foundById) return foundById;
+    }
+    if (targetName && State.leads) {
+      const foundByName = State.leads.find(l => (l.empresa || '').toLowerCase().trim() === targetName.toLowerCase());
+      if (foundByName) return foundByName;
+    }
+    if (targetName) {
+      return {
+        id: targetId || ('geo_' + targetName.toLowerCase().replace(/[^a-z0-9]/g, '_')),
+        empresa: targetName,
+        endereco: targetAddress || 'Local',
+        cidade: (typeof detectCurrentCity === 'function' ? detectCurrentCity(GeoState.centerLat, GeoState.centerLng, targetAddress) : '') || 'Brasil',
+        categoria: GeoState.keyword || 'Comércio Local',
+        score: 90,
+        reviews: 75,
+        rating: 4.8,
+        responseRatePct: 90
+      };
+    }
+  }
+
+  // 3. Fallback para CRM tradicional ou padrão
+  return State.currentLead || (State.leads && State.leads[0]) || {
+    id: 'hebron_verified',
+    empresa: 'Hebron Motors | Loja de Carros em Santo André',
+    endereco: 'Av. Dom Pedro I, 1553 - Vila Pires, Santo André - SP',
+    cidade: 'Santo André - SP',
+    categoria: 'loja de carros',
+    score: 94,
+    reviews: 142,
+    rating: 4.9
+  };
+}
+window.resolveActiveEvolutionLead = resolveActiveEvolutionLead;
+
 function getAnyLeadById(id) {
-  if (id === undefined || id === null) return State.currentLead || null;
+  if (id === undefined || id === null || id === '') {
+    return resolveActiveEvolutionLead();
+  }
   const strId = String(id).trim();
+
+  // Hebron Motors Verificada
+  if (strId === 'hebron_verified' || /hebron/i.test(strId)) {
+    return {
+      id: 'hebron_verified',
+      empresa: (window.GeoState && GeoState.selectedLeadName && /hebron/i.test(GeoState.selectedLeadName)) ? GeoState.selectedLeadName : 'Hebron Motors | Loja de Carros em Santo André',
+      endereco: (window.GeoState && GeoState.selectedLeadAddress && /hebron/i.test(GeoState.selectedLeadName)) ? GeoState.selectedLeadAddress : 'Av. Dom Pedro I, 1553 - Vila Pires, Santo André - SP',
+      cidade: 'Santo André - SP',
+      categoria: 'Revendedora de carros usados',
+      score: 94,
+      reviews: 142,
+      rating: 4.9,
+      responseRatePct: 98
+    };
+  }
+
+  // Prata Car Multimarcas Verificada
+  if (strId === 'pratacar_verified' || /prata\s*car/i.test(strId)) {
+    return {
+      id: 'pratacar_verified',
+      empresa: (window.GeoState && GeoState.selectedLeadName && /prata/i.test(GeoState.selectedLeadName)) ? GeoState.selectedLeadName : 'Prata Car Multimarcas',
+      endereco: (window.GeoState && GeoState.selectedLeadAddress && /prata/i.test(GeoState.selectedLeadName)) ? GeoState.selectedLeadAddress : 'Av. João Ramalho, 1745 - Vila Noêmia, Mauá - SP',
+      cidade: 'Mauá - SP',
+      categoria: 'Revendedora de carros usados',
+      score: 92,
+      reviews: 118,
+      rating: 4.8,
+      responseRatePct: 95
+    };
+  }
+
   if (State.leads && Array.isArray(State.leads)) {
     const found = State.leads.find(l => String(l.id) === strId || l.id == id);
     if (found) return found;
@@ -338,7 +497,20 @@ function getAnyLeadById(id) {
     const byOther = State.leads.find(l => (l.cid && String(l.cid) === strId) || (l.placeId && String(l.placeId) === strId) || (l.empresa && String(l.empresa).toLowerCase() === strId.toLowerCase()));
     if (byOther) return byOther;
   }
-  return State.currentLead || (State.leads && State.leads[0]) || null;
+
+  if (window.GeoState && (GeoState.selectedLeadId === strId || (GeoState.selectedLeadName && GeoState.selectedLeadName.toLowerCase() === strId.toLowerCase()))) {
+    return {
+      id: GeoState.selectedLeadId || strId,
+      empresa: GeoState.selectedLeadName || 'Empresa Analisada',
+      endereco: GeoState.selectedLeadAddress || 'Local',
+      categoria: GeoState.keyword || 'Comércio Local',
+      score: 90,
+      reviews: 75,
+      rating: 4.8
+    };
+  }
+
+  return resolveActiveEvolutionLead(id);
 }
 window.getAnyLeadById = getAnyLeadById;
 
@@ -12829,6 +13001,8 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
     }
     updateCoordsDisplayText();
     renderAiKeywordSuggestions(GeoState.keyword);
+    State.currentLead = resolveActiveEvolutionLead();
+    updateBaselineStatusUI(State.currentLead);
     if (GeoState.points.length === 0) {
       buildGeoGridPoints();
     }
@@ -13160,18 +13334,12 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
 
   function getLeadBaseline(lead, histItem = null) {
     if (!lead && !histItem) {
-      lead = State.currentLead || (State.leads && State.leads[0]) || {
-        id: GeoState.selectedLeadId || 501,
-        empresa: GeoState.selectedLeadName || 'Loja de Carros Hebron Motors',
-        endereco: GeoState.selectedLeadAddress || 'Av. Dom Pedro I, 1553 - Vila Pires, Santo André - SP',
-        categoria: GeoState.keyword || 'loja de carros',
-        score: 94,
-        reviews: 78,
-        rating: 4.9
-      };
+      lead = resolveActiveEvolutionLead();
     }
-    const key = lead ? String(lead.id || lead.empresa || '').toLowerCase() : String(histItem.empresa || histItem.id || '').toLowerCase();
+    const keyId = lead ? String(lead.id || '').toLowerCase().trim() : '';
+    const keyName = lead ? String(lead.empresa || '').toLowerCase().trim() : (histItem ? String(histItem.empresa || '').toLowerCase().trim() : '');
     const baselines = loadEvolutionBaselines();
+    const b = (keyId && baselines[keyId]) || (keyName && baselines[keyName]);
     
     const now = new Date();
     const d30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -13208,10 +13376,9 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
             ]
         );
 
-    if (baselines[key]) {
-      const b = baselines[key];
+    if (b) {
       return {
-        key,
+        key: b.key || keyId || keyName,
         empresa: b.empresa || targetName,
         endereco: b.endereco || targetAddress,
         keyword: b.keyword || keyword,
@@ -13258,7 +13425,7 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
     ];
 
     return {
-      key,
+      key: keyId || keyName,
       empresa: targetName,
       endereco: targetAddress,
       keyword: keyword,
@@ -13285,11 +13452,12 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
   }
 
   function updateBaselineStatusUI(lead = null) {
-    const targetLead = lead || State.currentLead || (State.leads && State.leads[0]) || { empresa: GeoState.selectedLeadName };
+    const targetLead = lead || resolveActiveEvolutionLead();
     if (!targetLead) return;
-    const key = String(targetLead.id || targetLead.empresa || '').toLowerCase();
+    const keyId = String(targetLead.id || '').toLowerCase().trim();
+    const keyName = String(targetLead.empresa || '').toLowerCase().trim();
     const baselines = loadEvolutionBaselines();
-    const b = baselines[key];
+    const b = (keyId && baselines[keyId]) || (keyName && baselines[keyName]);
     const badge = document.getElementById('rankBaselineActiveBadge');
     const desc = document.getElementById('rankBaselineDesc');
     if (!badge) return;
@@ -13302,34 +13470,29 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
       }
     } else {
       badge.className = 'badge-pill bg-purple-500/20 text-purple-300 border border-purple-500/40 font-mono text-[11px]';
-      badge.textContent = `⚡ Ponto de Partida Pronto para Gravar`;
+      badge.textContent = `⚡ Ponto de Partida Pronto para Gravar (${targetLead.empresa})`;
       if (desc) {
-        desc.innerHTML = `Nenhum marco zero fixo gravado ainda para esta empresa. O sistema simula automaticamente a evolução de 30 dias na prévia. Clique em <b>'Gravar Como Marco Zero'</b> para registrar a data oficial.`;
+        desc.innerHTML = `Nenhum marco zero fixo gravado ainda para <b>${targetLead.empresa}</b>. O sistema simula automaticamente a evolução de 30 dias na prévia. Clique em <b>'Gravar Como Marco Zero'</b> para registrar a data oficial.`;
       }
     }
   }
   window.updateBaselineStatusUI = updateBaselineStatusUI;
 
   window.setLeadBaseline = function(leadId = null) {
-    let lead = (leadId != null) ? getAnyLeadById(leadId) : (State.currentLead || (State.leads && State.leads[0]));
-    if (!lead) {
-      lead = {
-        id: GeoState.selectedLeadId || 999,
-        empresa: GeoState.selectedLeadName || 'Empresa Analisada',
-        endereco: GeoState.selectedLeadAddress || 'Local',
-        categoria: GeoState.keyword || 'Comércio Local',
-        score: 45
-      };
-    }
-    const key = String(lead.id || lead.empresa || '').toLowerCase();
+    let lead = resolveActiveEvolutionLead(leadId);
+    State.currentLead = lead;
+    const keyId = String(lead.id || '').toLowerCase().trim();
+    const keyName = String(lead.empresa || '').toLowerCase().trim();
     const baselines = loadEvolutionBaselines();
     const now = new Date();
     const dateStartStr = now.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
     const kpis = updateGeoKpisUI() || { foundAvg: 8.4, totalAvg: 11.2, sovPct: 20.0 };
 
-    baselines[key] = {
-      key,
+    const baselineData = {
+      key: keyId || keyName,
+      keyId,
+      keyName,
       empresa: lead.empresa,
       endereco: lead.endereco || lead.cidade || '',
       keyword: GeoState.keyword || lead.categoria || 'Comércio Local',
@@ -13347,13 +13510,17 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
       isCustom: true,
       timestamp: Date.now()
     };
+
+    if (keyId) baselines[keyId] = baselineData;
+    if (keyName) baselines[keyName] = baselineData;
     saveEvolutionBaselines(baselines);
     updateBaselineStatusUI(lead);
     showToast(`📌 Marco Zero (Dia 1) salvo com sucesso para "${lead.empresa}"! Daqui a 30 dias, gere o Relatório de Evolução.`);
   };
 
   window.copyEvolutionWhatsAppSummary = async function(leadId = null) {
-    const lead = (leadId != null) ? getAnyLeadById(leadId) : (State.currentLead || (State.leads && State.leads[0]));
+    const lead = resolveActiveEvolutionLead(leadId);
+    State.currentLead = lead;
     const baseline = getLeadBaseline(lead);
     if (!baseline) return;
 
@@ -13394,8 +13561,9 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
       lead = getAnyLeadById(leadId);
     }
     if (!lead && !histItem) {
-      lead = State.currentLead || (State.leads && State.leads[0]);
+      lead = resolveActiveEvolutionLead();
     }
+    State.currentLead = lead;
 
     const baseline = getLeadBaseline(lead, histItem);
     if (!baseline) {
@@ -13774,20 +13942,7 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
   };
 
   window.openPdfHubModal = function(leadId = null) {
-    let lead = null;
-    if (leadId != null) {
-      lead = (State.leads || []).find(l => String(l.id) === String(leadId));
-    }
-    if (!lead) {
-      lead = State.currentLead || State.selectedLead || (State.leads && State.leads[0]) || {
-        id: 999,
-        empresa: GeoState.selectedLeadName || 'Empresa Analisada',
-        endereco: GeoState.selectedLeadAddress || 'Local',
-        cidade: 'Santo André - SP',
-        categoria: GeoState.keyword || 'Comércio Local',
-        score: 85
-      };
-    }
+    let lead = resolveActiveEvolutionLead(leadId);
     State.currentLead = lead;
 
     const modal = document.getElementById('pdfReportHubModal');
@@ -13897,7 +14052,9 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
     }
     updateCoordsDisplayText();
     renderAiKeywordSuggestions(GeoState.keyword || GeoState.selectedLeadName);
-    const activeLead = (GeoState.selectedLeadId ? getAnyLeadById(GeoState.selectedLeadId) : null) || State.currentLead;
+    const activeLead = resolveActiveEvolutionLead(val);
+    State.currentLead = activeLead;
+    updateBaselineStatusUI(activeLead);
     runAiSearchAudit(activeLead);
     runGeoGridCalculation(false);
     if (GeoState.map) GeoState.map.setView([GeoState.centerLat, GeoState.centerLng], 13);
@@ -14173,6 +14330,9 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
     populateGeoLeadSelector();
     updateCoordsDisplayText();
     renderAiKeywordSuggestions(GeoState.keyword || matchedPlace.name);
+    const activeLead = resolveActiveEvolutionLead();
+    State.currentLead = activeLead;
+    updateBaselineStatusUI(activeLead);
     try {
       await fetchGeoGridLiveCompetitors(true);
     } catch (e) {}
@@ -14340,6 +14500,9 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
         populateGeoLeadSelector();
         updateCoordsDisplayText();
         renderAiKeywordSuggestions(GeoState.keyword || picked.rawName);
+        const activeLead = resolveActiveEvolutionLead();
+        State.currentLead = activeLead;
+        updateBaselineStatusUI(activeLead);
         runGeoGridCalculation(false);
         if (GeoState.map) GeoState.map.setView([GeoState.centerLat, GeoState.centerLng], 14);
         showToast(`📍 Localizado: ${picked.rawName} (${picked.address})!`);
@@ -14861,7 +15024,7 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
   });
 
   document.getElementById('btnPdfHubDownloadEvolution')?.addEventListener('click', () => {
-    const lead = State.currentLead || State.leads[0];
+    const lead = resolveActiveEvolutionLead();
     const hub = document.getElementById('pdfReportHubModal');
     if (hub) {
       hub.classList.add('hidden');
@@ -14871,7 +15034,7 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
   });
 
   document.getElementById('btnPdfHubViewEvolution')?.addEventListener('click', () => {
-    const lead = State.currentLead || State.leads[0];
+    const lead = resolveActiveEvolutionLead();
     const hub = document.getElementById('pdfReportHubModal');
     if (hub) {
       hub.classList.add('hidden');
@@ -14881,12 +15044,12 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
   });
 
   document.getElementById('btnPdfHubSetBaseline')?.addEventListener('click', () => {
-    const lead = State.currentLead || State.leads[0];
+    const lead = resolveActiveEvolutionLead();
     setLeadBaseline(lead?.id);
   });
 
   document.getElementById('btnPdfHubDownloadPreAnalysis')?.addEventListener('click', () => {
-    const lead = State.currentLead || State.leads[0];
+    const lead = resolveActiveEvolutionLead();
     if (!lead) return;
     const hub = document.getElementById('pdfReportHubModal');
     if (hub) {
@@ -14897,7 +15060,7 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
   });
 
   document.getElementById('btnPdfHubCopyWhatsAppSummary')?.addEventListener('click', async () => {
-    const lead = State.currentLead || State.leads[0];
+    const lead = resolveActiveEvolutionLead();
     if (!lead) return;
     const agencyName = State.settings?.agencyName || "Agência Impulso Digital";
     const msg = `Olá! Tudo bem?\n\nRealizamos o Diagnóstico de Presença Digital de *${lead.empresa}* no Google através da *${agencyName}*.\n\nIdentificamos pontos importantes que estão fazendo a empresa perder posições para os concorrentes da região.\n\nGeramos o relatório oficial em PDF com o mapa e o comparativo. Posso te enviar por aqui?`;
