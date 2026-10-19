@@ -9226,6 +9226,9 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       if (typeof window.initOrRefreshGeoGrid === 'function') {
         setTimeout(() => window.initOrRefreshGeoGrid(), 80);
       }
+      if (typeof updateBaselineStatusUI === 'function') {
+        setTimeout(() => updateBaselineStatusUI(), 120);
+      }
     } else if (viewName === 'admin') {
       if (!State.activeSession || State.activeSession.role !== 'master') {
         showToast('⛔ Acesso restrito exclusivamente ao Administrador Geral (Ricardo).');
@@ -13271,6 +13274,32 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
     };
   }
 
+  function updateBaselineStatusUI(lead = null) {
+    const targetLead = lead || State.currentLead || (State.leads && State.leads[0]) || { empresa: GeoState.selectedLeadName };
+    if (!targetLead) return;
+    const key = String(targetLead.id || targetLead.empresa || '').toLowerCase();
+    const baselines = loadEvolutionBaselines();
+    const b = baselines[key];
+    const badge = document.getElementById('rankBaselineActiveBadge');
+    const desc = document.getElementById('rankBaselineDesc');
+    if (!badge) return;
+
+    if (b) {
+      badge.className = 'badge-pill bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[11px]';
+      badge.textContent = `🟢 Gravado em ${b.dateStartStr} (${b.empresa})`;
+      if (desc) {
+        desc.innerHTML = `Marco Zero registrado para <b>${b.empresa}</b>. Posição inicial: <b>#${Number(b.initialFoundAvg).toFixed(1)}</b> · Saúde inicial: <b>${b.initialScore}%</b>. Clique em 'Gerar Relatório de Evolução' para comparar.`;
+      }
+    } else {
+      badge.className = 'badge-pill bg-purple-500/20 text-purple-300 border border-purple-500/40 font-mono text-[11px]';
+      badge.textContent = `⚡ Ponto de Partida Pronto para Gravar`;
+      if (desc) {
+        desc.innerHTML = `Nenhum marco zero fixo gravado ainda para esta empresa. O sistema simula automaticamente a evolução de 30 dias na prévia. Clique em <b>'Gravar Como Marco Zero'</b> para registrar a data oficial.`;
+      }
+    }
+  }
+  window.updateBaselineStatusUI = updateBaselineStatusUI;
+
   window.setLeadBaseline = function(leadId = null) {
     let lead = (leadId != null) ? getAnyLeadById(leadId) : (State.currentLead || (State.leads && State.leads[0]));
     if (!lead) {
@@ -13309,6 +13338,7 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
       timestamp: Date.now()
     };
     saveEvolutionBaselines(baselines);
+    updateBaselineStatusUI(lead);
     showToast(`📌 Marco Zero (Dia 1) salvo com sucesso para "${lead.empresa}"! Daqui a 30 dias, gere o Relatório de Evolução.`);
   };
 

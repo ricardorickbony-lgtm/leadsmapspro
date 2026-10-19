@@ -298,6 +298,9 @@
           <span id="headerCreditsDisplay" class="font-mono text-xs font-bold text-amber-400">∞ Créditos (Master)</span>
         </div>
         <button id="btnExportCSV" class="btn-ghost-dark px-3 py-2 text-xs font-semibold cursor-pointer">⬇ Exportar CSV/Excel</button>
+        <button id="btnHeaderTopEvolution" type="button" onclick="window.downloadEvolutionPdf()" class="rounded-xl border border-purple-500/60 bg-purple-500/20 hover:bg-purple-500/35 text-purple-200 px-3 py-2 text-xs font-bold cursor-pointer flex items-center gap-1.5 transition-all" title="Gerar Relatório de Evolução Mensal (Antes vs Depois — 30 Dias)">
+          <span>📈</span> <span>Evolução 30D (Marco Zero)</span>
+        </button>
         <button id="btnWhiteLabelReport" class="btn-amber px-3.5 py-2 text-xs font-extrabold cursor-pointer flex items-center gap-1.5 shadow-md hover:scale-105 transition-all"><span>📄</span> <span>Gerar Relatórios em PDF</span></button>
         <button id="btnOpenWhatsAppAutomation" class="btn-ghost-dark px-3 py-2 text-xs font-bold text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/10 cursor-pointer" title="Configurar mensagens de abordagem e gerenciar fila de disparos">💬 Automação WhatsApp</button>
         <button id="btnOpenSettings" class="btn-ghost-dark px-3 py-2 text-xs font-semibold cursor-pointer" aria-label="Configurações">⚙️ Configurações</button>
@@ -808,16 +811,48 @@
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
-            <button id="btnResetNewRankAnalysis" type="button" class="btn-ghost-dark px-3.5 py-2 text-xs font-bold text-slate-200 hover:text-white cursor-pointer">
-              🔄 Nova Análise para o Local
+            <button id="btnHeaderSetBaseline" type="button" onclick="window.setLeadBaseline()" class="rounded-xl border border-purple-500/50 bg-purple-500/20 px-3.5 py-2 text-xs font-black text-purple-200 hover:bg-purple-500/30 hover:border-purple-400 cursor-pointer flex items-center gap-1.5 shadow-md transition-all" title="Gravar o estado atual desta empresa como Marco Zero (Dia 1) para prestação de contas">
+              <span>📌</span> <span>Definir Marco Zero (Dia 1)</span>
             </button>
-            <button id="btnFullscreenRankMap" type="button" class="btn-ghost-dark px-3.5 py-2 text-xs font-bold text-sky-400 border-sky-500/40 hover:bg-sky-500/10 cursor-pointer">
-              ⛶ Apresentar em Tela Cheia
+            <button id="btnHeaderEvolutionPdf" type="button" onclick="window.downloadEvolutionPdf()" class="rounded-xl border border-purple-500/60 bg-gradient-to-r from-purple-600 to-indigo-600 px-3.5 py-2 text-xs font-black text-white hover:brightness-110 cursor-pointer flex items-center gap-1.5 shadow-lg transition-all" title="Gerar Relatório de Evolução Mensal (Antes vs Depois) desta empresa em PDF">
+              <span>📈</span> <span>Relatório de Evolução (30 Dias)</span>
             </button>
-            <button id="btnDownloadRankingPdf" type="button" class="btn-amber px-4 py-2 text-xs font-extrabold cursor-pointer flex items-center gap-1.5 shadow-lg">
-              <span>📄</span> <span>Baixar Report de Ranking em PDF</span>
+            <button id="btnResetNewRankAnalysis" type="button" class="btn-ghost-dark px-3 py-2 text-xs font-bold text-slate-200 hover:text-white cursor-pointer">
+              🔄 Nova Análise
+            </button>
+            <button id="btnFullscreenRankMap" type="button" class="btn-ghost-dark px-3 py-2 text-xs font-bold text-sky-400 border-sky-500/40 hover:bg-sky-500/10 cursor-pointer">
+              ⛶ Tela Cheia
+            </button>
+            <button id="btnDownloadRankingPdf" type="button" class="btn-amber px-3.5 py-2 text-xs font-extrabold cursor-pointer flex items-center gap-1.5 shadow-lg">
+              <span>📄</span> <span>PDF do Ranking</span>
             </button>
           </div>
+        </div>
+      </section>
+
+      <!-- Banner de Destaque: Marco Zero (Dia 1) & Prestação de Contas 30 Dias -->
+      <section id="rankBaselineStatusBar" class="glass-card p-4 border border-purple-500/40 bg-purple-950/25 flex flex-wrap items-center justify-between gap-4 shadow-xl">
+        <div class="flex items-center gap-3.5">
+          <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-purple-500/20 text-purple-300 text-xl border border-purple-500/50 shadow-inner">
+            📌
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-black text-white text-sm">Status do Marco Zero (Ponto de Partida):</span>
+              <span id="rankBaselineActiveBadge" class="badge-pill bg-purple-500/20 text-purple-300 border border-purple-500/40 font-mono text-[11px]">Calibrado (Ciclo 30 Dias Ativo)</span>
+            </div>
+            <p id="rankBaselineDesc" class="text-xs text-slate-300 mt-0.5">
+              O Marco Zero salva a foto da empresa no <b>Dia 1</b> (posição média inicial e mapa com pontos vermelhos) para comparar no <b>Dia 30</b> e comprovar o retorno aos clientes.
+            </p>
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button type="button" onclick="window.setLeadBaseline()" class="rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-extrabold px-4 py-2 text-xs shadow-md cursor-pointer flex items-center gap-1.5 transition-all" title="Gravar a situação atual como Marco Zero">
+            <span>📌</span> <span>Gravar Como Marco Zero</span>
+          </button>
+          <button type="button" onclick="window.downloadEvolutionPdf()" class="rounded-xl border border-emerald-500/50 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-extrabold px-4 py-2 text-xs cursor-pointer flex items-center gap-1.5 transition-all" title="Gerar o Relatório Oficial de Evolução 30 Dias em PDF">
+            <span>📈</span> <span>Gerar Relatório de Evolução</span>
+          </button>
         </div>
       </section>
 
@@ -1063,7 +1098,13 @@
                 <span>📍</span> <span>Analisar Outra Região</span>
               </button>
               <button id="btnMapToolbarDownloadPdf" type="button" onclick="window.downloadRankingPdf()" class="rounded-lg border border-amber-500/50 bg-amber-500/15 hover:bg-amber-500/30 text-amber-300 hover:text-white px-3 py-1.5 font-extrabold cursor-pointer flex items-center gap-1.5 shadow-sm transition-all" title="Baixar relatório oficial em PDF com o mapa e as posições">
-                <span>📄</span> <span>Baixar PDF do Ranking</span>
+                <span>📄</span> <span>PDF do Ranking</span>
+              </button>
+              <button id="btnMapToolbarSetBaseline" type="button" onclick="window.setLeadBaseline()" class="rounded-lg border border-purple-500/50 bg-purple-500/20 hover:bg-purple-500/35 text-purple-200 px-3 py-1.5 font-extrabold cursor-pointer flex items-center gap-1.5 shadow-sm transition-all" title="Gravar este mapa como Marco Zero (Dia 1)">
+                <span>📌</span> <span>Salvar Marco Zero</span>
+              </button>
+              <button id="btnMapToolbarEvolutionPdf" type="button" onclick="window.downloadEvolutionPdf()" class="rounded-lg border border-purple-500/60 bg-gradient-to-r from-purple-600 to-indigo-600 hover:brightness-110 text-white px-3 py-1.5 font-extrabold cursor-pointer flex items-center gap-1.5 shadow-sm transition-all" title="Gerar Relatório de Evolução Mensal (Antes vs Depois) em PDF">
+                <span>📈</span> <span>Evolução 30D</span>
               </button>
               <span id="rankRulerDistanceBadge" class="hidden rounded-full bg-amber-500/20 border border-amber-500/50 px-2.5 py-1 font-mono text-[11px] font-bold text-amber-300">
                 📏 Distância: 0.00 km
@@ -2366,7 +2407,7 @@
     <!-- Message injected here -->
   </div>
 
-  <script src="js/app.js?v=20261019_v57_relatorio_evolucao_30d"></script>
+  <script src="js/app.js?v=20261019_v58_marco_zero_destaque_total"></script>
   <script src="js/security-shield.js?v=20261018_v46_top10_competitors_niche_audit"></script>
 </body>
 </html>
