@@ -8263,7 +8263,11 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     if (icon) icon.textContent = "⏸️";
     if (label) label.textContent = `Pausar Disparo Automático (${pending.length} restantes)`;
 
-    showToast(`🚀 Disparo sequencial iniciado! Intervalo anti-ban: ${State.settings.whatsappDelay || 25}s.`);
+    if (!isExtensionBridgeActive() && State.settings.whatsappPlatform === 'web') {
+      showToast(`⚠️ Extensão auto-click desconectada: cada conversa abrirá com o texto pronto no WhatsApp Web para você apertar Enter.`);
+    } else {
+      showToast(`🚀 Disparo sequencial iniciado! Intervalo anti-ban: ${State.settings.whatsappDelay || 25}s.`);
+    }
     dispatchNextAutoLead();
   }
 
@@ -8289,7 +8293,15 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
         badge.className = "inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-extrabold text-emerald-300 border border-emerald-500/40";
       }
       if (txt) {
-        txt.textContent = "Conectado! O robô abre a conversa e clica em 'Enviar' (➤) sozinho no WhatsApp Web.";
+        txt.textContent = "Conectado! O robô abre a conversa e clica em 'Enviar' (➤) 100% sozinho no WhatsApp Web.";
+      }
+    } else {
+      if (badge) {
+        badge.textContent = "⚠️ Extensão Desconectada (Modo Manual)";
+        badge.className = "inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-300 border border-amber-500/40";
+      }
+      if (txt) {
+        txt.textContent = "Abre a conversa com o texto pronto. Para o robô apertar 'Enviar' (➤) 100% sozinho, ative a extensão ao lado!";
       }
     }
   }
@@ -8556,10 +8568,10 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
   const btnCopyExtensionPath = document.getElementById('btnCopyExtensionPath');
   if (btnCopyExtensionPath) {
     btnCopyExtensionPath.addEventListener('click', async () => {
-      const extPath = "C:\\Users\\ricar\\OneDrive\\Documentos\\Projetos\\leadmaps-pro\\extensao-chrome";
+      const extPath = "C:\\Users\\ricar\\OneDrive\\Documentos\\Projetos\\leadsmapspro\\extensao-chrome";
       try {
         await navigator.clipboard.writeText(extPath);
-        showToast("📁 Caminho da pasta extensao-chrome copiado! Cole em chrome://extensions");
+        showToast("📁 Caminho copiado: " + extPath + " (Cole em chrome://extensions)");
       } catch (e) {
         window.prompt("Copie o caminho da pasta da extensão abaixo:", extPath);
       }
@@ -8569,7 +8581,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
   const btnCopyWaConsoleBot = document.getElementById('btnCopyWaConsoleBot');
   if (btnCopyWaConsoleBot) {
     btnCopyWaConsoleBot.addEventListener('click', async () => {
-      const consoleBotScript = `/* ROBÔ AUTO-CLICK LEADMAPS PRO */ setInterval(()=>{const b=document.querySelector('footer button[aria-label="Enviar"],footer button[aria-label="Send"],span[data-icon="wds-ic-send-filled"],span[data-icon="send"],button[data-tab="11"]');if(b){const btn=b.closest('button')||b;btn.click();console.log('[LeadMaps Pro] Mensagem enviada automaticamente!');}},1200);console.log('🤖 Robô Auto-Click LeadMaps Pro ATIVO no WhatsApp Web!');`;
+      const consoleBotScript = `/* ROBÔ AUTO-CLICK RADARMAPS PRO */ setInterval(()=>{const b=document.querySelector('button[data-testid="compose-btn-send"],button[data-testid="send"],span[data-testid="send"],span[data-icon="send"],span[data-icon="wds-ic-send-filled"],span[data-icon="round-send-primary"],footer button[aria-label="Enviar"],footer button[aria-label="Send"],button[aria-label="Enviar"],button[aria-label="Send"],button[data-tab="11"]');if(b){const btn=b.closest('button')||b;btn.click();console.log('[RadarMaps PRO] Mensagem enviada automaticamente!');}},1000);console.log('🤖 Robô Auto-Click RadarMaps PRO ATIVO no WhatsApp Web!');`;
       try {
         await navigator.clipboard.writeText(consoleBotScript);
         showToast("📋 Robô Auto-Click copiado! No WhatsApp Web, aperte F12 > Console, cole e dê Enter!");

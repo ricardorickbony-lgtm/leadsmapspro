@@ -51,12 +51,18 @@
 
   function findSendButton() {
     const selectors = [
+      'button[data-testid="compose-btn-send"]',
+      'button[data-testid="send"]',
+      'span[data-testid="send"]',
+      'span[data-icon="send"]',
+      'span[data-icon="wds-ic-send-filled"]',
+      'span[data-icon="round-send-primary"]',
       'footer button[aria-label="Enviar"]',
       'footer button[aria-label="Send"]',
       'button[aria-label="Enviar"]',
       'button[aria-label="Send"]',
-      'span[data-icon="wds-ic-send-filled"]',
-      'span[data-icon="send"]',
+      'footer button[aria-label*="Enviar" i]',
+      'footer button[aria-label*="Send" i]',
       'button[data-tab="11"]'
     ];
     for (const sel of selectors) {
