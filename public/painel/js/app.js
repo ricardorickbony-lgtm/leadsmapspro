@@ -10024,6 +10024,29 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       return;
     }
 
+    // 1.1 Acesso de Teste / Degustação / VIP
+    const isTestKey = key === 'TESTE' || key === 'VIP' || key === 'TESTEGRATIS' || key === 'DEGUSTACAO' || key === 'DEMO' || key.startsWith('LMPRO-TST') || key.startsWith('LMPRO-VIP');
+    const isTestUser = email === 'teste' || email === 'convidado' || email === 'vip' || email === 'demo';
+
+    if (isTestKey || (isTestUser && (keyLower === 'teste' || keyLower === '123456' || keyLower === 'demo' || isTestKey))) {
+      const clientName = email && !isTestUser ? email.split('@')[0] : 'Convidado VIP (Degustação)';
+      applySessionRole({
+        role: 'client',
+        name: clientName,
+        email: email || 'teste@radarmapspro.com.br',
+        daysLeft: 7
+      });
+      document.documentElement.classList.add('authenticated');
+      document.body.classList.add('authenticated');
+      authOverlay?.classList.add('authenticated', 'is-hidden');
+      if (authOverlay) {
+        authOverlay.style.setProperty('display', 'none', 'important');
+        authOverlay.style.display = 'none';
+      }
+      showToast('🎁 Acesso de Teste VIP Liberado! 7 dias de degustação com 500 créditos.');
+      return;
+    }
+
     // 2. Verifica na lista de Assinantes cadastrados
     const sub = (State.subscribers || []).find(
       s => (s.email && s.email.toLowerCase() === email) || 
@@ -10242,20 +10265,38 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     if (raw) savedSession = JSON.parse(raw);
   } catch(e) {}
 
-  if (savedSession && savedSession.role) {
-    applySessionRole(savedSession);
-    document.documentElement.classList.add('authenticated');
-    document.body.classList.add('authenticated');
-    authOverlay?.classList.add('authenticated', 'is-hidden');
-    if (authOverlay) authOverlay.style.setProperty('display', 'none', 'important');
-  } else {
-    State.activeSession = null;
-    tabNavAdmin?.classList.add('hidden');
-    activateMainView('extrator');
-    document.documentElement.classList.remove('authenticated');
-    document.body.classList.remove('authenticated');
-    authOverlay?.classList.remove('authenticated', 'is-hidden');
-    if (authOverlay) authOverlay.style.setProperty('display', 'flex', 'important');
+  // Checagem de Auto-Login via Parâmetros de URL (?teste=1, ?vip=1, ?key=TESTE, ?token=...)
+  let autoLoginHandled = false;
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paramKey = urlParams.get('key') || urlParams.get('chave') || urlParams.get('token') || urlParams.get('licenca');
+    const paramEmail = urlParams.get('email') || urlParams.get('user') || urlParams.get('login');
+    const paramTest = urlParams.get('teste') || urlParams.get('test') || urlParams.get('vip') || urlParams.get('demo');
+
+    if (paramKey || paramTest || paramEmail) {
+      const emailToTry = paramEmail || (paramTest ? 'convidado@vip.com' : 'convidado@teste.com');
+      const keyToTry = paramKey || (paramTest ? 'VIP' : 'TESTE');
+      attemptLogin(emailToTry, keyToTry);
+      autoLoginHandled = Boolean(State.activeSession);
+    }
+  } catch(eParam) {}
+
+  if (!autoLoginHandled) {
+    if (savedSession && savedSession.role) {
+      applySessionRole(savedSession);
+      document.documentElement.classList.add('authenticated');
+      document.body.classList.add('authenticated');
+      authOverlay?.classList.add('authenticated', 'is-hidden');
+      if (authOverlay) authOverlay.style.setProperty('display', 'none', 'important');
+    } else {
+      State.activeSession = null;
+      tabNavAdmin?.classList.add('hidden');
+      activateMainView('extrator');
+      document.documentElement.classList.remove('authenticated');
+      document.body.classList.remove('authenticated');
+      authOverlay?.classList.remove('authenticated', 'is-hidden');
+      if (authOverlay) authOverlay.style.setProperty('display', 'flex', 'important');
+    }
   }
 
   // ==========================================================================
