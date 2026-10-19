@@ -49,6 +49,20 @@
     banner.style.opacity = "1";
   }
 
+  function dismissMicrophoneDialog() {
+    const dialogs = document.querySelectorAll('div[data-animate-modal-popup="true"], div[role="dialog"]');
+    for (const dialog of dialogs) {
+      const txt = (dialog.innerText || "").toLowerCase();
+      if (txt.includes("microfone") || txt.includes("gravar mensagens de voz") || txt.includes("microphone")) {
+        const btn = dialog.querySelector("button");
+        if (btn) {
+          btn.click();
+          console.log("[RadarMaps PRO] Modal de microfone fechado automaticamente.");
+        }
+      }
+    }
+  }
+
   function findSendButton() {
     const selectors = [
       'button[data-testid="compose-btn-send"]',
@@ -62,12 +76,15 @@
       'button[aria-label="Enviar"]',
       'button[aria-label="Send"]',
       'footer button[aria-label*="Enviar" i]',
-      'footer button[aria-label*="Send" i]',
-      'button[data-tab="11"]'
+      'footer button[aria-label*="Send" i]'
     ];
     for (const sel of selectors) {
       const el = document.querySelector(sel);
       if (el) {
+        // Garante que não é o botão de microfone / áudio
+        if (el.querySelector('[data-icon="ptt"], [data-icon="mic"], [aria-label*="voz" i], [aria-label*="voice" i]')) {
+          continue;
+        }
         return el.closest("button") || el;
       }
     }
@@ -102,12 +119,13 @@
     const maxAttempts = 60; // até 30 segundos aguardando o WhatsApp Web carregar a conversa
 
     showWaBanner(
-      `🤖 LeadMaps Pro: Preparando envio automático${empresaName ? " para " + empresaName : ""}...`,
+      `🤖 RadarMaps PRO: Preparando envio automático${empresaName ? " para " + empresaName : ""}...`,
       "amber"
     );
 
     autoSendTimer = setInterval(() => {
       attempts++;
+      dismissMicrophoneDialog();
 
       // 1. Verifica se o número é inválido / sem WhatsApp
       const invalidBtn = findInvalidNumberDialogButton();
@@ -131,58 +149,41 @@
       const sendBtn = findSendButton();
       const inputBox =
         document.querySelector('footer div[contenteditable="true"]') ||
-        document.querySelector('div[contenteditable="true"][data-tab="10"]');
+        document.querySelector('div[contenteditable="true"][data-tab="10"]') ||
+        document.querySelector('div[contenteditable="true"][role="textbox"]');
 
       if (sendBtn) {
         clearInterval(autoSendTimer);
         autoSendTimer = null;
         lastSentSignature = signature;
 
-        // Pequeno delay humano de 700ms para o estado do React estabilizar
+        // Pequeno delay humano de 600ms para o estado do React estabilizar
         setTimeout(() => {
           const btnNow = findSendButton() || sendBtn;
-          btnNow.click();
+          if (btnNow) {
+            btnNow.click();
+          }
 
-          // Fallback extra: dispara evento de clique e tecla Enter caso necessário
-          setTimeout(() => {
-            const stillHasBtn = findSendButton();
-            if (stillHasBtn) {
-              stillHasBtn.click();
-              const box =
-                document.querySelector('footer div[contenteditable="true"]') ||
-                document.querySelector('div[contenteditable="true"][data-tab="10"]');
-              if (box) {
-                box.focus();
-                const enterEvent = new KeyboardEvent("keydown", {
-                  key: "Enter",
-                  code: "Enter",
-                  keyCode: 13,
-                  which: 13,
-                  bubbles: true,
-                  cancelable: true
-                });
-                box.dispatchEvent(enterEvent);
-              }
-            }
+          showWaBanner(
+            `✅ RadarMaps PRO: Mensagem enviada automaticamente${empresaName ? " para " + empresaName : ""}!`,
+            "emerald"
+          );
 
-            showWaBanner(
-              `✅ LeadMaps Pro: Mensagem enviada automaticamente${empresaName ? " para " + empresaName : ""}!`,
-              "emerald"
-            );
+          try {
+            chrome.runtime.sendMessage({
+              type: "LEADMAPS_WA_SEND_RESULT",
+              ok: true,
+              empresa: empresaName
+            });
+          } catch (e) {}
 
-            try {
-              chrome.runtime.sendMessage({
-                type: "LEADMAPS_WA_SEND_RESULT",
-                ok: true,
-                empresa: empresaName
-              });
-            } catch (e) {}
-          }, 500);
-        }, 700);
+          // Fecha modal de microfone caso tenha aparecido
+          setTimeout(dismissMicrophoneDialog, 400);
+        }, 600);
         return;
       }
 
-      // 3. Caso o texto esteja na caixa mas o botão ainda esteja renderizando
+      // 3. Fallback: Se o texto estiver na caixa mas o botão ainda não renderizou, tenta tecla Enter
       if (attempts >= maxAttempts) {
         clearInterval(autoSendTimer);
         autoSendTimer = null;
@@ -204,6 +205,7 @@
 
   // Verifica se a página foi aberta via URL com ?phone=...&text=...
   function checkUrlForAutoSend() {
+    dismissMicrophoneDialog();
     const params = new URLSearchParams(window.location.search);
     const phone = params.get("phone");
     const text = params.get("text");
@@ -216,10 +218,11 @@
     }
   }
 
-  // Executa na carga inicial
+  // Executa na carga inicial e a cada 800ms para detectar navegações de novos leads
   checkUrlForAutoSend();
+  setInterval(checkUrlForAutoSend, 800);
 
-  // Escuta comandos diretos do Background Service Worker (Troca instantânea SPA sem recarregar a página!)
+  // Escuta comandos diretos do Background Service Worker
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === "EXECUTE_WA_SEND") {
       const { phone, text, empresa } = message.payload || {};
@@ -228,18 +231,9 @@
         return;
       }
 
-      const sig = `${phone}:${text.slice(0, 30)}:${Date.now()}`;
+      const targetUrl = `https://web.whatsapp.com/send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}&leadmaps_autosend=1`;
       showWaBanner(`⚡ Abrindo conversa com ${empresa || phone}...`, "amber");
-
-      // Injeta um link SPA interno no WhatsApp Web para abrir a conversa sem recarregar a aba inteira
-      const link = document.createElement("a");
-      link.href = `https://web.whatsapp.com/send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}`;
-      link.style.display = "none";
-      document.body.appendChild(link);
-      link.click();
-      setTimeout(() => link.remove(), 300);
-
-      triggerSendAction(sig, empresa);
+      window.location.href = targetUrl;
       sendResponse({ ok: true });
       return true;
     }

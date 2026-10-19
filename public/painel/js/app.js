@@ -8472,16 +8472,20 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     countdownBox?.classList.remove('hidden');
     if (btnOpen) btnOpen.disabled = true;
 
-    let remaining = delay;
-    if (countdownSec) countdownSec.textContent = `${remaining}s`;
+    const startTime = Date.now();
+    const durationMs = delay * 1000;
+    if (countdownSec) countdownSec.textContent = `${delay}s`;
 
-    State.whatsappCountdownTimer = setInterval(() => {
-      remaining--;
-      if (countdownSec) countdownSec.textContent = `${remaining}s`;
+    const checkCountdown = () => {
+      const elapsed = Date.now() - startTime;
+      const remainingSec = Math.max(0, Math.ceil((durationMs - elapsed) / 1000));
+      if (countdownSec) countdownSec.textContent = `${remainingSec}s`;
 
-      if (remaining <= 0) {
-        clearInterval(State.whatsappCountdownTimer);
-        State.whatsappCountdownTimer = null;
+      if (elapsed >= durationMs) {
+        if (State.whatsappCountdownTimer) {
+          clearInterval(State.whatsappCountdownTimer);
+          State.whatsappCountdownTimer = null;
+        }
         countdownBox?.classList.add('hidden');
         if (btnOpen) btnOpen.disabled = false;
         updateWhatsAppQueueUI();
@@ -8489,7 +8493,16 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
           onFinish();
         }
       }
-    }, 1000);
+    };
+
+    State.whatsappCountdownTimer = setInterval(checkCountdown, 500);
+
+    const onVisible = () => {
+      if (State.whatsappCountdownTimer) {
+        checkCountdown();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
   }
 
   function skipCurrentWhatsAppLead() {

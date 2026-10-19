@@ -38,18 +38,8 @@ async function handleWhatsAppAutoDispatch({ phone, text, empresa }) {
 
   if (tabs && tabs.length > 0) {
     const waTab = tabs[0];
-    await chrome.tabs.update(waTab.id, { active: true });
-    try {
-      await chrome.tabs.sendMessage(waTab.id, {
-        type: "EXECUTE_WA_SEND",
-        payload: { phone, text, empresa }
-      });
-      return { mode: "spa_instant", tabId: waTab.id };
-    } catch (e) {
-      // Se o content script ainda não estava injetado nessa aba antiga, recarrega com a URL
-      await chrome.tabs.update(waTab.id, { url: targetUrl, active: true });
-      return { mode: "tab_reload", tabId: waTab.id };
-    }
+    await chrome.tabs.update(waTab.id, { url: targetUrl, active: true });
+    return { mode: "tab_navigate", tabId: waTab.id };
   } else {
     const newTab = await chrome.tabs.create({ url: targetUrl, active: true });
     return { mode: "new_tab", tabId: newTab.id };
