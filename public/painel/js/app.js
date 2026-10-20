@@ -2127,6 +2127,236 @@ function cleanCityForComparison(cityStr) {
 }
 window.cleanCityForComparison = cleanCityForComparison;
 
+// --------------------------------------------------------------------------
+// 1.93E AveriguaÃ§Ã£o Total e CalibraÃ§Ã£o Factual de Concorrentes
+// Permite ajustar, verificar e persistir os concorrentes reais do nicho e cidade
+// --------------------------------------------------------------------------
+function getVerifiedCompetitorsForBusiness(empresa, cidade) {
+  try {
+    const rawStorage = localStorage.getItem('leadsmapspro_verified_competitors');
+    if (rawStorage) {
+      const store = JSON.parse(rawStorage);
+      const key = String(empresa || '').toLowerCase().trim();
+      if (store && store[key] && Array.isArray(store[key])) {
+        return store[key];
+      }
+      for (const k of Object.keys(store)) {
+        if (key.includes(k) || k.includes(key)) {
+          return store[k];
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("[getVerifiedCompetitorsForBusiness] Erro lendo storage:", err);
+  }
+
+  // Ficha protegida e averiguada: Santo AndrÃ© AutomÃ³veis
+  const low = String(empresa || '').toLowerCase().trim();
+  if (low.includes('santo andr') && low.includes('autom')) {
+    return [
+      { nome: "Sou Mais Carro | Loja de Carros em Santo AndrÃ©", rating: 4.8, reviews: 377, active: true },
+      { nome: "Nevada Multimarcas | Loja de Carros em Santo AndrÃ©", rating: 4.8, reviews: 334, active: true },
+      { nome: "Via Certa - Multimarcas", rating: 4.9, reviews: 310, active: true },
+      { nome: "Muticar VeÃ­culos Selecionados", rating: 4.8, reviews: 220, active: true },
+      { nome: "AndrÃ© Car VeÃ­culos", rating: 4.8, reviews: 95, active: true },
+      { nome: "LL Car Multimarcas", rating: 4.6, reviews: 98, active: true },
+      { nome: "Mill Multimarcas", rating: 5.0, reviews: 94, active: true },
+      { nome: "Davema Multimarcas", rating: 4.7, reviews: 88, active: true }
+    ];
+  }
+
+  return null;
+}
+window.getVerifiedCompetitorsForBusiness = getVerifiedCompetitorsForBusiness;
+
+function saveVerifiedCompetitorsBusiness(empresa, list) {
+  try {
+    const rawStorage = localStorage.getItem('leadsmapspro_verified_competitors');
+    const store = rawStorage ? JSON.parse(rawStorage) : {};
+    const key = String(empresa || '').toLowerCase().trim();
+    store[key] = list;
+    localStorage.setItem('leadsmapspro_verified_competitors', JSON.stringify(store));
+    return true;
+  } catch (err) {
+    console.error("[saveVerifiedCompetitorsBusiness] Erro:", err);
+    return false;
+  }
+}
+window.saveVerifiedCompetitorsBusiness = saveVerifiedCompetitorsBusiness;
+
+function resetVerifiedCompetitorsBusiness(empresa) {
+  try {
+    const rawStorage = localStorage.getItem('leadsmapspro_verified_competitors');
+    if (rawStorage) {
+      const store = JSON.parse(rawStorage);
+      const key = String(empresa || '').toLowerCase().trim();
+      delete store[key];
+      localStorage.setItem('leadsmapspro_verified_competitors', JSON.stringify(store));
+    }
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+window.resetVerifiedCompetitorsBusiness = resetVerifiedCompetitorsBusiness;
+
+let currentCalibratingLead = null;
+let currentCalibratingCompetitors = [];
+
+window.openCompetitorCalibrationModal = function(leadId, targetCompetitorName = null) {
+  const lead = (leadId ? getAnyLeadById(leadId) : null) || State.currentLead || (State.leads && State.leads[0]);
+  if (!lead) {
+    showToast("Nenhum lead ativo para calibraÃ§Ã£o.");
+    return;
+  }
+  currentCalibratingLead = lead;
+
+  const modal = document.getElementById('modalCompetitorCalibration');
+  if (!modal) return;
+
+  const nameEl = document.getElementById('calibratorLeadName');
+  const cityEl = document.getElementById('calibratorLeadCity');
+  const ratEl = document.getElementById('calibratorLeadRating');
+  const revEl = document.getElementById('calibratorLeadReviews');
+  if (nameEl) nameEl.textContent = lead.empresa || 'Empresa em Auditoria';
+  if (cityEl) cityEl.textContent = `(${extractCityName(lead.cidade) || extractCityName(lead.endereco) || 'RegiÃ£o'})`;
+  if (ratEl) ratEl.textContent = `â˜… ${Number(lead.rating || 5.0).toFixed(1)}`;
+  if (revEl) revEl.textContent = `${Number(lead.reviews || 0).toLocaleString('pt-BR')} revs`;
+
+  const verified = getVerifiedCompetitorsForBusiness(lead.empresa, lead.cidade || lead.endereco);
+  if (Array.isArray(verified) && verified.length > 0) {
+    currentCalibratingCompetitors = JSON.parse(JSON.stringify(verified));
+  } else {
+    const bench = getLeadTop10Competitors(lead);
+    currentCalibratingCompetitors = bench.top10
+      .filter(it => !it.isCurrentLead)
+      .map(it => ({
+        nome: it.nome,
+        rating: Number(it.rating || 4.8),
+        reviews: Number(it.reviews || 0),
+        active: true
+      }));
+  }
+
+  renderCalibratorRows();
+  modal.style.display = 'flex';
+  modal.classList.remove('hidden');
+};
+
+window.closeCompetitorCalibrationModal = function() {
+  const modal = document.getElementById('modalCompetitorCalibration');
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.add('hidden');
+  }
+};
+
+window.renderCalibratorRows = function() {
+  const container = document.getElementById('calibratorCompetitorsList');
+  if (!container) return;
+
+  if (currentCalibratingCompetitors.length === 0) {
+    container.innerHTML = `
+      <div class="p-6 text-center text-xs text-slate-400 bg-slate-900/50 rounded-xl border border-slate-800">
+        Nenhum concorrente cadastrado. Clique em <strong>"+ Adicionar Concorrente Real"</strong> para inserir.
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = currentCalibratingCompetitors.map((c, idx) => `
+    <div class="p-3 rounded-xl ${c.active !== false ? 'bg-slate-900/90 border border-slate-800' : 'bg-slate-900/40 border border-slate-800/40 opacity-60'} flex flex-wrap sm:flex-nowrap items-center gap-2.5 transition-all">
+      <div class="flex items-center gap-2 shrink-0">
+        <span class="font-mono text-xs font-bold text-slate-500 w-5">#${idx + 1}</span>
+        <label class="relative inline-flex items-center cursor-pointer" title="${c.active !== false ? 'Ativo no Ranking (desmarque para ocultar do benchmark)' : 'Inativo (marque para reativar)'}">
+          <input type="checkbox" ${c.active !== false ? 'checked' : ''} onchange="window.toggleCalibratorActive(${idx})" class="sr-only peer">
+          <div class="w-8 h-4 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-500"></div>
+        </label>
+      </div>
+
+      <div class="flex-1 min-w-[180px]">
+        <input type="text" value="${(c.nome || '').replace(/"/g, '&quot;')}" onchange="window.updateCalibratorField(${idx}, 'nome', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white focus:border-amber-400 focus:outline-none font-medium" placeholder="Nome do concorrente">
+      </div>
+
+      <div class="flex items-center gap-1.5 shrink-0">
+        <div class="w-20">
+          <label class="block text-[9px] uppercase tracking-wider text-slate-400 font-bold">Nota Google</label>
+          <div class="flex items-center gap-1">
+            <span class="text-amber-400 text-xs">â˜…</span>
+            <input type="number" step="0.1" min="1.0" max="5.0" value="${Number(c.rating || 4.8).toFixed(1)}" onchange="window.updateCalibratorField(${idx}, 'rating', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs text-amber-300 font-mono font-bold focus:border-amber-400 focus:outline-none text-center">
+          </div>
+        </div>
+
+        <div class="w-24">
+          <label class="block text-[9px] uppercase tracking-wider text-slate-400 font-bold">AvaliaÃ§Ãµes</label>
+          <input type="number" step="1" min="0" value="${Math.max(0, Number(c.reviews || 0))}" onchange="window.updateCalibratorField(${idx}, 'reviews', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white font-mono font-bold focus:border-amber-400 focus:outline-none text-right">
+        </div>
+
+        <button type="button" onclick="window.removeCalibratorRow(${idx})" class="p-1.5 text-slate-500 hover:text-rose-400 transition-colors cursor-pointer self-end mb-0.5 rounded" title="Remover concorrente">
+          ðŸ—‘ï¸
+        </button>
+      </div>
+    </div>
+  `).join('');
+};
+
+window.updateCalibratorField = function(idx, field, val) {
+  if (!currentCalibratingCompetitors[idx]) return;
+  if (field === 'rating') {
+    currentCalibratingCompetitors[idx].rating = Math.max(1, Math.min(5, Number(val) || 4.8));
+  } else if (field === 'reviews') {
+    currentCalibratingCompetitors[idx].reviews = Math.max(0, parseInt(val, 10) || 0);
+  } else if (field === 'nome') {
+    currentCalibratingCompetitors[idx].nome = String(val).trim();
+  }
+};
+
+window.toggleCalibratorActive = function(idx) {
+  if (!currentCalibratingCompetitors[idx]) return;
+  currentCalibratingCompetitors[idx].active = currentCalibratingCompetitors[idx].active === false ? true : false;
+  renderCalibratorRows();
+};
+
+window.removeCalibratorRow = function(idx) {
+  currentCalibratingCompetitors.splice(idx, 1);
+  renderCalibratorRows();
+};
+
+window.addCalibrationCompetitorRow = function() {
+  currentCalibratingCompetitors.push({
+    nome: 'Novo Concorrente Real',
+    rating: 4.8,
+    reviews: 150,
+    active: true
+  });
+  renderCalibratorRows();
+  const container = document.getElementById('calibratorCompetitorsList');
+  if (container) container.scrollTop = container.scrollHeight;
+};
+
+window.resetCalibrationCompetitors = function() {
+  if (!currentCalibratingLead) return;
+  resetVerifiedCompetitorsBusiness(currentCalibratingLead.empresa);
+  showToast("â†º Concorrentes restaurados para o padrÃ£o.");
+  openCompetitorCalibrationModal(currentCalibratingLead.id);
+};
+
+window.saveCompetitorCalibration = function() {
+  if (!currentCalibratingLead) return;
+  const validList = currentCalibratingCompetitors.filter(c => c.nome && c.nome.trim().length > 0);
+  saveVerifiedCompetitorsBusiness(currentCalibratingLead.empresa, validList);
+  showToast(`âœ“ Concorrentes de ${currentCalibratingLead.empresa} calibrados com sucesso!`);
+  closeCompetitorCalibrationModal();
+
+  if (document.getElementById('modalDiagnostic')?.style.display !== 'none' && window.renderDiagnosticCompetitors) {
+    renderDiagnosticCompetitors(currentCalibratingLead);
+  }
+  const wlModal = document.getElementById('whiteLabelModal');
+  if (wlModal && !wlModal.classList.contains('hidden') && window.openWhiteLabelReport) {
+    openWhiteLabelReport(currentCalibratingLead);
+  }
+};
+
 function getLeadTop10Competitors(lead) {
   if (!lead) {
     return {
@@ -2177,7 +2407,30 @@ function getLeadTop10Competitors(lead) {
   let pool = [];
   const seenNames = new Set([cleanLeadName]);
 
-  // A. Concorrentes diretos associados ao lead (estritamente reais do Google Maps na mesma cidade)
+  // AveriguaÃ§Ã£o Total: Verifica se jÃ¡ existem concorrentes verificados/calibrados
+  const verifiedList = getVerifiedCompetitorsForBusiness(lead.empresa, lead.cidade || lead.endereco);
+  let isVerified = false;
+
+  if (Array.isArray(verifiedList) && verifiedList.length > 0) {
+    isVerified = true;
+    verifiedList.forEach(c => {
+      if (c.active !== false && c.disabled !== true) {
+        const cName = String(c.nome || c.empresa || '').trim();
+        const cLow = cName.toLowerCase();
+        if (cName && !seenNames.has(cLow)) {
+          seenNames.add(cLow);
+          pool.push({
+            nome: cName,
+            reviews: Math.max(0, Number(c.reviews || 0)),
+            rating: Number(c.rating || 4.8),
+            isCurrentLead: false,
+            isVerified: true
+          });
+        }
+      }
+    });
+  } else {
+    // A. Concorrentes diretos associados ao lead (estritamente reais do Google Maps na mesma cidade)
   if (Array.isArray(lead.concorrentes) && lead.concorrentes.length > 0) {
     lead.concorrentes.forEach(c => {
       const cName = String(c.nome || c.empresa || '').trim();
@@ -2235,6 +2488,8 @@ function getLeadTop10Competitors(lead) {
   }
 
   // Ordena concorrentes reais por volume de reviews decrescente (limitado a 9 maiores + o lead)
+  }
+
   pool.sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
   pool = pool.slice(0, 9);
   const hasEnoughData = pool.length > 0;
@@ -2300,7 +2555,8 @@ function getLeadTop10Competitors(lead) {
     deficitTop1,
     nicheName,
     nicheKey,
-    city
+    city,
+    isVerified
   };
 }
 window.getLeadTop10Competitors = getLeadTop10Competitors;
@@ -5238,7 +5494,7 @@ function renderDiagnosticCompetitors(lead) {
       const rankBadge = item.rank === 1 ? '🥇 #1' : (item.rank === 2 ? '🥈 #2' : (item.rank === 3 ? '🥉 #3' : `#${item.rank}`));
       const pct = item.barPct;
       return `
-        <div class="p-2.5 rounded-xl transition-all ${isLead ? 'bg-amber-500/10 border-2 border-amber-500/50 shadow-md' : 'bg-[var(--surface-1)] border border-[var(--border)]'}">
+        <div class="p-2.5 rounded-xl transition-all cursor-pointer ${isLead ? 'bg-amber-500/10 border-2 border-amber-500/50 shadow-md' : 'bg-[var(--surface-1)] hover:bg-[var(--surface-2)] border border-[var(--border)]'}" ${!isLead ? `onclick="window.openCompetitorCalibrationModal('${lead.id}')" title="Clique para averiguar e calibrar este concorrente"` : 'title="Sua Empresa"'}>
           <div class="mb-1.5 flex items-center justify-between text-xs gap-2">
             <span class="flex items-center gap-1.5 truncate">
               <span class="font-mono font-black text-[10px] px-2 py-0.5 rounded ${item.rank <= 3 ? 'bg-amber-400 text-slate-950 shadow-sm' : (isLead ? 'bg-amber-500 text-slate-950 font-black' : 'bg-slate-800 text-slate-300')}">${rankBadge}</span>
@@ -5279,9 +5535,14 @@ function renderDiagnosticCompetitors(lead) {
             <span class="font-bold text-white flex items-center gap-1.5">
               <span>🎯</span> Comparativo Técnico com o Líder da Região (<strong class="text-amber-400">${topName}</strong>)
             </span>
-            <span class="text-[10px] px-2 py-0.5 rounded font-mono font-bold ${isLeader ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}">
-              ${isLeader ? '✓ Liderança Absoluta no Município' : (isTop3 ? `Pódio TOP 3 · Déficit para Líder: -${revDiff} reviews` : `Posição #${benchmark.currentLeadRank} · Déficit para TOP 3: -${deficitTop3} reviews`)}
-            </span>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] px-2 py-0.5 rounded font-mono font-bold ${isLeader ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}">
+                ${isLeader ? 'âœ“ LideranÃ§a Absoluta no MunicÃ­pio' : (isTop3 ? `PÃ³dio TOP 3 Â· DÃ©ficit para LÃ­der: -${revDiff} reviews` : `PosiÃ§Ã£o #${benchmark.currentLeadRank} Â· DÃ©ficit para TOP 3: -${deficitTop3} reviews`)}
+              </span>
+              <button type="button" onclick="window.openCompetitorCalibrationModal('${lead.id}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-[10px] font-bold transition-colors cursor-pointer" title="Calibrar e averiguar concorrentes reais desta praÃ§a">
+                âœï¸ Calibrar
+              </button>
+            </div>
           </div>
 
           <!-- Régua Comparativa por Parâmetros Reais -->
@@ -6713,17 +6974,29 @@ window.openWhiteLabelReport = function(lead) {
         <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4 print-avoid-break">
           <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
             <div>
-              <div class="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest text-amber-800">
-                ★ Benchmark Oficial de Prova Social (${top10Benchmark.nicheName})
+              <div class="flex items-center gap-2 flex-wrap">
+                <div class="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest text-amber-800">
+                  â˜… Benchmark Oficial de Prova Social (${top10Benchmark.nicheName})
+                </div>
+                ${top10Benchmark.isVerified ? `
+                  <div class="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-800">
+                    âœ“ AveriguaÃ§Ã£o Factual Ativa
+                  </div>
+                ` : ''}
               </div>
-              <h4 class="text-base font-black text-slate-900 mt-1">🏆 Ranking TOP 10 de Avaliações no Google Maps na Região</h4>
-              <p class="text-xs text-slate-500">Mapeamento dos 10 maiores concorrentes da mesma categoria em ${top10Benchmark.city || 'sua região'}.</p>
+              <h4 class="text-base font-black text-slate-900 mt-1">ðŸ† Ranking TOP 10 de AvaliaÃ§Ãµes no Google Maps na RegiÃ£o</h4>
+              <p class="text-xs text-slate-500">Mapeamento dos 10 maiores concorrentes da mesma categoria em ${top10Benchmark.city || 'sua regiÃ£o'}.</p>
             </div>
-            <div class="text-right">
-              <span class="text-xs font-bold text-slate-600">Sua Posição no Ranking:</span>
-              <span class="ml-1 inline-block text-xs font-black px-3 py-1 rounded-full ${top10Benchmark.currentLeadRank <= 3 ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'}">
-                #${top10Benchmark.currentLeadRank} ${top10Benchmark.currentLeadRank <= 3 ? '· PÓDIO REGIONAL' : 'NO NICHO'}
-              </span>
+            <div class="text-right flex items-center gap-2 flex-wrap justify-end">
+              <div>
+                <span class="text-xs font-bold text-slate-600">Sua PosiÃ§Ã£o no Ranking:</span>
+                <span class="ml-1 inline-block text-xs font-black px-3 py-1 rounded-full ${top10Benchmark.currentLeadRank <= 3 ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'}">
+                  #${top10Benchmark.currentLeadRank} ${top10Benchmark.currentLeadRank <= 3 ? 'Â· PÃ“DIO REGIONAL' : 'NO NICHO'}
+                </span>
+              </div>
+              <button type="button" onclick="window.openCompetitorCalibrationModal('${lead.id}')" class="print-hide inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition-colors shadow-sm cursor-pointer" title="Averiguar e calibrar os concorrentes reais desta praÃ§a">
+                âœï¸ Averiguar Concorrentes
+              </button>
             </div>
           </div>
 
@@ -6744,7 +7017,7 @@ window.openWhiteLabelReport = function(lead) {
                   const isLead = item.isCurrentLead;
                   const rankBadge = item.rank === 1 ? '🥇 #1' : (item.rank === 2 ? '🥈 #2' : (item.rank === 3 ? '🥉 #3' : `#${item.rank}`));
                   return `
-                    <tr class="${isLead ? 'bg-amber-50/80 font-bold border-l-4 border-l-amber-500' : 'hover:bg-slate-50/50'} transition-colors">
+                    <tr class="${isLead ? 'bg-amber-50/80 font-bold border-l-4 border-l-amber-500' : 'hover:bg-slate-50/80 cursor-pointer'} transition-colors" ${!isLead ? `onclick="window.openCompetitorCalibrationModal('${lead.id}')" title="Clique para averiguar e calibrar este concorrente"` : 'title="Sua Empresa"'}>
                       <td class="py-3 px-3 text-center font-mono font-bold text-slate-700">
                         <span class="inline-block px-2 py-0.5 rounded text-[11px] ${item.rank <= 3 ? 'bg-amber-100 text-amber-900 font-black' : (isLead ? 'bg-amber-400 text-slate-950 font-black' : 'bg-slate-100 text-slate-600')}">
                           ${rankBadge}

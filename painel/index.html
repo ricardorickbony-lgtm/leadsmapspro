@@ -2315,6 +2315,67 @@
     </div>
   </div>
 
+  <!-- Modal: Averiguação Total & Calibração de Concorrentes -->
+  <div id="modalCompetitorCalibration" class="fixed inset-0 z-[10000] hidden items-center justify-center bg-black/85 p-3 sm:p-4 backdrop-blur-md" style="display: none;">
+    <div class="glass-card w-full max-w-2xl border border-amber-500/40 bg-slate-950 p-5 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
+      
+      <!-- Cabeçalho -->
+      <div class="flex items-start justify-between border-b border-slate-800 pb-3 shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400 text-xl border border-amber-500/30">
+            🎯
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-base font-extrabold text-white">Averiguação Total & Calibração de Concorrentes</h3>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">Factual</span>
+            </div>
+            <p id="calibratorSubtitle" class="text-xs text-slate-400">Ajuste os dados reais dos concorrentes da mesma praça para refletir com exatidão a realidade de campo.</p>
+          </div>
+        </div>
+        <button type="button" onclick="window.closeCompetitorCalibrationModal()" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer" aria-label="Fechar">✕</button>
+      </div>
+
+      <!-- Info da Empresa em Auditoria -->
+      <div id="calibratorLeadBanner" class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 shrink-0 flex items-center justify-between text-xs">
+        <div>
+          <span class="text-slate-400">Empresa em Auditoria:</span>
+          <strong id="calibratorLeadName" class="text-white ml-1 font-bold">Santo André Automóveis</strong>
+          <span id="calibratorLeadCity" class="text-slate-400 ml-1">(Santo André - SP)</span>
+        </div>
+        <div class="flex items-center gap-2 font-mono">
+          <span id="calibratorLeadRating" class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">★ 5.0</span>
+          <span id="calibratorLeadReviews" class="px-2 py-0.5 rounded bg-slate-800 text-white font-bold border border-slate-700">73 revs</span>
+        </div>
+      </div>
+
+      <!-- Lista Rolável de Concorrentes -->
+      <div class="overflow-y-auto space-y-2.5 pr-1 flex-1 min-h-[220px]" id="calibratorCompetitorsList">
+        <!-- Renderizado dinamicamente via JS -->
+      </div>
+
+      <!-- Rodapé de Ações -->
+      <div class="pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2 shrink-0">
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="window.addCalibrationCompetitorRow()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5">
+            <span>➕</span> Adicionar Concorrente Real
+          </button>
+          <button type="button" onclick="window.resetCalibrationCompetitors()" class="px-3 py-1.5 rounded-lg hover:bg-rose-950/40 text-rose-400 border border-rose-900/40 text-xs font-bold transition-colors cursor-pointer" title="Restaura os concorrentes originais">
+            ↺ Restaurar
+          </button>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="window.closeCompetitorCalibrationModal()" class="px-3 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 text-xs font-bold transition-colors cursor-pointer">
+            Cancelar
+          </button>
+          <button type="button" onclick="window.saveCompetitorCalibration()" class="px-4 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-black transition-all shadow-md cursor-pointer flex items-center gap-1.5">
+            <span>💾</span> Salvar Averiguação
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Bottom Sheet Mobile: Inspeção Rápida de Ponto GeoGrid -->
   <div id="rankMobileBottomSheet" class="fixed inset-x-0 bottom-0 z-[999] transform translate-y-full transition-transform duration-300 ease-out bg-slate-950/95 border-t border-amber-500/40 p-4 shadow-2xl backdrop-blur-xl rounded-t-2xl max-h-[85vh] overflow-y-auto block lg:hidden">
     <div class="flex items-center justify-between pb-2.5 border-b border-slate-800">
@@ -2407,7 +2468,7 @@
     <!-- Message injected here -->
   </div>
 
-  <script src="js/app.js?v=20261019_v62_categorias_averiguacao_total"></script>
+  <script src="js/app.js?v=20261019_v63_concorrentes_averiguacao_calibracao"></script>
   <script src="js/security-shield.js?v=20261018_v46_top10_competitors_niche_audit"></script>
 </body>
 </html>
