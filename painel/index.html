@@ -2336,16 +2336,22 @@
         <button type="button" onclick="window.closeCompetitorCalibrationModal()" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer" aria-label="Fechar">✕</button>
       </div>
 
-      <!-- Info da Empresa em Auditoria -->
-      <div id="calibratorLeadBanner" class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 shrink-0 flex items-center justify-between text-xs">
+      <!-- Info da Empresa em Auditoria (Permite Calibrar o Próprio Lead se Necessário) -->
+      <div id="calibratorLeadBanner" class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 shrink-0 flex flex-wrap items-center justify-between gap-2 text-xs">
         <div>
-          <span class="text-slate-400">Empresa em Auditoria:</span>
+          <span class="text-slate-400">Sua Empresa (Em Auditoria):</span>
           <strong id="calibratorLeadName" class="text-white ml-1 font-bold">Santo André Automóveis</strong>
           <span id="calibratorLeadCity" class="text-slate-400 ml-1">(Santo André - SP)</span>
         </div>
-        <div class="flex items-center gap-2 font-mono">
-          <span id="calibratorLeadRating" class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">★ 5.0</span>
-          <span id="calibratorLeadReviews" class="px-2 py-0.5 rounded bg-slate-800 text-white font-bold border border-slate-700">73 revs</span>
+        <div class="flex items-center gap-2">
+          <div class="flex items-center gap-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-0.5" title="Nota Google da sua empresa">
+            <span class="text-amber-400 font-bold text-xs">★</span>
+            <input type="number" id="calibratorLeadRatingInput" step="0.1" min="1.0" max="5.0" class="w-12 bg-transparent text-amber-300 font-mono font-bold text-xs text-center focus:outline-none">
+          </div>
+          <div class="flex items-center gap-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-0.5" title="Volume real de avaliações da sua empresa">
+            <input type="number" id="calibratorLeadReviewsInput" step="1" min="0" class="w-16 bg-transparent text-white font-mono font-bold text-xs text-right focus:outline-none">
+            <span class="text-slate-400 text-[10px]">revs</span>
+          </div>
         </div>
       </div>
 
@@ -2468,7 +2474,7 @@
     <!-- Message injected here -->
   </div>
 
-  <script src="js/app.js?v=20261019_v63_concorrentes_averiguacao_calibracao"></script>
+  <script src="js/app.js?v=20261019_v64_blindagem_milhares_e_calibracao_atlanta"></script>
   <script src="js/security-shield.js?v=20261018_v46_top10_competitors_niche_audit"></script>
 </body>
 </html>

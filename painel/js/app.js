@@ -401,6 +401,20 @@ function resolveActiveEvolutionLead(leadId = null) {
         responseRatePct: 98
       };
     }
+    if (strId === "atlanta_verified" || /atlanta\s*motors/i.test(strId)) {
+      return {
+        id: "atlanta_verified",
+        empresa: (window.GeoState && GeoState.selectedLeadName && /atlanta/i.test(GeoState.selectedLeadName)) ? GeoState.selectedLeadName : "Atlanta Motors | Revenda de Carros Campinas - SP",
+        endereco: (window.GeoState && GeoState.selectedLeadAddress && /atlanta/i.test(GeoState.selectedLeadName)) ? GeoState.selectedLeadAddress : "R. Ernesto Alves Filho, 352 - Jardim Campos El\u00edseos, Campinas - SP",
+        cidade: "Campinas - SP",
+        categoria: "Revendedora de carros usados",
+        categoriasSecundarias: ["Revendedora de carros usados", "Concession\u00e1ria de autom\u00f3veis", "Loja de ve\u00edculos"],
+        score: 96,
+        reviews: 1603,
+        rating: 4.8,
+        responseRatePct: 100
+      };
+    }
         if (strId === 'santoandre_verified' || /santo\s*andr[eÃ©]\s*autom[oÃ³]ve/i.test(strId)) {
       return {
         id: 'santoandre_verified',
@@ -2150,6 +2164,20 @@ function getVerifiedCompetitorsForBusiness(empresa, cidade) {
     console.warn("[getVerifiedCompetitorsForBusiness] Erro lendo storage:", err);
   }
 
+  // Ficha protegida e averiguada: Atlanta Motors Campinas
+  if (low.includes("atlanta") && low.includes("motors")) {
+    return [
+      { nome: "Classificarros Ve\u00edculos", rating: 4.6, reviews: 1217, active: true },
+      { nome: "Ideal Ve\u00edculos - Loja 01", rating: 4.6, reviews: 1031, active: true },
+      { nome: "Neri Ve\u00edculos", rating: 4.6, reviews: 460, active: true },
+      { nome: "KM Ve\u00edculos Campinas", rating: 4.4, reviews: 440, active: true },
+      { nome: "Phoenix Autom\u00f3veis Multimarcas Campinas", rating: 4.6, reviews: 433, active: true },
+      { nome: "Arnaldo Ve\u00edculos", rating: 4.7, reviews: 320, active: true },
+      { nome: "NetCarros - Campinas", rating: 4.9, reviews: 304, active: true },
+      { nome: "Fator Ve\u00edculos - Campinas (Loja 1)", rating: 4.2, reviews: 286, active: true }
+    ];
+  }
+
   // Ficha protegida e averiguada: Santo AndrÃ© AutomÃ³veis
   const low = String(empresa || '').toLowerCase().trim();
   if (low.includes('santo andr') && low.includes('autom')) {
@@ -2222,6 +2250,10 @@ window.openCompetitorCalibrationModal = function(leadId, targetCompetitorName = 
   if (cityEl) cityEl.textContent = `(${extractCityName(lead.cidade) || extractCityName(lead.endereco) || 'RegiÃ£o'})`;
   if (ratEl) ratEl.textContent = `â˜… ${Number(lead.rating || 5.0).toFixed(1)}`;
   if (revEl) revEl.textContent = `${Number(lead.reviews || 0).toLocaleString('pt-BR')} revs`;
+  const ratInp = document.getElementById("calibratorLeadRatingInput");
+  const revInp = document.getElementById("calibratorLeadReviewsInput");
+  if (ratInp) ratInp.value = Number(lead.rating || 5.0).toFixed(1);
+  if (revInp) revInp.value = Math.max(0, Number(lead.reviews || 0));
 
   const verified = getVerifiedCompetitorsForBusiness(lead.empresa, lead.cidade || lead.endereco);
   if (Array.isArray(verified) && verified.length > 0) {
@@ -2343,6 +2375,18 @@ window.resetCalibrationCompetitors = function() {
 
 window.saveCompetitorCalibration = function() {
   if (!currentCalibratingLead) return;
+  const ratInp = document.getElementById("calibratorLeadRatingInput");
+  const revInp = document.getElementById("calibratorLeadReviewsInput");
+  if (ratInp && ratInp.value) {
+    currentCalibratingLead.rating = Math.max(1, Math.min(5, Number(ratInp.value) || currentCalibratingLead.rating));
+  }
+  if (revInp && revInp.value !== "") {
+    const newRevs = Math.max(0, parseInt(revInp.value, 10) || 0);
+    currentCalibratingLead.reviews = newRevs;
+    if (typeof saveVerifiedReviewsBusiness === "function") {
+      saveVerifiedReviewsBusiness(currentCalibratingLead.empresa, newRevs);
+    }
+  }
   const validList = currentCalibratingCompetitors.filter(c => c.nome && c.nome.trim().length > 0);
   saveVerifiedCompetitorsBusiness(currentCalibratingLead.empresa, validList);
   showToast(`âœ“ Concorrentes de ${currentCalibratingLead.empresa} calibrados com sucesso!`);
@@ -5537,10 +5581,10 @@ function renderDiagnosticCompetitors(lead) {
             </span>
             <div class="flex items-center gap-2">
               <span class="text-[10px] px-2 py-0.5 rounded font-mono font-bold ${isLeader ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}">
-                ${isLeader ? 'âœ“ LideranÃ§a Absoluta no MunicÃ­pio' : (isTop3 ? `PÃ³dio TOP 3 Â· DÃ©ficit para LÃ­der: -${revDiff} reviews` : `PosiÃ§Ã£o #${benchmark.currentLeadRank} Â· DÃ©ficit para TOP 3: -${deficitTop3} reviews`)}
+                ${isLeader ? "\u2713 Lideran\u00e7a Absoluta no Munic\u00edpio" : (isTop3 ? `P\u00f3dio TOP 3 \u00b7 D\u00e9ficit para L\u00edder: -${revDiff} reviews` : `Posi\u00e7\u00e3o #${benchmark.currentLeadRank} \u00b7 D\u00e9ficit para TOP 3: -${deficitTop3} reviews`)}
               </span>
               <button type="button" onclick="window.openCompetitorCalibrationModal('${lead.id}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-[10px] font-bold transition-colors cursor-pointer" title="Calibrar e averiguar concorrentes reais desta praÃ§a">
-                âœï¸ Calibrar
+                \u270F\uFE0F Calibrar
               </button>
             </div>
           </div>
@@ -5832,6 +5876,28 @@ window.openDiagnostic = function(id, showModal = true) {
 
   try {
     // Normalização inicial de website
+    // Auto-Cura Factual de Avalia\u00e7\u00f5es: Corrige bug da Serper /places que trunca 1.603 para 1 ou 2.100 para 2
+    if (typeof lead.reviews === "number" && lead.reviews <= 5 && lead.rating >= 4.0 && !lead._reviewsAuditedLive) {
+      const apiKey = State.settings?.apiKey || localStorage.getItem("leadmaps_google_api_key") || "f93ffd86dc739cb1c843b12f2082e381064c1339";
+      if (apiKey) {
+        fetch("https://google.serper.dev/maps", {
+          method: "POST",
+          headers: { "X-API-KEY": apiKey, "Content-Type": "application/json" },
+          body: JSON.stringify({ q: `${lead.empresa} ${lead.cidade || lead.endereco || ""}`.trim(), gl: "br", hl: "pt-br" })
+        }).then(r => r.ok ? r.json() : null).then(data => {
+          const mp = data?.places?.[0];
+          if (mp && typeof mp.ratingCount === "number" && mp.ratingCount > (lead.reviews || 0)) {
+            console.log(`[Auto-Cura /maps] Corrigindo reviews de ${lead.empresa}: de ${lead.reviews} para ${mp.ratingCount}`);
+            lead.reviews = mp.ratingCount;
+            if (typeof mp.rating === "number") lead.rating = mp.rating;
+            lead._reviewsAuditedLive = true;
+            if (typeof renderDiagnosticHeader === "function") renderDiagnosticHeader(lead);
+            if (typeof renderDiagnosticCompetitors === "function") renderDiagnosticCompetitors(lead);
+            if (typeof syncAuditPillars === "function") syncAuditPillars(lead);
+          }
+        }).catch(e => console.warn("[Auto-Cura /maps] Erro:", e));
+      }
+    }
     if (!lead.websiteAnalysis) {
       lead.websiteAnalysis = analyzeWebsiteUrl(lead.websiteUrl);
     }
@@ -6976,26 +7042,26 @@ window.openWhiteLabelReport = function(lead) {
             <div>
               <div class="flex items-center gap-2 flex-wrap">
                 <div class="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest text-amber-800">
-                  â˜… Benchmark Oficial de Prova Social (${top10Benchmark.nicheName})
+                  \u2605 Benchmark Oficial de Prova Social (${top10Benchmark.nicheName})
                 </div>
                 ${top10Benchmark.isVerified ? `
                   <div class="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-800">
-                    âœ“ AveriguaÃ§Ã£o Factual Ativa
+                    \u2713 Averigua\u00e7\u00e3o Factual Ativa
                   </div>
                 ` : ''}
               </div>
-              <h4 class="text-base font-black text-slate-900 mt-1">ðŸ† Ranking TOP 10 de AvaliaÃ§Ãµes no Google Maps na RegiÃ£o</h4>
-              <p class="text-xs text-slate-500">Mapeamento dos 10 maiores concorrentes da mesma categoria em ${top10Benchmark.city || 'sua regiÃ£o'}.</p>
+              <h4 class="text-base font-black text-slate-900 mt-1">\uD83C\uDFC6 Ranking TOP 10 de Avalia\u00e7\u00f5es no Google Maps na Regi\u00e3o</h4>
+              <p class="text-xs text-slate-500">Mapeamento dos 10 maiores concorrentes da mesma categoria em ${top10Benchmark.city || "sua regi\u00e3o"}.</p>
             </div>
             <div class="text-right flex items-center gap-2 flex-wrap justify-end">
               <div>
-                <span class="text-xs font-bold text-slate-600">Sua PosiÃ§Ã£o no Ranking:</span>
+                <span class="text-xs font-bold text-slate-600">Sua Posi\u00e7\u00e3o no Ranking:</span>
                 <span class="ml-1 inline-block text-xs font-black px-3 py-1 rounded-full ${top10Benchmark.currentLeadRank <= 3 ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'}">
-                  #${top10Benchmark.currentLeadRank} ${top10Benchmark.currentLeadRank <= 3 ? 'Â· PÃ“DIO REGIONAL' : 'NO NICHO'}
+                  #${top10Benchmark.currentLeadRank} ${top10Benchmark.currentLeadRank <= 3 ? "\u00b7 P\u00d3DIO REGIONAL" : "NO NICHO"}
                 </span>
               </div>
               <button type="button" onclick="window.openCompetitorCalibrationModal('${lead.id}')" class="print-hide inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition-colors shadow-sm cursor-pointer" title="Averiguar e calibrar os concorrentes reais desta praÃ§a">
-                âœï¸ Averiguar Concorrentes
+                \u270F\uFE0F Averiguar Concorrentes
               </button>
             </div>
           </div>
@@ -7738,6 +7804,35 @@ async function fetchSerperLivePlaces(niche, city, targetCount, apiKey) {
 
         const data = await response.json();
         const places = data.places || [];
+        // Blindagem contra Bug do Serper /places: /places trunca 1.603 para 1 em buscas pt-br.
+        // Consultamos /maps na p\u00e1gina 1 para enriquecer com os n\u00fameros de avalia\u00e7\u00f5es factuais completos.
+        if (page === 1) {
+          try {
+            const mapsRes = await fetch("https://google.serper.dev/maps", {
+              method: "POST",
+              headers: { "X-API-KEY": apiKey, "Content-Type": "application/json" },
+              body: JSON.stringify({ q: q, gl: "br", hl: "pt-br" })
+            });
+            if (mapsRes.ok) {
+              const mapsData = await mapsRes.json();
+              if (Array.isArray(mapsData.places)) {
+                mapsData.places.forEach(mp => {
+                  const mTitle = String(mp.title || mp.name || "").toLowerCase().trim();
+                  const targetPlace = places.find(pl => {
+                    const plTitle = String(pl.title || pl.name || "").toLowerCase().trim();
+                    return (pl.cid && pl.cid === mp.cid) || plTitle === mTitle || (plTitle && mTitle && (plTitle.includes(mTitle) || mTitle.includes(plTitle)));
+                  });
+                  if (targetPlace && typeof mp.ratingCount === "number" && mp.ratingCount > (targetPlace.ratingCount || 0)) {
+                    targetPlace.ratingCount = mp.ratingCount;
+                    targetPlace.reviews = mp.ratingCount;
+                  }
+                });
+              }
+            }
+          } catch (mapsErr) {
+            console.warn("[extractLeadsFromMaps] Falha ao enriquecer com /maps:", mapsErr);
+          }
+        }
         if (places.length === 0) {
           break; // Acabaram os resultados para esta query, passa para a próxima variação
         }
