@@ -6523,8 +6523,8 @@ window.switchReportSectionTab = function(tabKey) {
   document.querySelectorAll('#whiteLabelSectionTabs .wl-tab-btn').forEach(btn => {
     const isAct = btn.getAttribute('data-report-tab') === State.activeReportTab;
     btn.className = isAct
-      ? 'wl-tab-btn rounded-lg bg-emerald-500 px-3 py-1.5 font-extrabold text-slate-950 cursor-pointer transition-all'
-      : 'wl-tab-btn rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 font-bold text-slate-300 hover:text-white cursor-pointer transition-all';
+      ? 'wl-tab-btn shrink-0 whitespace-nowrap rounded-lg bg-emerald-500 px-2.5 sm:px-3 py-1 sm:py-1.5 text-[11px] sm:text-xs font-extrabold text-slate-950 cursor-pointer transition-all'
+      : 'wl-tab-btn shrink-0 whitespace-nowrap rounded-lg border border-slate-700 bg-slate-900 px-2.5 sm:px-3 py-1 sm:py-1.5 text-[11px] sm:text-xs font-bold text-slate-300 hover:text-white cursor-pointer transition-all';
   });
 
   document.querySelectorAll('#whiteLabelPaper .report-section-block').forEach(sec => {
@@ -6814,7 +6814,7 @@ window.openWhiteLabelReport = function(lead) {
            ===================================================================== -->
       <section data-section-id="saude" class="report-section-block space-y-6 ${activeTab !== 'all' && activeTab !== 'saude' ? 'hidden' : ''}">
         <div class="text-center border-b border-slate-200 pb-4">
-          <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">1. Matriz de Relevância Algorítmica & Eficiência Local</h2>
+          <h2 class="text-base sm:text-2xl font-extrabold text-slate-900 tracking-tight">1. Matriz de Relevância Algorítmica & Eficiência Local</h2>
           <p class="mt-1 text-xs text-slate-500 max-w-2xl mx-auto leading-relaxed">
             Auditoria analítica dos 22 fatores determinantes de autoridade no Google Maps. A convergência desses pilares dita o posicionamento no bloco de destaque (Local Pack) e determina o volume de contatos diários que a empresa recebe na região.
           </p>
@@ -6879,7 +6879,7 @@ window.openWhiteLabelReport = function(lead) {
            ===================================================================== -->
       <section data-section-id="avaliacoes" class="report-section-block print-break-before space-y-6 ${activeTab !== 'all' && activeTab !== 'avaliacoes' ? 'hidden' : ''}">
         <div class="text-center border-b border-slate-200 pb-4">
-          <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">2. Inteligência de Avaliações & Autoridade de Reputação</h2>
+          <h2 class="text-base sm:text-2xl font-extrabold text-slate-900 tracking-tight">2. Inteligência de Avaliações & Autoridade de Reputação</h2>
           <p class="mt-1 text-xs text-slate-500 max-w-2xl mx-auto leading-relaxed">
             Mapeamento da percepção do mercado, satisfação pública e tempo de resposta da marca. Avaliações ativas e respostas estratégicas no Google funcionam como a maior alavanca de vendas para converter clientes indecisos.
           </p>
@@ -7213,7 +7213,7 @@ window.openWhiteLabelReport = function(lead) {
            ===================================================================== -->
       <section data-section-id="metricas" class="report-section-block print-break-before space-y-6 ${activeTab !== 'all' && activeTab !== 'metricas' ? 'hidden' : ''}">
         <div class="text-center border-b border-slate-200 pb-4">
-          <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">3. Tráfego Orgânico Local & Funil de Conversão</h2>
+          <h2 class="text-base sm:text-2xl font-extrabold text-slate-900 tracking-tight">3. Tráfego Orgânico Local & Funil de Conversão</h2>
           <p class="mt-1 text-xs text-slate-500 max-w-2xl mx-auto leading-relaxed">
             Estimativa consolidada de alcance e taxa de interação do perfil no Google (período base de 30 dias de amostragem regional).
           </p>
@@ -7340,7 +7340,7 @@ window.openWhiteLabelReport = function(lead) {
            ===================================================================== -->
       <section data-section-id="midia" class="report-section-block print-break-before space-y-6 ${activeTab !== 'all' && activeTab !== 'midia' ? 'hidden' : ''}">
         <div class="text-center border-b border-slate-200 pb-4">
-          <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">4. Acervo Visual, Frequência de Postagens & Tour 360°</h2>
+          <h2 class="text-base sm:text-2xl font-extrabold text-slate-900 tracking-tight">4. Acervo Visual, Frequência de Postagens & Tour 360°</h2>
           <p class="mt-1 text-xs text-slate-500 max-w-2xl mx-auto leading-relaxed">
             Auditoria da cadência de publicações corporativas e enriquecimento da experiência imersiva do cliente no Google Street View.
           </p>
@@ -7406,7 +7406,7 @@ window.openWhiteLabelReport = function(lead) {
            ===================================================================== -->
       <section data-section-id="reputacao" class="report-section-block print-break-before space-y-6 ${activeTab !== 'all' && activeTab !== 'reputacao' ? 'hidden' : ''}">
         <div class="text-center border-b border-slate-200 pb-4">
-          <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">5. Inteligência Competitiva & Matriz de Sentimento</h2>
+          <h2 class="text-base sm:text-2xl font-extrabold text-slate-900 tracking-tight">5. Inteligência Competitiva & Matriz de Sentimento</h2>
           <p class="mt-1 text-xs text-slate-500 max-w-2xl mx-auto leading-relaxed">
             Análise contextual dos termos espontâneos mais citados pelos clientes e mapeamento estratégico de mercado contra a concorrência local.
           </p>
@@ -7546,8 +7546,8 @@ window.openWhiteLabelReport = function(lead) {
     const tabKey = btn.getAttribute('data-report-tab');
     const isAct = tabKey === activeTab;
     btn.className = isAct
-      ? 'wl-tab-btn rounded-lg bg-emerald-500 px-3 py-1.5 font-extrabold text-slate-950 cursor-pointer transition-all'
-      : 'wl-tab-btn rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 font-bold text-slate-300 hover:text-white cursor-pointer transition-all';
+      ? 'wl-tab-btn shrink-0 whitespace-nowrap rounded-lg bg-emerald-500 px-2.5 sm:px-3 py-1 sm:py-1.5 text-[11px] sm:text-xs font-extrabold text-slate-950 cursor-pointer transition-all'
+      : 'wl-tab-btn shrink-0 whitespace-nowrap rounded-lg border border-slate-700 bg-slate-900 px-2.5 sm:px-3 py-1 sm:py-1.5 text-[11px] sm:text-xs font-bold text-slate-300 hover:text-white cursor-pointer transition-all';
     btn.onclick = () => window.switchReportSectionTab(tabKey);
   });
 
@@ -7560,9 +7560,9 @@ window.openWhiteLabelReport = function(lead) {
   const btnToggleProspect = document.getElementById('btnToggleProspectMode');
   const labelProspect = document.getElementById('labelProspectMode');
   if (btnToggleProspect && labelProspect) {
-    labelProspect.textContent = isProspectMode 
-      ? 'Modo Prospecção: Ativado' 
-      : 'Modo Consultor: Completo';
+    labelProspect.innerHTML = isProspectMode
+      ? '<span class="hidden md:inline">Modo ProspecÃ§Ã£o: </span>Ativado'
+      : '<span class="hidden md:inline">Modo Consultor: </span>Completo';
     btnToggleProspect.className = isProspectMode
       ? 'btn-ghost-dark px-3 py-2 text-xs font-bold flex items-center gap-1.5 border border-amber-500/60 text-amber-300 bg-amber-500/10 cursor-pointer'
       : 'btn-ghost-dark px-3 py-2 text-xs font-bold flex items-center gap-1.5 border border-emerald-500/60 text-emerald-300 bg-emerald-500/10 cursor-pointer';

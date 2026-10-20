@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=20261020_v66_dossie_mobile_first_responsivo">
   <style>
     /* ==========================================================================
        BLOQUEIO MANDATÓRIO DE TELA DE LOGIN — RADARMAPS PRO (RICARDO & SEVERINO)
@@ -1446,59 +1446,59 @@
   </div>
 
   <!-- Modal: Relatório Completo de Auditoria & Saúde do Negócio (White-Label) -->
-  <div id="whiteLabelModal" class="fixed inset-0 z-50 hidden flex items-start justify-center bg-black/85 p-3 sm:p-6 backdrop-blur-md overflow-y-auto">
-    <div class="relative w-full max-w-5xl my-4">
-      <!-- Toolbar Superior (Oculta na impressão/PDF) -->
-      <div class="no-print sticky top-2 z-30 mb-4 rounded-xl border border-[var(--border)] bg-slate-950/95 p-4 shadow-2xl backdrop-blur-xl space-y-3">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div class="flex items-center gap-3">
-            <span class="text-2xl">📊</span>
-            <div>
-              <h4 class="text-sm font-extrabold text-white">Relatório Completo de Saúde, Métricas & Reputação no Google</h4>
-              <p class="text-xs text-[var(--muted-foreground)]">Dossiê executivo completo de 5 seções (22 itens de saúde, ISR, métricas, mídias e análise de sentimento)</p>
+  <div id="whiteLabelModal" class="fixed inset-0 z-50 hidden flex items-start justify-center bg-black/85 p-1 sm:p-6 backdrop-blur-md overflow-y-auto">
+    <div class="relative w-full max-w-5xl my-1 sm:my-4">
+      <!-- Toolbar Superior (Oculta na impressão/PDF - Compacta e Otimizada para Mobile) -->
+      <div class="no-print sticky top-1 sm:top-2 z-30 mb-2 sm:mb-4 rounded-xl border border-[var(--border)] bg-slate-950/95 p-2 sm:p-4 shadow-2xl backdrop-blur-xl space-y-2 sm:space-y-3">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="text-lg sm:text-2xl shrink-0">📊</span>
+            <div class="min-w-0">
+              <h4 class="text-xs sm:text-sm font-extrabold text-white truncate">Dossiê de Saúde & Métricas</h4>
+              <p class="text-[11px] text-[var(--muted-foreground)] hidden sm:block">Dossiê executivo completo de 5 seções (22 itens de saúde, ISR, métricas e concorrência)</p>
             </div>
           </div>
-          <div class="flex flex-wrap items-center gap-2">
-            <button id="btnToggleProspectMode" class="btn-ghost-dark px-3 py-2 text-xs font-bold flex items-center gap-1.5 border border-amber-500/40 text-amber-300 hover:bg-amber-500/10 cursor-pointer" title="Alternar entre modo consultor e modo prospecção (com bloqueio das ações para fechar contrato)">
-              🔒 <span id="labelProspectMode">Modo Prospecção: Ativado</span>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button id="btnToggleProspectMode" class="btn-ghost-dark px-2 sm:px-3 py-1 sm:py-2 text-[11px] sm:text-xs font-bold flex items-center gap-1 border border-amber-500/40 text-amber-300 hover:bg-amber-500/10 cursor-pointer" title="Alternar entre modo consultor e modo prospecção">
+              🔒 <span id="labelProspectMode"><span class="hidden md:inline">Modo Prospecção: </span>Ativado</span>
             </button>
-            <button id="btnPrintWhiteLabel" class="btn-amber px-4 py-2 text-xs font-bold flex items-center gap-1.5 shadow-lg cursor-pointer">
-              🖨️ Imprimir / Salvar PDF Completo
+            <button id="btnPrintWhiteLabel" class="btn-amber px-2.5 sm:px-4 py-1 sm:py-2 text-[11px] sm:text-xs font-extrabold flex items-center gap-1 shadow-lg cursor-pointer" title="Imprimir ou Salvar Dossiê em PDF">
+              🖨️ <span class="hidden sm:inline">Imprimir / Salvar </span>PDF
             </button>
-            <button id="btnCopyWhiteLabelSummary" class="btn-ghost-dark px-3 py-2 text-xs font-bold flex items-center gap-1.5 cursor-pointer">
-              📋 Copiar Resumo WhatsApp
+            <button id="btnCopyWhiteLabelSummary" class="btn-ghost-dark px-2 sm:px-3 py-1 sm:py-2 text-[11px] sm:text-xs font-bold flex items-center gap-1 cursor-pointer" title="Copiar Resumo WhatsApp">
+              📋 <span class="hidden md:inline">WhatsApp</span>
             </button>
-            <button id="btnCloseWhiteLabelModal" class="btn-ghost-dark px-3 py-2 text-xs font-bold cursor-pointer">
-              ✕ Fechar
+            <button id="btnCloseWhiteLabelModal" class="btn-ghost-dark px-2.5 sm:px-3 py-1 sm:py-2 text-[11px] sm:text-xs font-bold cursor-pointer" title="Fechar visualização do dossiê">
+              ✕
             </button>
           </div>
         </div>
 
-        <!-- Abas de Navegação Rápida das Seções do Relatório -->
-        <div id="whiteLabelSectionTabs" class="flex flex-wrap items-center gap-1.5 border-t border-slate-800 pt-2.5 text-xs">
-          <button type="button" data-report-tab="all" class="wl-tab-btn rounded-lg bg-emerald-500 px-3 py-1.5 font-extrabold text-slate-950 cursor-pointer transition-all">
-            📑 Dossiê Completo (5 Seções)
+        <!-- Abas de Navegação Rápida das Seções do Relatório (Carrossel Horizontal de 1 Linha no Mobile) -->
+        <div id="whiteLabelSectionTabs" class="flex flex-nowrap overflow-x-auto no-scrollbar items-center gap-1 sm:gap-1.5 border-t border-slate-800/80 pt-1.5 sm:pt-2 text-xs">
+          <button type="button" data-report-tab="all" class="wl-tab-btn shrink-0 whitespace-nowrap rounded-lg bg-emerald-500 px-2.5 sm:px-3 py-1 sm:py-1.5 text-[11px] sm:text-xs font-extrabold text-slate-950 cursor-pointer transition-all">
+            📑 Dossiê Completo
           </button>
-          <button type="button" data-report-tab="saude" class="wl-tab-btn rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 font-bold text-slate-300 hover:text-white cursor-pointer transition-all">
-            ⚡ 1. Matriz de Relevância (22 Pilares)
+          <button type="button" data-report-tab="saude" class="wl-tab-btn shrink-0 whitespace-nowrap rounded-lg border border-slate-700 bg-slate-900 px-2.5 sm:px-3 py-1 sm:py-1.5 text-[11px] sm:text-xs font-bold text-slate-300 hover:text-white cursor-pointer transition-all">
+            ⚡ 1. Matriz (22 Pilares)
           </button>
-          <button type="button" data-report-tab="avaliacoes" class="wl-tab-btn rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 font-bold text-slate-300 hover:text-white cursor-pointer transition-all">
-            ⭐ 2. Avaliações & Reputação
+          <button type="button" data-report-tab="avaliacoes" class="wl-tab-btn shrink-0 whitespace-nowrap rounded-lg border border-slate-700 bg-slate-900 px-2.5 sm:px-3 py-1 sm:py-1.5 text-[11px] sm:text-xs font-bold text-slate-300 hover:text-white cursor-pointer transition-all">
+            ⭐ 2. Avaliações
           </button>
-          <button type="button" data-report-tab="metricas" class="wl-tab-btn rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 font-bold text-slate-300 hover:text-white cursor-pointer transition-all">
-            📈 3. Tráfego & Funil de Conversão
+          <button type="button" data-report-tab="metricas" class="wl-tab-btn shrink-0 whitespace-nowrap rounded-lg border border-slate-700 bg-slate-900 px-2.5 sm:px-3 py-1 sm:py-1.5 text-[11px] sm:text-xs font-bold text-slate-300 hover:text-white cursor-pointer transition-all">
+            📈 3. Tráfego & Funil
           </button>
-          <button type="button" data-report-tab="midia" class="wl-tab-btn rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 font-bold text-slate-300 hover:text-white cursor-pointer transition-all">
-            📸 4. Postagens & Tour 360°
+          <button type="button" data-report-tab="midia" class="wl-tab-btn shrink-0 whitespace-nowrap rounded-lg border border-slate-700 bg-slate-900 px-2.5 sm:px-3 py-1 sm:py-1.5 text-[11px] sm:text-xs font-bold text-slate-300 hover:text-white cursor-pointer transition-all">
+            📸 4. Postagens & 360°
           </button>
-          <button type="button" data-report-tab="reputacao" class="wl-tab-btn rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 font-bold text-slate-300 hover:text-white cursor-pointer transition-all">
-            🧠 5. Inteligência Competitiva
+          <button type="button" data-report-tab="reputacao" class="wl-tab-btn shrink-0 whitespace-nowrap rounded-lg border border-slate-700 bg-slate-900 px-2.5 sm:px-3 py-1 sm:py-1.5 text-[11px] sm:text-xs font-bold text-slate-300 hover:text-white cursor-pointer transition-all">
+            🧠 5. Radar de Concorrentes
           </button>
         </div>
       </div>
 
       <!-- Documento do Relatório White-Label (Design Corporativo Fiel & Completo) -->
-      <div id="whiteLabelPaper" class="report-paper p-6 sm:p-10 text-slate-900 bg-white rounded-2xl shadow-2xl space-y-10">
+      <div id="whiteLabelPaper" class="report-paper p-3 sm:p-8 md:p-10 text-slate-900 bg-white rounded-xl sm:rounded-2xl shadow-2xl space-y-6 sm:space-y-10">
         <!-- Preenchido dinamicamente via JS -->
       </div>
     </div>
@@ -2474,7 +2474,7 @@
     <!-- Message injected here -->
   </div>
 
-  <script src="js/app.js?v=20261019_v65_radar_concorrentes_corrigido"></script>
+  <script src="js/app.js?v=20261020_v66_dossie_mobile_first_responsivo"></script>
   <script src="js/security-shield.js?v=20261018_v46_top10_competitors_niche_audit"></script>
 </body>
 </html>
