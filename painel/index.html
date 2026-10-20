@@ -1432,7 +1432,7 @@
           </button>
           <button id="btnCopyModalPitch" class="btn-ghost-dark px-4 py-2.5 text-xs font-bold cursor-pointer">📋 Copiar Copy</button>
           <a id="btnModalWhatsApp" href="#" target="_blank" rel="noreferrer" class="inline-flex items-center gap-1 rounded-lg bg-[color-mix(in_oklab,var(--emerald-signal)_18%,transparent)] px-4 py-2.5 text-xs font-bold text-[var(--emerald-signal)] transition-all hover:brightness-125">
-            💬 Abrir WhatsApp Web
+            <span>💬</span> <span id="labelModalWhatsApp">Enviar no WhatsApp</span>
           </a>
           <button id="btnDownloadWhiteLabel" type="button" class="btn-amber px-5 py-2.5 text-xs font-extrabold flex items-center gap-2 cursor-pointer shadow-lg hover:scale-105 transition-all" title="Gerar Dossiê Oficial Completo de Auditoria em PDF">
             <span>📄</span> <span>Gerar Dossiê em PDF</span>
@@ -1861,8 +1861,10 @@
           <div>
             <label class="mb-1 block text-xs font-bold text-slate-300">Destino de Disparo</label>
             <select id="waPlatformSelect" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-2 text-xs text-white outline-none focus:border-emerald-400 cursor-pointer">
-              <option value="web" selected>🌐 WhatsApp Web Direto (PC)</option>
-              <option value="wame">📱 WhatsApp App / Celular (wa.me)</option>
+              <option value="auto" selected>⚡ Detecção Automática (Celular: App / PC: Web)</option>
+              <option value="wame">📱 WhatsApp App / Celular (wa.me / api)</option>
+              <option value="web">💻 WhatsApp Web Direto (PC)</option>
+
               <option value="webhook">⚡ Webhook API (n8n / Z-API / Evolution)</option>
             </select>
           </div>
@@ -2474,7 +2476,7 @@
     <!-- Message injected here -->
   </div>
 
-  <script src="js/app.js?v=20261020_v66_dossie_mobile_first_responsivo"></script>
+  <script src="js/app.js?v=20261020_v67_whatsapp_auto_mobile_app_detection"></script>
   <script src="js/security-shield.js?v=20261018_v46_top10_competitors_niche_audit"></script>
 </body>
 </html>

@@ -4127,7 +4127,7 @@ const State = {
       const saved = parseInt(localStorage.getItem('leadmaps_wa_delay') || '60');
       return (isNaN(saved) || saved < 30) ? 60 : saved;
     })(),
-    whatsappPlatform: localStorage.getItem('leadmaps_wa_platform') || 'web'
+    whatsappPlatform: localStorage.getItem('leadmaps_wa_platform') || 'auto'
   }
 };
 window.State = State;
@@ -4323,19 +4323,39 @@ function formatBrazilWhatsAppNumber(rawPhone) {
 }
 window.formatBrazilWhatsAppNumber = formatBrazilWhatsAppNumber;
 
+function isMobileClient() {
+  try {
+    const ua = (navigator.userAgent || navigator.vendor || window.opera || '').toLowerCase();
+    const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    const isSmall = window.innerWidth <= 820;
+    const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/i.test(ua);
+    return isMobileUA || (isTouch && isSmall);
+  } catch (e) {
+    return false;
+  }
+}
+window.isMobileClient = isMobileClient;
+
 function buildWhatsAppUrl(lead, customMessage = null) {
   if (!lead) return '#';
   const phoneDigits = formatBrazilWhatsAppNumber(lead.telefone);
   if (!phoneDigits) return '#';
 
   const msg = customMessage || renderWhatsAppMessage(State.settings.whatsappTemplate, lead);
-  const platform = State.settings.whatsappPlatform || 'web'; // 'web', 'wame' ou 'webhook'
+  const platform = State.settings.whatsappPlatform || 'auto'; // 'auto', 'web', 'wame' ou 'webhook'
+  const isMob = isMobileClient();
 
-  if (platform === 'web') {
-    return `https://web.whatsapp.com/send?phone=${phoneDigits}&text=${encodeURIComponent(msg)}`;
-  } else {
+  // No celular: SEMPRE prioriza o aplicativo nativo do WhatsApp via api.whatsapp.com
+  if (isMob || platform === 'wame') {
     return `https://api.whatsapp.com/send?phone=${phoneDigits}&text=${encodeURIComponent(msg)}`;
   }
+
+  // No computador: se for 'web' ou 'auto', abre WhatsApp Web diretamente
+  if (platform === 'web' || platform === 'auto') {
+    return `https://web.whatsapp.com/send?phone=${phoneDigits}&text=${encodeURIComponent(msg)}`;
+  }
+
+  return `https://api.whatsapp.com/send?phone=${phoneDigits}&text=${encodeURIComponent(msg)}`;
 }
 window.buildWhatsAppUrl = buildWhatsAppUrl;
 
@@ -4508,9 +4528,17 @@ window.handleDirectWhatsAppClick = function(event, leadId) {
   if (State.settings.whatsappPlatform === 'webhook') {
     if (event) event.preventDefault();
     triggerWebhookWhatsAppDispatch(lead);
-  } else if (event && event.currentTarget) {
-    event.currentTarget.href = url;
-    showToast(`💬 Conversa aberta no WhatsApp para ${lead.empresa}! Aperte Enter para enviar.`);
+  } else {
+    if (isMobileClient()) {
+      if (event && event.currentTarget) {
+        event.currentTarget.removeAttribute('target');
+        event.currentTarget.href = url;
+      }
+      showToast(`📱 Abrindo aplicativo do WhatsApp para ${lead.empresa}...`);
+    } else if (event && event.currentTarget) {
+      event.currentTarget.href = url;
+      showToast(`💬 Conversa aberta no WhatsApp para ${lead.empresa}! Aperte Enter para enviar.`);
+    }
   }
 
   startGlobalWhatsAppCooldown();
@@ -4544,11 +4572,16 @@ function openSingleLeadWhatsAppDirect(leadId) {
   if (State.settings.whatsappPlatform === 'webhook') {
     triggerWebhookWhatsAppDispatch(lead);
   } else {
-    const openedWin = window.open(url, '_blank');
-    if (!openedWin || openedWin.closed || typeof openedWin.closed === 'undefined') {
-      showToast(`⚠️ Janela bloqueada pelo navegador. <a href="${url}" target="_blank" rel="noopener noreferrer" class="underline font-black text-amber-300 ml-1">Clique para abrir ${lead.empresa} no WhatsApp</a>`);
+    if (isMobileClient()) {
+      showToast(`📱 Abrindo aplicativo do WhatsApp para ${lead.empresa}...`);
+      window.location.href = url;
     } else {
-      showToast(`💬 Conversa aberta no WhatsApp para ${lead.empresa}! Aperte Enter para enviar.`);
+      const openedWin = window.open(url, '_blank');
+      if (!openedWin || openedWin.closed || typeof openedWin.closed === 'undefined') {
+        showToast(`⚠️ Janela bloqueada pelo navegador. <a href="${url}" target="_blank" rel="noopener noreferrer" class="underline font-black text-amber-300 ml-1">Clique para abrir ${lead.empresa} no WhatsApp</a>`);
+      } else {
+        showToast(`💬 Conversa aberta no WhatsApp para ${lead.empresa}! Aperte Enter para enviar.`);
+      }
     }
   }
 
@@ -5805,6 +5838,15 @@ function renderDiagnosticPitch(lead) {
     const btnWA = document.getElementById('btnModalWhatsApp');
     if (btnWA) {
       btnWA.href = buildWhatsAppUrl(lead, pitch);
+      const isMob = isMobileClient();
+      const labelEl = document.getElementById('labelModalWhatsApp') || btnWA;
+      if (isMob) {
+        btnWA.removeAttribute('target');
+        if (labelEl) labelEl.textContent = 'Abrir no WhatsApp App';
+      } else {
+        btnWA.setAttribute('target', '_blank');
+        if (labelEl) labelEl.textContent = 'Abrir WhatsApp Web';
+      }
     }
   } catch (err) {
     console.error("[renderDiagnosticPitch] Erro:", err);
