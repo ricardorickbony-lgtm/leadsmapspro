@@ -4881,28 +4881,31 @@ function renderTable() {
             <span class="text-amber-400 font-bold">💡 Oportunidade:</span> ${getLeadMotivo(lead)}
           </div>
 
-          <!-- Botões de Ação Mobile (Grandes alvos de toque 44px) -->
-          <div class="grid grid-cols-5 gap-1.5 pt-1">
-            <button onclick="window.runRaioXOficial('${lead.id}')" id="btnRaioX_mob_${lead.id}" type="button" class="flex flex-col items-center justify-center py-2.5 px-1 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 text-amber-300 font-black text-[11px] active:scale-95 transition-all cursor-pointer">
-              <span class="text-base">⚡</span>
-              <span class="mt-0.5">Raio-X</span>
-            </button>
-            <button onclick="window.openLeadInGeoGrid('${lead.id}')" type="button" class="flex flex-col items-center justify-center py-2.5 px-1 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-emerald-500/40 text-emerald-400 font-bold text-[11px] active:scale-95 transition-all cursor-pointer">
-              <span class="text-base">🎯</span>
-              <span class="mt-0.5">Ranking</span>
-            </button>
-            <button onclick="window.downloadLeadPdf('${lead.id}')" type="button" class="flex flex-col items-center justify-center py-2.5 px-1 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/50 text-amber-300 font-black text-[11px] active:scale-95 transition-all cursor-pointer">
-              <span class="text-base">📄</span>
-              <span class="mt-0.5">PDF</span>
-            </button>
-            <button onclick="openDiagnostic('${lead.id}')" type="button" class="flex flex-col items-center justify-center py-2.5 px-1 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-slate-300 font-bold text-[11px] active:scale-95 transition-all cursor-pointer">
-              <span class="text-base">🔍</span>
-              <span class="mt-0.5">Diagnóstico</span>
-            </button>
-            <a href="${buildWhatsAppUrl(lead)}" target="_blank" rel="noopener noreferrer" onclick="return window.handleDirectWhatsAppClick(event, '${lead.id}')" class="flex flex-col items-center justify-center py-2.5 px-1 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/50 text-emerald-400 font-black text-[11px] active:scale-95 transition-all cursor-pointer">
-              <span class="text-base">💬</span>
-              <span class="mt-0.5">WhatsApp</span>
-            </a>
+          <!-- Botões de Ação Mobile (Modo de Bolso: 2 Botões Primários + 3 Sub-ações Discretas) -->
+          <div class="space-y-2 pt-1.5">
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="window.runRaioXOficial('${lead.id}')" id="btnRaioX_mob_${lead.id}" type="button" class="flex items-center justify-center gap-1.5 py-3 px-2 rounded-xl bg-gradient-to-r from-amber-500/25 to-amber-500/15 hover:from-amber-500/35 border border-amber-500/50 text-amber-300 font-black text-xs active:scale-95 transition-all cursor-pointer shadow-sm">
+                <span class="text-base">⚡</span>
+                <span class="truncate">Raio-X & Dossiê</span>
+              </button>
+              <a href="${buildWhatsAppUrl(lead)}" target="_blank" rel="noopener noreferrer" onclick="return window.handleDirectWhatsAppClick(event, '${lead.id}')" class="flex items-center justify-center gap-1.5 py-3 px-2 rounded-xl bg-gradient-to-r from-emerald-500/30 to-emerald-500/20 hover:from-emerald-500/40 border border-emerald-500/60 text-emerald-300 font-black text-xs active:scale-95 transition-all cursor-pointer shadow-sm">
+                <span class="text-base">💬</span>
+                <span class="truncate">WhatsApp</span>
+              </a>
+            </div>
+            <div class="flex items-center justify-between text-[11px] text-slate-400 px-1 pt-1 border-t border-slate-800/60">
+              <button onclick="window.openLeadInGeoGrid('${lead.id}')" type="button" class="hover:text-emerald-400 transition-colors py-1 px-1.5 flex items-center gap-1 cursor-pointer">
+                <span>🎯 GeoGrid</span>
+              </button>
+              <span class="text-slate-700">·</span>
+              <button onclick="window.downloadLeadPdf('${lead.id}')" type="button" class="hover:text-amber-300 transition-colors py-1 px-1.5 flex items-center gap-1 cursor-pointer">
+                <span>📄 Salvar PDF</span>
+              </button>
+              <span class="text-slate-700">·</span>
+              <button onclick="openDiagnostic('${lead.id}')" type="button" class="hover:text-white transition-colors py-1 px-1.5 flex items-center gap-1 cursor-pointer">
+                <span>🔍 Diagnóstico</span>
+              </button>
+            </div>
           </div>
         </div>
       `;
@@ -6579,6 +6582,20 @@ window.switchReportSectionTab = function(tabKey) {
   });
 };
 
+window.toggleMobileConformPillars = function() {
+  const container = document.getElementById('mobPillarsConform');
+  const arrow = document.getElementById('conformPillarsArrow');
+  if (!container) return;
+  const isHidden = container.classList.contains('hidden');
+  if (isHidden) {
+    container.classList.remove('hidden');
+    if (arrow) arrow.innerHTML = 'Ocultar &#9650;';
+  } else {
+    container.classList.add('hidden');
+    if (arrow) arrow.innerHTML = 'Mostrar &#9660;';
+  }
+};
+
 window.openWhiteLabelReport = function(lead) {
   if (!lead) lead = State.currentLead || State.leads[0];
   if (!lead) {
@@ -6596,6 +6613,8 @@ window.openWhiteLabelReport = function(lead) {
 
   // 1. Constrói os 22 itens de Análise de Saúde e calcula a Pontuação Geral
   const healthItems = buildLeadFullAuditItems(lead);
+  const criticalPillars = healthItems.filter(i => i.score < 80);
+  const conformPillars = healthItems.filter(i => i.score >= 80);
   const countWeak = healthItems.filter(i => i.score < 40).length;
   const countMid = healthItems.filter(i => i.score >= 40 && i.score < 80).length;
   const countGood = healthItems.filter(i => i.score >= 80).length;
@@ -6906,13 +6925,41 @@ window.openWhiteLabelReport = function(lead) {
           </p>
         </div>
 
-        <!-- Grade dos 22 Pilares de Análise -->
+        <!-- Grade dos 22 Pilares de Análise (Modo de Bolso Mobile: Gargalos em destaque + Pilares Conformes Retráteis) -->
         <div class="space-y-4">
           <div class="flex items-center justify-between border-b border-slate-200 pb-2">
-            <h4 class="text-sm font-extrabold text-slate-900">Auditoria Detalhada dos 22 Pilares de Relevância:</h4>
-            <span class="text-xs text-slate-500 font-mono">RadarMaps Engine v2.4</span>
+            <div>
+              <h4 class="text-sm font-extrabold text-slate-900">Auditoria Detalhada dos 22 Pilares de Relevância:</h4>
+              <p class="text-[11px] text-slate-500 md:hidden">Foco imediato nos gargalos prioritários que exigem intervenção comercial</p>
+            </div>
+            <span class="text-xs text-slate-500 font-mono hidden sm:inline">RadarMaps Engine v2.4</span>
           </div>
-          ${healthItems.map(item => renderHealthThermometerCard(item, lead.id)).join('')}
+
+          <!-- Pilares Críticos e de Atenção (Score < 80) — Imediatamente Visíveis em Qualquer Dispositivo -->
+          <div class="space-y-3 sm:space-y-4">
+            ${criticalPillars.map(item => renderHealthThermometerCard(item, lead.id)).join('')}
+          </div>
+
+          ${conformPillars.length > 0 ? `
+            <!-- Expansor Mobile para Pilares Já Aprovados / Em Conformidade -->
+            <div class="no-print md:hidden pt-1">
+              <button type="button" onclick="window.toggleMobileConformPillars()" id="btnToggleConformPillars" class="w-full flex items-center justify-between p-3 rounded-xl border border-emerald-500/30 bg-emerald-50/70 hover:bg-emerald-100 text-emerald-950 font-bold text-xs transition-all cursor-pointer shadow-sm">
+                <span class="flex items-center gap-2">
+                  <span class="text-base">✅</span>
+                  <span>Ver ${conformPillars.length} Pilares Já em Conformidade Plena</span>
+                </span>
+                <span id="conformPillarsArrow" class="text-xs font-mono text-emerald-800 bg-emerald-200/60 px-2 py-0.5 rounded-md">Mostrar &#9660;</span>
+              </button>
+            </div>
+
+            <!-- Pilares Conformes (Score >= 80) — No mobile fica oculto até o toque; No desktop e impressão fica 100% visível -->
+            <div id="mobPillarsConform" class="hidden md:block space-y-3 sm:space-y-4 pt-1">
+              <div class="flex items-center gap-2 pb-1 border-b border-slate-100 text-xs font-bold text-emerald-700">
+                <span>✅</span> <span>Pilares Técnicos Aprovados / Em Conformidade (${conformPillars.length}):</span>
+              </div>
+              ${conformPillars.map(item => renderHealthThermometerCard(item, lead.id)).join('')}
+            </div>
+          ` : ''}
         </div>
       </section>
 

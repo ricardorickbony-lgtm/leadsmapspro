@@ -257,6 +257,9 @@ body {
   .no-print {
     display: none !important;
   }
+  #mobPillarsConform {
+    display: block !important;
+  }
   .report-paper {
     box-shadow: none !important;
     border: none !important;

@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="css/style.css?v=20261020_v66_dossie_mobile_first_responsivo">
+  <link rel="stylesheet" href="css/style.css?v=20261020_v68_pocket_mode_mobile_simplificado">
   <style>
     /* ==========================================================================
        BLOQUEIO MANDATÓRIO DE TELA DE LOGIN — RADARMAPS PRO (RICARDO & SEVERINO)
@@ -495,53 +495,53 @@
     </section>
 
     <!-- Section: 6 KPI Cards Grid -->
-    <section class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-      <div class="glass-card p-4 transition-transform hover:-translate-y-0.5">
+    <section class="grid grid-cols-2 gap-2.5 sm:gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <div class="glass-card p-3 sm:p-4 transition-transform hover:-translate-y-0.5">
         <div class="flex items-center justify-between">
           <span class="text-lg">🎯</span>
-          <span id="kpiTotal" class="font-mono text-2xl font-extrabold text-[var(--foreground)]">12</span>
+          <span id="kpiTotal" class="font-mono text-xl sm:text-2xl font-extrabold text-[var(--foreground)]">12</span>
         </div>
-        <p class="mt-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Total Capturado</p>
+        <p class="mt-1 sm:mt-2 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Total Capturado</p>
       </div>
 
-      <div class="glass-card p-4 transition-transform hover:-translate-y-0.5">
+      <div class="glass-card p-3 sm:p-4 transition-transform hover:-translate-y-0.5">
         <div class="flex items-center justify-between">
           <span class="text-lg">🚨</span>
-          <span id="kpiNoSite" class="font-mono text-2xl font-extrabold text-[var(--rose-signal)]">6</span>
+          <span id="kpiNoSite" class="font-mono text-xl sm:text-2xl font-extrabold text-[var(--rose-signal)]">6</span>
         </div>
-        <p class="mt-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Sem Site</p>
+        <p class="mt-1 sm:mt-2 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Sem Site</p>
       </div>
 
-      <div class="glass-card p-4 transition-transform hover:-translate-y-0.5">
+      <div class="glass-card p-3 sm:p-4 transition-transform hover:-translate-y-0.5">
         <div class="flex items-center justify-between">
           <span class="text-lg">📷</span>
-          <span id="kpiNo360" class="font-mono text-2xl font-extrabold text-[var(--amber-glow)]">9</span>
+          <span id="kpiNo360" class="font-mono text-xl sm:text-2xl font-extrabold text-[var(--amber-glow)]">9</span>
         </div>
-        <p class="mt-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Sem Fotos 360°</p>
+        <p class="mt-1 sm:mt-2 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Sem Fotos 360°</p>
       </div>
 
-      <div class="glass-card p-4 transition-transform hover:-translate-y-0.5">
+      <div class="glass-card p-3 sm:p-4 transition-transform hover:-translate-y-0.5">
         <div class="flex items-center justify-between">
           <span class="text-lg">⚙️</span>
-          <span id="kpiNoCRM" class="font-mono text-2xl font-extrabold text-[var(--rose-signal)]">5</span>
+          <span id="kpiNoCRM" class="font-mono text-xl sm:text-2xl font-extrabold text-[var(--rose-signal)]">5</span>
         </div>
-        <p class="mt-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Sem CRM / Manual</p>
+        <p class="mt-1 sm:mt-2 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Sem CRM / Manual</p>
       </div>
 
-      <div class="glass-card p-4 transition-transform hover:-translate-y-0.5">
+      <div class="glass-card p-3 sm:p-4 transition-transform hover:-translate-y-0.5">
         <div class="flex items-center justify-between">
           <span class="text-lg">🔥</span>
-          <span id="kpiHasPixel" class="font-mono text-2xl font-extrabold text-[var(--emerald-signal)]">5</span>
+          <span id="kpiHasPixel" class="font-mono text-xl sm:text-2xl font-extrabold text-[var(--emerald-signal)]">5</span>
         </div>
-        <p class="mt-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Fazem Tráfego Pago</p>
+        <p class="mt-1 sm:mt-2 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Fazem Tráfego Pago</p>
       </div>
 
-      <div class="glass-card p-4 transition-transform hover:-translate-y-0.5">
+      <div class="glass-card p-3 sm:p-4 transition-transform hover:-translate-y-0.5">
         <div class="flex items-center justify-between">
           <span class="text-lg">📤</span>
-          <span id="kpiSent" class="font-mono text-2xl font-extrabold text-[var(--foreground)]">37</span>
+          <span id="kpiSent" class="font-mono text-xl sm:text-2xl font-extrabold text-[var(--foreground)]">37</span>
         </div>
-        <p class="mt-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Disparos Realizados</p>
+        <p class="mt-1 sm:mt-2 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">Disparos Realizados</p>
       </div>
     </section>
 
@@ -2476,7 +2476,7 @@
     <!-- Message injected here -->
   </div>
 
-  <script src="js/app.js?v=20261020_v67_whatsapp_auto_mobile_app_detection"></script>
+  <script src="js/app.js?v=20261020_v68_pocket_mode_mobile_simplificado"></script>
   <script src="js/security-shield.js?v=20261018_v46_top10_competitors_niche_audit"></script>
 </body>
 </html>
