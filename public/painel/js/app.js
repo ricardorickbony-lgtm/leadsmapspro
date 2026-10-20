@@ -2164,6 +2164,7 @@ function getVerifiedCompetitorsForBusiness(empresa, cidade) {
     console.warn("[getVerifiedCompetitorsForBusiness] Erro lendo storage:", err);
   }
 
+  const low = String(empresa || '').toLowerCase().trim();
   // Ficha protegida e averiguada: Atlanta Motors Campinas
   if (low.includes("atlanta") && low.includes("motors")) {
     return [
@@ -2179,7 +2180,6 @@ function getVerifiedCompetitorsForBusiness(empresa, cidade) {
   }
 
   // Ficha protegida e averiguada: Santo AndrÃ© AutomÃ³veis
-  const low = String(empresa || '').toLowerCase().trim();
   if (low.includes('santo andr') && low.includes('autom')) {
     return [
       { nome: "Sou Mais Carro | Loja de Carros em Santo AndrÃ©", rating: 4.8, reviews: 377, active: true },
