@@ -4259,12 +4259,18 @@ function renderWhatsAppMessage(template, lead) {
 }
 
 function isMobileWhatsAppNumber(rawPhone) {
-  const digits = String(rawPhone || '').replace(/\D/g, '');
+  let digits = String(rawPhone || '').replace(/\D/g, '');
   if (!digits) return false;
-  if (digits.endsWith('44576043') || digits.endsWith('954389151')) return true;
-  const clean = digits.startsWith('55') && digits.length >= 12 ? digits.slice(2) : digits;
-  if (clean.length === 11 && clean[2] === '9') return true;
-  if (clean.length === 10 && ['6', '7', '8', '9'].includes(clean[2])) return true;
+  if (digits.startsWith('55') && digits.length >= 12) digits = digits.substring(2);
+  digits = digits.replace(/^0+/, '');
+  // Celular completo com DDD: 11 dígitos, ex: 11 9xxxx-xxxx
+  if (digits.length === 11 && digits[2] === '9') return true;
+  // Celular antigo com DDD sem o 9 inicial (10 dígitos, inicial 6, 7, 8, 9)
+  if (digits.length === 10 && ['6', '7', '8', '9'].includes(digits[2])) return true;
+  // Celular sem DDD: 9 dígitos iniciando com 9
+  if (digits.length === 9 && digits[0] === '9') return true;
+  // Celular antigo sem DDD: 8 dígitos iniciando com 6, 7, 8, 9
+  if (digits.length === 8 && ['6', '7', '8', '9'].includes(digits[0])) return true;
   return false;
 }
 window.isMobileWhatsAppNumber = isMobileWhatsAppNumber;
@@ -4273,45 +4279,36 @@ function formatBrazilWhatsAppNumber(rawPhone) {
   let digits = String(rawPhone || '').replace(/\D/g, '');
   if (!digits) return '';
 
-  // Se for o fixo da Fisioterapia Jardim (4457-6043), converte para o WhatsApp oficial de agendamento (95438-9151)
-  if (digits.endsWith('44576043')) {
-    return '5511954389151';
-  }
-
-  // Se já tiver DDI 55
+  // Remove DDI 55 inicial se já existir para normalizar DDD e número
   if (digits.startsWith('55') && digits.length >= 12) {
-    if (digits.length === 12) {
-      const ddd = digits.substring(2, 4);
-      const num = digits.substring(4);
-      if (['6', '7', '8', '9'].includes(num[0])) {
-        return `55${ddd}9${num}`;
-      }
-      return digits;
-    }
-    return digits;
+    digits = digits.substring(2);
   }
 
-  // Se for celular completo com DDD (11 dígitos, ex: 11989872135)
+  // Remove zeros à esquerda (ex: 011970558412 -> 11970558412)
+  digits = digits.replace(/^0+/, '');
+
+  // 11 dígitos: DDD + 9 dígitos (ex: 11970558412)
   if (digits.length === 11) {
     return `55${digits}`;
   }
 
-  // Se tiver 10 dígitos (DDD + 8 dígitos)
+  // 10 dígitos: DDD + 8 dígitos (ex: 1187654321 ou fixo 1132221111)
   if (digits.length === 10) {
     const ddd = digits.substring(0, 2);
     const num = digits.substring(2);
+    // Se for celular sem o 9 (dígito inicial 6, 7, 8, 9)
     if (['6', '7', '8', '9'].includes(num[0])) {
       return `55${ddd}9${num}`;
     }
     return `55${digits}`;
   }
 
-  // Se tiver 9 dígitos (celular sem DDD, assume 11)
+  // 9 dígitos: celular sem DDD (assume DDD 11)
   if (digits.length === 9) {
     return `5511${digits}`;
   }
 
-  // Se tiver 8 dígitos (sem DDD, assume 11)
+  // 8 dígitos: sem DDD
   if (digits.length === 8) {
     if (['6', '7', '8', '9'].includes(digits[0])) {
       return `55119${digits}`;
@@ -4693,9 +4690,7 @@ function renderTable() {
     const isChecked = State.selectedLeadIds.has(lead.id);
     const techStackList = lead.techStack || [];
     const isMobile = isMobileWhatsAppNumber(lead.telefone);
-    const displayPhone = lead.telefone && lead.telefone.replace(/\D/g, '').endsWith('44576043')
-      ? '(11) 95438-9151'
-      : lead.telefone;
+    const displayPhone = lead.telefone || 'Não informado';
     const webAnalysis = lead.websiteAnalysis || analyzeWebsiteUrl(lead.websiteUrl);
     const isSocialAsSite = !lead.temSite && webAnalysis.isSocial;
     const postAudit = getLeadPostAudit(lead);
@@ -4813,9 +4808,7 @@ function renderTable() {
       const isChecked = State.selectedLeadIds.has(lead.id);
       const techStackList = lead.techStack || [];
       const isMobile = isMobileWhatsAppNumber(lead.telefone);
-      const displayPhone = lead.telefone && lead.telefone.replace(/\D/g, '').endsWith('44576043')
-        ? '(11) 95438-9151'
-        : lead.telefone;
+      const displayPhone = lead.telefone || 'Não informado';
       const webAnalysis = lead.websiteAnalysis || analyzeWebsiteUrl(lead.websiteUrl);
       const isSocialAsSite = !lead.temSite && webAnalysis.isSocial;
       const postAudit = getLeadPostAudit(lead);
@@ -8042,9 +8035,6 @@ async function fetchSerperLivePlaces(niche, city, targetCount, apiKey) {
         }
       }
     }
-    if (placeTitle.toLowerCase().includes('fisioterapia jardim') || tel.replace(/\D/g, '').endsWith('44576043')) {
-      tel = '(11) 95438-9151';
-    }
     try {
       const customPhones = JSON.parse(localStorage.getItem('leadmaps_custom_phones') || '{}');
       if (customPhones[placeTitle.toLowerCase().trim()]) {
@@ -8456,9 +8446,6 @@ function buildLeadFromPlace(mainPlace, otherPlaces, city, cleanQuery, reviewsDat
   }
 
   let tel = mainPlace.phoneNumber || mainPlace.phone || '';
-  if (mainTitle.toLowerCase().includes('fisioterapia jardim') || tel.replace(/\D/g, '').endsWith('44576043')) {
-    tel = '(11) 95438-9151';
-  }
   try {
     const customPhones = JSON.parse(localStorage.getItem('leadmaps_custom_phones') || '{}');
     if (customPhones[mainTitle.toLowerCase().trim()]) {
@@ -9327,9 +9314,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
         if (infoEl) infoEl.textContent = `${lead.cidade || 'Região'} · ${lead.categoria || 'Nicho'} · ⭐ ${lead.rating || 5.0} (${lead.reviews || 0} avaliações)`;
         if (phoneEl) {
           phoneEl.disabled = false;
-          phoneEl.value = lead.telefone && lead.telefone.replace(/\D/g, '').endsWith('44576043')
-            ? '(11) 95438-9151'
-            : (lead.telefone || '');
+          phoneEl.value = lead.telefone || '';
         }
         if (msgEl) msgEl.textContent = renderWhatsAppMessage(State.settings.whatsappTemplate, lead);
         if (indexEl) indexEl.textContent = `Lead #${currentIdx} de ${total}`;
@@ -9662,7 +9647,11 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
   const btnTestWaDispatch = document.getElementById('btnTestWaDispatch');
   if (btnTestWaDispatch) {
     btnTestWaDispatch.addEventListener('click', () => {
-      const savedTestPhone = localStorage.getItem('leadmaps_test_phone') || '(11) 95438-9151';
+      let savedTestPhone = localStorage.getItem('leadmaps_test_phone');
+      if (!savedTestPhone || savedTestPhone.includes('954389151') || savedTestPhone.includes('44576043')) {
+        savedTestPhone = '(11) 97055-8412';
+        localStorage.setItem('leadmaps_test_phone', savedTestPhone);
+      }
       const testPhone = window.prompt(
         "Digite o número de WhatsApp (com DDD) para enviar uma mensagem de teste agora:",
         savedTestPhone
@@ -9712,6 +9701,21 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
   const btnWaAutoRunner = document.getElementById('btnWaAutoRunner');
   if (btnWaAutoRunner) btnWaAutoRunner.addEventListener('click', toggleAutoDispatch);
 
+    const waCurrentLeadPhone = document.getElementById('waCurrentLeadPhone');
+  if (waCurrentLeadPhone) {
+    waCurrentLeadPhone.addEventListener('input', () => {
+      const currentItem = State.whatsappQueue.find(i => i.status === 'pendente');
+      if (currentItem && waCurrentLeadPhone.value.trim() && waCurrentLeadPhone.value !== '100% Concluído') {
+        currentItem.lead.telefone = waCurrentLeadPhone.value.trim();
+        currentItem.lead.whatsappVerificado = isMobileWhatsAppNumber(currentItem.lead.telefone);
+        try {
+          const customPhones = JSON.parse(localStorage.getItem('leadmaps_custom_phones') || '{}');
+          customPhones[currentItem.lead.empresa.toLowerCase().trim()] = currentItem.lead.telefone;
+          localStorage.setItem('leadmaps_custom_phones', JSON.stringify(customPhones));
+        } catch (e) {}
+      }
+    });
+  }
   const btnWaOpenCurrent = document.getElementById('btnWaOpenCurrent');
   if (btnWaOpenCurrent) btnWaOpenCurrent.addEventListener('click', sendCurrentWhatsAppLead);
 
@@ -10938,7 +10942,11 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       showToast('⚠️ Assinante sem telefone cadastrado.');
       return;
     }
-    window.open(`https://web.whatsapp.com/send?phone=${phoneDigits}&text=${encodeURIComponent(msg)}`, '_blank');
+    const isMob = isMobileClient();
+    const waUrl = isMob
+      ? `https://api.whatsapp.com/send?phone=${phoneDigits}&text=${encodeURIComponent(msg)}`
+      : `https://web.whatsapp.com/send?phone=${phoneDigits}&text=${encodeURIComponent(msg)}`;
+    window.open(waUrl, '_blank');
   };
 
   window.sendBillingWhatsApp = function(subId) {
@@ -10952,7 +10960,11 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       showToast('⚠️ Assinante sem telefone cadastrado.');
       return;
     }
-    window.open(`https://web.whatsapp.com/send?phone=${phoneDigits}&text=${encodeURIComponent(msg)}`, '_blank');
+    const isMob = isMobileClient();
+    const waUrl = isMob
+      ? `https://api.whatsapp.com/send?phone=${phoneDigits}&text=${encodeURIComponent(msg)}`
+      : `https://web.whatsapp.com/send?phone=${phoneDigits}&text=${encodeURIComponent(msg)}`;
+    window.open(waUrl, '_blank');
   };
 
   // Inicializa chave aleatória no formulário Admin
