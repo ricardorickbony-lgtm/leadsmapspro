@@ -4304,6 +4304,155 @@ function getLeadSocialMedia(lead) {
 }
 window.getLeadSocialMedia = getLeadSocialMedia;
 
+
+// ============================================================================
+// GOOGLE AI STUDIO (GEMINI 2.5) LIVE MOTOR
+// ============================================================================
+function getGeminiApiKey() {
+  return localStorage.getItem('leadmaps_gemini_api_key') || '';
+}
+
+function setGeminiApiKey(key) {
+  if (!key) {
+    localStorage.removeItem('leadmaps_gemini_api_key');
+  } else {
+    localStorage.setItem('leadmaps_gemini_api_key', key.trim());
+  }
+  updateGeminiStatusBadge();
+}
+
+function updateGeminiStatusBadge() {
+  const key = getGeminiApiKey();
+  const badge = document.getElementById('geminiStatusBadge');
+  const input = document.getElementById('settingGeminiApiKey');
+  if (input && document.activeElement !== input) {
+    input.value = key;
+  }
+  if (badge) {
+    if (key && key.startsWith('AIza')) {
+      badge.textContent = '● Chave Conectada (Gemini 2.5)';
+      badge.className = 'inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full';
+    } else {
+      badge.textContent = '○ Não Conectado';
+      badge.className = 'inline-flex items-center gap-1 text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-full';
+    }
+  }
+}
+window.updateGeminiStatusBadge = updateGeminiStatusBadge;
+
+async function testGeminiApiKey(key) {
+  if (!key) throw new Error('Insira sua Chave de API do Google AI Studio');
+  const cleanKey = key.trim();
+  
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(cleanKey);
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{
+        parts: [{ text: 'Responda estritamente: "CONEXAO_OK"' }]
+      }]
+    })
+  });
+
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    const errMsg = errData.error?.message || ('Erro HTTP ' + response.status);
+    throw new Error(errMsg);
+  }
+
+  const data = await response.json();
+  const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  return reply;
+}
+window.testGeminiApiKey = testGeminiApiKey;
+
+async function generateGeminiPitchForLead(lead) {
+  if (!lead) lead = State.currentLead || State.leads[0];
+  if (!lead) {
+    showToast('⚠️ Selecione um comércio antes de gerar o pitch.');
+    return null;
+  }
+
+  const key = getGeminiApiKey();
+  if (!key) {
+    showToast('⚠️ Conecte sua Chave do Google AI Studio em Configurações para ativar a IA!');
+    const settingsModal = document.getElementById('settingsModal');
+    if (settingsModal) settingsModal.classList.remove('hidden');
+    const input = document.getElementById('settingGeminiApiKey');
+    if (input) input.focus();
+    return null;
+  }
+
+  const overlay = document.getElementById('geminiLoadingOverlay');
+  const labelBtn = document.getElementById('labelGenerateGeminiPitch');
+  if (overlay) overlay.classList.remove('hidden');
+  if (labelBtn) labelBtn.textContent = 'Gerando com IA...';
+
+  try {
+    const soc = typeof getLeadSocialMedia === 'function' ? getLeadSocialMedia(lead) : { hasInstagram: false, hasFacebook: false };
+    const prompt = 'Você é Ricardo, consultor especialista em vendas e posicionamento no Google Maps para empresas locais.\n'
+      + 'Você identificou a seguinte empresa no Google Maps e vai enviar uma mensagem de WhatsApp para o proprietário ou gerente:\n\n'
+      + '- Nome da Empresa: ' + (lead.empresa || 'Empresa Local') + '\n'
+      + '- Cidade / Endereço: ' + (lead.endereco || lead.cidade || 'Região') + '\n'
+      + '- Segmento / Categoria: ' + (lead.categoria || 'Comércio Local') + '\n'
+      + '- Avaliações: ' + (lead.rating || 5.0) + ' estrelas (' + (lead.reviews || 0) + ' avaliações)\n'
+      + '- Website Oficial: ' + (lead.temSite ? 'Sim (' + (lead.websiteUrl || 'ativo') + ')' : 'NÃO POSSUI SITE (Grave gargalo de captação de clientes)') + '\n'
+      + '- Tour 360° no Maps: ' + (lead.temTour360 ? 'Sim' : 'NÃO POSSUI TOUR 360° INTERNO (Apenas foto de rua do carro)') + '\n'
+      + '- Taxa de Resposta a Avaliações: ' + (lead.responseRatePct || 0) + '% respondidas\n'
+      + '- Instagram: ' + (soc.hasInstagram ? 'Conectado' : 'Não possui no perfil do Maps') + '\n'
+      + '- Facebook: ' + (soc.hasFacebook ? 'Conectado' : 'Não possui no perfil do Maps') + '\n\n'
+      + 'INSTRUÇÕES DE ESCRITA:\n'
+      + '1. Escreva uma mensagem de WhatsApp persuasiva, consultiva, natural e humana (sem jargões engessados).\n'
+      + '2. Destaque um gargalo evidente onde a empresa está deixando de faturar e perdendo clientes para concorrentes na região.\n'
+      + '3. Convide amigavelmente o dono para ver o Raio-X Técnico que você preparou da empresa dele.\n'
+      + '4. Divida em 3 ou 4 parágrafos curtos, prontos para envio no WhatsApp.\n'
+      + 'Retorne APENAS o texto da mensagem formatada para WhatsApp (com emojis adequados).';
+
+    const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(key.trim());
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 800
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error?.message || ('Erro ' + response.status + ' da API Gemini'));
+    }
+
+    const data = await response.json();
+    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+    if (!generatedText) throw new Error('O Gemini retornou uma resposta em branco.');
+
+    // Atualiza a tela
+    const modalAiPitchText = document.getElementById('modalAiPitchText');
+    if (modalAiPitchText) modalAiPitchText.textContent = generatedText;
+
+    const btnWA = document.getElementById('btnModalWhatsApp');
+    if (btnWA) {
+      btnWA.href = buildWhatsAppUrl(lead, generatedText);
+    }
+
+    showToast('✨ Pitch gerado com sucesso pelo Google Gemini 2.5!');
+    return generatedText;
+  } catch (err) {
+    console.error('Erro ao chamar Gemini:', err);
+    showToast('❌ Falha ao consultar Gemini: ' + err.message);
+    return null;
+  } finally {
+    if (overlay) overlay.classList.add('hidden');
+    if (labelBtn) labelBtn.textContent = 'Reescrever com Gemini IA';
+  }
+}
+window.generateGeminiPitchForLead = generateGeminiPitchForLead;
+
 function isMobileWhatsAppNumber(rawPhone) {
   let digits = String(rawPhone || '').replace(/\D/g, '');
   if (!digits) return false;
@@ -7894,6 +8043,50 @@ document.addEventListener('DOMContentLoaded', () => {
   const nicheInput = document.getElementById('nicheInput');
   const cityInput = document.getElementById('cityInput');
   const leadCountSelect = document.getElementById('leadCountSelect');
+  
+  // Gemini AI Key & Test Events
+  updateGeminiStatusBadge();
+
+  const inputGeminiKey = document.getElementById('settingGeminiApiKey');
+  if (inputGeminiKey) {
+    inputGeminiKey.value = getGeminiApiKey();
+    inputGeminiKey.addEventListener('input', (e) => {
+      setGeminiApiKey(e.target.value);
+    });
+  }
+
+  const btnToggleShowKey = document.getElementById('btnToggleShowGeminiKey');
+  if (btnToggleShowKey && inputGeminiKey) {
+    btnToggleShowKey.addEventListener('click', () => {
+      inputGeminiKey.type = inputGeminiKey.type === 'password' ? 'text' : 'password';
+    });
+  }
+
+  const btnTestGemini = document.getElementById('btnTestGeminiKey');
+  if (btnTestGemini) {
+    btnTestGemini.addEventListener('click', async () => {
+      const key = inputGeminiKey ? inputGeminiKey.value : getGeminiApiKey();
+      const label = document.getElementById('btnTestGeminiLabel');
+      if (label) label.textContent = 'Testando...';
+      try {
+        await testGeminiApiKey(key);
+        setGeminiApiKey(key);
+        showToast('✅ Conexão bem-sucedida! Google Gemini 2.5 Ativo.');
+      } catch (err) {
+        showToast('❌ Falha no teste: ' + err.message);
+      } finally {
+        if (label) label.textContent = 'Testar IA ⚡';
+      }
+    });
+  }
+
+  const btnGeneratePitch = document.getElementById('btnGenerateGeminiPitch');
+  if (btnGeneratePitch) {
+    btnGeneratePitch.addEventListener('click', () => {
+      generateGeminiPitchForLead(State.currentLead);
+    });
+  }
+
   const btnStart = document.getElementById('btnStartScraping');
   const btnClearSearch = document.getElementById('btnClearSearchFields');
   if (btnClearSearch) {

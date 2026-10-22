@@ -1731,6 +1731,36 @@
           </p>
         </div>
 
+        <!-- Inteligência Artificial — Google AI Studio (Gemini 2.5) -->
+        <div class="rounded-xl border border-indigo-500/40 bg-gradient-to-br from-indigo-950/40 to-slate-900/60 p-4 space-y-3 shadow-lg">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">⚡</span>
+              <p class="text-xs font-bold uppercase tracking-wider text-indigo-400">Google Gemini AI (AI Studio)</p>
+            </div>
+            <span class="inline-flex items-center gap-1 text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-full" id="geminiStatusBadge">○ Não Conectado</span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            Conecte sua Chave de API do <strong>Google AI Studio</strong> para gerar abordagens de WhatsApp cirúrgicas, diagnósticos personalizados e análises inteligentes em tempo real com o <strong>Gemini 2.5 Flash</strong>.
+          </p>
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-xs font-semibold text-slate-400">Chave de API (GEMINI_API_KEY)</label>
+              <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="text-[11px] text-amber-400 hover:text-amber-300 font-bold underline">
+                Obter Chave no AI Studio ↗
+              </a>
+            </div>
+            <div class="flex gap-2">
+              <input id="settingGeminiApiKey" type="password" placeholder="Cole sua chave AIzaSy..." class="flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs outline-none focus:border-indigo-400 text-white font-mono">
+              <button id="btnToggleShowGeminiKey" type="button" class="btn-ghost-dark px-2.5 py-2 text-xs text-slate-400 hover:text-white" title="Mostrar/Ocultar Chave">👁️</button>
+              <button id="btnTestGeminiKey" type="button" class="btn-amber px-3.5 py-2 text-xs font-bold whitespace-nowrap cursor-pointer shadow-md">
+                <span id="btnTestGeminiLabel">Testar IA ⚡</span>
+              </button>
+            </div>
+            <p class="mt-1 text-[10px] text-slate-400">🔒 Segurança total: Sua chave fica salva estritamente no seu navegador local (localStorage) e nunca é enviada para repositórios públicos.</p>
+          </div>
+        </div>
+
         <!-- Identidade White-Label da Agência -->
         <div class="rounded-xl border border-[var(--border)] bg-[var(--secondary)]/40 p-4 space-y-3">
           <p class="text-xs font-bold uppercase tracking-wider text-[var(--amber-glow)]">🏢 Identidade White-Label da sua Agência</p>
