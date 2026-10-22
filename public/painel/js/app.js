@@ -7916,8 +7916,8 @@ window.openWhiteLabelReport = function(lead) {
   const labelProspect = document.getElementById('labelProspectMode');
   if (btnToggleProspect && labelProspect) {
     labelProspect.innerHTML = isProspectMode
-      ? '<span class="hidden md:inline">Modo ProspecÃ§Ã£o: </span>Ativado'
-      : '<span class="hidden md:inline">Modo Consultor: </span>Completo';
+      ? '<span class="hidden md:inline">Modo Prospecção: </span>Com Cadeados 🔒'
+      : '<span class="hidden md:inline">Modo Consultor: </span>100% Desbloqueado 🔓';
     btnToggleProspect.className = isProspectMode
       ? 'btn-ghost-dark px-3 py-2 text-xs font-bold flex items-center gap-1.5 border border-amber-500/60 text-amber-300 bg-amber-500/10 cursor-pointer'
       : 'btn-ghost-dark px-3 py-2 text-xs font-bold flex items-center gap-1.5 border border-emerald-500/60 text-emerald-300 bg-emerald-500/10 cursor-pointer';
