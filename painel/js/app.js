@@ -10944,7 +10944,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     const currentUrl = window.location.href.split('?')[0].split('#')[0];
     const basePainelUrl = (currentUrl.startsWith('http') && !currentUrl.includes('localhost') && !currentUrl.includes('127.0.0.1'))
       ? currentUrl
-      : 'https://ricardorickbony-lgtm.github.io/leadmaps-pro/painel/';
+      : 'https://ricardorickbony-lgtm.github.io/leadsmapspro/painel/';
     
     // Link direto com preenchimento automático
     const autoLoginUrl = `${basePainelUrl}?email=${encodeURIComponent(sub.email)}&chave=${encodeURIComponent(sub.chave)}`;
@@ -10970,7 +10970,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     const currentUrl = window.location.href.split('?')[0].split('#')[0];
     const basePainelUrl = (currentUrl.startsWith('http') && !currentUrl.includes('localhost') && !currentUrl.includes('127.0.0.1'))
       ? currentUrl
-      : 'https://ricardorickbony-lgtm.github.io/leadmaps-pro/painel/';
+      : 'https://ricardorickbony-lgtm.github.io/leadsmapspro/painel/';
     const autoLoginUrl = `${basePainelUrl}?email=${encodeURIComponent(sub.email)}&chave=${encodeURIComponent(sub.chave)}`;
     navigator.clipboard?.writeText(autoLoginUrl).catch(() => {});
     showToast(`🔗 Link de acesso de "${sub.nome}" copiado com sucesso!`);
@@ -11064,7 +11064,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     const currentUrl = window.location.href.split('?')[0].split('#')[0];
     const basePainelUrl = (currentUrl.startsWith('http') && !currentUrl.includes('localhost') && !currentUrl.includes('127.0.0.1'))
       ? currentUrl
-      : 'https://ricardorickbony-lgtm.github.io/leadmaps-pro/painel/';
+      : 'https://ricardorickbony-lgtm.github.io/leadsmapspro/painel/';
     const autoLoginUrl = `${basePainelUrl}?email=${encodeURIComponent(email)}&chave=${encodeURIComponent(chave)}`;
 
     if (nameEl) nameEl.textContent = nome;
