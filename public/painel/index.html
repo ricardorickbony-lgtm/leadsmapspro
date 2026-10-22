@@ -368,7 +368,7 @@
         <div class="flex flex-wrap items-end gap-3">
           <div class="min-w-[220px] flex-1">
             <label class="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Nicho / Categoria</label>
-            <input id="nicheInput" list="nichos" placeholder="Ex: Clínica de Fisioterapia, Dentistas..." style="background-color: #131c2e !important; color: #ffffff !important;" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2.5 text-sm outline-none transition-colors focus:border-amber-400 text-white" value="Clínica de Fisioterapia">
+            <input id="nicheInput" list="nichos" placeholder="Ex: Clínica de Fisioterapia, Dentistas..." style="background-color: #131c2e !important; color: #ffffff !important;" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2.5 text-sm outline-none transition-colors focus:border-amber-400 text-white" value="">
             <datalist id="nichos">
               <option value="Clínica de Fisioterapia"></option>
               <option value="Clínicas Odontológicas"></option>
@@ -386,7 +386,7 @@
 
           <div class="min-w-[200px] flex-1">
             <label class="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Cidade / Região</label>
-            <input id="cityInput" list="cidades" placeholder="Ex: Santo André - SP, Campinas - SP" style="background-color: #131c2e !important; color: #ffffff !important;" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2.5 text-sm outline-none transition-colors focus:border-amber-400 text-white" value="Santo André - SP">
+            <input id="cityInput" list="cidades" placeholder="Ex: Santo André - SP, Campinas - SP" style="background-color: #131c2e !important; color: #ffffff !important;" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2.5 text-sm outline-none transition-colors focus:border-amber-400 text-white" value="">
             <datalist id="cidades">
               <option value="Santo André - SP"></option>
               <option value="São Bernardo do Campo - SP"></option>
@@ -414,6 +414,9 @@
 
           <button id="btnStartScraping" class="btn-amber flex items-center justify-center gap-2 px-5 py-2.5 text-sm whitespace-nowrap cursor-pointer w-full sm:w-auto">
             <span id="btnIcon">📡</span> <span id="btnLabel">Iniciar Varredura & Diagnóstico</span>
+          </button>
+          <button id="btnClearSearchFields" type="button" class="btn-ghost-dark flex items-center justify-center gap-1.5 px-3.5 py-2.5 text-sm whitespace-nowrap cursor-pointer text-slate-400 hover:text-white border border-slate-700 hover:border-slate-500 rounded-lg transition-all w-full sm:w-auto" title="Limpar campos de busca e zerar resultados da tela">
+            <span>✕</span> <span>Limpar</span>
           </button>
         </div>
 
@@ -1981,7 +1984,7 @@
                 <span class="text-sm font-bold text-amber-400" id="waCurrentLeadIndexLabel">Lead #1 de 10</span>
                 <h4 class="text-base font-extrabold text-white" id="waCurrentLeadName">Nome da Empresa</h4>
               </div>
-              <p class="text-xs text-slate-400 mt-0.5" id="waCurrentLeadInfo">Santo André - SP · Clínica de Fisioterapia</p>
+              <p class="text-xs text-slate-400 mt-0.5" id="waCurrentLeadInfo">Nenhum comércio selecionado</p>
             </div>
             <div class="flex items-center gap-1.5">
               <input id="waCurrentLeadPhone" type="text" value="(11) 99999-9999" title="Você pode editar o número de WhatsApp diretamente aqui antes de disparar" class="w-36 font-mono text-xs font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-700/80 px-2.5 py-1 rounded-lg outline-none focus:border-emerald-400 text-center">

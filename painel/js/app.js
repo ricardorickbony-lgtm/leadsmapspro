@@ -3734,6 +3734,10 @@ function generateCityLeads(niche, city, targetCount = 35) {
       cidade: clinic.cidade,
       endereco: clinic.endereco,
       temSite: clinic.temSite,
+      temInstagram: true,
+      instagramUrl: `https://instagram.com/${(clinic.empresa || '').toLowerCase().replace(/[^a-z0-9]/g, '')}`,
+      temFacebook: idx % 2 === 0,
+      facebookUrl: idx % 2 === 0 ? `https://facebook.com/${(clinic.empresa || '').toLowerCase().replace(/[^a-z0-9]/g, '')}` : '',
       temTour360: Boolean(clinic.temTour360 || isTourVerifiedForBusiness(clinic.empresa, clinic.endereco, clinic.telefone)),
       techStack: clinic.techStack,
       score: clinic.score,
@@ -3768,6 +3772,10 @@ function generateCityLeads(niche, city, targetCount = 35) {
           endereco: `Avenida Principal, ${120 + i * 40} - ${bairro}, Santo André`,
           temSite: i % 3 === 0,
           temTour360: false,
+          temInstagram: i % 2 === 0,
+          instagramUrl: (i % 2 === 0) ? `https://instagram.com/clinica_${esp.toLowerCase().replace(/[^a-z0-9]/g, '')}` : '',
+          temFacebook: i % 3 === 0,
+          facebookUrl: (i % 3 === 0) ? `https://facebook.com/clinica_${esp.toLowerCase().replace(/[^a-z0-9]/g, '')}` : '',
           techStack: i % 3 === 0 ? ['Meta Pixel'] : [],
           score: i % 3 === 0 ? 56 : 30,
           rating: +(4.5 + Math.random() * 0.4).toFixed(1),
@@ -3926,6 +3934,10 @@ function generateCityLeads(niche, city, targetCount = 35) {
       lng: +(-46.525000 + (Math.random() - 0.5) * 0.04).toFixed(6),
       temSite: hasSite,
       temTour360: has360,
+      temInstagram: index % 2 === 0,
+      instagramUrl: (index % 2 === 0) ? `https://instagram.com/${nomeFinal.toLowerCase().replace(/[^a-z0-9]/g, '')}` : '',
+      temFacebook: index % 3 === 0,
+      facebookUrl: (index % 3 === 0) ? `https://facebook.com/${nomeFinal.toLowerCase().replace(/[^a-z0-9]/g, '')}` : '',
       temPostsAtivos: false,
       diasSemPostar: 45,
       techStack: techStack,
@@ -4257,6 +4269,40 @@ function renderWhatsAppMessage(template, lead) {
     .replace(/{social_rede}/gi, socialRede)
     .replace(/{website_url}/gi, websiteUrl);
 }
+
+
+function getLeadSocialMedia(lead) {
+  if (!lead) return { hasInstagram: false, instagramUrl: '', hasFacebook: false, facebookUrl: '' };
+  
+  let ig = lead.instagramUrl || '';
+  let fb = lead.facebookUrl || '';
+  const web = (lead.websiteUrl || '').toLowerCase();
+  
+  if (!ig && web.includes('instagram.com')) ig = lead.websiteUrl;
+  if (!fb && (web.includes('facebook.com') || web.includes('fb.com'))) fb = lead.websiteUrl;
+  
+  if (lead.socialLinks && typeof lead.socialLinks === 'object') {
+    if (lead.socialLinks.instagram) ig = lead.socialLinks.instagram;
+    if (lead.socialLinks.facebook) fb = lead.socialLinks.facebook;
+  }
+  
+  if (!ig && lead.temInstagram) {
+    const cleanSlug = (lead.empresa || 'empresa').toLowerCase().replace(/[^a-z0-9]/g, '');
+    ig = `https://instagram.com/${cleanSlug}`;
+  }
+  if (!fb && lead.temFacebook) {
+    const cleanSlug = (lead.empresa || 'empresa').toLowerCase().replace(/[^a-z0-9]/g, '');
+    fb = `https://facebook.com/${cleanSlug}`;
+  }
+  
+  return {
+    hasInstagram: Boolean(ig),
+    instagramUrl: ig,
+    hasFacebook: Boolean(fb),
+    facebookUrl: fb
+  };
+}
+window.getLeadSocialMedia = getLeadSocialMedia;
 
 function isMobileWhatsAppNumber(rawPhone) {
   let digits = String(rawPhone || '').replace(/\D/g, '');
@@ -4671,15 +4717,27 @@ function renderTable() {
   if (filtered.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="8" class="px-4 py-12 text-center text-sm text-[var(--muted-foreground)]">
-          Nenhum lead com os filtros selecionados. Clique em "Iniciar Varredura & Diagnóstico" para carregar novos estabelecimentos.
+        <td colspan="8" class="px-6 py-14 text-center">
+          <div class="w-14 h-14 mx-auto mb-3.5 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-2xl shadow-xl text-emerald-400">
+            📡
+          </div>
+          <h3 class="text-sm sm:text-base font-extrabold text-white mb-1.5">Pronto para Iniciar Nova Varredura</h3>
+          <p class="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+            Digite o <strong>Nicho / Categoria</strong> e a <strong>Cidade / Região</strong> acima e clique em <strong>"Iniciar Varredura & Diagnóstico"</strong> para mapear empresas com raio-x completo do Google Maps.
+          </p>
         </td>
       </tr>
     `;
     if (mobileContainer) {
       mobileContainer.innerHTML = `
-        <div class="p-6 text-center text-sm text-[var(--muted-foreground)]">
-          Nenhum lead com os filtros selecionados. Clique em "Iniciar Varredura & Diagnóstico" para carregar novos estabelecimentos.
+        <div class="py-12 px-4 text-center rounded-2xl border border-slate-800 bg-slate-900/60 my-2">
+          <div class="w-12 h-12 mx-auto mb-3 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-2xl text-emerald-400">
+            📡
+          </div>
+          <h3 class="text-sm font-bold text-white mb-1">Pronto para pesquisar</h3>
+          <p class="text-xs text-slate-400 leading-relaxed max-w-xs mx-auto">
+            Preencha o nicho e cidade acima e toque em <strong>"Iniciar Varredura"</strong> para carregar os comércios.
+          </p>
         </div>
       `;
     }
@@ -4726,6 +4784,16 @@ function renderTable() {
                       ? `<span class="badge-pill badge-rose" title="Link descontinuado pelo Google em março/2024 (Erro 404)">🚨 Erro 404 (Site) ✎</span>` 
                       : `<span class="badge-pill badge-rose" title="Ficha sem website oficial cadastrado">🚨 Sem Site ✎</span>`))}
           </button>
+          ${(() => {
+            const soc = getLeadSocialMedia(lead);
+            const igHtml = soc.hasInstagram 
+              ? ('<a href="' + soc.instagramUrl + '" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-0.5 text-pink-400 hover:text-pink-300 font-bold hover:underline" title="Instagram: ' + soc.instagramUrl + '">📸 Insta</a>')
+              : '<span class="text-slate-500 font-medium opacity-60" title="Sem Instagram no perfil">📸 <span class="line-through">Insta</span></span>';
+            const fbHtml = soc.hasFacebook 
+              ? ('<a href="' + soc.facebookUrl + '" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-0.5 text-sky-400 hover:text-sky-300 font-bold hover:underline" title="Facebook: ' + soc.facebookUrl + '">👥 Face</a>')
+              : '<span class="text-slate-500 font-medium opacity-60" title="Sem Facebook no perfil">👥 <span class="line-through">Face</span></span>';
+            return '<div class="mt-1 flex items-center gap-2 text-[10.5px] font-sans">' + igHtml + '<span class="text-slate-700">·</span>' + fbHtml + '</div>';
+          })()}
         </td>
         <td class="px-4 py-3">
           <div class="flex flex-col gap-1.5">
@@ -6493,7 +6561,7 @@ window.cycleHealthItemScore = function(leadId, itemId) {
   showToast(`Item "${item.title}" ajustado para nota ${item.score} (${item.score === 100 ? 'CONFORME' : item.score === 50 ? 'OTIMIZAÇÃO' : 'GARGALO'})`);
 };
 
-function renderHealthThermometerCard(item, leadId) {
+function renderHealthThermometerCard(item, leadId, isBlurred = false) {
   const isGood = item.score >= 80;
   const isMid = item.score >= 40 && item.score < 80;
 
@@ -6513,45 +6581,69 @@ function renderHealthThermometerCard(item, leadId) {
 
   const benchmarkBadge = item.benchmarkText
     ? `<div class="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 border border-slate-200/80 px-2.5 py-1 text-[10.5px] font-semibold text-slate-700">
-        <span class="text-indigo-600 font-bold">📊 Régua TOP 3:</span> ${item.benchmarkText}
+        <span class="text-indigo-600 font-bold">🎯 Régua TOP 3:</span> ${item.benchmarkText}
       </div>`
     : '';
 
+  const cardInner = `
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+      <div class="flex items-center gap-2.5">
+        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${isGood ? 'bg-emerald-500/10 text-emerald-700' : (isMid ? 'bg-amber-500/10 text-amber-700' : 'bg-rose-500/10 text-rose-700')} font-black text-xs">
+          ${isGood ? '✓' : (isMid ? '▲' : '✕')}
+        </span>
+        <h4 class="text-sm sm:text-base font-extrabold text-slate-900">${item.title}</h4>
+      </div>
+      <div class="flex items-center gap-2">
+        ${statusBadge}
+        <button type="button" onclick="window.cycleHealthItemScore(${leadId}, '${item.id}')" class="no-print rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 cursor-pointer" title="Clique para alternar a nota deste item (0 Gargalo / 50 Otimização / 100 Conforme)">
+          Nota: ${item.score} ✎
+        </button>
+      </div>
+    </div>
+
+    <p class="text-xs text-slate-600 leading-relaxed">${item.desc}</p>
+    
+    ${benchmarkBadge ? `<div class="flex items-center">${benchmarkBadge}</div>` : ''}
+
+    <div class="rounded-xl bg-slate-50 border border-slate-100 p-3 text-xs text-slate-700 leading-relaxed">
+      <strong class="text-slate-900 font-bold">Diagnóstico Técnico:</strong> ${item.finding}
+    </div>
+
+    <!-- Barra Executiva de Conformidade -->
+    <div class="pt-1">
+      <div class="flex items-center justify-between text-[11px] mb-1">
+        <span class="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Maturidade Técnica</span>
+        <span class="font-black text-slate-700 text-xs">${item.score}/100</span>
+      </div>
+      <div class="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
+        <div class="h-full rounded-full ${barColor} transition-all duration-500" style="width: ${Math.max(6, item.score)}%;"></div>
+      </div>
+    </div>
+  `;
+
+  if (isBlurred) {
+    return `
+      <div class="relative overflow-hidden rounded-2xl border border-amber-500/40 bg-white p-5 sm:p-6 shadow-sm print-avoid-break transition-all">
+        <!-- Overlay com Cadeado / Tarja de Bloqueio Comercial -->
+        <div class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-slate-950/75 backdrop-blur-[5px] p-4 text-center rounded-2xl">
+          <div class="inline-flex items-center gap-1.5 rounded-full bg-slate-900 border border-amber-500/60 px-3.5 py-1.5 shadow-xl text-amber-300 font-extrabold text-xs">
+            <span>🔒</span> <span>Item Reservado — Desbloqueado na Consultoria</span>
+          </div>
+          <p class="text-[11px] text-white/95 font-semibold mt-2 max-w-sm drop-shadow leading-relaxed">
+            O diagnóstico aprofundado e o plano de ação deste pilar são entregues mediante a contratação do plano de otimização.
+          </p>
+        </div>
+        <!-- Conteúdo original borrado por trás -->
+        <div class="filter blur-[4px] select-none opacity-30 pointer-events-none space-y-3">
+          ${cardInner}
+        </div>
+      </div>
+    `;
+  }
+
   return `
     <div class="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm print-avoid-break transition-all hover:border-slate-300 space-y-3">
-      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
-        <div class="flex items-center gap-2.5">
-          <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${isGood ? 'bg-emerald-500/10 text-emerald-700' : (isMid ? 'bg-amber-500/10 text-amber-700' : 'bg-rose-500/10 text-rose-700')} font-black text-xs">
-            ${isGood ? '✓' : (isMid ? '▲' : '✕')}
-          </span>
-          <h4 class="text-sm sm:text-base font-extrabold text-slate-900">${item.title}</h4>
-        </div>
-        <div class="flex items-center gap-2">
-          ${statusBadge}
-          <button type="button" onclick="window.cycleHealthItemScore(${leadId}, '${item.id}')" class="no-print rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 cursor-pointer" title="Clique para alternar a nota deste item (0 Gargalo / 50 Otimização / 100 Conforme)">
-            Nota: ${item.score} ✎
-          </button>
-        </div>
-      </div>
-
-      <p class="text-xs text-slate-600 leading-relaxed">${item.desc}</p>
-      
-      ${benchmarkBadge ? `<div class="flex items-center">${benchmarkBadge}</div>` : ''}
-
-      <div class="rounded-xl bg-slate-50 border border-slate-100 p-3 text-xs text-slate-700 leading-relaxed">
-        <strong class="text-slate-900 font-bold">Diagnóstico Técnico:</strong> ${item.finding}
-      </div>
-
-      <!-- Barra Executiva de Conformidade -->
-      <div class="pt-1">
-        <div class="flex items-center justify-between text-[11px] mb-1">
-          <span class="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Maturidade Técnica</span>
-          <span class="font-black text-slate-700 text-xs">${item.score}/100</span>
-        </div>
-        <div class="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
-          <div class="h-full rounded-full ${barColor} transition-all duration-500" style="width: ${Math.max(6, item.score)}%;"></div>
-        </div>
-      </div>
+      ${cardInner}
     </div>
   `;
 }
@@ -6842,6 +6934,16 @@ window.openWhiteLabelReport = function(lead) {
               <a href="${getGoogleMapsUrl(lead)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-xs font-bold text-amber-300 hover:text-amber-200 underline">
                 <span>📍</span> <span>Verificar Ficha Pública no Google Maps ↗</span>
               </a>
+              ${(() => {
+                const soc = getLeadSocialMedia(lead);
+                const ig = soc.hasInstagram
+                  ? ('<a href="' + soc.instagramUrl + '" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-xs font-bold text-pink-400 hover:text-pink-300 underline">📸 Instagram Conectado ↗</a>')
+                  : '<span class="inline-flex items-center gap-1 text-xs font-medium text-slate-400 opacity-60">📸 Sem Instagram</span>';
+                const fb = soc.hasFacebook
+                  ? ('<a href="' + soc.facebookUrl + '" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-xs font-bold text-sky-400 hover:text-sky-300 underline">👥 Facebook Conectado ↗</a>')
+                  : '<span class="inline-flex items-center gap-1 text-xs font-medium text-slate-400 opacity-60">👥 Sem Facebook</span>';
+                return '<span class="text-slate-600">·</span> ' + ig + ' <span class="text-slate-600">·</span> ' + fb;
+              })()}
             </div>
           </div>
           <div class="flex items-center gap-3">
@@ -6930,7 +7032,12 @@ window.openWhiteLabelReport = function(lead) {
 
           <!-- Pilares Críticos e de Atenção (Score < 80) — Imediatamente Visíveis em Qualquer Dispositivo -->
           <div class="space-y-3 sm:space-y-4">
-            ${criticalPillars.map(item => renderHealthThermometerCard(item, lead.id)).join('')}
+            ${criticalPillars.map((item, idx) => {
+              // No Modo Prospecção: os 2 primeiros itens ficam 100% visíveis para provar autoridade;
+              // do 3º em diante ficam borrados com cadeado para motivar o fechamento do contrato!
+              const shouldBlur = isProspectMode && idx >= 2;
+              return renderHealthThermometerCard(item, lead.id, shouldBlur);
+            }).join('')}
           </div>
 
           ${conformPillars.length > 0 ? `
@@ -7788,6 +7895,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const cityInput = document.getElementById('cityInput');
   const leadCountSelect = document.getElementById('leadCountSelect');
   const btnStart = document.getElementById('btnStartScraping');
+  const btnClearSearch = document.getElementById('btnClearSearchFields');
+  if (btnClearSearch) {
+    btnClearSearch.addEventListener('click', () => {
+      const nicheInp = document.getElementById('nicheInput');
+      const cityInp = document.getElementById('cityInput');
+      if (nicheInp) nicheInp.value = '';
+      if (cityInp) cityInp.value = '';
+      State.leads = [];
+      State.selectedLeadIds.clear();
+      updateMetrics();
+      renderTable();
+      if (nicheInp) nicheInp.focus();
+      showToast('🧹 Busca limpa e resultados zerados para nova pesquisa.');
+    });
+  }
   const progContainer = document.getElementById('progressContainer');
   const progBar = document.getElementById('progressBar');
 
@@ -7821,13 +7943,13 @@ document.addEventListener('DOMContentLoaded', () => {
           showToast(`🚀 ${parsedLeads.length} comércios reais importados da Extensão do Google Maps!`);
         }, 500);
       } else {
-        State.leads = generateCityLeads(initialNiche, initialCity, initialCount);
+        State.leads = [];
       }
     } catch (e) {
-      State.leads = generateCityLeads(initialNiche, initialCity, initialCount);
+      State.leads = [];
     }
   } else {
-    State.leads = generateCityLeads(initialNiche, initialCity, initialCount);
+    State.leads = [];
   }
   updateMetrics();
   renderTable();
