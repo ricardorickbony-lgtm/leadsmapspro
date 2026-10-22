@@ -4306,8 +4306,10 @@ window.getLeadSocialMedia = getLeadSocialMedia;
 
 
 // ============================================================================
-// GOOGLE AI STUDIO (GEMINI 2.5) LIVE MOTOR
+// GOOGLE AI STUDIO (GEMINI 3.8 FLASH) LIVE MOTOR
 // ============================================================================
+const GEMINI_SUPPORTED_MODELS = ['gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash'];
+
 function getGeminiApiKey() {
   return localStorage.getItem('leadmaps_gemini_api_key') || '';
 }
@@ -4329,8 +4331,8 @@ function updateGeminiStatusBadge() {
     input.value = key;
   }
   if (badge) {
-    if (key && key.startsWith('AIza')) {
-      badge.textContent = '● Chave Conectada (Gemini 2.5)';
+    if (key && key.trim().length >= 10) {
+      badge.textContent = '● Chave Conectada (Gemini 3.8 Flash)';
       badge.className = 'inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full';
     } else {
       badge.textContent = '○ Não Conectado';
@@ -4340,30 +4342,58 @@ function updateGeminiStatusBadge() {
 }
 window.updateGeminiStatusBadge = updateGeminiStatusBadge;
 
+async function callGeminiApi(apiKey, contents, generationConfig = {}) {
+  let lastError = null;
+  const cleanKey = apiKey.trim();
+
+  for (const model of GEMINI_SUPPORTED_MODELS) {
+    try {
+      const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + encodeURIComponent(cleanKey);
+      const payload = { contents: contents };
+      if (generationConfig && Object.keys(generationConfig).length > 0) {
+        payload.generationConfig = generationConfig;
+      }
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        const errMsg = errData.error?.message || ('Erro HTTP ' + response.status);
+        lastError = new Error(errMsg);
+
+        // Se for erro de modelo indisponível para novos usuários, tenta o próximo modelo da lista
+        if (errMsg.includes('not available') || errMsg.includes('not found') || response.status === 404) {
+          console.warn('[Gemini Engine] Modelo ' + model + ' indisponível, tentando alternativo...', errMsg);
+          continue;
+        }
+        throw lastError;
+      }
+
+      const data = await response.json();
+      return { data: data, model: model };
+    } catch (err) {
+      lastError = err;
+      if (err.message && (err.message.includes('not available') || err.message.includes('not found'))) {
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw lastError || new Error('Nenhum modelo Gemini compatível respondeu.');
+}
+window.callGeminiApi = callGeminiApi;
+
 async function testGeminiApiKey(key) {
   if (!key) throw new Error('Insira sua Chave de API do Google AI Studio');
-  const cleanKey = key.trim();
-  
-  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(cleanKey);
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{
-        parts: [{ text: 'Responda estritamente: "CONEXAO_OK"' }]
-      }]
-    })
-  });
-
-  if (!response.ok) {
-    const errData = await response.json().catch(() => ({}));
-    const errMsg = errData.error?.message || ('Erro HTTP ' + response.status);
-    throw new Error(errMsg);
-  }
-
-  const data = await response.json();
-  const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-  return reply;
+  const res = await callGeminiApi(key, [{
+    parts: [{ text: 'Responda estritamente: "CONEXAO_OK"' }]
+  }]);
+  const reply = res.data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  return { reply: reply, model: res.model };
 }
 window.testGeminiApiKey = testGeminiApiKey;
 
@@ -4409,26 +4439,13 @@ async function generateGeminiPitchForLead(lead) {
       + '4. Divida em 3 ou 4 parágrafos curtos, prontos para envio no WhatsApp.\n'
       + 'Retorne APENAS o texto da mensagem formatada para WhatsApp (com emojis adequados).';
 
-    const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(key.trim());
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 800
-        }
-      })
-    });
+    const res = await callGeminiApi(
+      key,
+      [{ parts: [{ text: prompt }] }],
+      { temperature: 0.7, maxOutputTokens: 800 }
+    );
 
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.error?.message || ('Erro ' + response.status + ' da API Gemini'));
-    }
-
-    const data = await response.json();
-    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+    const generatedText = res.data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
     if (!generatedText) throw new Error('O Gemini retornou uma resposta em branco.');
 
     // Atualiza a tela
@@ -4440,7 +4457,7 @@ async function generateGeminiPitchForLead(lead) {
       btnWA.href = buildWhatsAppUrl(lead, generatedText);
     }
 
-    showToast('✨ Pitch gerado com sucesso pelo Google Gemini 2.5!');
+    showToast('✨ Pitch gerado com sucesso pelo Google Gemini (' + res.model + ')!');
     return generatedText;
   } catch (err) {
     console.error('Erro ao chamar Gemini:', err);
@@ -8069,9 +8086,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const label = document.getElementById('btnTestGeminiLabel');
       if (label) label.textContent = 'Testando...';
       try {
-        await testGeminiApiKey(key);
+        const res = await testGeminiApiKey(key);
         setGeminiApiKey(key);
-        showToast('✅ Conexão bem-sucedida! Google Gemini 2.5 Ativo.');
+        showToast('✅ Conexão bem-sucedida! Google Gemini (' + (res?.model || '3.8 Flash') + ') Ativo.');
       } catch (err) {
         showToast('❌ Falha no teste: ' + err.message);
       } finally {
