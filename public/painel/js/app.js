@@ -10833,6 +10833,9 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
               <button type="button" onclick="window.sendAccessWhatsApp(${s.id})" class="rounded-lg bg-emerald-500/20 border border-emerald-500/40 hover:bg-emerald-500/30 px-2.5 py-1 text-[11px] font-bold text-emerald-300 cursor-pointer" title="Enviar Login e Chave de Acesso no WhatsApp do Cliente">
                 📲 Enviar Acesso WA
               </button>
+              <button type="button" onclick="window.copySubscriberAccessLink(${s.id})" class="rounded-lg bg-sky-500/20 border border-sky-500/40 hover:bg-sky-500/30 px-2.5 py-1 text-[11px] font-bold text-sky-300 cursor-pointer" title="Copiar Link de Acesso com Auto-Login">
+                🔗 Copiar Link
+              </button>
               <button type="button" onclick="window.renewSubscriberDays(${s.id}, 30)" class="rounded-lg bg-sky-500/20 border border-sky-500/40 hover:bg-sky-500/30 px-2 py-1 text-[11px] font-bold text-sky-300 cursor-pointer" title="Renovar +30 dias de validade e recarregar cota para 500 créditos">
                 🔄 +30d (500cr)
               </button>
@@ -10936,10 +10939,22 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     const sub = State.subscribers.find(s => s.id === subId);
     if (!sub) return;
     const expStr = new Date(sub.expiraEm).toLocaleDateString('pt-BR');
-    const msg = `Olá, *${sub.nome.split('—')[0].trim()}*! Seja muito bem-vindo(a) ao *RadarMaps PRO Enterprise*! 🚀\n\nSeu acesso oficial já está *ATIVO e LIBERADO*.\n\n🔐 *SEUS DADOS DE ACESSO:*\n👤 *Login (E-mail):* ${sub.email}\n🔑 *Chave de Licença:* ${sub.chave}\n📅 *Plano:* ${sub.plano} (Válido até ${expStr})\n\nBasta inserir seu e-mail e sua chave na tela de entrada para começar a extrair empresas, gerar relatórios completos de 22 itens e disparar no WhatsApp!\n\nQualquer dúvida estou à disposição. Bons negócios!`;
+    
+    // URL base oficial da plataforma
+    const currentUrl = window.location.href.split('?')[0].split('#')[0];
+    const basePainelUrl = (currentUrl.startsWith('http') && !currentUrl.includes('localhost') && !currentUrl.includes('127.0.0.1'))
+      ? currentUrl
+      : 'https://ricardorickbony-lgtm.github.io/leadmaps-pro/painel/';
+    
+    // Link direto com preenchimento automático
+    const autoLoginUrl = `${basePainelUrl}?email=${encodeURIComponent(sub.email)}&chave=${encodeURIComponent(sub.chave)}`;
+
+    const msg = `Olá, *${sub.nome.split('—')[0].trim()}*! Seja muito bem-vindo(a) ao *RadarMaps PRO*! 🚀\n\nSeu acesso oficial já está *ATIVO e LIBERADO*.\n\n🔐 *SEUS DADOS DE ACESSO:*\n👤 *Login (E-mail):* ${sub.email}\n🔑 *Chave de Licença / Senha:* ${sub.chave}\n📅 *Plano:* ${sub.plano} (Válido até ${expStr})\n\n🌐 *LINK DE ACESSO DIRETO (1 Clique):*\n${autoLoginUrl}\n\nOu acesse diretamente:\n${basePainelUrl}\n\nBasta abrir o link acima para começar a extrair empresas no Google Maps e disparar no WhatsApp. Qualquer dúvida estou à disposição!`;
+
     const phoneDigits = formatBrazilWhatsAppNumber(sub.telefone || '');
     if (!phoneDigits) {
-      showToast('⚠️ Assinante sem telefone cadastrado.');
+      navigator.clipboard?.writeText(msg).catch(() => {});
+      showToast('📋 Assinante sem telefone. Mensagem completa com link copiada!');
       return;
     }
     const isMob = isMobileClient();
@@ -10947,6 +10962,18 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       ? `https://api.whatsapp.com/send?phone=${phoneDigits}&text=${encodeURIComponent(msg)}`
       : `https://web.whatsapp.com/send?phone=${phoneDigits}&text=${encodeURIComponent(msg)}`;
     window.open(waUrl, '_blank');
+  };
+
+  window.copySubscriberAccessLink = function(subId) {
+    const sub = State.subscribers.find(s => s.id === subId);
+    if (!sub) return;
+    const currentUrl = window.location.href.split('?')[0].split('#')[0];
+    const basePainelUrl = (currentUrl.startsWith('http') && !currentUrl.includes('localhost') && !currentUrl.includes('127.0.0.1'))
+      ? currentUrl
+      : 'https://ricardorickbony-lgtm.github.io/leadmaps-pro/painel/';
+    const autoLoginUrl = `${basePainelUrl}?email=${encodeURIComponent(sub.email)}&chave=${encodeURIComponent(sub.chave)}`;
+    navigator.clipboard?.writeText(autoLoginUrl).catch(() => {});
+    showToast(`🔗 Link de acesso de "${sub.nome}" copiado com sucesso!`);
   };
 
   window.sendBillingWhatsApp = function(subId) {
@@ -11023,7 +11050,56 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     document.getElementById('adminNewClientPhone').value = '';
     document.getElementById('adminNewClientKey').value = generateLicenseKeyString('MEN');
 
-    showToast(`✅ Licença ${chave} criada com sucesso para ${nome}!`);
+    // Atualiza a caixa de sucesso imediata com os links e ações rápidas
+    const successBox = document.getElementById('adminCreatedSuccessBox');
+    const nameEl = document.getElementById('createdSubName');
+    const emailEl = document.getElementById('createdSubEmail');
+    const keyEl = document.getElementById('createdSubKey');
+    const linkEl = document.getElementById('createdSubLink');
+    const planBadge = document.getElementById('createdSubPlanBadge');
+    const btnSendWa = document.getElementById('btnSendCreatedSubWa');
+    const btnCopyLink = document.getElementById('btnCopyCreatedSubLink');
+    const btnCopyMsg = document.getElementById('btnCopyCreatedSubMsg');
+
+    const currentUrl = window.location.href.split('?')[0].split('#')[0];
+    const basePainelUrl = (currentUrl.startsWith('http') && !currentUrl.includes('localhost') && !currentUrl.includes('127.0.0.1'))
+      ? currentUrl
+      : 'https://ricardorickbony-lgtm.github.io/leadmaps-pro/painel/';
+    const autoLoginUrl = `${basePainelUrl}?email=${encodeURIComponent(email)}&chave=${encodeURIComponent(chave)}`;
+
+    if (nameEl) nameEl.textContent = nome;
+    if (emailEl) emailEl.textContent = email;
+    if (keyEl) keyEl.textContent = chave;
+    if (linkEl) {
+      linkEl.href = autoLoginUrl;
+      linkEl.textContent = autoLoginUrl;
+    }
+    if (planBadge) planBadge.textContent = `${planLabel} (${days} dias)`;
+
+    if (btnSendWa) {
+      btnSendWa.onclick = () => window.sendAccessWhatsApp(newSub.id);
+    }
+    if (btnCopyLink) {
+      btnCopyLink.onclick = () => {
+        navigator.clipboard?.writeText(autoLoginUrl);
+        showToast('🔗 Link de acesso copiado com sucesso!');
+      };
+    }
+    if (btnCopyMsg) {
+      btnCopyMsg.onclick = () => {
+        const expStr = new Date(newSub.expiraEm).toLocaleDateString('pt-BR');
+        const fullMsg = `Olá, *${nome.split('—')[0].trim()}*! Seja muito bem-vindo(a) ao *RadarMaps PRO*! 🚀\n\nSeu acesso oficial já está *ATIVO e LIBERADO*.\n\n🔐 *SEUS DADOS DE ACESSO:*\n👤 *Login (E-mail):* ${email}\n🔑 *Chave de Licença / Senha:* ${chave}\n📅 *Plano:* ${planLabel} (Válido até ${expStr})\n\n🌐 *LINK DE ACESSO DIRETO (1 Clique):*\n${autoLoginUrl}\n\nOu acesse diretamente:\n${basePainelUrl}\n\nBasta abrir o link acima para começar a extrair empresas no Google Maps e disparar no WhatsApp. Qualquer dúvida estou à disposição!`;
+        navigator.clipboard?.writeText(fullMsg);
+        showToast('📋 Mensagem completa com link copiada!');
+      };
+    }
+
+    if (successBox) {
+      successBox.classList.remove('hidden');
+      successBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    showToast(`✅ Licença criada com sucesso! O link direto de acesso está pronto abaixo.`);
   });
 
   document.getElementById('adminSearchSubInput')?.addEventListener('input', () => renderAdminPanel());

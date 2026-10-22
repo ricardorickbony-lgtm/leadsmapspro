@@ -735,6 +735,38 @@
               <span>⚡</span> <span>Liberar Acesso & Gerar Licença</span>
             </button>
           </div>
+          <!-- Caixa de Confirmação & Link Imediato do Cliente Criado -->
+          <div id="adminCreatedSuccessBox" class="hidden rounded-xl border border-emerald-500/50 bg-emerald-950/40 p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="text-base sm:text-lg">🎉</span>
+                <h4 class="font-extrabold text-white text-xs sm:text-sm">Licença Criada & Liberada com Sucesso!</h4>
+              </div>
+              <span id="createdSubPlanBadge" class="badge-pill badge-emerald">Plano Ativo</span>
+            </div>
+            
+            <div class="bg-slate-950/80 p-3 rounded-lg border border-slate-800 space-y-1.5 font-mono text-xs text-slate-200">
+              <div>👤 <span class="text-slate-400">Cliente:</span> <strong id="createdSubName" class="text-white"></strong></div>
+              <div>📧 <span class="text-slate-400">Login (E-mail):</span> <strong id="createdSubEmail" class="text-emerald-300"></strong></div>
+              <div>🔑 <span class="text-slate-400">Chave / Senha:</span> <strong id="createdSubKey" class="text-emerald-300"></strong></div>
+              <div class="pt-1 border-t border-slate-800/80">
+                🌐 <span class="text-slate-400">Link de Acesso Direto (1 Clique):</span><br>
+                <a id="createdSubLink" href="#" target="_blank" class="text-sky-400 hover:text-sky-300 underline break-all font-semibold"></a>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 pt-1">
+              <button id="btnSendCreatedSubWa" type="button" class="btn-emerald px-4 py-2 text-xs font-bold flex items-center gap-1.5 cursor-pointer">
+                📲 Enviar Acesso no WhatsApp do Cliente
+              </button>
+              <button id="btnCopyCreatedSubLink" type="button" class="btn-ghost-dark px-3 py-2 text-xs font-bold text-sky-300 border-sky-500/40 hover:bg-sky-500/10 cursor-pointer">
+                🔗 Copiar Link de Acesso
+              </button>
+              <button id="btnCopyCreatedSubMsg" type="button" class="btn-ghost-dark px-3 py-2 text-xs font-bold text-slate-300 cursor-pointer">
+                📋 Copiar Mensagem Completa
+              </button>
+            </div>
+          </div>
         </section>
 
         <!-- Coluna Direita (5 cols): Central de Pagamento Automático Asaas (PIX Dinâmico + Cartão de Crédito Recorrente) -->
