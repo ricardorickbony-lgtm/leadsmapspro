@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="css/style.css?v=20261020_v68_pocket_mode_mobile_simplificado">
+  <link rel="stylesheet" href="css/style.css?v=20261022_v69_vendas_e_demo_google_119_90">
   <style>
     /* ==========================================================================
        BLOQUEIO MANDATÓRIO DE TELA DE LOGIN — RADARMAPS PRO (RICARDO & SEVERINO)
@@ -168,6 +168,22 @@
               <span>🔐</span> <span>Entrar na Plataforma</span>
             </button>
           </form>
+          <!-- Card Comercial de Compra de LicenÃ§a (Pronto para Venda) -->
+          <div class="mt-5 p-4 rounded-xl border border-amber-500/40 bg-gradient-to-br from-amber-500/10 via-slate-900 to-slate-950 text-center space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="badge-pill badge-amber text-[10px]">ðŸš€ LicenÃ§a Comercial</span>
+              <span class="font-mono text-xs font-black text-amber-400">R$ 119,90/mÃªs</span>
+            </div>
+            <div class="text-left space-y-1">
+              <h4 class="text-xs font-extrabold text-white">Ainda nÃ£o possui Chave de Acesso?</h4>
+              <p class="text-[11px] text-slate-300 leading-relaxed">
+                Adquira sua licenÃ§a mensal sem fidelidade. Fale direto com o Ricardo no WhatsApp e receba sua chave na hora!
+              </p>
+            </div>
+            <a href="https://wa.me/5511970558412?text=Ol%C3%A1%20Ricardo!%20Gostaria%20de%20assinar%20o%20RadarMaps%20PRO%20no%20Plano%20Mensal%20de%20R%24%20119%2C90." target="_blank" rel="noopener noreferrer" class="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+              <span>ðŸ’¬</span> <span>Falar no WhatsApp para Liberar LicenÃ§a</span>
+            </a>
+          </div>
 
           <div class="mt-6 pt-4 border-t border-slate-800 text-center">
             <p class="text-[11px] text-slate-500">
@@ -210,7 +226,7 @@
                 </div>
               </div>
               <div class="text-right">
-                <p class="text-xl font-black text-emerald-400">R$ 129,90<span class="text-[10px] text-slate-400 font-normal">/mês</span></p>
+                <p class="text-xl font-black text-emerald-400">R$ 119,90<span class="text-[10px] text-slate-400 font-normal">/mês</span></p>
                 <button type="button" onclick="window.openCheckoutPlan('mensal')" class="mt-1 rounded-lg bg-emerald-500 px-3 py-1.5 text-[11px] font-black text-slate-950 hover:bg-emerald-400 cursor-pointer flex items-center gap-1 shadow-md">
                   <span>💳</span> <span>Assinar Licença</span>
                 </button>
@@ -221,7 +237,7 @@
           <div class="rounded-xl border border-slate-800 bg-slate-950 p-4 space-y-3 text-xs">
             <div class="flex items-center justify-between">
               <span class="font-bold text-slate-300">Plano Selecionado:</span>
-              <span id="pixSelectedPlanBadge" class="badge-pill badge-emerald">🚀 Mensal Pro (R$ 129,90)</span>
+              <span id="pixSelectedPlanBadge" class="badge-pill badge-emerald">🚀 Mensal Pro (R$ 119,90)</span>
             </div>
 
             <div class="flex items-center justify-between pt-1">
@@ -235,7 +251,7 @@
             </p>
             <div class="flex flex-wrap gap-2 pt-1">
               <button id="btnConfirmPixAutoRelease" type="button" class="flex-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3 py-2.5 text-xs font-extrabold text-white cursor-pointer flex items-center justify-center gap-1.5 shadow-lg">
-                <span>📲</span> <span id="btnConfirmPixText">Enviar Comprovante (R$ 129,90 Mensal) no WhatsApp</span>
+                <span>📲</span> <span id="btnConfirmPixText">Enviar Comprovante (R$ 119,90 Mensal) no WhatsApp</span>
               </button>
               <a id="btnBuyLicenseWhatsApp" href="https://wa.me/5511970558412?text=Ol%C3%A1!%20Gostaria%20de%20falar%20com%20o%20Plant%C3%A3o%20de%20Vendas%20do%20RadarMaps%20PRO%20sobre%20as%20licen%C3%A7as." target="_blank" rel="noopener noreferrer" class="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-bold text-slate-300 hover:text-white flex items-center gap-1">
                 <span>💬</span> <span>Falar com Plantão de Vendas</span>
@@ -694,7 +710,7 @@
               <select id="adminNewClientPlan" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white cursor-pointer">
                 <option value="VIP" data-days="3" data-price="0.00">🎁 Teste Grátis VIP (3 Dias) — R$ 0,00</option>
                 <option value="TST" data-days="7" data-price="0.00">🎁 Teste Degustação (7 Dias) — R$ 0,00</option>
-                <option value="MEN" data-days="30" data-price="129.90" selected>🚀 Plano Mensal Pro (30 Dias) — R$ 129,90</option>
+                <option value="MEN" data-days="30" data-price="119.90" selected>🚀 Plano Mensal Pro (30 Dias) — R$ 119,90</option>
                 <option value="TRI" data-days="90" data-price="297.00">💎 Plano Trimestral Pro (90 Dias) — R$ 297,00</option>
                 <option value="ANU" data-days="365" data-price="897.00">👑 Plano Anual Pro (365 Dias) — R$ 897,00</option>
                 <option value="VIT" data-days="3650" data-price="1497.00">♾️ Licença Vitalícia / Parceiro — R$ 1.497,00</option>
@@ -702,7 +718,7 @@
             </div>
             <div>
               <label class="mb-1 block font-bold text-slate-300">Valor da Assinatura (R$)</label>
-              <input id="adminNewClientPrice" type="number" step="0.01" value="129.90" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 font-mono text-white">
+              <input id="adminNewClientPrice" type="number" step="0.01" value="119.90" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 font-mono text-white">
             </div>
             <div>
               <label class="mb-1 block font-bold text-slate-300">Chave de Licença / Senha (Auto ou Personalizada)</label>
@@ -733,7 +749,7 @@
 
           <div class="space-y-3 text-xs">
             <div>
-              <label class="mb-1 block font-bold text-slate-300">Link Checkout Asaas — Mensal R$ 129,90 (Cartão Recorrente + PIX)</label>
+              <label class="mb-1 block font-bold text-slate-300">Link Checkout Asaas — Mensal R$ 119,90 (Cartão Recorrente + PIX)</label>
               <input id="adminCheckoutMonthlyInput" placeholder="https://www.asaas.com/c/xxxxxxxxxx ou Kiwify" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white font-mono text-xs">
               <span class="text-[10px] text-slate-400 mt-0.5 block">💡 Crie no Asaas como "Assinatura Mensal" para cobrar todo mês no cartão do cliente automaticamente sem você precisar cobrar.</span>
             </div>
@@ -2476,7 +2492,7 @@
     <!-- Message injected here -->
   </div>
 
-  <script src="js/app.js?v=20261020_v68_pocket_mode_mobile_simplificado"></script>
+  <script src="js/app.js?v=20261022_v69_vendas_e_demo_google_119_90"></script>
   <script src="js/security-shield.js?v=20261018_v46_top10_competitors_niche_audit"></script>
 </body>
 </html>

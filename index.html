@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR" class="scroll-smooth">
 <head>
   <meta charset="utf-8" />
@@ -227,6 +227,8 @@
         <a href="#modulos" class="hover:text-solar transition-colors whitespace-nowrap">Módulos Táticos</a>
         <a href="#comparativo" class="hover:text-solar transition-colors whitespace-nowrap">Método Tático</a>
         <a href="#roi" class="hover:text-solar transition-colors whitespace-nowrap">Calculadora ROI</a>
+        <a href="#demo" class="hover:text-solar transition-colors whitespace-nowrap">Como Funciona</a>
+        <a href="#planos" class="text-amber-400 font-bold hover:text-white transition-colors whitespace-nowrap">Planos & PreÃ§o</a>
         <a href="#faq" class="hover:text-solar transition-colors whitespace-nowrap">FAQ</a>
       </nav>
 
@@ -235,8 +237,8 @@
         <a href="painel/index.html" class="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-slate-300 hover:text-white transition-colors border border-white/10 rounded-xl hover:bg-white/5 whitespace-nowrap">
           <span>Área do Assinante</span>
         </a>
-        <a href="painel/index.html" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-solar via-amber-400 to-yellow-400 text-slate-950 font-bold text-xs sm:text-sm tracking-wide shadow-lg hover:shadow-solar/30 hover:scale-[1.02] transition-all whitespace-nowrap">
-          <span>Abrir Ferramenta</span>
+        <a href="#planos" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-solar via-amber-400 to-yellow-400 text-slate-950 font-bold text-xs sm:text-sm tracking-wide shadow-lg hover:shadow-solar/30 hover:scale-[1.02] transition-all whitespace-nowrap">
+          <span>Assinar LicenÃ§a (R$ 119,90)</span>
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
         </a>
       </div>
@@ -296,11 +298,11 @@
 
         <!-- CTA Buttons Row -->
         <div class="pt-4 flex flex-wrap items-center justify-center gap-4">
-          <a href="painel/index.html" class="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-gradient-to-r from-solar via-amber-400 to-yellow-400 text-slate-950 font-extrabold text-base tracking-wide shadow-xl hover:shadow-solar/40 hover:scale-[1.03] transition-all">
-            <div class="w-5 h-5 rounded-full overflow-hidden border border-slate-900">
-              <img src="assets/images/radar-hud.png" alt="Radar Icon" class="w-full h-full object-cover" />
-            </div>
-            <span>Iniciar Varredura no Painel</span>
+          <a href="#planos" class="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-gradient-to-r from-solar via-amber-400 to-yellow-400 text-slate-950 font-extrabold text-base tracking-wide shadow-xl hover:shadow-solar/40 hover:scale-[1.03] transition-all">
+            <span>ðŸš€</span>
+
+
+            <span>Assinar LicenÃ§a por R$ 119,90/mÃªs</span>
           </a>
 
           <a href="#demo" class="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl border border-white/15 bg-obsidian-800/80 hover:bg-obsidian-700 text-white font-bold text-base hover:border-emerald-400/40 transition-all backdrop-blur-md">
@@ -339,289 +341,255 @@
       </div>
 
       <!-- ========================================== -->
-      <!-- 4. HUD TÁTICO AO VIVO: CONSOLE RADAR MAPS  -->
+      <!-- 4. DEMO VISUAL: O GOOGLE EM AÇÃO (CLEAN & FAMILIAR) -->
       <!-- ========================================== -->
       <div id="demo" class="mt-16 sm:mt-24 max-w-5xl mx-auto">
-        <div class="luxury-card rounded-3xl p-2 sm:p-3 border border-emerald-500/30 shadow-2xl relative">
+        <div class="luxury-card rounded-3xl p-3 sm:p-5 border border-amber-500/30 shadow-2xl relative bg-slate-950/90 backdrop-blur-xl">
           
-          <!-- Top Window Controls -->
-          <div class="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-obsidian-900/90 rounded-t-2xl">
+          <!-- Top Window Controls Estilo Navegador Google -->
+          <div class="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-slate-900/90 rounded-2xl">
             <div class="flex items-center gap-2">
               <span class="w-3 h-3 rounded-full bg-rose-500/80"></span>
               <span class="w-3 h-3 rounded-full bg-amber-500/80"></span>
               <span class="w-3 h-3 rounded-full bg-emerald-500/80"></span>
-              <span class="ml-3 font-mono text-xs text-slate-400">radar.radarmaps.pro/live-hud</span>
+              <span class="ml-3 font-mono text-xs text-slate-400 hidden sm:inline">https://google.com.br/search?q=fisioterapia+em+santo+andre</span>
             </div>
             <div class="flex items-center gap-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-signal-emerald animate-ping"></span>
-              <span class="font-mono text-xs text-emerald-400 font-bold uppercase tracking-wider">Telemetria em Tempo Real</span>
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+              <span class="font-mono text-xs text-emerald-400 font-bold uppercase tracking-wider">Simulador Oficial Google</span>
             </div>
           </div>
 
-          <!-- Live Interactive Tabs Selector -->
-          <div class="grid grid-cols-3 border-b border-white/10 bg-obsidian-800/50">
-            <button id="tabDemoGeoGrid" onclick="switchDemoTab('geogrid')" class="demo-tab-btn py-3.5 px-3 text-xs sm:text-sm font-bold border-b-2 border-emerald-400 text-emerald-400 flex items-center justify-center gap-2 transition-all">
-              <span>🎯</span>
-              <span>GeoGrid GPS de Ranking</span>
+          <!-- Abas Super Didáticas & Familiares -->
+          <div class="grid grid-cols-3 border-b border-white/10 bg-slate-900/60 text-xs sm:text-sm font-bold">
+            <button id="tabDemoGoogle" onclick="switchDemoTab('google')" class="demo-tab-btn py-3.5 px-2 text-center border-b-2 border-amber-400 text-amber-300 flex items-center justify-center gap-1.5 transition-all cursor-pointer">
+              <span>🔍</span>
+              <span class="truncate">1. Busca no Google</span>
             </button>
-            <button id="tabDemoAuditoria" onclick="switchDemoTab('auditoria')" class="demo-tab-btn py-3.5 px-3 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-white flex items-center justify-center gap-2 transition-all">
-              <span>📋</span>
-              <span>Auditoria 22 Itens & Inatividade</span>
+            <button id="tabDemoBairro" onclick="switchDemoTab('bairro')" class="demo-tab-btn py-3.5 px-2 text-center border-b-2 border-transparent text-slate-400 hover:text-white flex items-center justify-center gap-1.5 transition-all cursor-pointer">
+              <span>📍</span>
+              <span class="truncate">2. Raio-X por Bairro</span>
             </button>
-            <button id="tabDemoPitch" onclick="switchDemoTab('pitch')" class="demo-tab-btn py-3.5 px-3 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-white flex items-center justify-center gap-2 transition-all">
-              <span>💬</span>
-              <span>Pitch WhatsApp 1-Clique</span>
+            <button id="tabDemoDossie" onclick="switchDemoTab('dossie')" class="demo-tab-btn py-3.5 px-2 text-center border-b-2 border-transparent text-slate-400 hover:text-white flex items-center justify-center gap-1.5 transition-all cursor-pointer">
+              <span>📄</span>
+              <span class="truncate">3. Dossiê de Vendas</span>
             </button>
           </div>
 
-          <!-- TAB 1: GEOGRID GPS INTERATIVO -->
-          <div id="contentDemoGeoGrid" class="p-6 sm:p-8">
-            <div class="grid lg:grid-cols-12 gap-8 items-center">
-              
-              <!-- 9-Point Interactive Grid com Radar HUD de Fundo -->
-              <div class="lg:col-span-6 bg-obsidian-900/95 rounded-2xl p-6 border border-white/10 relative overflow-hidden">
-                <!-- Fundo sutil do radar real do print -->
-                <div class="absolute inset-0 flex items-center justify-center opacity-15 pointer-events-none">
-                  <img src="assets/images/radar-hud.png" alt="Radar HUD" class="w-80 h-80 object-contain animate-spin-slow" />
-                </div>
-                
-                <div class="flex items-center justify-between mb-4 relative z-10">
-                  <span class="font-mono text-xs text-slate-400 uppercase tracking-wider">Mapa de Calor (Raio 5.0 km)</span>
-                  <span class="text-xs font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/30">9 Pontos GPS</span>
-                </div>
-
-                <!-- Interactive 9-Pin Grid -->
-                <div class="grid grid-cols-3 gap-3.5 my-2 relative z-10">
-                  <button onclick="selectPin(0, '#1', '0.0 km (Centro)', 'Domina o Top 3 no raio imediato. Fortaleça postagens semanais.', 'bg-emerald-500 text-slate-950', 'Baixo (R$ 0/mês)')" class="pin-btn aspect-square rounded-2xl font-mono text-base font-black flex flex-col items-center justify-center transition-all bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20 hover:scale-105 ring-2 ring-white">
-                    <span>#1</span>
-                    <span class="text-[10px] font-sans font-semibold opacity-90">Centro</span>
-                  </button>
-                  <button onclick="selectPin(1, '#4', '1.8 km (Norte)', 'Caiu para a 4ª posição. O cliente já não aparece no Pack Principal de 3 vagas.', 'bg-amber-500 text-slate-950', 'Médio (R$ 2.400/mês)')" class="pin-btn aspect-square rounded-2xl font-mono text-base font-black flex flex-col items-center justify-center transition-all bg-amber-500 text-slate-950 shadow-lg hover:scale-105">
-                    <span>#4</span>
-                    <span class="text-[10px] font-sans font-semibold opacity-90">Norte</span>
-                  </button>
-                  <button onclick="selectPin(2, '#12', '3.5 km (Nordeste)', 'Invisível! Na posição #12 nenhum usuário rola a tela. Clientes migram para a concorrência.', 'bg-rose-500 text-white', 'Crítico (R$ 5.800/mês)')" class="pin-btn aspect-square rounded-2xl font-mono text-base font-black flex flex-col items-center justify-center transition-all bg-rose-500 text-white shadow-lg hover:scale-105">
-                    <span>#12</span>
-                    <span class="text-[10px] font-sans font-semibold opacity-90">Nordeste</span>
-                  </button>
-                  <button onclick="selectPin(3, '#3', '1.4 km (Oeste)', 'No limite do Top 3. Risco iminente de queda por falta de Tour Virtual 360° e postagens.', 'bg-amber-400 text-slate-950', 'Alerta (R$ 1.200/mês)')" class="pin-btn aspect-square rounded-2xl font-mono text-base font-black flex flex-col items-center justify-center transition-all bg-amber-400 text-slate-950 shadow-lg hover:scale-105">
-                    <span>#3</span>
-                    <span class="text-[10px] font-sans font-semibold opacity-90">Oeste</span>
-                  </button>
-                  <button onclick="selectPin(4, '#1', 'Sede da Empresa', 'Ponto de origem. Perfeito, mas perde relevância assim que o consumidor se afasta 800m.', 'bg-emerald-500 text-slate-950', 'Excelente')" class="pin-btn aspect-square rounded-2xl font-mono text-base font-black flex flex-col items-center justify-center transition-all bg-emerald-500 text-slate-950 shadow-lg ring-4 ring-solar hover:scale-105">
-                    <span>#1</span>
-                    <span class="text-[10px] font-sans font-semibold opacity-90">Sede</span>
-                  </button>
-                  <button onclick="selectPin(5, '#15', '4.2 km (Leste)', 'Desastre total. O concorrente local leva 100% das chamadas e orçamentos desta região.', 'bg-rose-600 text-white', 'Crítico (R$ 7.200/mês)')" class="pin-btn aspect-square rounded-2xl font-mono text-base font-black flex flex-col items-center justify-center transition-all bg-rose-600 text-white shadow-lg hover:scale-105">
-                    <span>#15</span>
-                    <span class="text-[10px] font-sans font-semibold opacity-90">Leste</span>
-                  </button>
-                  <button onclick="selectPin(6, '#9', '3.8 km (Sudoeste)', 'Posição intermediária fraca. Falta consistência de palavras-chave nas avaliações.', 'bg-rose-500 text-white', 'Alto (R$ 4.100/mês)')" class="pin-btn aspect-square rounded-2xl font-mono text-base font-black flex flex-col items-center justify-center transition-all bg-rose-500 text-white shadow-lg hover:scale-105">
-                    <span>#9</span>
-                    <span class="text-[10px] font-sans font-semibold opacity-90">Sudoeste</span>
-                  </button>
-                  <button onclick="selectPin(7, '#5', '2.6 km (Sul)', '5ª colocação. Mais de 60% dos cliques param nos 3 primeiros colocados do Google Maps.', 'bg-amber-500 text-slate-950', 'Médio (R$ 3.000/mês)')" class="pin-btn aspect-square rounded-2xl font-mono text-base font-black flex flex-col items-center justify-center transition-all bg-amber-500 text-slate-950 shadow-lg hover:scale-105">
-                    <span>#5</span>
-                    <span class="text-[10px] font-sans font-semibold opacity-90">Sul</span>
-                  </button>
-                  <button onclick="selectPin(8, '#14', '4.8 km (Sudeste)', 'Invisibilidade geográfica crítica. Nenhuma ligação gerada neste perímetro comercial.', 'bg-rose-600 text-white', 'Crítico (R$ 6.500/mês)')" class="pin-btn aspect-square rounded-2xl font-mono text-base font-black flex flex-col items-center justify-center transition-all bg-rose-600 text-white shadow-lg hover:scale-105">
-                    <span>#14</span>
-                    <span class="text-[10px] font-sans font-semibold opacity-90">Sudeste</span>
-                  </button>
-                </div>
-
-                <p class="text-center font-mono text-[11px] text-slate-400 mt-4 relative z-10">
-                  💡 Clique nos números para simular a auditoria geográfica em tempo real
-                </p>
-              </div>
-
-              <!-- Pin Telemetry Details Card -->
-              <div class="lg:col-span-6 space-y-4">
-                <div class="p-5 rounded-2xl bg-obsidian-800/80 border border-white/10 space-y-4">
-                  <div class="flex items-center justify-between">
-                    <div>
-                      <span class="font-mono text-xs text-emerald-400 uppercase font-bold tracking-wider">Telemetria de Posição</span>
-                      <h4 class="text-lg font-bold text-white mt-0.5">Clínica Odonto Sorriso Tatuapé</h4>
-                    </div>
-                    <span id="pinBadgePosition" class="font-mono text-2xl font-black px-3.5 py-1.5 rounded-xl bg-emerald-500 text-slate-950 shadow-md">#1</span>
-                  </div>
-
-                  <div class="grid grid-cols-2 gap-3 pt-2">
-                    <div class="p-3 rounded-xl bg-obsidian-900 border border-white/5">
-                      <span class="text-xs text-slate-400 block">Distância do Centro:</span>
-                      <span id="pinDistance" class="font-mono text-sm font-bold text-white">0.0 km (Centro)</span>
-                    </div>
-                    <div class="p-3 rounded-xl bg-obsidian-900 border border-white/5">
-                      <span class="text-xs text-slate-400 block">Impacto de Perda:</span>
-                      <span id="pinLeak" class="font-mono text-sm font-bold text-solar">Baixo (R$ 0/mês)</span>
-                    </div>
-                  </div>
-
-                  <div class="p-3.5 rounded-xl bg-obsidian-900/90 border border-white/10">
-                    <span class="text-xs font-bold text-slate-300 block mb-1">Diagnóstico do Consultor:</span>
-                    <p id="pinDiagnosis" class="text-sm text-slate-300 leading-relaxed">
-                      Domina o Top 3 no raio imediato. Fortaleça postagens semanais para não ser ultrapassado.
-                    </p>
-                  </div>
-
-                  <div class="flex items-center justify-between pt-2">
-                    <span class="font-mono text-xs text-slate-400">Lat: -23.5412 • Lng: -46.5742</span>
-                    <a href="painel/index.html" class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400 hover:underline font-mono">
-                      <span>Auditar Meus Clientes</span>
-                      <span>→</span>
-                    </a>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-          <!-- TAB 2: AUDITORIA 22 ITENS & INATIVIDADE DE POSTAGENS -->
-          <div id="contentDemoAuditoria" class="p-6 sm:p-8 hidden">
-            <div class="grid lg:grid-cols-12 gap-8">
-              
-              <!-- Card 1: Score & Perdas -->
-              <div class="lg:col-span-5 bg-obsidian-900/90 rounded-2xl p-6 border border-white/10 space-y-5">
-                <div class="flex items-center gap-4">
-                  <div class="w-20 h-20 rounded-2xl bg-rose-500/10 border-2 border-rose-500 flex flex-col items-center justify-center font-mono">
-                    <span class="text-3xl font-black text-rose-500">48</span>
-                    <span class="text-[10px] text-slate-400 uppercase font-bold">de 100</span>
-                  </div>
-                  <div>
-                    <span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 text-xs font-bold font-mono">SAÚDE CRÍTICA</span>
-                    <h4 class="text-lg font-bold text-white mt-1">Clínica Odonto Sorriso</h4>
-                    <p class="text-xs text-slate-400 font-mono">Dentista • Tatuapé, São Paulo</p>
-                  </div>
-                </div>
-
-                <div class="p-4 rounded-xl bg-obsidian-800 border border-solar/30">
-                  <span class="text-xs text-slate-400 uppercase font-mono tracking-wider block">Faturamento Perdido Estimado</span>
-                  <div class="flex items-baseline gap-2 mt-1">
-                    <span class="text-3xl font-black font-mono text-solar">R$ 6.200</span>
-                    <span class="text-xs text-slate-400">/mês para a concorrência</span>
-                  </div>
-                  <p class="text-xs text-slate-300 mt-2 leading-relaxed">
-                    Com base no ticket médio odontológico e taxa de conversão perdida pela ausência de Tour 360°, agendamento e inatividade de postagens.
-                  </p>
-                </div>
-
-                <div class="space-y-2 text-xs">
-                  <div class="flex justify-between text-slate-400">
-                    <span>Posição Média no GeoGrid:</span>
-                    <span class="font-mono font-bold text-white">#8.4 (Fora do Top 3)</span>
-                  </div>
-                  <div class="flex justify-between text-slate-400">
-                    <span>Avaliações sem Resposta:</span>
-                    <span class="font-mono font-bold text-rose-400">18 de 24 (75% abandonadas)</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Card 2: Checklist dos 7 Pilares de Elite -->
-              <div class="lg:col-span-7 space-y-3">
-                <span class="font-mono text-xs text-solar font-bold uppercase tracking-wider block">
-                  Checklist Cirúrgico Auditado pelo RadarMaps PRO:
+          <!-- TAB 1: A BUSCA REAL NO GOOGLE (3-PACK FAMILIAR) -->
+          <div id="contentDemoGoogle" class="p-4 sm:p-8 space-y-6">
+            
+            <!-- Barra de Busca Oficial do Google -->
+            <div class="max-w-2xl mx-auto rounded-full border border-slate-700 bg-slate-900/90 px-4 py-3 flex items-center gap-3 shadow-lg">
+              <span class="text-xl">🔍</span>
+              <div class="flex-1 min-w-0">
+                <span class="text-xs sm:text-sm text-slate-200 font-semibold truncate block">
+                  Clínica de Fisioterapia perto de mim
                 </span>
+              </div>
+              <div class="flex items-center gap-2 text-slate-400 text-xs font-mono">
+                <span>📍 Santo André - SP</span>
+              </div>
+            </div>
 
-                <div class="grid gap-2.5">
-                  <div class="p-3.5 rounded-xl bg-obsidian-800/80 border border-rose-500/30 flex items-start gap-3">
-                    <span class="text-rose-500 text-lg">✕</span>
-                    <div>
-                      <div class="flex items-center gap-2">
-                        <span class="text-sm font-bold text-white">Frequência de Postagens no Google Maps</span>
-                        <span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 text-[10px] font-mono font-bold">34 DIAS SEM POST</span>
-                      </div>
-                      <p class="text-xs text-slate-400 mt-0.5">O perfil está estagnado. O algoritmo do Google rebaixa fichas que passam mais de 7 dias sem postagens de produtos, fotos ou ofertas.</p>
-                    </div>
-                  </div>
+            <p class="text-center text-xs text-slate-400 max-w-xl mx-auto">
+              💡 <strong>O Algoritmo do Google:</strong> Mais de 82% das chamadas e cliques no WhatsApp vão exclusivamente para os <strong class="text-amber-400">3 primeiros colocados</strong>.
+            </p>
 
-                  <div class="p-3.5 rounded-xl bg-obsidian-800/80 border border-rose-500/30 flex items-start gap-3">
-                    <span class="text-rose-500 text-lg">✕</span>
-                    <div>
-                      <div class="flex items-center gap-2">
-                        <span class="text-sm font-bold text-white">Tour Virtual 360° no Google Street View</span>
-                        <span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 text-[10px] font-mono font-bold">AUSENTE</span>
-                      </div>
-                      <p class="text-xs text-slate-400 mt-0.5">Sem tour 360° mapeado. Negócios com fotos 360° geram 2x mais interesse de agendamento presencial.</p>
-                    </div>
-                  </div>
-
-                  <div class="p-3.5 rounded-xl bg-obsidian-800/80 border border-rose-500/30 flex items-start gap-3">
-                    <span class="text-rose-500 text-lg">✕</span>
-                    <div>
-                      <div class="flex items-center gap-2">
-                        <span class="text-sm font-bold text-white">Botão de Agendamento Direto no Maps</span>
-                        <span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 text-[10px] font-mono font-bold">FALTA LINK</span>
-                      </div>
-                      <p class="text-xs text-slate-400 mt-0.5">O lead não encontra botão de WhatsApp ou agendamento na primeira tela e vai para outro consultório.</p>
-                    </div>
-                  </div>
-
-                  <div class="p-3.5 rounded-xl bg-obsidian-800/80 border border-emerald-500/30 flex items-start gap-3">
-                    <span class="text-emerald-400 text-lg">✓</span>
-                    <div>
-                      <div class="flex items-center gap-2">
-                        <span class="text-sm font-bold text-white">Nome & Categoria Primária</span>
-                        <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-mono font-bold">CONFORME</span>
-                      </div>
-                      <p class="text-xs text-slate-400 mt-0.5">Categoria definida como "Clínica Odontológica", mas sem categorias secundárias cadastradas.</p>
-                    </div>
-                  </div>
+            <!-- Comparativo Visual: Top 3 que Lucra vs. Perfil Fora do Mapa -->
+            <div class="grid md:grid-cols-12 gap-5 items-stretch">
+              
+              <!-- Coluna 1: O Top 3 do Google Maps (Quem Domina) -->
+              <div class="md:col-span-7 rounded-2xl border border-emerald-500/30 bg-slate-900/80 p-4 sm:p-5 space-y-3">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                  <span class="text-xs font-black uppercase text-emerald-400 tracking-wider flex items-center gap-1.5">
+                    <span>🥇</span> <span>Pack Principal do Google Maps (Top 3)</span>
+                  </span>
+                  <span class="badge-pill badge-emerald text-[10px]">70% dos Pacientes</span>
                 </div>
 
+                <!-- 1º Lugar -->
+                <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800 flex items-center justify-between gap-3">
+                  <div class="flex items-center gap-3 min-w-0">
+                    <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-500 text-slate-950 font-black text-xs">#1</span>
+                    <div class="min-w-0">
+                      <h5 class="text-sm font-extrabold text-white truncate">Clínica Vitalidade Fisioterapia</h5>
+                      <div class="flex items-center gap-2 text-xs text-amber-400">
+                        <span>5.0 ★★★★★</span>
+                        <span class="text-slate-400 font-mono text-[11px]">(142 avaliações)</span>
+                      </div>
+                    </div>
+                  </div>
+                  <span class="text-xs text-emerald-400 font-bold shrink-0">📞 Agenda Lotada</span>
+                </div>
+
+                <!-- 2º Lugar -->
+                <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800 flex items-center justify-between gap-3">
+                  <div class="flex items-center gap-3 min-w-0">
+                    <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-500/80 text-slate-950 font-black text-xs">#2</span>
+                    <div class="min-w-0">
+                      <h5 class="text-sm font-bold text-white truncate">Espaço Fisio & Reab</h5>
+                      <div class="flex items-center gap-2 text-xs text-amber-400">
+                        <span>4.9 ★★★★★</span>
+                        <span class="text-slate-400 font-mono text-[11px]">(88 avaliações)</span>
+                      </div>
+                    </div>
+                  </div>
+                  <span class="text-xs text-slate-300 font-bold shrink-0">✓ Fotos 360°</span>
+                </div>
+
+                <!-- 3º Lugar -->
+                <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800 flex items-center justify-between gap-3">
+                  <div class="flex items-center gap-3 min-w-0">
+                    <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500 text-slate-950 font-black text-xs">#3</span>
+                    <div class="min-w-0">
+                      <h5 class="text-sm font-bold text-white truncate">Instituto Fisio Corpore</h5>
+                      <div class="flex items-center gap-2 text-xs text-amber-400">
+                        <span>4.8 ★★★★★</span>
+                        <span class="text-slate-400 font-mono text-[11px]">(65 avaliações)</span>
+                      </div>
+                    </div>
+                  </div>
+                  <span class="text-xs text-amber-400 font-bold shrink-0">Última vaga</span>
+                </div>
               </div>
 
-            </div>
-          </div>
-
-          <!-- TAB 3: PITCH DE ABORDAGEM WHATSAPP 1-CLIQUE -->
-          <div id="contentDemoPitch" class="p-6 sm:p-8 hidden">
-            <div class="max-w-3xl mx-auto space-y-5">
-              <div class="flex items-center justify-between">
+              <!-- Coluna 2: O Cliente que você vai prospectar (Fora da tela) -->
+              <div class="md:col-span-5 rounded-2xl border border-rose-500/40 bg-gradient-to-br from-rose-950/20 to-slate-900/90 p-4 sm:p-5 flex flex-col justify-between space-y-4">
                 <div>
-                  <span class="font-mono text-xs text-emerald-400 font-bold uppercase tracking-wider">Script de Abordagem Cirúrgico</span>
-                  <h4 class="text-lg font-bold text-white">Mensagem Personalizada Gerada Automaticamente</h4>
+                  <div class="flex items-center justify-between border-b border-rose-500/30 pb-2.5">
+                    <span class="text-xs font-black uppercase text-rose-400 tracking-wider flex items-center gap-1.5">
+                      <span>🚨</span> <span>O Perfil que Perde Dinheiro</span>
+                    </span>
+                    <span class="badge-pill badge-rose text-[10px]">Posição #14</span>
+                  </div>
+
+                  <div class="mt-3 space-y-2 text-xs">
+                    <h5 class="text-sm font-extrabold text-white">Clínica Auditada pelo RadarMaps</h5>
+                    <p class="text-slate-300 text-[11px]">
+                      Aparece na <strong>14ª colocação</strong> no Google Maps. Nenhum paciente rola até lá.
+                    </p>
+
+                    <div class="space-y-1.5 pt-2 text-[11px]">
+                      <div class="flex items-center gap-2 text-rose-300">
+                        <span>✕</span> <span>Sem Website próprio com WhatsApp</span>
+                      </div>
+                      <div class="flex items-center gap-2 text-rose-300">
+                        <span>✕</span> <span>34 dias sem postar no Google</span>
+                      </div>
+                      <div class="flex items-center gap-2 text-rose-300">
+                        <span>✕</span> <span>Sem Tour Virtual 360°</span>
+                      </div>
+                      <div class="flex items-center gap-2 text-rose-300">
+                        <span>✕</span> <span>18 avaliações sem resposta</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 font-mono text-xs font-bold flex items-center gap-1.5">
-                  <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                  WhatsApp Pronto
-                </span>
+
+                <div class="p-3 rounded-xl bg-slate-950 border border-amber-500/40 text-center">
+                  <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Estimativa de Clientes Perdidos:</span>
+                  <span class="text-xl font-black text-amber-400 font-mono">~R$ 6.200/mês</span>
+                  <span class="text-[10px] text-slate-400 block mt-0.5">indo direto para os 3 concorrentes acima</span>
+                </div>
               </div>
 
-              <!-- Message Bubble -->
-              <div class="p-5 sm:p-6 rounded-2xl bg-obsidian-900 border border-white/10 text-slate-200 font-mono text-xs sm:text-sm leading-relaxed space-y-3">
-                <p>Olá, Dr. Responsável da <strong>Clínica Odonto Sorriso</strong>! Tudo bem?</p>
-                <p>Aqui é da assessoria de posicionamento no Google Maps na região do Tatuapé.</p>
-                <p>Fizemos uma auditoria tática do perfil de vocês no Google Maps e identificamos <strong>3 falhas críticas</strong> que estão custando cerca de <span class="text-solar font-bold">R$ 6.200/mês</span> em pacientes perdidos:</p>
-                <ul class="list-disc pl-5 space-y-1 text-slate-300">
-                  <li>O perfil está há <strong>34 dias sem novas postagens</strong> (o algoritmo rebaixa quem fica inativo);</li>
-                  <li>Vocês não possuem <strong>Tour Virtual 360°</strong> ativo no Street View;</li>
-                  <li>Na busca a 2km do consultório, vocês caem para a <strong>12ª posição</strong> do mapa.</li>
-                </ul>
-                <p>Preparamos um relatório executivo de 22 páginas em PDF mostrando como recuperar o Top 3. Posso te enviar por aqui em 2 minutos?</p>
+            </div>
+
+            <div class="text-center pt-2">
+              <a href="#planos" class="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-black text-xs sm:text-sm hover:scale-105 transition-all shadow-lg">
+                <span>🚀 Quero Assinar o RadarMaps PRO por R$ 119,90/mês</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- TAB 2: RAIO-X POR BAIRRO (GEOGRID DIDÁTICO) -->
+          <div id="contentDemoBairro" class="p-4 sm:p-8 space-y-6 hidden">
+            <div class="text-center max-w-xl mx-auto space-y-1.5">
+              <span class="text-xs font-mono text-emerald-400 font-bold uppercase tracking-wider">🎯 A Ilusão do Dono do Negócio</span>
+              <h4 class="text-base sm:text-xl font-black text-white">"Eu pesquiso aqui da minha clínica e apareço em 1º lugar!"</h4>
+              <p class="text-xs text-slate-300">
+                O Google personaliza o resultado pelo GPS do celular. Quando o consumidor pesquisa da avenida vizinha, o perfil cai e perde todas as chamadas:
+              </p>
+            </div>
+
+            <!-- 3 Cenários Didáticos de Distância -->
+            <div class="grid sm:grid-cols-3 gap-4">
+              
+              <!-- Ponto 1: Na Sede -->
+              <div onclick="selectPointDemo(0)" id="pointCard0" class="point-demo-card p-4 rounded-2xl border-2 border-emerald-500 bg-slate-900/90 cursor-pointer transition-all hover:scale-[1.02]">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-2xl">🟢</span>
+                  <span class="font-mono text-xs font-black px-2 py-0.5 rounded bg-emerald-500 text-slate-950">POSIÇÃO #1</span>
+                </div>
+                <h5 class="text-sm font-bold text-white">Na Porta do Consultório (0 km)</h5>
+                <p class="text-xs text-slate-300 mt-1">O dono pesquisa de dentro da clínica. Ele está no topo e acha que não precisa de assessoria.</p>
+                <span class="text-[10px] font-mono text-emerald-400 block mt-2">✓ Visibilidade: 100%</span>
               </div>
 
-              <!-- Action Row -->
-              <div class="flex flex-wrap items-center justify-between gap-4 pt-2">
-                <span class="text-xs text-slate-400 font-mono">
-                  💡 O RadarMaps PRO já puxa o WhatsApp validado da empresa direto do Google Maps.
-                </span>
-                <a href="https://wa.me/5511970558412?text=Ol%C3%A1!%20Gostaria%20de%20falar%20com%20o%20Plant%C3%A3o%20de%20Vendas%20do%20RadarMaps%20PRO." target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-signal-emerald hover:bg-signal-emeraldDark text-white font-bold text-xs sm:text-sm shadow-lg transition-all">
-                  <span>💬 Falar com Plantão de Vendas</span>
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                </a>
+              <!-- Ponto 2: A 1.8km -->
+              <div onclick="selectPointDemo(1)" id="pointCard1" class="point-demo-card p-4 rounded-2xl border border-amber-500/50 bg-slate-900/60 cursor-pointer transition-all hover:scale-[1.02]">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-2xl">🟡</span>
+                  <span class="font-mono text-xs font-black px-2 py-0.5 rounded bg-amber-500 text-slate-950">POSIÇÃO #5</span>
+                </div>
+                <h5 class="text-sm font-bold text-white">Na Avenida Principal (1.8 km)</h5>
+                <p class="text-xs text-slate-300 mt-1">O consumidor pesquisou da avenida movimentada. O perfil já caiu para o 5º lugar (fora da tela).</p>
+                <span class="text-[10px] font-mono text-amber-400 block mt-2">⚠️ Perda de 50% dos cliques</span>
               </div>
+
+              <!-- Ponto 3: A 3.5km -->
+              <div onclick="selectPointDemo(2)" id="pointCard2" class="point-demo-card p-4 rounded-2xl border border-rose-500/50 bg-slate-900/60 cursor-pointer transition-all hover:scale-[1.02]">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-2xl">🔴</span>
+                  <span class="font-mono text-xs font-black px-2 py-0.5 rounded bg-rose-500 text-white">POSIÇÃO #14</span>
+                </div>
+                <h5 class="text-sm font-bold text-white">No Bairro Vizinho (3.5 km)</h5>
+                <p class="text-xs text-slate-300 mt-1">Onde está o público de maior poder aquisitivo. A empresa é 100% invisível. O concorrente leva tudo.</p>
+                <span class="text-[10px] font-mono text-rose-400 block mt-2">🚨 Perda Total: R$ 6.200/mês</span>
+              </div>
+
+            </div>
+
+            <!-- Caixa de Argumento de Vendas -->
+            <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300 flex items-center gap-3">
+              <span class="text-2xl">💡</span>
+              <p class="leading-relaxed">
+                <strong>O Maior Fechador de Contratos:</strong> Quando você mostra esse mapa por pontos para o empresário, ele percebe na hora o dinheiro que está deixando na mesa. É o argumento definitivo para fechar contratos mensais de R$ 1.500 a R$ 3.000!
+              </p>
+            </div>
+          </div>
+
+          <!-- TAB 3: O DOSSIÊ EM PDF & SCRIPT WHATSAPP -->
+          <div id="contentDemoDossie" class="p-4 sm:p-8 space-y-5 hidden">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+              <div>
+                <span class="text-xs font-mono text-emerald-400 font-bold uppercase tracking-wider">📄 Entregável Oficial White-Label</span>
+                <h4 class="text-base sm:text-lg font-black text-white">O Relatório que você gera em 1 clique para enviar ao cliente</h4>
+              </div>
+              <span class="badge-pill badge-emerald">PDF Pronto em 30 Segundos</span>
+            </div>
+
+            <!-- Pré-visualização do Script WhatsApp -->
+            <div class="p-4 sm:p-5 rounded-2xl bg-slate-900 border border-slate-800 text-xs sm:text-sm text-slate-200 font-mono space-y-2.5">
+              <p class="text-amber-400 font-bold">📲 Abordagem Cirúrgica de WhatsApp (Gerada Automaticamente):</p>
+              <p><em>"Olá Dr. Responsável da Clínica Odonto Sorriso! Aqui é da assessoria de posicionamento no Google Maps da região."</em></p>
+              <p><em>"Fizemos uma auditoria tática do seu perfil no Google e encontramos <strong>3 gargalos</strong> que estão fazendo vocês perderem cerca de <strong>R$ 6.200/mês</strong> para os concorrentes da avenida principal."</em></p>
+              <p><em>"Gerei um <strong>Dossiê Executivo de 22 Pontos em PDF</strong> com os dados completos da região. Posso te enviar por aqui em 2 minutos para você dar uma olhada?"</em></p>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+              <span class="text-xs text-slate-400">
+                ✅ O RadarMaps PRO já valida o WhatsApp da empresa e gera o texto personalizado.
+              </span>
+              <a href="#planos" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs transition-all shadow-md">
+                <span>🚀 Começar a Usar por R$ 119,90/mês</span>
+              </a>
             </div>
           </div>
 
         </div>
       </div>
-
-    </div>
-  </section>
-
-  <!-- ========================================== -->
   <!-- 5. OS 6 MÓDULOS TÁTICOS (BENTO GRID LUXURY)-->
   <!-- ========================================== -->
   <section id="modulos" class="py-24 sm:py-32 border-t border-white/10 bg-obsidian-900/50 relative">
@@ -954,18 +922,17 @@
   </section>
 
   <!-- ============================================================== -->
-  <!-- 8. PLANOS & PREÇOS (OCULTO TEMPORARIAMENTE ANTES DO INÍCIO DAS VENDAS) -->
-  <!-- Para reativar, basta descomentar este bloco quando Ricardo definir a abertura de vendas -->
-  <!--
+  <!-- 8. PLANOS & PREÇOS — ASSINATURA OFICIAL RADARMAPS PRO           -->
+  <!-- ============================================================== -->
   <section id="planos" class="py-24 sm:py-32 border-t border-white/10 bg-obsidian-900 relative">
     <div class="max-w-7xl mx-auto px-4 sm:px-8">
       
-      <div class="text-center max-w-3xl mx-auto mb-16">
-        <span class="font-mono text-xs uppercase tracking-widest text-emerald-400 font-bold">Investimento & Licenças</span>
-        <h2 class="mt-3 text-3xl sm:text-5xl font-display font-extrabold text-white tracking-tight">
+      <div class="text-center max-w-3xl mx-auto mb-16 space-y-3">
+        <span class="font-mono text-xs uppercase tracking-widest text-emerald-400 font-bold bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/30">Investimento & Licenças Oficiais</span>
+        <h2 class="text-3xl sm:text-5xl font-display font-extrabold text-white tracking-tight">
           Acesso liberado sem limites de extração.
         </h2>
-        <p class="mt-4 text-slate-300 text-base sm:text-lg">
+        <p class="text-slate-300 text-base sm:text-lg">
           Escolha o plano ideal para a sua agência ou carreira como consultor independente de SEO Local.
         </p>
       </div>
@@ -983,10 +950,10 @@
               <h3 class="text-3xl font-display font-extrabold text-white">Mensal Pro</h3>
               <span class="px-3.5 py-1 rounded-full bg-solar/20 text-solar font-mono text-xs font-black">ACESSO TOTAL</span>
             </div>
-            <p class="mt-2 text-sm text-slate-300">Todas as ferramentas liberadas sem travas. Extraia leads, audite 22 pontos de ranking e feche contratos de alto valor.</p>
+            <p class="mt-2 text-sm text-slate-300">Todas as ferramentas liberadas sem travas. Extraia leads, audite 22 pontos de ranking no Google Maps e feche contratos de alto valor.</p>
 
             <div class="mt-6 flex items-baseline gap-2">
-              <span class="text-6xl font-display font-black text-white">R$ 129,90</span>
+              <span class="text-6xl font-display font-black text-white">R$ 119,90</span>
               <span class="text-slate-300 font-mono text-base font-semibold">/mês</span>
             </div>
             <span class="font-mono text-xs text-emerald-400 font-bold block mt-1">Cancele quando quiser • Sem multas ou taxas ocultas</span>
@@ -1031,32 +998,15 @@
             </ul>
           </div>
 
-          <a href="https://wa.me/5511970558412?text=Ol%C3%A1!%20Quero%20assinar%20o%20Plano%20Mensal%20Pro%20(R%24%20129%2C90%2Fm%C3%AAs)%20do%20RadarMaps%20PRO." target="_blank" rel="noopener noreferrer" class="w-full py-4.5 rounded-xl bg-gradient-to-r from-solar via-amber-400 to-yellow-400 text-slate-950 font-black text-base text-center tracking-wide shadow-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2">
-            <span>🚀</span> <span>Assinar Plano Mensal Pro (R$ 129,90/mês)</span>
+          <a href="https://wa.me/5511970558412?text=Ol%C3%A1%20Ricardo!%20Quero%20assinar%20o%20Plano%20Mensal%20Pro%20(R%24%20119%2C90%2Fm%C3%AAs)%20do%20RadarMaps%20PRO." target="_blank" rel="noopener noreferrer" class="w-full py-4.5 rounded-xl bg-gradient-to-r from-solar via-amber-400 to-yellow-400 text-slate-950 font-black text-base text-center tracking-wide shadow-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2 cursor-pointer">
+            <span>🚀</span> <span>Assinar Plano Mensal Pro (R$ 119,90/mês)</span>
           </a>
         </div>
 
       </div>
 
-      <div class="mt-12 flex flex-wrap justify-center gap-8 text-xs font-mono text-slate-400">
-        <span class="flex items-center gap-2">
-          <span class="text-emerald-400">🛡️</span> Pagamento Seguro via PIX ou Cartão em até 12x
-        </span>
-        <span class="flex items-center gap-2">
-          <span class="text-emerald-400">⚡</span> Liberação Imediata de Chave de Licença
-        </span>
-        <span class="flex items-center gap-2">
-          <span class="text-emerald-400">💬</span> Plantão Comercial & Atendimento Online via WhatsApp
-        </span>
-      </div>
-
     </div>
   </section>
-  -->
-
-  <!-- ========================================== -->
-  <!-- 9. FAQ EXECUTIVO (ACCORDION DE ALTO PADRÃO)-->
-  <!-- ========================================== -->
   <section id="faq" class="py-24 sm:py-32 border-t border-white/10 bg-obsidian-900/60">
     <div class="max-w-4xl mx-auto px-4 sm:px-8">
       
@@ -1218,38 +1168,39 @@
   <!-- 12. JAVASCRIPT INTERATIVO (HUD + ROI + FAQ)-->
   <!-- ========================================== -->
   <script>
-    // Tab Switcher no Console Hero HUD
+    // Tab Switcher no Console Hero HUD (Google, Bairro, Dossiê)
     function switchDemoTab(tab) {
-      const tabs = ['geogrid', 'auditoria', 'pitch'];
+      const tabs = ['google', 'bairro', 'dossie'];
       tabs.forEach(t => {
         const btn = document.getElementById('tabDemo' + t.charAt(0).toUpperCase() + t.slice(1));
         const content = document.getElementById('contentDemo' + t.charAt(0).toUpperCase() + t.slice(1));
         if (t === tab) {
-          btn.classList.add('border-emerald-400', 'text-emerald-400');
-          btn.classList.remove('border-transparent', 'text-slate-400');
-          content.classList.remove('hidden');
+          if (btn) {
+            btn.classList.add('border-amber-400', 'text-amber-300');
+            btn.classList.remove('border-transparent', 'text-slate-400');
+          }
+          if (content) content.classList.remove('hidden');
         } else {
-          btn.classList.remove('border-emerald-400', 'text-emerald-400');
-          btn.classList.add('border-transparent', 'text-slate-400');
-          content.classList.add('hidden');
+          if (btn) {
+            btn.classList.remove('border-amber-400', 'text-amber-300');
+            btn.classList.add('border-transparent', 'text-slate-400');
+          }
+          if (content) content.classList.add('hidden');
         }
       });
     }
 
-    // Seleção Interativa de Pinos no GeoGrid
-    function selectPin(index, pos, dist, diag, colorClass, leak) {
-      document.getElementById('pinBadgePosition').textContent = pos;
-      document.getElementById('pinBadgePosition').className = 'font-mono text-2xl font-black px-3.5 py-1.5 rounded-xl shadow-md ' + colorClass;
-      document.getElementById('pinDistance').textContent = dist;
-      document.getElementById('pinDiagnosis').textContent = diag;
-      document.getElementById('pinLeak').textContent = leak;
-      
-      const allPins = document.querySelectorAll('.pin-btn');
-      allPins.forEach((btn, i) => {
+    // Seleção Interativa de Pontos na Demo de Bairro
+    function selectPointDemo(index) {
+      const cards = [document.getElementById('pointCard0'), document.getElementById('pointCard1'), document.getElementById('pointCard2')];
+      cards.forEach((card, i) => {
+        if (!card) return;
         if (i === index) {
-          btn.classList.add('ring-4', 'ring-solar');
+          card.classList.add('ring-2', 'ring-amber-400', 'bg-slate-900');
+          card.classList.remove('bg-slate-900/60');
         } else {
-          btn.classList.remove('ring-4', 'ring-solar');
+          card.classList.remove('ring-2', 'ring-amber-400', 'bg-slate-900');
+          card.classList.add('bg-slate-900/60');
         }
       });
     }
@@ -1264,7 +1215,7 @@
 
       const mrr = ticket * clients;
       const arr = mrr * 12;
-      const monthlyCost = 129.90;
+      const monthlyCost = 119.90;
       const roiMultiplier = Math.round(mrr / monthlyCost);
 
       document.getElementById('resultMrr').textContent = 'R$ ' + mrr.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
@@ -1274,8 +1225,6 @@
       document.getElementById('resultRoiDesc').textContent = 
         'Com ' + clients + (clients === 1 ? ' cliente fechado' : ' clientes fechados') + ' a R$ ' + ticket.toLocaleString('pt-BR') + '/mês, você recupera ' + roiMultiplier + 'x o investimento com altíssima margem de lucro líquido recorrente!';
     }
-
-    // Accordion do FAQ
     function toggleFaq(card) {
       const content = card.querySelector('.faq-content');
       const icon = card.querySelector('.faq-icon');
