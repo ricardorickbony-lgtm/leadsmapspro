@@ -4470,6 +4470,38 @@ async function generateGeminiPitchForLead(lead) {
 }
 window.generateGeminiPitchForLead = generateGeminiPitchForLead;
 
+
+function getOfficialPainelBaseUrl() {
+  const currentUrl = window.location.href.split('?')[0].split('#')[0];
+  if (currentUrl.startsWith('http') && !currentUrl.includes('localhost') && !currentUrl.includes('127.0.0.1')) {
+    return currentUrl.endsWith('/') ? currentUrl : currentUrl + '/';
+  }
+  return 'https://ricardorickbony-lgtm.github.io/leadsmapspro/painel/';
+}
+window.getOfficialPainelBaseUrl = getOfficialPainelBaseUrl;
+
+function buildSubscriberFullWhatsAppMessage(sub) {
+  const basePainelUrl = getOfficialPainelBaseUrl();
+  const autoLoginUrl = basePainelUrl + '?email=' + encodeURIComponent(sub.email) + '&chave=' + encodeURIComponent(sub.chave);
+  const expStr = sub.expiraEm ? new Date(sub.expiraEm).toLocaleDateString('pt-BR') : '30 dias';
+  const cleanName = (sub.nome || 'Parceiro').split('—')[0].trim();
+
+  return 'Olá, *' + cleanName + '*! Seja muito bem-vindo(a) ao *RadarMaps PRO*! 🚀\n\n'
+    + 'Seu acesso oficial já está *ATIVO e LIBERADO*.\n\n'
+    + '🔐 *SEUS DADOS DE ACESSO:*\n'
+    + '👤 *Login (E-mail):* ' + sub.email + '\n'
+    + '🔑 *Chave de Licença / Senha:* ' + sub.chave + '\n'
+    + '📅 *Plano:* ' + (sub.plano || 'Acesso VIP') + ' (Válido até ' + expStr + ')\n\n'
+    + '🌐 *LINK DE ACESSO DIRETO (1 Clique - Já entra logado):*\n'
+    + autoLoginUrl + '\n\n'
+    + '📲 *LINK DA TELA DE LOGIN MANUAL:*\n'
+    + basePainelUrl + '\n\n'
+    + '📌 *Como acessar:*\n'
+    + 'Basta tocar no *Link de Acesso Direto* acima. O sistema já abre com a sua conta logada e 500 créditos liberados para extrair empresas no Google Maps e prospectar no WhatsApp!\n\n'
+    + 'Qualquer dúvida estou à disposição!';
+}
+window.buildSubscriberFullWhatsAppMessage = buildSubscriberFullWhatsAppMessage;
+
 function isMobileWhatsAppNumber(rawPhone) {
   let digits = String(rawPhone || '').replace(/\D/g, '');
   if (!digits) return false;
@@ -8104,6 +8136,36 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  
+  // Atualiza Live Preview do Link de Acesso em tempo real conforme o Ricardo digita
+  function updateAdminLiveAccessLink() {
+    const email = document.getElementById('adminNewClientEmail')?.value.trim() || 'cliente@exemplo.com';
+    const chave = document.getElementById('adminNewClientKey')?.value.trim() || 'LMPRO-PRO-XXXX-XXXX';
+    const basePainelUrl = getOfficialPainelBaseUrl();
+    const previewEl = document.getElementById('adminLiveAccessLinkPreview');
+    if (previewEl) {
+      previewEl.value = basePainelUrl + '?email=' + encodeURIComponent(email) + '&chave=' + encodeURIComponent(chave);
+    }
+  }
+
+  document.getElementById('adminNewClientEmail')?.addEventListener('input', updateAdminLiveAccessLink);
+  document.getElementById('adminNewClientKey')?.addEventListener('input', updateAdminLiveAccessLink);
+  document.getElementById('adminNewClientPlan')?.addEventListener('change', () => {
+    setTimeout(updateAdminLiveAccessLink, 50);
+  });
+  document.getElementById('btnGenerateRandomKey')?.addEventListener('click', () => {
+    setTimeout(updateAdminLiveAccessLink, 50);
+  });
+
+  document.getElementById('btnCopyLiveAccessLink')?.addEventListener('click', () => {
+    const previewEl = document.getElementById('adminLiveAccessLinkPreview');
+    if (previewEl && previewEl.value) {
+      navigator.clipboard?.writeText(previewEl.value);
+      showToast('🔗 Link de acesso copiado com sucesso!');
+    }
+  });
+  updateAdminLiveAccessLink();
+
   const btnStart = document.getElementById('btnStartScraping');
   const btnClearSearch = document.getElementById('btnClearSearchFields');
   if (btnClearSearch) {
@@ -11270,42 +11332,34 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
   window.sendAccessWhatsApp = function(subId) {
     const sub = State.subscribers.find(s => s.id === subId);
     if (!sub) return;
-    const expStr = new Date(sub.expiraEm).toLocaleDateString('pt-BR');
     
-    // URL base oficial da plataforma
-    const currentUrl = window.location.href.split('?')[0].split('#')[0];
-    const basePainelUrl = (currentUrl.startsWith('http') && !currentUrl.includes('localhost') && !currentUrl.includes('127.0.0.1'))
-      ? currentUrl
-      : 'https://ricardorickbony-lgtm.github.io/leadsmapspro/painel/';
-    
-    // Link direto com preenchimento automático
-    const autoLoginUrl = `${basePainelUrl}?email=${encodeURIComponent(sub.email)}&chave=${encodeURIComponent(sub.chave)}`;
-
-    const msg = `Olá, *${sub.nome.split('—')[0].trim()}*! Seja muito bem-vindo(a) ao *RadarMaps PRO*! 🚀\n\nSeu acesso oficial já está *ATIVO e LIBERADO*.\n\n🔐 *SEUS DADOS DE ACESSO:*\n👤 *Login (E-mail):* ${sub.email}\n🔑 *Chave de Licença / Senha:* ${sub.chave}\n📅 *Plano:* ${sub.plano} (Válido até ${expStr})\n\n🌐 *LINK DE ACESSO DIRETO (1 Clique):*\n${autoLoginUrl}\n\nOu acesse diretamente:\n${basePainelUrl}\n\nBasta abrir o link acima para começar a extrair empresas no Google Maps e disparar no WhatsApp. Qualquer dúvida estou à disposição!`;
-
+    const msg = buildSubscriberFullWhatsAppMessage(sub);
     const phoneDigits = formatBrazilWhatsAppNumber(sub.telefone || '');
+    
+    // Copia sempre para o clipboard por garantia
+    navigator.clipboard?.writeText(msg).catch(() => {});
+
     if (!phoneDigits) {
-      navigator.clipboard?.writeText(msg).catch(() => {});
-      showToast('📋 Assinante sem telefone. Mensagem completa com link copiada!');
+      showToast('📋 Link e mensagem de acesso copiados! (Assinante sem telefone cadastrado)');
       return;
     }
+
     const isMob = isMobileClient();
     const waUrl = isMob
-      ? `https://api.whatsapp.com/send?phone=${phoneDigits}&text=${encodeURIComponent(msg)}`
-      : `https://web.whatsapp.com/send?phone=${phoneDigits}&text=${encodeURIComponent(msg)}`;
+      ? 'https://api.whatsapp.com/send?phone=' + phoneDigits + '&text=' + encodeURIComponent(msg)
+      : 'https://web.whatsapp.com/send?phone=' + phoneDigits + '&text=' + encodeURIComponent(msg);
+    
     window.open(waUrl, '_blank');
+    showToast('🚀 Abrindo WhatsApp com Link de Acesso para ' + sub.nome.split('—')[0].trim() + '!');
   };
 
   window.copySubscriberAccessLink = function(subId) {
     const sub = State.subscribers.find(s => s.id === subId);
     if (!sub) return;
-    const currentUrl = window.location.href.split('?')[0].split('#')[0];
-    const basePainelUrl = (currentUrl.startsWith('http') && !currentUrl.includes('localhost') && !currentUrl.includes('127.0.0.1'))
-      ? currentUrl
-      : 'https://ricardorickbony-lgtm.github.io/leadsmapspro/painel/';
-    const autoLoginUrl = `${basePainelUrl}?email=${encodeURIComponent(sub.email)}&chave=${encodeURIComponent(sub.chave)}`;
+    const basePainelUrl = getOfficialPainelBaseUrl();
+    const autoLoginUrl = basePainelUrl + '?email=' + encodeURIComponent(sub.email) + '&chave=' + encodeURIComponent(sub.chave);
     navigator.clipboard?.writeText(autoLoginUrl).catch(() => {});
-    showToast(`🔗 Link de acesso de "${sub.nome}" copiado com sucesso!`);
+    showToast('🔗 Link direto de acesso de "' + sub.nome.split('—')[0].trim() + '" copiado com sucesso!');
   };
 
   window.sendBillingWhatsApp = function(subId) {
@@ -11347,7 +11401,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
   document.getElementById('btnCreateSubscriber')?.addEventListener('click', () => {
     const nome = document.getElementById('adminNewClientName')?.value.trim();
     const email = document.getElementById('adminNewClientEmail')?.value.trim();
-    const telefone = document.getElementById('adminNewClientPhone')?.value.trim() || '(11) 99999-9999';
+    const telefone = document.getElementById('adminNewClientPhone')?.value.trim();
     const planSel = document.getElementById('adminNewClientPlan');
     const opt = planSel?.selectedOptions?.[0];
     const days = parseInt(opt?.getAttribute('data-days') || '30');
@@ -11364,7 +11418,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       id: Date.now(),
       nome,
       email,
-      telefone,
+      telefone: telefone || '',
       chave,
       plano: planLabel,
       valorMensal: valor,
@@ -11377,52 +11431,51 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     State.subscribers.unshift(newSub);
     saveSubscribers(State.subscribers);
 
-    document.getElementById('adminNewClientName').value = '';
-    document.getElementById('adminNewClientEmail').value = '';
-    document.getElementById('adminNewClientPhone').value = '';
-    document.getElementById('adminNewClientKey').value = generateLicenseKeyString('MEN');
+    const basePainelUrl = getOfficialPainelBaseUrl();
+    const autoLoginUrl = basePainelUrl + '?email=' + encodeURIComponent(email) + '&chave=' + encodeURIComponent(chave);
 
-    // Atualiza a caixa de sucesso imediata com os links e ações rápidas
     const successBox = document.getElementById('adminCreatedSuccessBox');
     const nameEl = document.getElementById('createdSubName');
+    const phoneEl = document.getElementById('createdSubPhone');
     const emailEl = document.getElementById('createdSubEmail');
     const keyEl = document.getElementById('createdSubKey');
-    const linkEl = document.getElementById('createdSubLink');
+    const linkInput = document.getElementById('createdSubLinkInput');
+    const loginBaseInput = document.getElementById('createdSubLoginBaseInput');
     const planBadge = document.getElementById('createdSubPlanBadge');
     const btnSendWa = document.getElementById('btnSendCreatedSubWa');
-    const btnCopyLink = document.getElementById('btnCopyCreatedSubLink');
+    const btnCopyDirect = document.getElementById('btnCopyDirectLinkOnly');
+    const btnCopyBase = document.getElementById('btnCopyBaseLinkOnly');
     const btnCopyMsg = document.getElementById('btnCopyCreatedSubMsg');
 
-    const currentUrl = window.location.href.split('?')[0].split('#')[0];
-    const basePainelUrl = (currentUrl.startsWith('http') && !currentUrl.includes('localhost') && !currentUrl.includes('127.0.0.1'))
-      ? currentUrl
-      : 'https://ricardorickbony-lgtm.github.io/leadsmapspro/painel/';
-    const autoLoginUrl = `${basePainelUrl}?email=${encodeURIComponent(email)}&chave=${encodeURIComponent(chave)}`;
-
     if (nameEl) nameEl.textContent = nome;
+    if (phoneEl) phoneEl.textContent = telefone || 'Não informado';
     if (emailEl) emailEl.textContent = email;
     if (keyEl) keyEl.textContent = chave;
-    if (linkEl) {
-      linkEl.href = autoLoginUrl;
-      linkEl.textContent = autoLoginUrl;
-    }
-    if (planBadge) planBadge.textContent = `${planLabel} (${days} dias)`;
+    if (linkInput) linkInput.value = autoLoginUrl;
+    if (loginBaseInput) loginBaseInput.value = basePainelUrl;
+    if (planBadge) planBadge.textContent = planLabel + ' (' + days + ' dias)';
+
+    const fullMsg = buildSubscriberFullWhatsAppMessage(newSub);
 
     if (btnSendWa) {
       btnSendWa.onclick = () => window.sendAccessWhatsApp(newSub.id);
     }
-    if (btnCopyLink) {
-      btnCopyLink.onclick = () => {
+    if (btnCopyDirect) {
+      btnCopyDirect.onclick = () => {
         navigator.clipboard?.writeText(autoLoginUrl);
-        showToast('🔗 Link de acesso copiado com sucesso!');
+        showToast('🔗 Link direto de 1 clique copiado com sucesso!');
+      };
+    }
+    if (btnCopyBase) {
+      btnCopyBase.onclick = () => {
+        navigator.clipboard?.writeText(basePainelUrl);
+        showToast('📲 Link geral de login copiado!');
       };
     }
     if (btnCopyMsg) {
       btnCopyMsg.onclick = () => {
-        const expStr = new Date(newSub.expiraEm).toLocaleDateString('pt-BR');
-        const fullMsg = `Olá, *${nome.split('—')[0].trim()}*! Seja muito bem-vindo(a) ao *RadarMaps PRO*! 🚀\n\nSeu acesso oficial já está *ATIVO e LIBERADO*.\n\n🔐 *SEUS DADOS DE ACESSO:*\n👤 *Login (E-mail):* ${email}\n🔑 *Chave de Licença / Senha:* ${chave}\n📅 *Plano:* ${planLabel} (Válido até ${expStr})\n\n🌐 *LINK DE ACESSO DIRETO (1 Clique):*\n${autoLoginUrl}\n\nOu acesse diretamente:\n${basePainelUrl}\n\nBasta abrir o link acima para começar a extrair empresas no Google Maps e disparar no WhatsApp. Qualquer dúvida estou à disposição!`;
         navigator.clipboard?.writeText(fullMsg);
-        showToast('📋 Mensagem completa com link copiada!');
+        showToast('📋 Mensagem completa com todos os links copiada!');
       };
     }
 
@@ -11431,7 +11484,15 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       successBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
-    showToast(`✅ Licença criada com sucesso! O link direto de acesso está pronto abaixo.`);
+    // Copia sempre a mensagem completa com link para a área de transferência
+    navigator.clipboard?.writeText(fullMsg).catch(() => {});
+
+    // Se o telefone foi preenchido, abre o WhatsApp do cliente automaticamente com o link!
+    if (telefone && telefone.length >= 8) {
+      window.sendAccessWhatsApp(newSub.id);
+    } else {
+      showToast('✅ Licença criada com sucesso! Link e mensagem copiados.');
+    }
   });
 
   document.getElementById('adminSearchSubInput')?.addEventListener('input', () => renderAdminPanel());
@@ -11555,11 +11616,52 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     }
 
     // 2. Verifica na lista de Assinantes cadastrados
-    const sub = (State.subscribers || []).find(
+    let sub = (State.subscribers || []).find(
       s => (s.email && s.email.toLowerCase() === email) || 
            (s.chave && s.chave.toUpperCase() === key) ||
            (s.nome && s.nome.toLowerCase().includes(email) && email.length >= 3)
     );
+
+    // 2.1 Se não encontrou na lista local (ex: cliente abrindo em outro computador/celular sem sincronia de localStorage),
+    // mas possui uma Chave de Licença válida gerada pelo RadarMaps PRO (iniciada com LMPRO- ou formato válido de chave):
+    if (!sub && (key.startsWith('LMPRO-') || key.length >= 10 || isTestKey)) {
+      let days = 30;
+      let planName = 'Plano Mensal Pro';
+      if (key.includes('TST') || key.includes('TESTE') || isTestKey) {
+        days = 7;
+        planName = 'Plano Degustação (7 Dias)';
+      } else if (key.includes('VIP')) {
+        days = 3;
+        planName = 'Plano VIP (3 Dias)';
+      } else if (key.includes('TRI')) {
+        days = 90;
+        planName = 'Plano Trimestral Pro';
+      } else if (key.includes('ANU')) {
+        days = 365;
+        planName = 'Plano Anual Pro';
+      } else if (key.includes('VIT')) {
+        days = 3650;
+        planName = 'Plano Vitalício';
+      }
+
+      const clientName = email ? email.split('@')[0] : 'Assinante Licenciado';
+      sub = {
+        id: Date.now(),
+        nome: clientName.charAt(0).toUpperCase() + clientName.slice(1),
+        email: email || 'cliente@radarmapspro.com.br',
+        telefone: '',
+        chave: key,
+        plano: planName,
+        valorMensal: 119.90,
+        expiraEm: Date.now() + (days * 86400000),
+        creditosDisponiveis: 500,
+        creditosTotal: 500,
+        status: 'ativo'
+      };
+
+      State.subscribers.unshift(sub);
+      saveSubscribers(State.subscribers);
+    }
 
     if (!sub) {
       if (loginAlertBox && loginAlertTitle && loginAlertText) {
@@ -11783,8 +11885,19 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     if (paramKey || paramTest || paramEmail) {
       const emailToTry = paramEmail || (paramTest ? 'convidado@vip.com' : 'convidado@teste.com');
       const keyToTry = paramKey || (paramTest ? 'VIP' : 'TESTE');
+      
+      const inpEmail = document.getElementById('loginEmailInput');
+      const inpKey = document.getElementById('loginLicenseInput');
+      if (inpEmail) inpEmail.value = emailToTry;
+      if (inpKey) inpKey.value = keyToTry;
+
       attemptLogin(emailToTry, keyToTry);
       autoLoginHandled = Boolean(State.activeSession);
+      if (autoLoginHandled) {
+        setTimeout(() => {
+          showToast('🎉 Acesso Liberado com Sucesso! Bem-vindo(a) ao RadarMaps PRO!');
+        }, 600);
+      }
     }
   } catch(eParam) {}
 

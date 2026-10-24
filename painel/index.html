@@ -732,10 +732,26 @@
             </div>
           </div>
 
+          <!-- Live Preview do Link de Acesso enquanto digita -->
+          <div class="rounded-xl border border-sky-500/30 bg-sky-950/30 p-3.5 space-y-2">
+            <div class="flex items-center justify-between flex-wrap gap-1">
+              <span class="text-xs font-bold text-sky-300 flex items-center gap-1.5">
+                <span>🌐</span> <span>Link de Acesso Direto (Gerado Automaticamente):</span>
+              </span>
+              <span class="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded">1 Clique · Auto-Login</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <input id="adminLiveAccessLinkPreview" readonly class="flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-mono text-sky-300 select-all cursor-pointer" value="https://ricardorickbony-lgtm.github.io/leadsmapspro/painel/">
+              <button id="btnCopyLiveAccessLink" type="button" class="btn-ghost-dark px-3.5 py-2 text-xs font-bold text-sky-300 border border-sky-500/40 hover:bg-sky-500/10 cursor-pointer whitespace-nowrap" title="Copiar link direto de acesso">
+                📋 Copiar Link
+              </button>
+            </div>
+          </div>
+
           <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800">
-            <span class="text-[11px] text-slate-400">💡 Ao criar, você pode enviar o Login + Chave em 1 clique direto no WhatsApp do cliente.</span>
-            <button id="btnCreateSubscriber" type="button" class="btn-amber px-5 py-2.5 text-xs font-extrabold cursor-pointer flex items-center gap-2">
-              <span>⚡</span> <span>Liberar Acesso & Gerar Licença</span>
+            <span class="text-[11px] text-slate-400">💡 Ao clicar em Liberar, o WhatsApp do cliente abre automaticamente com o link e credenciais prontos para envio.</span>
+            <button id="btnCreateSubscriber" type="button" class="btn-amber px-5 py-2.5 text-xs font-extrabold cursor-pointer flex items-center gap-2 shadow-lg">
+              <span>⚡</span> <span>Liberar Acesso & Enviar no WhatsApp</span>
             </button>
           </div>
           <!-- Caixa de Confirmação & Link Imediato do Cliente Criado -->
@@ -748,14 +764,31 @@
               <span id="createdSubPlanBadge" class="badge-pill badge-emerald">Plano Ativo</span>
             </div>
             
-            <div class="bg-slate-950/80 p-3 rounded-lg border border-slate-800 space-y-1.5 font-mono text-xs text-slate-200">
-              <div>👤 <span class="text-slate-400">Cliente:</span> <strong id="createdSubName" class="text-white"></strong></div>
-              <div>📧 <span class="text-slate-400">Login (E-mail):</span> <strong id="createdSubEmail" class="text-emerald-300"></strong></div>
-              <div>🔑 <span class="text-slate-400">Chave / Senha:</span> <strong id="createdSubKey" class="text-emerald-300"></strong></div>
-              <div class="pt-1 border-t border-slate-800/80">
-                🌐 <span class="text-slate-400">Link de Acesso Direto (1 Clique):</span><br>
-                <a id="createdSubLink" href="#" target="_blank" class="text-sky-400 hover:text-sky-300 underline break-all font-semibold"></a>
+            <div class="bg-slate-950/90 p-4 rounded-xl border border-slate-800 space-y-2.5 font-mono text-xs text-slate-200">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pb-2 border-b border-slate-800/80">
+                <div>👤 <span class="text-slate-400">Cliente:</span> <strong id="createdSubName" class="text-white"></strong></div>
+                <div>📱 <span class="text-slate-400">WhatsApp:</span> <strong id="createdSubPhone" class="text-emerald-400 font-bold"></strong></div>
+                <div>📧 <span class="text-slate-400">Login (E-mail):</span> <strong id="createdSubEmail" class="text-emerald-300 font-bold"></strong></div>
+                <div>🔑 <span class="text-slate-400">Chave / Senha:</span> <strong id="createdSubKey" class="text-emerald-300 font-bold"></strong></div>
               </div>
+              <div class="space-y-1 pt-1">
+                <div class="flex items-center justify-between">
+                  <span class="text-slate-400 font-sans font-bold text-[11px] text-sky-400">🌐 1. Link Direto com Auto-Login (Recomendado):</span>
+                  <span class="text-[10px] text-emerald-400 font-bold font-sans">Entra Sem Digitar Nada ✓</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <input id="createdSubLinkInput" readonly class="flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-sky-300 select-all cursor-pointer font-mono" value="">
+                  <button id="btnCopyDirectLinkOnly" type="button" class="btn-ghost-dark px-2.5 py-1.5 text-xs font-bold text-sky-300 hover:bg-sky-500/10 cursor-pointer">Copiar 📋</button>
+                </div>
+              </div>
+              <div class="space-y-1 pt-1">
+                <span class="text-slate-400 font-sans font-bold text-[11px] text-slate-300">📲 2. Link Geral da Tela de Login:</span>
+                <div class="flex items-center gap-1.5">
+                  <input id="createdSubLoginBaseInput" readonly class="flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-slate-300 select-all cursor-pointer font-mono" value="https://ricardorickbony-lgtm.github.io/leadsmapspro/painel/">
+                  <button id="btnCopyBaseLinkOnly" type="button" class="btn-ghost-dark px-2.5 py-1.5 text-xs font-bold text-slate-300 hover:bg-slate-700/50 cursor-pointer">Copiar 📋</button>
+                </div>
+              </div>
+            </div>
             </div>
 
             <div class="flex flex-wrap items-center gap-2 pt-1">
