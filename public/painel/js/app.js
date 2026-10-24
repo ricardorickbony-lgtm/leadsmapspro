@@ -4321,7 +4321,7 @@ window.getLeadSocialMedia = getLeadSocialMedia;
 // ============================================================================
 // GOOGLE AI STUDIO (GEMINI 3.8 FLASH) LIVE MOTOR
 // ============================================================================
-const GEMINI_SUPPORTED_MODELS = ['gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash'];
+const GEMINI_SUPPORTED_MODELS = ['gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-flash-latest'];
 
 function getGeminiApiKey() {
   return localStorage.getItem('leadmaps_gemini_api_key') || '';
