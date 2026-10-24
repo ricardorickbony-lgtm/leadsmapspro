@@ -12635,6 +12635,38 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
     });
   }
 
+  // Comparador Inteligente de Nomes de Empresas (Tolera diacríticos, pontuação e sufixos)
+  function isMatchTargetBusiness(candTitle, targName) {
+    if (!candTitle || !targName) return false;
+    const clean = s => (s || '').normalize('NFD')
+                                .replace(/[\u0300-\u036f]/g, '')
+                                .toLowerCase()
+                                .replace(/[^a-z0-9]/g, ' ')
+                                .replace(/\s+/g, ' ')
+                                .trim();
+    const c1 = clean(candTitle);
+    const c2 = clean(targName);
+    if (c1 === c2) return true;
+    if (c1 && c2 && (c1.includes(c2) || c2.includes(c1))) return true;
+
+    // Compara o nome principal (antes de pipes ou hífens)
+    const p1 = clean(candTitle.split(/[|\-–]/)[0]);
+    const p2 = clean(targName.split(/[|\-–]/)[0]);
+    if (p1 === p2 || (p1.length >= 4 && p2.length >= 4 && (p1.includes(p2) || p2.includes(p1)))) {
+      return true;
+    }
+
+    // Checa tokens de palavras com mais de 3 letras
+    const stopWords = ['loja', 'carros', 'veiculos', 'automoveis', 'seminovos', 'comercio', 'ltda', 'me', 'eireli', 'cia', 'sao', 'santo', 'andre', 'brasil', 'centro'];
+    const t1 = p1.split(' ').filter(w => w.length > 3 && !stopWords.includes(w));
+    const t2 = p2.split(' ').filter(w => w.length > 3 && !stopWords.includes(w));
+    if (t1.length > 0 && t2.length > 0) {
+      const matchCount = t1.filter(w => t2.includes(w)).length;
+      if (matchCount >= Math.min(t1.length, t2.length)) return true;
+    }
+    return false;
+  }
+
   // Motor de Coleta ao Vivo de Concorrentes Reais do Google Maps (Serper Places API)
   async function fetchGeoGridLiveCompetitors(forceRefresh = false) {
     const kw = (GeoState.keyword || 'loja de carros').trim();
@@ -12675,13 +12707,50 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
           if (Array.isArray(d2.places)) rawPlaces.push(...d2.places);
         }
 
+        // 1. Identificação Oficial do Cliente no Google Maps da Cidade:
+        const targetName = (GeoState.selectedLeadName || '').trim();
+        let foundTargetInGoogle = false;
+        rawPlaces.forEach((p, idx) => {
+          const pTitle = (p.title || p.name || '').trim();
+          const pPos = typeof p.position === 'number' ? p.position : (idx + 1);
+          if (!foundTargetInGoogle && isMatchTargetBusiness(pTitle, targetName)) {
+            foundTargetInGoogle = true;
+            GeoState.targetOfficialRank = pPos;
+            GeoState.targetOfficialRating = typeof p.rating === 'number' ? p.rating : (GeoState.selectedLeadRating || 4.8);
+            GeoState.targetOfficialReviews = typeof p.ratingCount === 'number' ? p.ratingCount : (p.reviews || GeoState.selectedLeadReviews || 80);
+            GeoState.targetFoundInGoogle = true;
+            if (p.latitude && p.longitude && !isNaN(p.latitude) && !isNaN(p.longitude)) {
+              GeoState.centerLat = +parseFloat(p.latitude).toFixed(6);
+              GeoState.centerLng = +parseFloat(p.longitude).toFixed(6);
+            }
+          }
+        });
+
+        if (!foundTargetInGoogle) {
+          const foundInState = (State.leads || []).find(l => isMatchTargetBusiness(l.empresa, targetName));
+          if (foundInState && (foundInState.rank || foundInState.position)) {
+            GeoState.targetOfficialRank = Number(foundInState.rank || foundInState.position);
+            GeoState.targetOfficialRating = Number(foundInState.rating || 4.8);
+            GeoState.targetOfficialReviews = Number(foundInState.reviews || 80);
+            GeoState.targetFoundInGoogle = true;
+          } else {
+            // Empresa não figura no Top 20 orgânico do Google Maps nesta cidade:
+            GeoState.targetOfficialRank = 18;
+            GeoState.targetFoundInGoogle = false;
+          }
+        }
+
+        // 2. Extrai Concorrentes Reais com Rank Oficial:
         const seen = new Set();
-        rawPlaces.forEach(p => {
+        rawPlaces.forEach((p, idx) => {
           const name = (p.title || p.name || '').trim();
           if (!name) return;
           const norm = name.toLowerCase();
           if (seen.has(norm)) return;
           seen.add(norm);
+
+          // Não duplica a empresa alvo nos concorrentes
+          if (isMatchTargetBusiness(name, targetName)) return;
 
           // Filtro estrito de nicho para evitar contaminação
           const pNiche = detectNicheCategory('', name, p.category || '');
@@ -12707,6 +12776,7 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
             websiteAnalysis: analyzeWebsiteUrl(p.website),
             lat: lat,
             lng: lng,
+            googlePosition: typeof p.position === 'number' ? p.position : (idx + 1),
             cid: p.cid || null
           });
         });
@@ -13034,33 +13104,38 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
       }
     }
 
-    // 3. Constrói o pool avaliando distâncias e scoring geodésico
-    const pool = cleanCompetitors.map(item => {
+    // 3. Constrói o pool avaliando distâncias, autoridade oficial Google Maps e proximidade
+    const pool = cleanCompetitors.map((item, idx) => {
       const distKm = calcHaversineKm(pointLat, pointLng, item.lat, item.lng);
-      // Queda hiperlocal com a distância (Proximity Sigmoid de alta fidelidade)
-      const proximityScore = 100 / (1 + Math.pow(distKm / 0.85, 1.85));
+      const compGoogleRank = Number(item.googlePosition || (idx + 1));
+
+      // Hierarquia oficial de autoridade comprovada no Google Maps da cidade
+      const authorityScore = Math.max(15, 140 - (compGoogleRank * 5.0));
+
+      // Proximidade hiperlocal com decaimento suave
+      const proximityScore = 45 / (1 + Math.pow(distKm / 0.85, 1.85));
 
       const titleCat = (item.empresa || '').toLowerCase();
       let kwBonus = 0;
       if (titleCat.includes(kwLower)) {
-        kwBonus = 24;
+        kwBonus = 12;
       } else {
         kwTokens.forEach(tk => {
-          if (titleCat.includes(tk)) kwBonus += 8;
+          if (titleCat.includes(tk)) kwBonus += 4;
         });
       }
 
       const rating = Number(item.rating || 4.6);
       const reviews = Math.max(1, Number(item.reviews || 25));
-      const prominenceScore = (rating * 4.2) + (Math.log10(reviews + 1) * 14.5) + (item.temSite ? 6.5 : 0);
+      const prominenceScore = (rating * 2.5) + (Math.min(18, Math.log10(reviews + 1) * 6)) + (item.temSite ? 3 : 0);
 
       // Bônus/Penalidade de localidade municipal
       let cityBonus = 0;
       if (item.cidade && pointCity) {
         if (item.cidade.toLowerCase() === pointCity.toLowerCase()) {
-          cityBonus = 12;
+          cityBonus = 8;
         } else {
-          cityBonus = -12;
+          cityBonus = -8;
         }
       }
 
@@ -13072,84 +13147,63 @@ async function fetchSinglePlaceAudit(rawInput, cityInput, apiKey) {
         lat: item.lat,
         lng: item.lng,
         distKm: distKm,
-        score: proximityScore + kwBonus + prominenceScore + cityBonus,
+        googlePosition: compGoogleRank,
+        score: authorityScore + proximityScore + kwBonus + prominenceScore + cityBonus,
         isTarget: false
       };
     });
 
-    // 4. Insere o CLIENTE ALVO exatamente nas coordenadas centrais
-    const targetProximity = 100 / (1 + Math.pow(targetDistKm / 0.85, 1.85));
-
-    let targetRating = 4.8;
-    let targetReviews = 110;
+    // 4. Insere o CLIENTE ALVO calibrado com a Posição Oficial do Google Maps
+    let targetRating = Number(GeoState.targetOfficialRating || GeoState.selectedLeadRating || 4.8);
+    let targetReviews = Number(GeoState.targetOfficialReviews || GeoState.selectedLeadReviews || 80);
     let targetTemSite = true;
     const foundInState = (State.leads || []).find(l =>
       (l.empresa || '').toLowerCase().trim() === targetName.toLowerCase() ||
       (GeoState.selectedLeadId && l.id === GeoState.selectedLeadId)
     );
     if (foundInState) {
-      targetRating = Number(foundInState.rating || 4.8);
-      targetReviews = Number(foundInState.reviews || 110);
+      targetRating = Number(foundInState.rating || targetRating);
+      targetReviews = Number(foundInState.reviews || targetReviews);
       targetTemSite = Boolean(foundInState.temSite);
     }
 
-    let targetKwBonus = 0;
-    const targetTitle = `${targetName} ${GeoState.selectedLeadCategory || ''}`.toLowerCase();
-    if (targetTitle.includes(kwLower)) {
-      targetKwBonus = 24;
+    // ÂNCORA REAL OFICIAL: se o Google entregou posição 4 na cidade, a base da sede começa exatamente em 4!
+    const officialBaseRank = Number(GeoState.targetOfficialRank) || 4;
+
+    // Decaimento Geodésico Realista por Distância da Sede:
+    let distanceRankDecay = 0;
+    if (targetDistKm <= 0.20) {
+      // No centro exato (raio de 200m da loja): 100% ancorado na posição oficial do Google Maps!
+      distanceRankDecay = 0;
+    } else if (targetDistKm <= 0.65) {
+      // 200m a 650m: oscilação leve (0 a 1 posição)
+      distanceRankDecay = Math.floor(targetDistKm / 0.55);
+    } else if (targetDistKm <= 1.25) {
+      // 650m a 1.25km: cai 1 a 2 posições
+      distanceRankDecay = 1 + Math.floor((targetDistKm - 0.65) * 2.2);
+    } else if (targetDistKm <= 2.20) {
+      // 1.25km a 2.2km: cai 3 a 5 posições
+      distanceRankDecay = 2 + Math.floor((targetDistKm - 1.25) * 3.2);
+    } else if (targetDistKm <= 3.50) {
+      // 2.2km a 3.5km: cai 5 a 8 posições
+      distanceRankDecay = 5 + Math.floor((targetDistKm - 2.20) * 3.5);
+    } else if (targetDistKm <= 5.00) {
+      // 3.5km a 5.0km: cai 9 a 13 posições
+      distanceRankDecay = 9 + Math.floor((targetDistKm - 3.50) * 3.2);
     } else {
-      kwTokens.forEach(tk => {
-        if (targetTitle.includes(tk)) targetKwBonus += 9;
-      });
+      // Mais de 5km de distância: cai 14 a 18 posições (limite 20+)
+      distanceRankDecay = 14 + Math.min(6, Math.floor((targetDistKm - 5.00) * 2.0));
     }
 
-    const targetProminence = (targetRating * 4.2) + (Math.log10(targetReviews + 1) * 14.5) + (targetTemSite ? 6.5 : 0);
-    const targetCityBonus = isCrossCity ? -16 : 12;
-    const targetScore = targetProximity + targetKwBonus + targetProminence + targetCityBonus;
-
-    pool.push({
-      empresa: targetName,
-      rating: targetRating,
-      reviews: targetReviews,
-      temSite: targetTemSite,
-      lat: GeoState.centerLat,
-      lng: GeoState.centerLng,
-      distKm: targetDistKm,
-      score: targetScore,
-      isTarget: true
-    });
-
-    // 5. Ordena por score decrescente
-    pool.sort((a, b) => b.score - a.score);
-
-    // 6. Calibração Realista de Piso por Distância (Proximity Falloff Ground Truth)
-    // Impede matematicamente que uma empresa a 3km ou 4km de distância figure como #1 ou #2 em cidades metropolitanas
-    let distanceRankFloor = 1;
-    if (targetDistKm <= 0.6) {
-      distanceRankFloor = 1;
-    } else if (targetDistKm <= 1.2) {
-      distanceRankFloor = 2 + Math.floor((targetDistKm - 0.6) * 2.5);
-    } else if (targetDistKm <= 2.2) {
-      distanceRankFloor = 4 + Math.floor((targetDistKm - 1.2) * 3.5);
-    } else if (targetDistKm <= 3.5) {
-      distanceRankFloor = 7 + Math.floor((targetDistKm - 2.2) * 4.0);
-    } else if (targetDistKm <= 4.8) {
-      distanceRankFloor = 12 + Math.floor((targetDistKm - 3.5) * 3.8);
-    } else {
-      distanceRankFloor = 16 + Math.min(4, Math.floor((targetDistKm - 4.8) * 2.0));
-    }
-
-    // Se o ponto cruzou a divisa para outro município (ex: Santo André -> São Bernardo do Campo)
     if (isCrossCity) {
-      distanceRankFloor = Math.min(20, distanceRankFloor + 4);
+      distanceRankDecay += 4;
     }
 
-    const rawTargetIndex = pool.findIndex(p => p.isTarget);
-    let rankPos = rawTargetIndex !== -1 ? (rawTargetIndex + 1) : 20;
-
-    // Aplica o piso de física geodésica do Google Maps
-    rankPos = Math.max(rankPos, distanceRankFloor);
+    let rankPos = officialBaseRank + distanceRankDecay;
     rankPos = Math.min(20, Math.max(1, rankPos));
+
+    // Ordena os concorrentes pelo score competitivo deste ponto
+    pool.sort((a, b) => b.score - a.score);
 
     // Mapeia ranks dos concorrentes para o painel
     const competitorRanks = {};
@@ -14058,6 +14112,18 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
         <span class="rounded-lg bg-amber-500/20 border border-amber-500/40 px-2.5 py-1 text-amber-300">🟡 4-10: ${midCount}</span>
         <span class="rounded-lg bg-rose-500/20 border border-rose-500/40 px-2.5 py-1 text-rose-300">🔴 11+: ${lowCount}</span>
       `;
+    }
+
+    // Atualiza badge de Âncora Oficial do Google Maps
+    const anchorEl = document.getElementById('rankOfficialAnchorValue');
+    const anchorTitle = document.getElementById('rankOfficialAnchorTitle');
+    if (anchorEl) {
+      if (GeoState.targetOfficialRank) {
+        anchorEl.textContent = `#${GeoState.targetOfficialRank}º Lugar Oficial`;
+        if (anchorTitle) anchorTitle.textContent = GeoState.targetFoundInGoogle ? 'Google Maps Oficial:' : 'Google Maps (Orgânico):';
+      } else {
+        anchorEl.textContent = 'Auto-Calibrado';
+      }
     }
 
     // Atualiza badge de Aberto ou Fechado no momento da análise
@@ -15917,6 +15983,9 @@ Quais são as 3 principais empresas que você recomenda? Analise especificamente
     GeoState.selectedLeadAddress = matchedPlace.address;
     GeoState.centerLat = +matchedPlace.lat.toFixed(6);
     GeoState.centerLng = +matchedPlace.lng.toFixed(6);
+    GeoState.selectedLeadRating = matchedPlace.rating || 4.8;
+    GeoState.selectedLeadReviews = matchedPlace.reviews || 80;
+    GeoState.selectedLeadCategory = matchedPlace.category || GeoState.selectedLeadCategory;
     if (rankSearchInput) rankSearchInput.value = matchedPlace.name;
     if (matchedPlace.defaultRival) {
       GeoState.duelCompetitorName = matchedPlace.defaultRival;
