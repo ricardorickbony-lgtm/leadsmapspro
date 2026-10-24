@@ -4446,7 +4446,10 @@ async function generateGeminiPitchForLead(lead) {
 
   try {
     const soc = typeof getLeadSocialMedia === 'function' ? getLeadSocialMedia(lead) : { hasInstagram: false, hasFacebook: false };
-    const prompt = 'Você é Ricardo, consultor especialista em vendas e posicionamento no Google Maps para empresas locais.\n'
+    const consultorNome = (State.activeSession && State.activeSession.nome && State.activeSession.role !== 'master')
+      ? State.activeSession.nome.split('—')[0].trim()
+      : (document.getElementById('settingAgencyName')?.value.trim() || 'Ricardo');
+    const prompt = 'Você é ' + consultorNome + ', consultor especialista em vendas e posicionamento no Google Maps para empresas locais.\n'
       + 'Você identificou a seguinte empresa no Google Maps e vai enviar uma mensagem de WhatsApp para o proprietário ou gerente:\n\n'
       + '- Nome da Empresa: ' + (lead.empresa || 'Empresa Local') + '\n'
       + '- Cidade / Endereço: ' + (lead.endereco || lead.cidade || 'Região') + '\n'
