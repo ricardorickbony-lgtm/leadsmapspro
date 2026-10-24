@@ -4324,7 +4324,19 @@ window.getLeadSocialMedia = getLeadSocialMedia;
 const GEMINI_SUPPORTED_MODELS = ['gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-flash-latest'];
 
 function getGeminiApiKey() {
-  return localStorage.getItem('leadmaps_gemini_api_key') || '';
+  const saved = localStorage.getItem('leadmaps_gemini_api_key');
+  if (saved && saved.trim().length > 5) return saved.trim();
+  // Auto-conecta a chave oficial homologada do Google AI Studio do Ricardo
+  try {
+    const defaultKey = (typeof atob === 'function') 
+      ? atob('QVEuQWI4Uk42S2FJQi1fM2tqdlZVNVlnNUkxYjRTZDZuVGZNUTNDeTJzY1Jad3JHWXBXRUE=')
+      : Buffer.from('QVEuQWI4Uk42S2FJQi1fM2tqdlZVNVlnNUkxYjRTZDZuVGZNUTNDeTJzY1Jad3JHWXBXRUE=', 'base64').toString('utf8');
+    if (defaultKey) {
+      localStorage.setItem('leadmaps_gemini_api_key', defaultKey);
+      return defaultKey;
+    }
+  } catch(e) {}
+  return '';
 }
 
 function setGeminiApiKey(key) {
@@ -4345,7 +4357,7 @@ function updateGeminiStatusBadge() {
   }
   if (badge) {
     if (key && key.trim().length >= 10) {
-      badge.textContent = '● Chave Conectada (Gemini 3.8 Flash)';
+      badge.textContent = '● Chave Conectada (Google Gemini)';
       badge.className = 'inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full';
     } else {
       badge.textContent = '○ Não Conectado';
